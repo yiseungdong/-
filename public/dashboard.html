@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ASTERIA — 내 성궤</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Noto+Sans+KR:wght@300;400;500;700&family=Orbitron:wght@400;700&display=swap"
+        rel="stylesheet" />
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --void: #03010a;
+            --quasar-gold: #f0c040;
+            --nova-purple: #b87fff;
+            --planet-teal: #40e0d0;
+            --star-blue: #60a8ff;
+            --dust-gray: #8899bb;
+            --text-primary: #f0eeff;
+            --text-secondary: #a0a8cc;
+            --text-muted: #556077;
+        }
+
+        body {
+            background: var(--void);
+            color: var(--text-primary);
+            font-family: 'Noto Sans KR', sans-serif;
+            font-weight: 300;
+            min-height: 100vh;
+        }
+
+        /* 네브 */
+        nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.2rem 2.5rem;
+            background: rgba(13, 5, 32, 0.95);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-logo {
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            font-weight: 900;
+            letter-spacing: 0.25em;
+            color: var(--quasar-gold);
+            text-decoration: none;
+        }
+
+        .nav-logo span {
+            color: var(--nova-purple);
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .nav-user {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .nav-user strong {
+            color: var(--nova-purple);
+        }
+
+        .btn-logout {
+            font-family: 'Cinzel', serif;
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
+            color: var(--text-muted);
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.4rem 1rem;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            color: var(--text-primary);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* 메인 레이아웃 */
+        .dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2.5rem 2rem;
+        }
+
+        /* 환영 배너 */
+        .welcome-banner {
+            background: linear-gradient(135deg, rgba(184, 127, 255, 0.1), rgba(240, 192, 64, 0.05));
+            border: 1px solid rgba(184, 127, 255, 0.2);
+            border-radius: 8px;
+            padding: 2rem 2.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .welcome-text h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 0.4rem;
+        }
+
+        .welcome-text h1 span {
+            color: var(--quasar-gold);
+        }
+
+        .welcome-text p {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+        }
+
+        .league-badge-big {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            padding: 0.6rem 1.4rem;
+            border-radius: 3px;
+            text-transform: uppercase;
+        }
+
+        .badge-dust {
+            background: rgba(136, 153, 187, 0.15);
+            border: 1px solid rgba(136, 153, 187, 0.4);
+            color: var(--dust-gray);
+        }
+
+        .badge-star {
+            background: rgba(96, 168, 255, 0.15);
+            border: 1px solid rgba(96, 168, 255, 0.4);
+            color: var(--star-blue);
+        }
+
+        .badge-planet {
+            background: rgba(64, 224, 208, 0.15);
+            border: 1px solid rgba(64, 224, 208, 0.4);
+            color: var(--planet-teal);
+        }
+
+        .badge-nova {
+            background: rgba(184, 127, 255, 0.15);
+            border: 1px solid rgba(184, 127, 255, 0.4);
+            color: var(--nova-purple);
+        }
+
+        .badge-quasar {
+            background: rgba(240, 192, 64, 0.15);
+            border: 1px solid rgba(240, 192, 64, 0.4);
+            color: var(--quasar-gold);
+        }
+
+        /* 스탯 카드 그리드 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 6px;
+            padding: 1.4rem 1.6rem;
+            transition: border-color 0.3s, background 0.3s;
+        }
+
+        .stat-card:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .stat-label {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.58rem;
+            letter-spacing: 0.18em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 0.6rem;
+        }
+
+        .stat-value {
+            font-family: 'Cinzel', serif;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .stat-sub {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 0.3rem;
+        }
+
+        /* 2열 그리드 */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .two-col {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 섹션 카드 */
+        .section-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 6px;
+            padding: 1.6rem;
+        }
+
+        .section-title {
+            font-family: 'Cinzel', serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            color: var(--text-secondary);
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .section-title span {
+            font-size: 1rem;
+        }
+
+        /* 미션 리스트 */
+        .mission-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.7rem;
+        }
+
+        .mission-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.8rem 1rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mission-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(184, 127, 255, 0.2);
+        }
+
+        .mission-item.done {
+            opacity: 0.4;
+        }
+
+        .mission-check {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 1px solid rgba(184, 127, 255, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            color: var(--nova-purple);
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .mission-item.done .mission-check {
+            background: rgba(184, 127, 255, 0.3);
+            border-color: var(--nova-purple);
+        }
+
+        .mission-info {
+            flex: 1;
+        }
+
+        .mission-name {
+            font-size: 0.82rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .mission-reward {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.6rem;
+            color: var(--quasar-gold);
+            letter-spacing: 0.1em;
+        }
+
+        /* 헥사곤 스탯 */
+        .hex-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.8rem;
+        }
+
+        .hex-item {
+            text-align: center;
+            padding: 0.8rem 0.5rem;
+        }
+
+        .hex-name {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.58rem;
+            letter-spacing: 0.12em;
+            color: var(--text-muted);
+            margin-bottom: 0.4rem;
+        }
+
+        .hex-bar {
+            height: 3px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 2px;
+            margin-bottom: 0.4rem;
+            overflow: hidden;
+        }
+
+        .hex-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 1s ease;
+        }
+
+        .hex-val {
+            font-family: 'Cinzel', serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* 리그 진행도 */
+        .league-progress {
+            margin-top: 0.5rem;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 0.6rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--nova-purple), var(--quasar-gold));
+            border-radius: 3px;
+            transition: width 1.2s ease;
+        }
+
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.68rem;
+            color: var(--text-muted);
+        }
+
+        /* 로그인 안된 상태 */
+        .not-logged {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            text-align: center;
+            gap: 1.2rem;
+        }
+
+        .not-logged h2 {
+            font-family: 'Cinzel', serif;
+            font-size: 1.4rem;
+            color: var(--text-secondary);
+        }
+
+        .btn-go {
+            font-family: 'Cinzel', serif;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            color: var(--void);
+            background: linear-gradient(135deg, var(--quasar-gold), #ffaa30);
+            border: none;
+            padding: 0.9rem 2.4rem;
+            border-radius: 2px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <a href="/" class="nav-logo">ASTER<span>IA</span></a>
+        <div class="nav-right">
+            <div class="nav-user">환영합니다, <strong id="nav-nickname">...</strong></div>
+            <button class="btn-logout" onclick="logout()">로그아웃</button>
+        </div>
+    </nav>
+
+    <div class="dashboard" id="dashboard-content">
+        <!-- 로딩 중 -->
+        <div style="text-align:center; padding: 4rem; color: var(--text-muted);">
+            <div style="font-family:'Orbitron',monospace; font-size:0.7rem; letter-spacing:0.2em;">LOADING...</div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('asteria_token');
+
+        async function loadDashboard() {
+            if (!token) {
+                document.getElementById('dashboard-content').innerHTML = `
+      <div class="not-logged">
+        <h2>로그인이 필요합니다</h2>
+        <p style="color:var(--text-muted);font-size:0.85rem;">아스테리아 제국에 귀환하여 주권을 행사하세요.</p>
+        <a href="/" class="btn-go">홈으로 돌아가기</a>
+      </div>`;
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + token } });
+                if (!res.ok) { localStorage.removeItem('asteria_token'); location.href = '/'; return; }
+                const user = await res.json();
+                renderDashboard(user);
+            } catch {
+                document.getElementById('dashboard-content').innerHTML = `<div class="not-logged"><h2>서버 연결 오류</h2><a href="/" class="btn-go">홈으로</a></div>`;
+            }
+        }
+
+        function renderDashboard(user) {
+            document.getElementById('nav-nickname').textContent = user.nickname;
+
+            const leagueName = { dust: '더스트', star: '스타', planet: '플래닛', nova: '노바', quasar: '퀘이사' };
+            const leagueColor = { dust: 'var(--dust-gray)', star: 'var(--star-blue)', planet: 'var(--planet-teal)', nova: 'var(--nova-purple)', quasar: 'var(--quasar-gold)' };
+            const lg = user.league || 'dust';
+            const ap = user.ap || 0;
+            const lv = user.level || 1;
+
+            // 미션 (로컬 상태)
+            const missions = [
+                { id: 'm1', name: '오늘의 스트리밍 15분', reward: '+50 AP', done: false },
+                { id: 'm2', name: '팬클럽 게시물 작성', reward: '+30 AP', done: false },
+                { id: 'm3', name: '투표 참여', reward: '+20 AP', done: false },
+                { id: 'm4', name: '신규 아스트라 초대', reward: '+100 AP', done: false },
+            ];
+
+            document.getElementById('dashboard-content').innerHTML = `
+    <div class="welcome-banner">
+      <div class="welcome-text">
+        <h1>환영합니다, <span>${user.nickname}</span> 아스트라</h1>
+        <p>오늘도 제국을 위해 빛나주세요. 당신의 열정이 은하를 만듭니다.</p>
+      </div>
+      <div class="league-badge-big badge-${lg}">${leagueName[lg] || lg} 리그</div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Level</div>
+        <div class="stat-value" style="color:var(--quasar-gold)">${lv}</div>
+        <div class="stat-sub">아스트라 등급</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Activity Points</div>
+        <div class="stat-value" style="color:var(--nova-purple)">${ap.toLocaleString()}</div>
+        <div class="stat-sub">누적 활동 포인트</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">League</div>
+        <div class="stat-value" style="color:${leagueColor[lg]}">${leagueName[lg] || lg}</div>
+        <div class="stat-sub">현재 소속 리그</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Today Missions</div>
+        <div class="stat-value" style="color:var(--planet-teal)" id="mission-count">0/4</div>
+        <div class="stat-sub">완료된 미션</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="section-card">
+        <div class="section-title"><span>⚡</span> 오늘의 성좌 미션</div>
+        <div class="mission-list" id="mission-list">
+          ${missions.map(m => `
+            <div class="mission-item" id="${m.id}" onclick="toggleMission('${m.id}')">
+              <div class="mission-check">${m.done ? '✓' : ''}</div>
+              <div class="mission-info">
+                <div class="mission-name">${m.name}</div>
+                <div class="mission-reward">${m.reward}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-title"><span>✦</span> 6대 스탯 헥사곤</div>
+        <div class="hex-stats">
+          ${[
+                    { name: 'LOY', label: '성실', val: lv * 8, color: 'var(--quasar-gold)' },
+                    { name: 'ACT', label: '행동', val: lv * 6, color: 'var(--nova-purple)' },
+                    { name: 'SOC', label: '사회', val: lv * 5, color: 'var(--planet-teal)' },
+                    { name: 'ECO', label: '경제', val: lv * 4, color: 'var(--star-blue)' },
+                    { name: 'CRE', label: '창의', val: lv * 7, color: 'var(--dust-gray)' },
+                    { name: 'INT', label: '지성', val: lv * 5, color: 'var(--nova-purple)' },
+                ].map(s => `
+            <div class="hex-item">
+              <div class="hex-name">${s.name}</div>
+              <div class="hex-bar"><div class="hex-fill" style="width:${Math.min(s.val, 100)}%;background:${s.color}" id="bar-${s.name}"></div></div>
+              <div class="hex-val" style="color:${s.color}">${Math.min(s.val, 100)}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title"><span>🌌</span> 리그 승격 진행도</div>
+      <div class="league-progress">
+        <div class="progress-labels">
+          <span style="color:${leagueColor[lg]}">${leagueName[lg]} 리그</span>
+          <span>${ap.toLocaleString()} / ${(lv * 1000).toLocaleString()} AP</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+        </div>
+        <div class="progress-labels">
+          <span>현재 진행도</span>
+          <span id="progress-pct">0%</span>
+        </div>
+      </div>
+    </div>
+  `;
+
+            // 애니메이션
+            setTimeout(() => {
+                const pct = Math.min(Math.round((ap / (lv * 1000)) * 100), 100);
+                document.getElementById('progress-fill').style.width = pct + '%';
+                document.getElementById('progress-pct').textContent = pct + '%';
+            }, 100);
+        }
+
+        let missionDone = {};
+        function toggleMission(id) {
+            missionDone[id] = !missionDone[id];
+            const el = document.getElementById(id);
+            el.classList.toggle('done', missionDone[id]);
+            el.querySelector('.mission-check').textContent = missionDone[id] ? '✓' : '';
+            const count = Object.values(missionDone).filter(Boolean).length;
+            document.getElementById('mission-count').textContent = count + '/4';
+        }
+
+        function logout() {
+            localStorage.removeItem('asteria_token');
+            location.href = '/';
+        }
+
+        loadDashboard();
+    </script>
+</body>
+
+</html>
