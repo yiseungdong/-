@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASTERIA — 팬이 주인이 되는 팬덤 플랫폼</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syncopate:wght@400;700&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --void: #04040e;
+    --deep: #080820;
+    --nebula: #0d0d35;
+    --indigo: #1a1a5e;
+    --violet: #3d1a78;
+    --astral: #6b35c9;
+    --starlight: #a78bfa;
+    --aurora: #c4b5fd;
+    --comet: #e0d7ff;
+    --nova: #f5f0ff;
+    --gold: #fbbf24;
+    --shimmer: #fde68a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--void);
+    color: var(--comet);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-weight: 300;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* Custom cursor */
+  .cursor {
+    position: fixed;
+    width: 8px;
+    height: 8px;
+    background: var(--starlight);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: transform 0.1s ease;
+    box-shadow: 0 0 12px var(--starlight), 0 0 24px var(--astral);
+  }
+  .cursor-ring {
+    position: fixed;
+    width: 32px;
+    height: 32px;
+    border: 1px solid rgba(167,139,250,0.4);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: all 0.15s ease;
+  }
+
+  /* Stars canvas */
+  #starfield {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* ── NAVIGATION ── */
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 28px 60px;
+    background: linear-gradient(to bottom, rgba(4,4,14,0.9) 0%, transparent 100%);
+  }
+  .nav-logo {
+    font-family: 'Syncopate', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: var(--aurora);
+    text-decoration: none;
+  }
+  .nav-logo span {
+    color: var(--gold);
+  }
+  .nav-links {
+    display: flex;
+    gap: 48px;
+    list-style: none;
+  }
+  .nav-links a {
+    font-family: 'Syncopate', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    color: rgba(196,181,253,0.6);
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+  .nav-links a:hover { color: var(--aurora); }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    z-index: 1;
+    padding: 0 24px;
+  }
+
+  .hero-eyebrow {
+    font-family: 'Syncopate', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.5em;
+    color: var(--gold);
+    margin-bottom: 40px;
+    opacity: 0;
+    animation: fadeUp 1s ease 0.3s forwards;
+  }
+
+  .hero-title {
+    font-family: 'Syncopate', sans-serif;
+    font-size: clamp(52px, 12vw, 140px);
+    font-weight: 700;
+    line-height: 0.9;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--aurora) 0%, var(--starlight) 40%, var(--gold) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+    opacity: 0;
+    animation: fadeUp 1.2s ease 0.5s forwards;
+    position: relative;
+  }
+
+  .hero-subtitle-en {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(14px, 2.5vw, 22px);
+    font-style: italic;
+    font-weight: 300;
+    color: rgba(196,181,253,0.7);
+    letter-spacing: 0.15em;
+    margin-bottom: 60px;
+    opacity: 0;
+    animation: fadeUp 1s ease 0.8s forwards;
+  }
+
+  .hero-tagline {
+    font-size: clamp(16px, 2.5vw, 22px);
+    font-weight: 400;
+    color: var(--nova);
+    line-height: 1.8;
+    max-width: 620px;
+    margin-bottom: 80px;
+    opacity: 0;
+    animation: fadeUp 1s ease 1s forwards;
+  }
+  .hero-tagline strong {
+    color: var(--aurora);
+    font-weight: 500;
+  }
+
+  .hero-cta-group {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    opacity: 0;
+    animation: fadeUp 1s ease 1.3s forwards;
+  }
+
+  .btn-primary {
+    font-family: 'Syncopate', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    padding: 18px 48px;
+    background: linear-gradient(135deg, var(--violet), var(--astral));
+    color: var(--nova);
+    border: none;
+    cursor: none;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s ease;
+    clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
+  }
+  .btn-primary::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--astral), var(--starlight));
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .btn-primary:hover::before { opacity: 1; }
+  .btn-primary span { position: relative; z-index: 1; }
+
+  .btn-ghost {
+    font-family: 'Syncopate', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    padding: 17px 48px;
+    background: transparent;
+    color: var(--aurora);
+    border: 1px solid rgba(167,139,250,0.4);
+    cursor: none;
+    text-decoration: none;
+    transition: all 0.4s ease;
+    clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
+  }
+  .btn-ghost:hover {
+    border-color: var(--aurora);
+    background: rgba(107,53,201,0.15);
+  }
+
+  /* floating star deco */
+  .star-deco {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 0 6px 2px rgba(167,139,250,0.8);
+    animation: twinkle 3s ease-in-out infinite;
+  }
+
+  /* ── DIVIDER ── */
+  .section-divider {
+    position: relative;
+    z-index: 1;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--astral), transparent);
+    margin: 0 80px;
+  }
+
+  /* ── MANIFESTO ── */
+  .manifesto {
+    position: relative;
+    z-index: 1;
+    padding: 140px 60px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-family: 'Syncopate', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.6em;
+    color: var(--gold);
+    margin-bottom: 60px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .section-label::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 1px;
+    background: var(--gold);
+  }
+
+  .manifesto-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+  }
+
+  .manifesto-quote {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(28px, 4vw, 52px);
+    font-weight: 300;
+    line-height: 1.3;
+    color: var(--nova);
+  }
+  .manifesto-quote em {
+    font-style: italic;
+    color: var(--aurora);
+  }
+
+  .manifesto-body p {
+    font-size: 15px;
+    line-height: 2;
+    color: rgba(196,181,253,0.75);
+    margin-bottom: 24px;
+  }
+  .manifesto-body p strong {
+    color: var(--comet);
+    font-weight: 500;
+  }
+
+  /* ── PROBLEM ── */
+  .problem-section {
+    position: relative;
+    z-index: 1;
+    padding: 120px 60px;
+    background: linear-gradient(180deg, transparent 0%, rgba(13,13,53,0.6) 50%, transparent 100%);
+  }
+
+  .problem-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .problem-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(32px, 5vw, 64px);
+    font-weight: 300;
+    text-align: center;
+    margin-bottom: 80px;
+    color: var(--nova);
+  }
+  .problem-title span {
+    color: var(--starlight);
+    font-style: italic;
+  }
+
+  .problem-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+  }
+
+  .problem-card {
+    padding: 48px 36px;
+    background: rgba(13,13,53,0.5);
+    border-top: 1px solid rgba(107,53,201,0.3);
+    position: relative;
+    overflow: hidden;
+    transition: background 0.4s;
+  }
+  .problem-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(to right, var(--violet), var(--starlight));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.5s ease;
+  }
+  .problem-card:hover { background: rgba(26,26,94,0.4); }
+  .problem-card:hover::before { transform: scaleX(1); }
+
+  .card-num {
+    font-family: 'Syncopate', sans-serif;
+    font-size: 10px;
+    color: rgba(167,139,250,0.4);
+    letter-spacing: 0.3em;
+    margin-bottom: 24px;
+  }
+  .card-icon {
+    font-size: 28px;
+    margin-bottom: 20px;
+    display: block;
+  }
+  .card-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--aurora);
+    margin-bottom: 16px;
+  }
+  .card-text {
+    font-size: 14px;
+    line-height: 1.9;
+    color: rgba(196,181,253,0.65);
+  }
+
+  /* ── VISION ── */
+  .vision-section {
+    position: relative;
+    z-index: 1;
+    padding: 140px 60px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .vision-center {
+    text-align: center;
+    margin-bottom: 100px;
+  }
+
+  .vision-headline {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(36px, 6vw, 80px);
+    font-weight: 300;
+    line-height: 1.2;
+    color: var(--nova);
+    margin-bottom: 32px;
+  }
+  .vision-headline strong {
+    font-weight: 600;
+    background: linear-gradient(135deg, var(--starlight), var(--gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .vision-desc {
+    font-size: 16px;
+    line-height: 2;
+    color: rgba(196,181,253,0.7);
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  .vision-pillars {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 32px;
+  }
+
+  .pillar {
+    text-align: center;
+    padding: 48px 24px;
+    border: 1px solid rgba(107,53,201,0.2);
+    position: relative;
+    transition: all 0.4s;
+  }
+  .pillar:hover {
+    border-color: rgba(167,139,250,0.5);
+    background: rgba(61,26,120,0.15);
+    transform: translateY(-8px);
+  }
+  .pillar-glyph {
+    font-size: 36px;
+    margin-bottom: 24px;
+    display: block;
+  }
+  .pillar-name {
+    font-family: 'Syncopate', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    color: var(--aurora);
+    margin-bottom: 16px;
+  }
+  .pillar-desc {
+    font-size: 13px;
+    line-height: 1.8;
+    color: rgba(196,181,253,0.6);
+  }
+
+  /* ── VS SECTION ── */
+  .vs-section {
+    position: relative;
+    z-index: 1;
+    padding: 120px 60px;
+    background: linear-gradient(180deg, transparent 0%, rgba(8,8,32,0.8) 50%, transparent 100%);
+  }
+  .vs-inner {
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  .vs-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(28px, 4vw, 52px);
+    font-weight: 300;
+    text-align: center;
+    color: var(--nova);
+    margin-bottom: 72px;
+  }
+  .vs-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0;
+    align-items: start;
+  }
+  .vs-col {
+    padding: 48px 40px;
+  }
+  .vs-col.old {
+    background: rgba(30,20,20,0.4);
+    border: 1px solid rgba(255,100,100,0.1);
+  }
+  .vs-col.new {
+    background: rgba(13,13,53,0.5);
+    border: 1px solid rgba(107,53,201,0.3);
+  }
+  .vs-col-title {
+    font-family: 'Syncopate', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.4em;
+    margin-bottom: 32px;
+  }
+  .vs-col.old .vs-col-title { color: rgba(255,100,100,0.7); }
+  .vs-col.new .vs-col-title { color: var(--gold); }
+
+  .vs-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  .vs-col.old .vs-item { color: rgba(196,150,150,0.7); }
+  .vs-col.new .vs-item { color: rgba(196,181,253,0.8); }
+  .vs-icon { flex-shrink: 0; margin-top: 2px; }
+
+  .vs-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 20px;
+  }
+  .vs-vs {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 48px;
+    font-style: italic;
+    color: rgba(167,139,250,0.3);
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+  }
+
+  /* ── EARLY ACCESS ── */
+  .early-section {
+    position: relative;
+    z-index: 1;
+    padding: 160px 60px;
+    text-align: center;
+  }
+  .early-inner {
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  .nebula-orb {
+    width: 200px;
+    height: 200px;
+    margin: 0 auto 60px;
+    position: relative;
+  }
+  .nebula-orb::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 40%, var(--violet), var(--deep));
+    box-shadow: 0 0 60px rgba(107,53,201,0.5), 0 0 120px rgba(61,26,120,0.3);
+    animation: pulse 4s ease-in-out infinite;
+  }
+  .nebula-orb-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syncopate', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--aurora);
+    z-index: 1;
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  .early-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(32px, 5vw, 56px);
+    font-weight: 300;
+    color: var(--nova);
+    margin-bottom: 24px;
+  }
+  .early-title em {
+    font-style: italic;
+    color: var(--starlight);
+  }
+  .early-desc {
+    font-size: 15px;
+    line-height: 2;
+    color: rgba(196,181,253,0.65);
+    margin-bottom: 48px;
+  }
+
+  .email-form {
+    display: flex;
+    gap: 0;
+    max-width: 480px;
+    margin: 0 auto 20px;
+  }
+  .email-input {
+    flex: 1;
+    padding: 16px 24px;
+    background: rgba(13,13,53,0.8);
+    border: 1px solid rgba(107,53,201,0.4);
+    border-right: none;
+    color: var(--comet);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.3s;
+  }
+  .email-input::placeholder { color: rgba(167,139,250,0.3); }
+  .email-input:focus { border-color: var(--starlight); }
+
+  .email-btn {
+    font-family: 'Syncopate', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    padding: 16px 28px;
+    background: linear-gradient(135deg, var(--violet), var(--astral));
+    color: var(--nova);
+    border: none;
+    cursor: none;
+    transition: all 0.3s;
+    white-space: nowrap;
+  }
+  .email-btn:hover {
+    background: linear-gradient(135deg, var(--astral), var(--starlight));
+    color: var(--void);
+  }
+
+  .form-note {
+    font-size: 11px;
+    color: rgba(167,139,250,0.4);
+    letter-spacing: 0.1em;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    position: relative;
+    z-index: 1;
+    padding: 60px;
+    border-top: 1px solid rgba(107,53,201,0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer-logo {
+    font-family: 'Syncopate', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: rgba(167,139,250,0.4);
+    letter-spacing: 0.3em;
+  }
+  .footer-copy {
+    font-size: 12px;
+    color: rgba(167,139,250,0.3);
+    letter-spacing: 0.1em;
+  }
+  .footer-links {
+    display: flex;
+    gap: 32px;
+    list-style: none;
+  }
+  .footer-links a {
+    font-size: 12px;
+    color: rgba(167,139,250,0.4);
+    text-decoration: none;
+    letter-spacing: 0.1em;
+    transition: color 0.3s;
+  }
+  .footer-links a:hover { color: var(--aurora); }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.5); }
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.05); opacity: 1; }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-15px); }
+  }
+  @keyframes orbit {
+    from { transform: rotate(0deg) translateX(80px) rotate(0deg); }
+    to { transform: rotate(360deg) translateX(80px) rotate(-360deg); }
+  }
+
+  .fade-in-up {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .fade-in-up.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    nav { padding: 24px 30px; }
+    .nav-links { display: none; }
+    .manifesto-grid { grid-template-columns: 1fr; gap: 40px; }
+    .problem-cards { grid-template-columns: 1fr; gap: 2px; }
+    .vision-pillars { grid-template-columns: repeat(2, 1fr); }
+    .vs-grid { grid-template-columns: 1fr; }
+    .vs-divider { display: none; }
+    footer { flex-direction: column; gap: 24px; text-align: center; }
+    .manifesto, .vision-section { padding: 80px 30px; }
+    .problem-section, .vs-section, .early-section { padding: 80px 30px; }
+    footer { padding: 40px 30px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<canvas id="starfield"></canvas>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">ASTE<span>★</span>RIA</a>
+  <ul class="nav-links">
+    <li><a href="#manifesto">비전</a></li>
+    <li><a href="#problem">현실</a></li>
+    <li><a href="#vision">플랫폼</a></li>
+    <li><a href="#early">사전등록</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <p class="hero-eyebrow">K-POP FANDOM PLATFORM</p>
+  <h1 class="hero-title">ASTERIA</h1>
+  <p class="hero-subtitle-en">Where Fans Become the Stars</p>
+  <p class="hero-tagline">
+    팬덤의 권력을 <strong>팬에게 돌려줍니다</strong>.<br>
+    기획사도, 플랫폼도 아닌 — <strong>팬이 주인</strong>이 되는<br>
+    새로운 팬클럽의 시작.
+  </p>
+  <div class="hero-cta-group">
+    <a href="#early" class="btn-primary"><span>사전 등록하기</span></a>
+    <a href="#manifesto" class="btn-ghost">더 알아보기</a>
+  </div>
+
+  <!-- decorative stars -->
+  <div class="star-deco" style="top:20%; left:15%; animation-delay:0s;"></div>
+  <div class="star-deco" style="top:35%; right:20%; animation-delay:1s;"></div>
+  <div class="star-deco" style="top:70%; left:25%; animation-delay:0.5s;"></div>
+  <div class="star-deco" style="top:60%; right:15%; animation-delay:1.5s;"></div>
+  <div class="star-deco" style="top:15%; right:35%; animation-delay:2s;"></div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- MANIFESTO -->
+<section class="manifesto fade-in-up" id="manifesto">
+  <div class="section-label">MANIFESTO</div>
+  <div class="manifesto-grid">
+    <div class="manifesto-quote">
+      "팬의 열정이<br>
+      플랫폼을 키웠지만,<br>
+      <em>그 열매는<br>
+      늘 다른 곳으로<br>
+      흘러갔습니다.</em>"
+    </div>
+    <div class="manifesto-body">
+      <p>팬들이 모이는 공간은 많습니다. 하지만 그 공간의 <strong>규칙을 만드는 것</strong>은 팬이 아닙니다.</p>
+      <p>기획사는 언제든 팬클럽 운영 방식을 바꿀 수 있고, 플랫폼은 알고리즘으로 팬들의 목소리를 통제합니다. 팬들이 만든 문화, 팬들이 쌓은 커뮤니티가 <strong>팬의 것이 아닌 현실</strong>입니다.</p>
+      <p>아스테리아는 이 구조를 바꾸려 합니다. <strong>팬이 규칙을 만들고, 팬이 방향을 결정하고, 팬이 그 열매를 누리는</strong> 플랫폼.</p>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- PROBLEM -->
+<section class="problem-section fade-in-up" id="problem">
+  <div class="problem-inner">
+    <div class="section-label" style="justify-content:center;">현재의 문제</div>
+    <h2 class="problem-title">팬덤은 <span>성장했지만</span><br>팬의 권리는 제자리입니다</h2>
+    <div class="problem-cards">
+      <div class="problem-card">
+        <div class="card-num">01</div>
+        <span class="card-icon">🏢</span>
+        <div class="card-title">기획사 중심 구조</div>
+        <p class="card-text">팬클럽의 모든 규칙과 방향은 기획사가 결정합니다. 팬의 의견은 반영되기 어렵고, 언제든 일방적으로 변경될 수 있습니다.</p>
+      </div>
+      <div class="problem-card">
+        <div class="card-num">02</div>
+        <span class="card-icon">📊</span>
+        <div class="card-title">플랫폼의 데이터 독점</div>
+        <p class="card-text">팬들의 활동 데이터, 소통 기록, 커뮤니티 자산이 플랫폼 기업의 소유가 됩니다. 팬은 콘텐츠를 만들지만 소유하지 못합니다.</p>
+      </div>
+      <div class="problem-card">
+        <div class="card-num">03</div>
+        <span class="card-icon">💸</span>
+        <div class="card-title">일방적인 수익 구조</div>
+        <p class="card-text">팬들의 열정과 소비가 만든 수익은 기획사와 플랫폼으로 집중됩니다. 문화를 만든 팬들에게 돌아오는 것은 없습니다.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VISION -->
+<section class="vision-section fade-in-up" id="vision">
+  <div class="vision-center">
+    <div class="section-label" style="justify-content:center;">ASTERIA의 답</div>
+    <h2 class="vision-headline">팬이 <strong>주인</strong>이 되는<br>팬덤의 새 질서</h2>
+    <p class="vision-desc">아스테리아는 팬덤 문화의 권력을 재분배합니다. 팬이 운영에 참여하고, 결정하고, 그 가치를 함께 나누는 플랫폼을 만듭니다.</p>
+  </div>
+  <div class="vision-pillars">
+    <div class="pillar">
+      <span class="pillar-glyph">🗳️</span>
+      <div class="pillar-name">팬 거버넌스</div>
+      <p class="pillar-desc">팬클럽의 규칙과 방향을 팬들이 직접 투표로 결정합니다</p>
+    </div>
+    <div class="pillar">
+      <span class="pillar-glyph">🔓</span>
+      <div class="pillar-name">데이터 주권</div>
+      <p class="pillar-desc">내가 만든 콘텐츠와 활동 기록은 온전히 나의 것입니다</p>
+    </div>
+    <div class="pillar">
+      <span class="pillar-glyph">🤝</span>
+      <div class="pillar-name">수익 공유</div>
+      <p class="pillar-desc">플랫폼이 성장할수록 팬들도 함께 그 가치를 나눕니다</p>
+    </div>
+    <div class="pillar">
+      <span class="pillar-glyph">🌐</span>
+      <div class="pillar-name">직접 연결</div>
+      <p class="pillar-desc">아티스트와 팬이 중간 권력 없이 직접 소통합니다</p>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- VS SECTION -->
+<section class="vs-section fade-in-up">
+  <div class="vs-inner">
+    <h2 class="vs-title">무엇이 다른가요</h2>
+    <div class="vs-grid">
+      <div class="vs-col old">
+        <div class="vs-col-title">기존 플랫폼</div>
+        <div class="vs-item"><span class="vs-icon">✗</span><span>기획사/플랫폼이 규칙 결정</span></div>
+        <div class="vs-item"><span class="vs-icon">✗</span><span>팬의 데이터가 기업 자산</span></div>
+        <div class="vs-item"><span class="vs-icon">✗</span><span>수익은 소수에게 집중</span></div>
+        <div class="vs-item"><span class="vs-icon">✗</span><span>아티스트-팬 사이 중간 권력</span></div>
+        <div class="vs-item"><span class="vs-icon">✗</span><span>일방적 공지와 통보</span></div>
+      </div>
+      <div class="vs-divider"><div class="vs-vs">VS</div></div>
+      <div class="vs-col new">
+        <div class="vs-col-title">ASTERIA</div>
+        <div class="vs-item"><span class="vs-icon">★</span><span>팬들의 투표로 운영 방향 결정</span></div>
+        <div class="vs-item"><span class="vs-icon">★</span><span>내 데이터는 내가 소유</span></div>
+        <div class="vs-item"><span class="vs-icon">★</span><span>플랫폼 성장을 팬과 공유</span></div>
+        <div class="vs-item"><span class="vs-icon">★</span><span>아티스트-팬 직접 소통 채널</span></div>
+        <div class="vs-item"><span class="vs-icon">★</span><span>팬 커뮤니티가 함께 만드는 문화</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EARLY ACCESS -->
+<section class="early-section fade-in-up" id="early">
+  <div class="early-inner">
+    <div class="nebula-orb">
+      <div class="nebula-orb-text">EARLY<br>ACCESS</div>
+    </div>
+    <h2 class="early-title">첫 번째 별이<br><em>되어주세요</em></h2>
+    <p class="early-desc">아스테리아는 지금 준비 중입니다.<br>사전 등록하시면 오픈 소식을 가장 먼저 받아보실 수 있어요.</p>
+    <div class="email-form">
+      <input type="email" class="email-input" placeholder="이메일 주소를 입력해주세요" id="emailInput">
+      <button class="email-btn" onclick="handleRegister()">등록</button>
+    </div>
+    <p class="form-note">스팸 없음 · 언제든 취소 가능</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">ASTERIA</div>
+  <p class="footer-copy">© 2025 ASTERIA. All rights reserved.</p>
+  <ul class="footer-links">
+    <li><a href="#">Instagram</a></li>
+    <li><a href="#">X (Twitter)</a></li>
+    <li><a href="#">문의하기</a></li>
+  </ul>
+</footer>
+
+<script>
+// Custom cursor
+const cursor = document.getElementById('cursor');
+const cursorRing = document.getElementById('cursorRing');
+let mouseX = 0, mouseY = 0;
+let ringX = 0, ringY = 0;
+
+document.addEventListener('mousemove', (e) => {
+  mouseX = e.clientX; mouseY = e.clientY;
+  cursor.style.left = mouseX + 'px';
+  cursor.style.top = mouseY + 'px';
+});
+
+function animateRing() {
+  ringX += (mouseX - ringX) * 0.12;
+  ringY += (mouseY - ringY) * 0.12;
+  cursorRing.style.left = ringX + 'px';
+  cursorRing.style.top = ringY + 'px';
+  requestAnimationFrame(animateRing);
+}
+animateRing();
+
+// Starfield
+const canvas = document.getElementById('starfield');
+const ctx = canvas.getContext('2d');
+let stars = [];
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+for (let i = 0; i < 280; i++) {
+  stars.push({
+    x: Math.random() * window.innerWidth,
+    y: Math.random() * window.innerHeight,
+    r: Math.random() * 1.5,
+    speed: Math.random() * 0.3 + 0.05,
+    opacity: Math.random(),
+    twinkleSpeed: Math.random() * 0.02 + 0.005,
+    twinkleDir: Math.random() > 0.5 ? 1 : -1
+  });
+}
+
+function drawStars() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  stars.forEach(s => {
+    s.opacity += s.twinkleSpeed * s.twinkleDir;
+    if (s.opacity >= 1 || s.opacity <= 0.1) s.twinkleDir *= -1;
+    s.y -= s.speed;
+    if (s.y < 0) { s.y = canvas.height; s.x = Math.random() * canvas.width; }
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(167, 139, 250, ${s.opacity * 0.8})`;
+    ctx.fill();
+  });
+  requestAnimationFrame(drawStars);
+}
+drawStars();
+
+// Scroll animations
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) entry.target.classList.add('visible');
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.fade-in-up').forEach(el => observer.observe(el));
+
+// Email registration
+function handleRegister() {
+  const email = document.getElementById('emailInput').value;
+  if (!email || !email.includes('@')) {
+    alert('올바른 이메일 주소를 입력해주세요.');
+    return;
+  }
+  alert(`✨ 감사합니다!\n${email} 으로 오픈 소식을 보내드릴게요.`);
+  document.getElementById('emailInput').value = '';
+}
+</script>
+</body>
+</html>
