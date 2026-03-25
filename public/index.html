@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ASTERIA — 팬이 주권을 갖는 우주</title>
   <link
-    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Noto+Sans+KR:wght@300;400;500;700&family=Orbitron:wght@400;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;900&family=Noto+Sans+KR:wght@300;400;500;700&family=Orbitron:wght@400;700;900&display=swap"
     rel="stylesheet" />
   <style>
     *,
@@ -27,13 +27,13 @@
       --text-primary: #f0eeff;
       --text-secondary: #a0a8cc;
       --text-muted: #556077;
-      --sidebar-w: 260px;
-      --sidebar-bg: rgba(7, 3, 15, 0.97);
+      --sidebar-w: 270px;
     }
 
     html,
     body {
       height: 100%;
+      overflow: hidden;
     }
 
     body {
@@ -42,10 +42,8 @@
       font-family: 'Noto Sans KR', sans-serif;
       font-weight: 300;
       display: flex;
-      overflow: hidden;
     }
 
-    /* ── 별 캔버스 ── */
     #star-canvas {
       position: fixed;
       inset: 0;
@@ -56,9 +54,9 @@
     /* ── 사이드바 ── */
     .sidebar {
       width: var(--sidebar-w);
-      min-height: 100vh;
+      height: 100vh;
       flex-shrink: 0;
-      background: var(--sidebar-bg);
+      background: rgba(7, 3, 15, 0.97);
       border-right: 1px solid rgba(255, 255, 255, 0.06);
       display: flex;
       flex-direction: column;
@@ -67,13 +65,12 @@
       overflow-y: auto;
     }
 
-    /* 로고 */
     .sidebar-logo {
       padding: 1.4rem 1.4rem 1rem;
-      font-family: 'Cinzel', serif;
-      font-size: 1.2rem;
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 1.1rem;
       font-weight: 900;
-      letter-spacing: 0.25em;
+      letter-spacing: 0.15em;
       color: var(--quasar-gold);
       border-bottom: 1px solid rgba(255, 255, 255, 0.05);
       text-shadow: 0 0 20px rgba(240, 192, 64, 0.4);
@@ -83,21 +80,16 @@
       color: var(--nova-purple);
     }
 
-    /* 로그인 박스 */
     .auth-box {
       padding: 1.2rem 1.4rem;
       border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
 
-    .auth-box-loggedin {
-      display: none;
-    }
-
     .auth-greeting {
-      font-size: 0.75rem;
+      font-size: 0.78rem;
       color: var(--text-muted);
-      margin-bottom: 0.5rem;
-      letter-spacing: 0.05em;
+      line-height: 1.6;
+      margin-bottom: 0.6rem;
     }
 
     .auth-greeting strong {
@@ -109,9 +101,10 @@
       display: flex;
       flex-direction: column;
       gap: 0.6rem;
+      margin-top: 0.8rem;
     }
 
-    .btn-auth-login {
+    .btn-login {
       width: 100%;
       padding: 0.65rem;
       background: transparent;
@@ -123,16 +116,15 @@
       font-weight: 600;
       border-radius: 3px;
       cursor: pointer;
-      transition: all 0.2s;
       text-transform: uppercase;
+      transition: all 0.2s;
     }
 
-    .btn-auth-login:hover {
+    .btn-login:hover {
       background: rgba(240, 192, 64, 0.08);
-      box-shadow: 0 0 12px rgba(240, 192, 64, 0.2);
     }
 
-    .btn-auth-register {
+    .btn-register {
       width: 100%;
       padding: 0.65rem;
       background: linear-gradient(135deg, var(--quasar-gold), #ffaa30);
@@ -144,15 +136,15 @@
       font-weight: 700;
       border-radius: 3px;
       cursor: pointer;
-      transition: filter 0.2s;
       text-transform: uppercase;
+      transition: filter 0.2s;
     }
 
-    .btn-auth-register:hover {
+    .btn-register:hover {
       filter: brightness(1.1);
     }
 
-    .btn-auth-dashboard {
+    .btn-dashboard {
       width: 100%;
       padding: 0.65rem;
       background: rgba(184, 127, 255, 0.12);
@@ -164,15 +156,11 @@
       font-weight: 600;
       border-radius: 3px;
       cursor: pointer;
-      transition: all 0.2s;
       text-transform: uppercase;
+      transition: all 0.2s;
     }
 
-    .btn-auth-dashboard:hover {
-      background: rgba(184, 127, 255, 0.2);
-    }
-
-    .btn-auth-logout {
+    .btn-logout {
       width: 100%;
       padding: 0.5rem;
       background: transparent;
@@ -185,17 +173,15 @@
       transition: all 0.2s;
     }
 
-    .btn-auth-logout:hover {
+    .btn-logout:hover {
       color: var(--text-primary);
-      border-color: rgba(255, 255, 255, 0.2);
     }
 
-    /* 사이드바 섹션 */
     .sidebar-section {
       border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
 
-    .sidebar-section-header {
+    .sb-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -204,11 +190,11 @@
       transition: background 0.2s;
     }
 
-    .sidebar-section-header:hover {
+    .sb-header:hover {
       background: rgba(255, 255, 255, 0.03);
     }
 
-    .sidebar-section-title {
+    .sb-title {
       font-size: 0.72rem;
       font-weight: 500;
       letter-spacing: 0.12em;
@@ -219,51 +205,43 @@
       gap: 0.5rem;
     }
 
-    .sidebar-section-title .icon {
-      font-size: 0.9rem;
-    }
-
-    .sidebar-arrow {
+    .sb-arrow {
       font-size: 0.6rem;
       color: var(--text-muted);
       transition: transform 0.25s;
     }
 
-    .sidebar-section.open .sidebar-arrow {
+    .sidebar-section.open .sb-arrow {
       transform: rotate(90deg);
     }
 
-    .sidebar-section-body {
+    .sb-body {
       display: none;
-      padding: 0 0 0.5rem;
     }
 
-    .sidebar-section.open .sidebar-section-body {
+    .sidebar-section.open .sb-body {
       display: block;
     }
 
-    /* 리그 안내 */
     .league-list {
       list-style: none;
     }
 
-    .league-item {}
-
-    .league-item-header {
+    .li-header {
       display: flex;
       align-items: center;
       gap: 0.7rem;
       padding: 0.6rem 1.4rem 0.6rem 1.6rem;
       cursor: pointer;
-      transition: background 0.2s;
       font-size: 0.8rem;
+      transition: background 0.2s;
     }
 
-    .league-item-header:hover {
+    .li-header:hover {
       background: rgba(255, 255, 255, 0.04);
     }
 
-    .league-orb {
+    .l-orb {
       width: 22px;
       height: 22px;
       border-radius: 50%;
@@ -277,57 +255,52 @@
       border: 1px solid;
     }
 
-    .orb-q {
+    .oq {
       background: radial-gradient(circle at 35% 35%, #ffe87a, #f0c040);
       border-color: #f0c040;
-      color: #3a2000;
+      color: #3a2000
     }
 
-    .orb-n {
+    .on {
       background: radial-gradient(circle at 35% 35%, #d4aaff, #b87fff);
       border-color: #b87fff;
-      color: #1e0050;
+      color: #1e0050
     }
 
-    .orb-p {
+    .op {
       background: radial-gradient(circle at 35% 35%, #80ffe8, #40e0d0);
       border-color: #40e0d0;
-      color: #003830;
+      color: #003830
     }
 
-    .orb-s {
+    .os {
       background: radial-gradient(circle at 35% 35%, #a0c8ff, #60a8ff);
       border-color: #60a8ff;
-      color: #001040;
+      color: #001040
     }
 
-    .orb-d {
+    .od {
       background: radial-gradient(circle at 35% 35%, #c0c8d8, #8899bb);
       border-color: #8899bb;
-      color: #0a0f1e;
+      color: #0a0f1e
     }
 
-    .league-item-name {
-      font-weight: 400;
-    }
-
-    .league-item-count {
+    .l-count {
       font-size: 0.65rem;
       color: var(--text-muted);
       margin-left: auto;
     }
 
-    .league-item-arrow {
+    .l-arrow {
       font-size: 0.55rem;
       color: var(--text-muted);
       transition: transform 0.2s;
     }
 
-    .league-item.open .league-item-arrow {
+    .league-item.open .l-arrow {
       transform: rotate(90deg);
     }
 
-    /* 팬덤 목록 */
     .fandom-list {
       display: none;
       list-style: none;
@@ -354,15 +327,14 @@
       color: var(--text-primary);
     }
 
-    .fandom-rank {
+    .f-rank {
       font-family: 'Orbitron', monospace;
       font-size: 0.55rem;
       color: var(--text-muted);
       min-width: 14px;
     }
 
-    /* 내 아스트라 성궤 */
-    .my-ark {
+    .ark-box {
       padding: 1rem 1.4rem;
     }
 
@@ -388,7 +360,6 @@
       font-weight: 900;
       color: #fff;
       border: 2px solid rgba(184, 127, 255, 0.5);
-      box-shadow: 0 0 16px rgba(184, 127, 255, 0.3);
     }
 
     .ark-name {
@@ -399,7 +370,7 @@
       margin-bottom: 0.3rem;
     }
 
-    .ark-league {
+    .ark-league-txt {
       font-family: 'Orbitron', monospace;
       font-size: 0.55rem;
       letter-spacing: 0.15em;
@@ -413,24 +384,19 @@
       justify-content: space-around;
     }
 
-    .ark-stat-item {
-      text-align: center;
-    }
-
-    .ark-stat-val {
+    .ark-stat-v {
       font-family: 'Cinzel', serif;
       font-size: 0.9rem;
       font-weight: 600;
       color: var(--quasar-gold);
     }
 
-    .ark-stat-label {
+    .ark-stat-l {
       font-size: 0.58rem;
       color: var(--text-muted);
-      letter-spacing: 0.08em;
     }
 
-    .ark-login-prompt {
+    .prompt-txt {
       font-size: 0.75rem;
       color: var(--text-muted);
       text-align: center;
@@ -438,8 +404,7 @@
       line-height: 1.6;
     }
 
-    /* 내 아스트라 정보 */
-    .my-info {
+    .info-box {
       padding: 0.8rem 1.4rem 1rem;
     }
 
@@ -455,30 +420,30 @@
       border-bottom: none;
     }
 
-    .info-key {
+    .info-k {
       font-size: 0.68rem;
       color: var(--text-muted);
-      letter-spacing: 0.08em;
     }
 
-    .info-val {
+    .info-v {
       font-size: 0.75rem;
       font-weight: 500;
     }
 
-    /* ── 메인 콘텐츠 ── */
+    /* ── 메인 ── */
     .main-content {
       flex: 1;
       height: 100vh;
       overflow-y: auto;
       position: relative;
       z-index: 1;
+      display: flex;
+      flex-direction: column;
     }
 
-    /* 상단 헤더 */
     .main-header {
-      padding: 1.2rem 2rem;
-      background: rgba(3, 1, 10, 0.8);
+      padding: 1rem 2rem;
+      background: rgba(3, 1, 10, 0.85);
       border-bottom: 1px solid rgba(255, 255, 255, 0.05);
       backdrop-filter: blur(8px);
       position: sticky;
@@ -487,9 +452,10 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      flex-shrink: 0;
     }
 
-    .main-header-title {
+    .mh-title {
       font-family: 'Orbitron', monospace;
       font-size: 0.65rem;
       letter-spacing: 0.3em;
@@ -497,34 +463,40 @@
       text-transform: uppercase;
     }
 
-    .main-header-sub {
-      font-size: 0.72rem;
+    .mh-sub {
+      font-size: 0.7rem;
       color: var(--text-muted);
+      margin-top: 0.2rem;
     }
 
-    /* 퀘이사 리그 섹션 */
-    .quasar-section {
-      padding: 2.5rem 2rem;
+    /* ── 도넛 섹션 ── */
+    .donut-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem 1rem;
     }
 
-    .section-eyebrow {
+    .s-eyebrow {
       font-family: 'Orbitron', monospace;
-      font-size: 0.6rem;
+      font-size: 0.62rem;
       letter-spacing: 0.35em;
       color: var(--nova-purple);
       text-transform: uppercase;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.4rem;
     }
 
-    .section-heading {
-      font-family: 'Cinzel', serif;
+    .s-heading {
+      font-family: 'Cinzel Decorative', serif;
       font-size: 1.6rem;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      margin-bottom: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      text-align: center;
     }
 
-    .section-heading em {
+    .s-heading em {
       font-style: normal;
       background: linear-gradient(90deg, var(--quasar-gold), var(--nova-purple));
       -webkit-background-clip: text;
@@ -532,191 +504,159 @@
       background-clip: text;
     }
 
-    /* 퀘이사 맵 */
-    .quasar-map {
+    /* 도넛 컨테이너 */
+    .donut-container {
       position: relative;
-      width: 100%;
-      max-width: 700px;
-      margin: 0 auto;
+      width: min(560px, calc(100vh - 220px));
       aspect-ratio: 1;
     }
 
-    /* 중앙 연결선 */
-    .quasar-map::before {
-      content: '';
+    /* SVG */
+    .donut-svg {
       position: absolute;
       inset: 0;
-      z-index: 0;
-      background:
-        radial-gradient(ellipse 2px 40% at 50% 50%, rgba(184, 127, 255, 0.3) 0%, transparent 100%),
-        radial-gradient(ellipse 40% 2px at 50% 50%, rgba(184, 127, 255, 0.3) 0%, transparent 100%);
-    }
-
-    /* 팬덤 카드 공통 */
-    .fandom-card {
-      position: absolute;
-      z-index: 2;
-      background: rgba(13, 5, 32, 0.9);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 8px;
-      padding: 1.2rem;
-      text-align: center;
-      cursor: pointer;
-      transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
-      backdrop-filter: blur(8px);
-    }
-
-    .fandom-card:hover {
-      transform: scale(1.04);
-    }
-
-    /* 1위 - 중앙 */
-    .fandom-card.rank-1 {
-      width: 200px;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      border-color: rgba(240, 192, 64, 0.4);
-      box-shadow: 0 0 40px rgba(240, 192, 64, 0.15);
-      background: rgba(20, 10, 0, 0.95);
-    }
-
-    .fandom-card.rank-1:hover {
-      transform: translate(-50%, -50%) scale(1.04);
-      box-shadow: 0 0 60px rgba(240, 192, 64, 0.25);
-    }
-
-    /* 2위 - 북(위) */
-    .fandom-card.rank-2 {
-      width: 160px;
-      top: 4%;
-      left: 50%;
-      transform: translateX(-50%);
-      border-color: rgba(184, 127, 255, 0.3);
-      box-shadow: 0 0 24px rgba(184, 127, 255, 0.1);
-    }
-
-    .fandom-card.rank-2:hover {
-      transform: translateX(-50%) scale(1.04);
-    }
-
-    /* 3위 - 동(오른쪽) */
-    .fandom-card.rank-3 {
-      width: 160px;
-      top: 50%;
-      right: 2%;
-      transform: translateY(-50%);
-      border-color: rgba(64, 224, 208, 0.3);
-      box-shadow: 0 0 24px rgba(64, 224, 208, 0.1);
-    }
-
-    .fandom-card.rank-3:hover {
-      transform: translateY(-50%) scale(1.04);
-    }
-
-    /* 4위 - 남(아래) */
-    .fandom-card.rank-4 {
-      width: 160px;
-      bottom: 4%;
-      left: 50%;
-      transform: translateX(-50%);
-      border-color: rgba(96, 168, 255, 0.3);
-      box-shadow: 0 0 24px rgba(96, 168, 255, 0.1);
-    }
-
-    .fandom-card.rank-4:hover {
-      transform: translateX(-50%) scale(1.04);
-    }
-
-    /* 5위 - 서(왼쪽) */
-    .fandom-card.rank-5 {
-      width: 160px;
-      top: 50%;
-      left: 2%;
-      transform: translateY(-50%);
-      border-color: rgba(136, 153, 187, 0.3);
-      box-shadow: 0 0 24px rgba(136, 153, 187, 0.1);
-    }
-
-    .fandom-card.rank-5:hover {
-      transform: translateY(-50%) scale(1.04);
-    }
-
-    /* 연결선 SVG */
-    .quasar-lines {
-      position: absolute;
-      inset: 0;
-      z-index: 1;
-      pointer-events: none;
       width: 100%;
       height: 100%;
     }
 
-    /* 카드 내부 */
-    .fc-rank {
-      font-family: 'Orbitron', monospace;
-      font-size: 0.55rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      margin-bottom: 0.5rem;
+    /* 중앙 1위 */
+    .center-card {
+      position: absolute;
+      width: 32%;
+      aspect-ratio: 1;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: rgba(15, 7, 2, 0.97);
+      border-radius: 50%;
+      border: 2px solid rgba(240, 192, 64, 0.6);
+      box-shadow: 0 0 50px rgba(240, 192, 64, 0.25), inset 0 0 30px rgba(240, 192, 64, 0.05);
+      cursor: pointer;
+      padding: 0.8rem;
+      transition: box-shadow 0.3s;
     }
 
-    .fc-emblem {
-      width: 48px;
-      height: 48px;
+    .center-card:hover {
+      box-shadow: 0 0 80px rgba(240, 192, 64, 0.4), inset 0 0 40px rgba(240, 192, 64, 0.1);
+    }
+
+    /* 섹터 카드 (도넛 링 위에 올라감) */
+    .sector-card {
+      position: absolute;
+      z-index: 4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      cursor: pointer;
+      transition: opacity 0.3s;
+      width: 22%;
+    }
+
+    .sector-card:hover {
+      opacity: 0.8;
+    }
+
+    /* 위(2위) */
+    .s-top {
+      top: 3%;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    /* 오른쪽(3위) */
+    .s-right {
+      top: 50%;
+      right: 3%;
+      transform: translateY(-50%);
+    }
+
+    /* 아래(4위) */
+    .s-bottom {
+      bottom: 3%;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    /* 왼쪽(5위) */
+    .s-left {
+      top: 50%;
+      left: 3%;
+      transform: translateY(-50%);
+    }
+
+    /* 카드 내용 */
+    .c-rank {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.58rem;
+      letter-spacing: 0.18em;
+      margin-bottom: 0.25rem;
+    }
+
+    .c-emblem {
       border-radius: 50%;
-      margin: 0 auto 0.6rem;
+      margin: 0 auto 0.3rem;
       display: flex;
       align-items: center;
       justify-content: center;
       font-family: 'Cinzel', serif;
-      font-size: 1rem;
       font-weight: 900;
       border: 2px solid;
     }
 
-    .rank-1 .fc-emblem {
-      width: 64px;
-      height: 64px;
-      font-size: 1.3rem;
+    .center-card .c-emblem {
+      width: 48px;
+      height: 48px;
+      font-size: 1.1rem;
     }
 
-    .fc-name {
-      font-family: 'Cinzel', serif;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      margin-bottom: 0.3rem;
-    }
-
-    .rank-1 .fc-name {
-      font-size: 0.95rem;
-    }
-
-    .rank-2 .fc-name,
-    .rank-3 .fc-name,
-    .rank-4 .fc-name,
-    .rank-5 .fc-name {
+    .sector-card .c-emblem {
+      width: 32px;
+      height: 32px;
       font-size: 0.8rem;
     }
 
-    .fc-artist {
-      font-size: 0.68rem;
-      color: var(--text-muted);
-      margin-bottom: 0.5rem;
+    .c-name {
+      font-family: 'Cinzel', serif;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      line-height: 1.2;
     }
 
-    .rank-1 .fc-artist {
-      font-size: 0.75rem;
+    .center-card .c-name {
+      font-size: 0.88rem;
+      margin-bottom: 0.2rem;
     }
 
-    .fc-power {
-      font-family: 'Orbitron', monospace;
-      font-size: 0.6rem;
-      letter-spacing: 0.1em;
-    }
-
-    .rank-1 .fc-power {
+    .sector-card .c-name {
       font-size: 0.7rem;
+      margin-bottom: 0.15rem;
+    }
+
+    .c-artist {
+      font-size: 0.6rem;
+      color: var(--text-muted);
+      margin-bottom: 0.2rem;
+    }
+
+    .c-power {
+      font-family: 'Orbitron', monospace;
+      letter-spacing: 0.06em;
+    }
+
+    .center-card .c-power {
+      font-size: 0.62rem;
+    }
+
+    .sector-card .c-power {
+      font-size: 0.55rem;
     }
 
     /* 모달 */
@@ -749,7 +689,6 @@
       position: relative;
       transform: translateY(20px);
       transition: transform 0.3s;
-      box-shadow: 0 0 60px rgba(184, 127, 255, 0.12);
     }
 
     .modal-overlay.active .modal {
@@ -765,11 +704,6 @@
       color: var(--text-muted);
       font-size: 1.1rem;
       cursor: pointer;
-      transition: color 0.2s;
-    }
-
-    .modal-close:hover {
-      color: var(--text-primary);
     }
 
     .modal-title {
@@ -787,11 +721,11 @@
       margin-bottom: 1.8rem;
     }
 
-    .form-group {
+    .fg {
       margin-bottom: 1rem;
     }
 
-    .form-group label {
+    .fg label {
       display: block;
       font-size: 0.65rem;
       letter-spacing: 0.15em;
@@ -801,7 +735,7 @@
       font-family: 'Orbitron', monospace;
     }
 
-    .form-group input {
+    .fg input {
       width: 100%;
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.1);
@@ -814,11 +748,11 @@
       transition: border-color 0.25s;
     }
 
-    .form-group input:focus {
+    .fg input:focus {
       border-color: rgba(184, 127, 255, 0.5);
     }
 
-    .form-group input::placeholder {
+    .fg input::placeholder {
       color: var(--text-muted);
     }
 
@@ -884,158 +818,102 @@
     .toast.error {
       border-color: rgba(255, 80, 80, 0.4);
     }
-
-    /* 하단 리그 안내 */
-    .league-info-section {
-      padding: 2rem 2rem 3rem;
-    }
-
-    .league-cards-row {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-
-    .league-info-card {
-      flex: 1;
-      min-width: 120px;
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 6px;
-      padding: 1rem;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.25s;
-    }
-
-    .league-info-card:hover {
-      background: rgba(255, 255, 255, 0.05);
-      transform: translateY(-3px);
-    }
-
-    .lic-orb {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      margin: 0 auto 0.6rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Cinzel', serif;
-      font-size: 0.75rem;
-      font-weight: 700;
-      border: 1px solid;
-    }
-
-    .lic-name {
-      font-family: 'Cinzel', serif;
-      font-size: 0.78rem;
-      font-weight: 600;
-      margin-bottom: 0.2rem;
-    }
-
-    .lic-count {
-      font-size: 0.65rem;
-      color: var(--text-muted);
-    }
   </style>
 </head>
 
 <body>
-
   <canvas id="star-canvas"></canvas>
 
   <!-- 사이드바 -->
   <aside class="sidebar">
     <div class="sidebar-logo">ASTER<span>IA</span></div>
 
-    <!-- 로그인/회원가입 -->
     <div class="auth-box">
-      <div id="auth-logged-out">
+      <div id="auth-out">
         <div class="auth-greeting">로그인하고<br />나만의 아스트라를 만나보세요!</div>
-        <div class="auth-buttons" style="margin-top:0.8rem">
-          <button class="btn-auth-login" onclick="openModal('login')">로그인</button>
-          <button class="btn-auth-register" onclick="openModal('register')">제국에 참여하기</button>
+        <div class="auth-buttons">
+          <button class="btn-login" onclick="openModal('login')">로그인</button>
+          <button class="btn-register" onclick="openModal('register')">제국에 참여하기</button>
         </div>
       </div>
-      <div id="auth-logged-in" style="display:none">
-        <div class="auth-greeting">환영합니다, <strong id="auth-nickname">...</strong></div>
-        <div class="auth-buttons" style="margin-top:0.8rem">
-          <button class="btn-auth-dashboard" onclick="location.href='/dashboard.html'">내 대시보드</button>
-          <button class="btn-auth-logout" onclick="logout()">로그아웃</button>
+      <div id="auth-in" style="display:none">
+        <div class="auth-greeting">환영합니다,<br /><strong id="auth-nick">...</strong></div>
+        <div class="auth-buttons">
+          <button class="btn-dashboard" onclick="location.href='/dashboard.html'">내 대시보드</button>
+          <button class="btn-logout" onclick="logout()">로그아웃</button>
         </div>
       </div>
     </div>
 
     <!-- 리그 안내 -->
-    <div class="sidebar-section" id="section-league">
-      <div class="sidebar-section-header" onclick="toggleSection('league')">
-        <div class="sidebar-section-title"><span class="icon">🌌</span> 리그 안내</div>
-        <span class="sidebar-arrow">▶</span>
+    <div class="sidebar-section" id="sec-league">
+      <div class="sb-header" onclick="toggleSec('league')">
+        <div class="sb-title"><span>🌌</span>리그 안내</div>
+        <span class="sb-arrow">▶</span>
       </div>
-      <div class="sidebar-section-body">
+      <div class="sb-body">
         <ul class="league-list">
-          <li class="league-item" id="li-quasar">
-            <div class="league-item-header" onclick="toggleLeague('quasar')">
-              <div class="league-orb orb-q">Q</div>
-              <span class="league-item-name color-quasar" style="color:var(--quasar-gold)">퀘이사</span>
-              <span class="league-item-count">상위 5개</span>
-              <span class="league-item-arrow">▶</span>
+          <li class="league-item" id="li-q">
+            <div class="li-header" onclick="toggleLi('q')">
+              <div class="l-orb oq">Q</div>
+              <span style="color:var(--quasar-gold)">퀘이사</span>
+              <span class="l-count">상위 5개</span>
+              <span class="l-arrow">▶</span>
             </div>
-            <ul class="fandom-list" id="fl-quasar">
-              <li class="fandom-item"><span class="fandom-rank">1</span> 아르테미스</li>
-              <li class="fandom-item"><span class="fandom-rank">2</span> 스텔라리움</li>
-              <li class="fandom-item"><span class="fandom-rank">3</span> 루나틱스</li>
-              <li class="fandom-item"><span class="fandom-rank">4</span> 오로라 팩션</li>
-              <li class="fandom-item"><span class="fandom-rank">5</span> 갤럭시아</li>
+            <ul class="fandom-list">
+              <li class="fandom-item"><span class="f-rank">1</span>아르테미스</li>
+              <li class="fandom-item"><span class="f-rank">2</span>스텔라리움</li>
+              <li class="fandom-item"><span class="f-rank">3</span>루나틱스</li>
+              <li class="fandom-item"><span class="f-rank">4</span>오로라 팩션</li>
+              <li class="fandom-item"><span class="f-rank">5</span>갤럭시아</li>
             </ul>
           </li>
-          <li class="league-item" id="li-nova">
-            <div class="league-item-header" onclick="toggleLeague('nova')">
-              <div class="league-orb orb-n">N</div>
-              <span class="league-item-name" style="color:var(--nova-purple)">노바</span>
-              <span class="league-item-count">다음 10개</span>
-              <span class="league-item-arrow">▶</span>
+          <li class="league-item" id="li-n">
+            <div class="li-header" onclick="toggleLi('n')">
+              <div class="l-orb on">N</div>
+              <span style="color:var(--nova-purple)">노바</span>
+              <span class="l-count">다음 10개</span>
+              <span class="l-arrow">▶</span>
             </div>
-            <ul class="fandom-list" id="fl-nova">
-              <li class="fandom-item"><span class="fandom-rank">1</span> 솔라 엠파이어</li>
-              <li class="fandom-item"><span class="fandom-rank">2</span> 네뷸라 크루</li>
-              <li class="fandom-item"><span class="fandom-rank">3</span> 코스모스 팩트</li>
+            <ul class="fandom-list">
+              <li class="fandom-item"><span class="f-rank">1</span>솔라 엠파이어</li>
+              <li class="fandom-item"><span class="f-rank">2</span>네뷸라 크루</li>
+              <li class="fandom-item"><span class="f-rank">3</span>코스모스 팩트</li>
             </ul>
           </li>
-          <li class="league-item" id="li-planet">
-            <div class="league-item-header" onclick="toggleLeague('planet')">
-              <div class="league-orb orb-p">P</div>
-              <span class="league-item-name" style="color:var(--planet-teal)">플래닛</span>
-              <span class="league-item-count">다음 20개</span>
-              <span class="league-item-arrow">▶</span>
+          <li class="league-item" id="li-p">
+            <div class="li-header" onclick="toggleLi('p')">
+              <div class="l-orb op">P</div>
+              <span style="color:var(--planet-teal)">플래닛</span>
+              <span class="l-count">다음 20개</span>
+              <span class="l-arrow">▶</span>
             </div>
-            <ul class="fandom-list" id="fl-planet">
-              <li class="fandom-item"><span class="fandom-rank">1</span> 테라 팬덤</li>
-              <li class="fandom-item"><span class="fandom-rank">2</span> 오빗 클럽</li>
+            <ul class="fandom-list">
+              <li class="fandom-item"><span class="f-rank">1</span>테라 팬덤</li>
+              <li class="fandom-item"><span class="f-rank">2</span>오빗 클럽</li>
             </ul>
           </li>
-          <li class="league-item" id="li-star">
-            <div class="league-item-header" onclick="toggleLeague('star')">
-              <div class="league-orb orb-s">S</div>
-              <span class="league-item-name" style="color:var(--star-blue)">스타</span>
-              <span class="league-item-count">다음 40개</span>
-              <span class="league-item-arrow">▶</span>
+          <li class="league-item" id="li-s">
+            <div class="li-header" onclick="toggleLi('s')">
+              <div class="l-orb os">S</div>
+              <span style="color:var(--star-blue)">스타</span>
+              <span class="l-count">다음 40개</span>
+              <span class="l-arrow">▶</span>
             </div>
-            <ul class="fandom-list" id="fl-star">
-              <li class="fandom-item"><span class="fandom-rank">1</span> 스타더스트</li>
-              <li class="fandom-item"><span class="fandom-rank">2</span> 라이트크루</li>
+            <ul class="fandom-list">
+              <li class="fandom-item"><span class="f-rank">1</span>스타더스트</li>
+              <li class="fandom-item"><span class="f-rank">2</span>라이트크루</li>
             </ul>
           </li>
-          <li class="league-item" id="li-dust">
-            <div class="league-item-header" onclick="toggleLeague('dust')">
-              <div class="league-orb orb-d">D</div>
-              <span class="league-item-name" style="color:var(--dust-gray)">더스트</span>
-              <span class="league-item-count">그 외</span>
-              <span class="league-item-arrow">▶</span>
+          <li class="league-item" id="li-d">
+            <div class="li-header" onclick="toggleLi('d')">
+              <div class="l-orb od">D</div>
+              <span style="color:var(--dust-gray)">더스트</span>
+              <span class="l-count">그 외</span>
+              <span class="l-arrow">▶</span>
             </div>
-            <ul class="fandom-list" id="fl-dust">
-              <li class="fandom-item"><span class="fandom-rank">1</span> 퍼스트 스타</li>
+            <ul class="fandom-list">
+              <li class="fandom-item"><span class="f-rank">1</span>퍼스트 스타</li>
             </ul>
           </li>
         </ul>
@@ -1043,27 +921,27 @@
     </div>
 
     <!-- 내 아스트라 성궤 -->
-    <div class="sidebar-section" id="section-ark">
-      <div class="sidebar-section-header" onclick="toggleSection('ark')">
-        <div class="sidebar-section-title"><span class="icon">✦</span> 내 아스트라 성궤</div>
-        <span class="sidebar-arrow">▶</span>
+    <div class="sidebar-section" id="sec-ark">
+      <div class="sb-header" onclick="toggleSec('ark')">
+        <div class="sb-title"><span>✦</span>내 아스트라 성궤</div>
+        <span class="sb-arrow">▶</span>
       </div>
-      <div class="sidebar-section-body">
-        <div class="my-ark">
-          <div class="ark-card" id="ark-card">
-            <div class="ark-login-prompt" id="ark-login-prompt">로그인하면 나만의<br />아스트라 성궤를 확인할 수 있어요.</div>
+      <div class="sb-body">
+        <div class="ark-box">
+          <div class="ark-card">
+            <div class="prompt-txt" id="ark-prompt">로그인하면 나만의<br />아스트라 성궤를 확인할 수 있어요.</div>
             <div id="ark-info" style="display:none">
-              <div class="ark-avatar" id="ark-avatar">?</div>
-              <div class="ark-name" id="ark-name">-</div>
-              <div class="ark-league" id="ark-league">DUST LEAGUE</div>
+              <div class="ark-avatar" id="ark-av">?</div>
+              <div class="ark-name" id="ark-nm">-</div>
+              <div class="ark-league-txt" id="ark-lg">DUST LEAGUE</div>
               <div class="ark-stats">
-                <div class="ark-stat-item">
-                  <div class="ark-stat-val" id="ark-level">1</div>
-                  <div class="ark-stat-label">LEVEL</div>
+                <div>
+                  <div class="ark-stat-v" id="ark-lv">1</div>
+                  <div class="ark-stat-l">LEVEL</div>
                 </div>
-                <div class="ark-stat-item">
-                  <div class="ark-stat-val" id="ark-ap">0</div>
-                  <div class="ark-stat-label">AP</div>
+                <div>
+                  <div class="ark-stat-v" id="ark-ap">0</div>
+                  <div class="ark-stat-l">AP</div>
                 </div>
               </div>
             </div>
@@ -1073,145 +951,133 @@
     </div>
 
     <!-- 내 아스트라 정보 -->
-    <div class="sidebar-section" id="section-info">
-      <div class="sidebar-section-header" onclick="toggleSection('info')">
-        <div class="sidebar-section-title"><span class="icon">⚡</span> 내 아스트라 정보</div>
-        <span class="sidebar-arrow">▶</span>
+    <div class="sidebar-section" id="sec-info">
+      <div class="sb-header" onclick="toggleSec('info')">
+        <div class="sb-title"><span>⚡</span>내 아스트라 정보</div>
+        <span class="sb-arrow">▶</span>
       </div>
-      <div class="sidebar-section-body">
-        <div class="my-info" id="my-info">
-          <div class="ark-login-prompt" id="info-login-prompt">로그인이 필요합니다.</div>
-          <div id="info-content" style="display:none">
-            <div class="info-row"><span class="info-key">닉네임</span><span class="info-val" id="info-nick">-</span></div>
-            <div class="info-row"><span class="info-key">리그</span><span class="info-val" id="info-league">-</span></div>
-            <div class="info-row"><span class="info-key">레벨</span><span class="info-val" id="info-level">-</span></div>
-            <div class="info-row"><span class="info-key">활동 포인트</span><span class="info-val" id="info-ap"
+      <div class="sb-body">
+        <div class="info-box">
+          <div class="prompt-txt" id="info-prompt">로그인이 필요합니다.</div>
+          <div id="info-data" style="display:none">
+            <div class="info-row"><span class="info-k">닉네임</span><span class="info-v" id="i-nick">-</span></div>
+            <div class="info-row"><span class="info-k">리그</span><span class="info-v" id="i-league">-</span></div>
+            <div class="info-row"><span class="info-k">레벨</span><span class="info-v" id="i-level">-</span></div>
+            <div class="info-row"><span class="info-k">활동 포인트</span><span class="info-v" id="i-ap"
                 style="color:var(--quasar-gold)">-</span></div>
-            <div class="info-row"><span class="info-key">가입일</span><span class="info-val" id="info-date">-</span></div>
+            <div class="info-row"><span class="info-k">가입일</span><span class="info-v" id="i-date">-</span></div>
           </div>
         </div>
       </div>
     </div>
   </aside>
 
-  <!-- 메인 콘텐츠 -->
+  <!-- 메인 -->
   <main class="main-content">
     <div class="main-header">
       <div>
-        <div class="main-header-title">✦ Quasar League — 제국의 정점</div>
-        <div class="main-header-sub">실시간 팬클럽 화력 순위</div>
+        <div class="mh-title">✦ Quasar League — 제국의 정점</div>
+        <div class="mh-sub">실시간 팬클럽 화력 순위</div>
       </div>
       <div style="font-family:'Orbitron',monospace;font-size:0.6rem;color:var(--text-muted);letter-spacing:0.1em">
-        ASTERIA.ME.KR
-      </div>
+        ASTERIA.ME.KR</div>
     </div>
 
-    <!-- 퀘이사 리그 맵 -->
-    <div class="quasar-section">
-      <div class="section-eyebrow">Empire League Structure</div>
-      <div class="section-heading">퀘이사 리그 <em>TOP 5</em></div>
+    <div class="donut-section">
+      <div class="s-eyebrow">Quasar League · Top 5</div>
+      <div class="s-heading">제국의 <em>5대 성좌</em></div>
 
-      <div class="quasar-map">
-        <!-- 연결선 -->
-        <svg class="quasar-lines" viewBox="0 0 700 700" xmlns="http://www.w3.org/2000/svg">
-          <line x1="350" y1="350" x2="350" y2="120" stroke="rgba(184,127,255,0.2)" stroke-width="1"
-            stroke-dasharray="4,4" />
-          <line x1="350" y1="350" x2="620" y2="350" stroke="rgba(64,224,208,0.2)" stroke-width="1"
-            stroke-dasharray="4,4" />
-          <line x1="350" y1="350" x2="350" y2="580" stroke="rgba(96,168,255,0.2)" stroke-width="1"
-            stroke-dasharray="4,4" />
-          <line x1="350" y1="350" x2="80" y2="350" stroke="rgba(136,153,187,0.2)" stroke-width="1"
-            stroke-dasharray="4,4" />
-          <circle cx="350" cy="350" r="140" fill="none" stroke="rgba(240,192,64,0.06)" stroke-width="1" />
-          <circle cx="350" cy="350" r="240" fill="none" stroke="rgba(184,127,255,0.04)" stroke-width="1" />
+      <div class="donut-container">
+        <!-- SVG 도넛 -->
+        <svg class="donut-svg" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="glow-gold" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="rgba(240,192,64,0.15)" />
+              <stop offset="100%" stop-color="rgba(240,192,64,0)" />
+            </radialGradient>
+          </defs>
+          <!-- 글로우 배경 -->
+          <circle cx="250" cy="250" r="240" fill="url(#glow-gold)" />
+          <!-- 바깥 원 -->
+          <circle cx="250" cy="250" r="238" fill="none" stroke="rgba(240,192,64,0.15)" stroke-width="1.5" />
+          <!-- 섹터 구분선 -->
+          <line x1="250" y1="12" x2="250" y2="488" stroke="rgba(255,255,255,0.07)" stroke-width="1" />
+          <line x1="12" y1="250" x2="488" y2="250" stroke="rgba(255,255,255,0.07)" stroke-width="1" />
+          <!-- 섹터 채우기 -->
+          <!-- 2위 섹터 (위 오른쪽) -->
+          <path d="M250,250 L250,12 A238,238 0 0,1 488,250 Z" fill="rgba(184,127,255,0.05)" stroke="none" />
+          <!-- 3위 섹터 (아래 오른쪽) -->
+          <path d="M250,250 L488,250 A238,238 0 0,1 250,488 Z" fill="rgba(64,224,208,0.05)" stroke="none" />
+          <!-- 4위 섹터 (아래 왼쪽) -->
+          <path d="M250,250 L250,488 A238,238 0 0,1 12,250 Z" fill="rgba(96,168,255,0.05)" stroke="none" />
+          <!-- 5위 섹터 (위 왼쪽) -->
+          <path d="M250,250 L12,250 A238,238 0 0,1 250,12 Z" fill="rgba(136,153,187,0.05)" stroke="none" />
+          <!-- 내부 원 (도넛 구멍 경계) -->
+          <circle cx="250" cy="250" r="130" fill="rgba(3,1,10,0.0)" stroke="rgba(240,192,64,0.25)" stroke-width="1.5" />
+          <!-- 순위 레이블 -->
+          <text x="390" y="130" text-anchor="middle" fill="rgba(184,127,255,0.5)" font-family="Orbitron,monospace"
+            font-size="11" letter-spacing="2">2ND</text>
+          <text x="390" y="390" text-anchor="middle" fill="rgba(64,224,208,0.5)" font-family="Orbitron,monospace"
+            font-size="11" letter-spacing="2">3RD</text>
+          <text x="110" y="390" text-anchor="middle" fill="rgba(96,168,255,0.5)" font-family="Orbitron,monospace"
+            font-size="11" letter-spacing="2">4TH</text>
+          <text x="110" y="130" text-anchor="middle" fill="rgba(136,153,187,0.5)" font-family="Orbitron,monospace"
+            font-size="11" letter-spacing="2">5TH</text>
         </svg>
 
-        <!-- 1위: 중앙 -->
-        <div class="fandom-card rank-1">
-          <div class="fc-rank" style="color:var(--quasar-gold)">🏆 1ST · QUASAR</div>
-          <div class="fc-emblem"
+        <!-- 중앙 1위 -->
+        <div class="center-card">
+          <div class="c-rank" style="color:var(--quasar-gold)">🏆 1ST</div>
+          <div class="c-emblem"
             style="background:radial-gradient(circle at 35% 35%,#ffe87a,#f0c040,#c07a00);border-color:#f0c040;color:#3a2000">
             A</div>
-          <div class="fc-name" style="color:var(--quasar-gold)">아르테미스</div>
-          <div class="fc-artist">ARTIST NAME</div>
-          <div class="fc-power" style="color:var(--quasar-gold)">⚡ 9,842,100 CP</div>
+          <div class="c-name" style="color:var(--quasar-gold)">아르테미스</div>
+          <div class="c-artist">ARTIST NAME</div>
+          <div class="c-power" style="color:var(--quasar-gold)">⚡ 9,842,100 CP</div>
         </div>
 
-        <!-- 2위: 북 -->
-        <div class="fandom-card rank-2">
-          <div class="fc-rank" style="color:var(--nova-purple)">2ND</div>
-          <div class="fc-emblem"
+        <!-- 2위: 위 오른쪽 -->
+        <div class="sector-card s-top">
+          <div class="c-rank" style="color:var(--nova-purple)">2ND</div>
+          <div class="c-emblem"
             style="background:radial-gradient(circle at 35% 35%,#d4aaff,#b87fff);border-color:#b87fff;color:#fff">S
           </div>
-          <div class="fc-name" style="color:var(--nova-purple)">스텔라리움</div>
-          <div class="fc-artist">ARTIST NAME</div>
-          <div class="fc-power" style="color:var(--nova-purple)">⚡ 7,231,400 CP</div>
+          <div class="c-name" style="color:var(--nova-purple)">스텔라리움</div>
+          <div class="c-artist">ARTIST NAME</div>
+          <div class="c-power" style="color:var(--nova-purple)">⚡ 7,231,400</div>
         </div>
 
-        <!-- 3위: 동 -->
-        <div class="fandom-card rank-3">
-          <div class="fc-rank" style="color:var(--planet-teal)">3RD</div>
-          <div class="fc-emblem"
+        <!-- 3위: 아래 오른쪽 -->
+        <div class="sector-card s-right">
+          <div class="c-rank" style="color:var(--planet-teal)">3RD</div>
+          <div class="c-emblem"
             style="background:radial-gradient(circle at 35% 35%,#80ffe8,#40e0d0);border-color:#40e0d0;color:#003830">L
           </div>
-          <div class="fc-name" style="color:var(--planet-teal)">루나틱스</div>
-          <div class="fc-artist">ARTIST NAME</div>
-          <div class="fc-power" style="color:var(--planet-teal)">⚡ 5,890,200 CP</div>
+          <div class="c-name" style="color:var(--planet-teal)">루나틱스</div>
+          <div class="c-artist">ARTIST NAME</div>
+          <div class="c-power" style="color:var(--planet-teal)">⚡ 5,890,200</div>
         </div>
 
-        <!-- 4위: 남 -->
-        <div class="fandom-card rank-4">
-          <div class="fc-rank" style="color:var(--star-blue)">4TH</div>
-          <div class="fc-emblem"
+        <!-- 4위: 아래 왼쪽 -->
+        <div class="sector-card s-bottom">
+          <div class="c-rank" style="color:var(--star-blue)">4TH</div>
+          <div class="c-emblem"
             style="background:radial-gradient(circle at 35% 35%,#a0c8ff,#60a8ff);border-color:#60a8ff;color:#001040">O
           </div>
-          <div class="fc-name" style="color:var(--star-blue)">오로라 팩션</div>
-          <div class="fc-artist">ARTIST NAME</div>
-          <div class="fc-power" style="color:var(--star-blue)">⚡ 4,120,800 CP</div>
+          <div class="c-name" style="color:var(--star-blue)">오로라 팩션</div>
+          <div class="c-artist">ARTIST NAME</div>
+          <div class="c-power" style="color:var(--star-blue)">⚡ 4,120,800</div>
         </div>
 
-        <!-- 5위: 서 -->
-        <div class="fandom-card rank-5">
-          <div class="fc-rank" style="color:var(--dust-gray)">5TH</div>
-          <div class="fc-emblem"
+        <!-- 5위: 위 왼쪽 -->
+        <div class="sector-card s-left">
+          <div class="c-rank" style="color:var(--dust-gray)">5TH</div>
+          <div class="c-emblem"
             style="background:radial-gradient(circle at 35% 35%,#c0c8d8,#8899bb);border-color:#8899bb;color:#0a0f1e">G
           </div>
-          <div class="fc-name" style="color:var(--dust-gray)">갤럭시아</div>
-          <div class="fc-artist">ARTIST NAME</div>
-          <div class="fc-power" style="color:var(--dust-gray)">⚡ 3,450,600 CP</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 하단 리그 카드 -->
-    <div class="league-info-section">
-      <div class="section-eyebrow">All Leagues</div>
-      <div class="section-heading" style="font-size:1.2rem;margin-bottom:1.2rem">전체 <em>리그 현황</em></div>
-      <div class="league-cards-row">
-        <div class="league-info-card">
-          <div class="lic-orb orb-q" style="width:36px;height:36px;font-size:0.7rem">Q</div>
-          <div class="lic-name" style="color:var(--quasar-gold)">퀘이사</div>
-          <div class="lic-count">5개 팬클럽</div>
-        </div>
-        <div class="league-info-card">
-          <div class="lic-orb orb-n" style="width:36px;height:36px;font-size:0.7rem">N</div>
-          <div class="lic-name" style="color:var(--nova-purple)">노바</div>
-          <div class="lic-count">10개 팬클럽</div>
-        </div>
-        <div class="league-info-card">
-          <div class="lic-orb orb-p" style="width:36px;height:36px;font-size:0.7rem">P</div>
-          <div class="lic-name" style="color:var(--planet-teal)">플래닛</div>
-          <div class="lic-count">20개 팬클럽</div>
-        </div>
-        <div class="league-info-card">
-          <div class="lic-orb orb-s" style="width:36px;height:36px;font-size:0.7rem">S</div>
-          <div class="lic-name" style="color:var(--star-blue)">스타</div>
-          <div class="lic-count">40개 팬클럽</div>
-        </div>
-        <div class="league-info-card">
-          <div class="lic-orb orb-d" style="width:36px;height:36px;font-size:0.7rem">D</div>
-          <div class="lic-name" style="color:var(--dust-gray)">더스트</div>
-          <div class="lic-count">그 외 전체</div>
+          <div class="c-name" style="color:var(--dust-gray)">갤럭시아</div>
+          <div class="c-artist">ARTIST NAME</div>
+          <div class="c-power" style="color:var(--dust-gray)">⚡ 3,450,600</div>
         </div>
       </div>
     </div>
@@ -1223,9 +1089,8 @@
       <button class="modal-close" onclick="closeModal('login')">✕</button>
       <div class="modal-title">제국에 귀환하기</div>
       <div class="modal-sub">RETURN TO THE EMPIRE</div>
-      <div class="form-group"><label>이메일</label><input type="email" id="login-email" placeholder="your@email.com" />
-      </div>
-      <div class="form-group"><label>비밀번호</label><input type="password" id="login-pw" placeholder="••••••••" /></div>
+      <div class="fg"><label>이메일</label><input type="email" id="login-email" placeholder="your@email.com" /></div>
+      <div class="fg"><label>비밀번호</label><input type="password" id="login-pw" placeholder="••••••••" /></div>
       <button class="form-submit" onclick="handleLogin()">귀환하기</button>
       <div class="form-switch">아직 아스트라가 아니신가요? <a onclick="switchModal('login','register')">지금 탄생하기</a></div>
     </div>
@@ -1237,10 +1102,10 @@
       <button class="modal-close" onclick="closeModal('register')">✕</button>
       <div class="modal-title">아스트라로 탄생하기</div>
       <div class="modal-sub">BIRTH OF A NEW STAR</div>
-      <div class="form-group"><label>닉네임</label><input type="text" id="reg-nick" placeholder="당신의 별 이름" /></div>
-      <div class="form-group"><label>이메일</label><input type="email" id="reg-email" placeholder="your@email.com" /></div>
-      <div class="form-group"><label>비밀번호</label><input type="password" id="reg-pw" placeholder="8자 이상" /></div>
-      <div class="form-group"><label>비밀번호 확인</label><input type="password" id="reg-pw2" placeholder="비밀번호 재입력" /></div>
+      <div class="fg"><label>닉네임</label><input type="text" id="reg-nick" placeholder="당신의 별 이름" /></div>
+      <div class="fg"><label>이메일</label><input type="email" id="reg-email" placeholder="your@email.com" /></div>
+      <div class="fg"><label>비밀번호</label><input type="password" id="reg-pw" placeholder="8자 이상" /></div>
+      <div class="fg"><label>비밀번호 확인</label><input type="password" id="reg-pw2" placeholder="비밀번호 재입력" /></div>
       <button class="form-submit" onclick="handleRegister()">탄생하기</button>
       <div class="form-switch">이미 아스트라이신가요? <a onclick="switchModal('register','login')">귀환하기</a></div>
     </div>
@@ -1249,7 +1114,6 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    // 별 캔버스
     const canvas = document.getElementById('star-canvas');
     const ctx = canvas.getContext('2d');
     let W, H, stars = [];
@@ -1270,33 +1134,20 @@
     }
     drawStars();
 
-    // 사이드바 섹션 토글
-    function toggleSection(id) {
-      const el = document.getElementById('section-' + id);
-      el.classList.toggle('open');
-    }
-
-    // 리그 팬덤 토글
-    function toggleLeague(id) {
-      const el = document.getElementById('li-' + id);
-      el.classList.toggle('open');
-    }
-
-    // 모달
+    function toggleSec(id) { document.getElementById('sec-' + id).classList.toggle('open'); }
+    function toggleLi(id) { document.getElementById('li-' + id).classList.toggle('open'); }
     function openModal(type) { document.getElementById('modal-' + type).classList.add('active'); }
     function closeModal(type) { document.getElementById('modal-' + type).classList.remove('active'); }
     function switchModal(from, to) { closeModal(from); setTimeout(() => openModal(to), 200); }
     document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('active'); }));
     document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active')); });
 
-    // 토스트
     function showToast(msg, type = '') {
       const t = document.getElementById('toast');
       t.textContent = msg; t.className = 'toast ' + type; t.classList.add('show');
       setTimeout(() => t.classList.remove('show'), 3200);
     }
 
-    // 인증 상태 확인
     async function checkAuth() {
       const token = localStorage.getItem('asteria_token');
       if (!token) return;
@@ -1309,30 +1160,26 @@
     }
 
     function updateUI(user) {
-      const leagueName = { dust: '더스트', star: '스타', planet: '플래닛', nova: '노바', quasar: '퀘이사' };
-      // 네브 전환
-      document.getElementById('auth-logged-out').style.display = 'none';
-      document.getElementById('auth-logged-in').style.display = 'block';
-      document.getElementById('auth-nickname').textContent = user.nickname;
-      // 성궤
-      document.getElementById('ark-login-prompt').style.display = 'none';
+      const ln = { dust: '더스트', star: '스타', planet: '플래닛', nova: '노바', quasar: '퀘이사' };
+      document.getElementById('auth-out').style.display = 'none';
+      document.getElementById('auth-in').style.display = 'block';
+      document.getElementById('auth-nick').textContent = user.nickname;
+      document.getElementById('ark-prompt').style.display = 'none';
       document.getElementById('ark-info').style.display = 'block';
-      document.getElementById('ark-avatar').textContent = user.nickname[0].toUpperCase();
-      document.getElementById('ark-name').textContent = user.nickname;
-      document.getElementById('ark-league').textContent = (leagueName[user.league] || user.league).toUpperCase() + ' LEAGUE';
-      document.getElementById('ark-level').textContent = user.level;
+      document.getElementById('ark-av').textContent = user.nickname[0].toUpperCase();
+      document.getElementById('ark-nm').textContent = user.nickname;
+      document.getElementById('ark-lg').textContent = (ln[user.league] || user.league).toUpperCase() + ' LEAGUE';
+      document.getElementById('ark-lv').textContent = user.level;
       document.getElementById('ark-ap').textContent = (user.ap || 0).toLocaleString();
-      // 정보
-      document.getElementById('info-login-prompt').style.display = 'none';
-      document.getElementById('info-content').style.display = 'block';
-      document.getElementById('info-nick').textContent = user.nickname;
-      document.getElementById('info-league').textContent = leagueName[user.league] || user.league;
-      document.getElementById('info-level').textContent = 'Lv.' + user.level;
-      document.getElementById('info-ap').textContent = (user.ap || 0).toLocaleString() + ' AP';
-      document.getElementById('info-date').textContent = user.created_at ? new Date(user.created_at).toLocaleDateString('ko-KR') : '-';
+      document.getElementById('info-prompt').style.display = 'none';
+      document.getElementById('info-data').style.display = 'block';
+      document.getElementById('i-nick').textContent = user.nickname;
+      document.getElementById('i-league').textContent = ln[user.league] || user.league;
+      document.getElementById('i-level').textContent = 'Lv.' + user.level;
+      document.getElementById('i-ap').textContent = (user.ap || 0).toLocaleString() + ' AP';
+      document.getElementById('i-date').textContent = user.created_at ? new Date(user.created_at).toLocaleDateString('ko-KR') : '-';
     }
 
-    // 로그인
     async function handleLogin() {
       const email = document.getElementById('login-email').value.trim();
       const pw = document.getElementById('login-pw').value;
@@ -1340,16 +1187,11 @@
       try {
         const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password: pw }) });
         const data = await res.json();
-        if (res.ok) {
-          localStorage.setItem('asteria_token', data.token);
-          closeModal('login');
-          showToast('✦ 제국에 귀환하셨습니다. ' + data.nickname, 'success');
-          checkAuth();
-        } else { showToast(data.message || '로그인에 실패했습니다.', 'error'); }
-      } catch { showToast('서버에 연결할 수 없습니다.', 'error'); }
+        if (res.ok) { localStorage.setItem('asteria_token', data.token); closeModal('login'); showToast('✦ 제국에 귀환하셨습니다. ' + data.nickname, 'success'); checkAuth(); }
+        else showToast(data.message || '로그인 실패', 'error');
+      } catch { showToast('서버 연결 오류', 'error'); }
     }
 
-    // 회원가입
     async function handleRegister() {
       const nick = document.getElementById('reg-nick').value.trim();
       const email = document.getElementById('reg-email').value.trim();
@@ -1361,20 +1203,12 @@
       try {
         const res = await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nickname: nick, email, password: pw }) });
         const data = await res.json();
-        if (res.ok) {
-          localStorage.setItem('asteria_token', data.token);
-          closeModal('register');
-          showToast('✦ 아스트라 ' + nick + ', 제국에 오신 것을 환영합니다!', 'success');
-          checkAuth();
-        } else { showToast(data.message || '회원가입에 실패했습니다.', 'error'); }
-      } catch { showToast('서버에 연결할 수 없습니다.', 'error'); }
+        if (res.ok) { localStorage.setItem('asteria_token', data.token); closeModal('register'); showToast('✦ 아스트라 ' + nick + ', 환영합니다!', 'success'); checkAuth(); }
+        else showToast(data.message || '회원가입 실패', 'error');
+      } catch { showToast('서버 연결 오류', 'error'); }
     }
 
-    function logout() {
-      localStorage.removeItem('asteria_token');
-      location.reload();
-    }
-
+    function logout() { localStorage.removeItem('asteria_token'); location.reload(); }
     checkAuth();
   </script>
 </body>
