@@ -1,1216 +1,745 @@
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ASTERIA — 팬이 주권을 갖는 우주</title>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;900&family=Noto+Sans+KR:wght@300;400;500;700&family=Orbitron:wght@400;700;900&display=swap"
-    rel="stylesheet" />
-  <style>
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    :root {
-      --void: #03010a;
-      --quasar-gold: #f0c040;
-      --nova-purple: #b87fff;
-      --planet-teal: #40e0d0;
-      --star-blue: #60a8ff;
-      --dust-gray: #8899bb;
-      --text-primary: #f0eeff;
-      --text-secondary: #a0a8cc;
-      --text-muted: #556077;
-      --sidebar-w: 270px;
-    }
-
-    html,
-    body {
-      height: 100%;
-      overflow: hidden;
-    }
-
-    body {
-      background: var(--void);
-      color: var(--text-primary);
-      font-family: 'Noto Sans KR', sans-serif;
-      font-weight: 300;
-      display: flex;
-    }
-
-    #star-canvas {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-    }
-
-    /* ── 사이드바 ── */
-    .sidebar {
-      width: var(--sidebar-w);
-      height: 100vh;
-      flex-shrink: 0;
-      background: rgba(7, 3, 15, 0.97);
-      border-right: 1px solid rgba(255, 255, 255, 0.06);
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      z-index: 10;
-      overflow-y: auto;
-    }
-
-    .sidebar-logo {
-      padding: 1.4rem 1.4rem 1rem;
-      font-family: 'Cinzel Decorative', serif;
-      font-size: 1.1rem;
-      font-weight: 900;
-      letter-spacing: 0.15em;
-      color: var(--quasar-gold);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      text-shadow: 0 0 20px rgba(240, 192, 64, 0.4);
-    }
-
-    .sidebar-logo span {
-      color: var(--nova-purple);
-    }
-
-    .auth-box {
-      padding: 1.2rem 1.4rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    .auth-greeting {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      line-height: 1.6;
-      margin-bottom: 0.6rem;
-    }
-
-    .auth-greeting strong {
-      color: var(--nova-purple);
-      font-weight: 500;
-    }
-
-    .auth-buttons {
-      display: flex;
-      flex-direction: column;
-      gap: 0.6rem;
-      margin-top: 0.8rem;
-    }
-
-    .btn-login {
-      width: 100%;
-      padding: 0.65rem;
-      background: transparent;
-      border: 1px solid rgba(240, 192, 64, 0.4);
-      color: var(--quasar-gold);
-      font-family: 'Cinzel', serif;
-      font-size: 0.72rem;
-      letter-spacing: 0.18em;
-      font-weight: 600;
-      border-radius: 3px;
-      cursor: pointer;
-      text-transform: uppercase;
-      transition: all 0.2s;
-    }
-
-    .btn-login:hover {
-      background: rgba(240, 192, 64, 0.08);
-    }
-
-    .btn-register {
-      width: 100%;
-      padding: 0.65rem;
-      background: linear-gradient(135deg, var(--quasar-gold), #ffaa30);
-      border: none;
-      color: #1a0a00;
-      font-family: 'Cinzel', serif;
-      font-size: 0.72rem;
-      letter-spacing: 0.18em;
-      font-weight: 700;
-      border-radius: 3px;
-      cursor: pointer;
-      text-transform: uppercase;
-      transition: filter 0.2s;
-    }
-
-    .btn-register:hover {
-      filter: brightness(1.1);
-    }
-
-    .btn-dashboard {
-      width: 100%;
-      padding: 0.65rem;
-      background: rgba(184, 127, 255, 0.12);
-      border: 1px solid rgba(184, 127, 255, 0.3);
-      color: var(--nova-purple);
-      font-family: 'Cinzel', serif;
-      font-size: 0.72rem;
-      letter-spacing: 0.15em;
-      font-weight: 600;
-      border-radius: 3px;
-      cursor: pointer;
-      text-transform: uppercase;
-      transition: all 0.2s;
-    }
-
-    .btn-logout {
-      width: 100%;
-      padding: 0.5rem;
-      background: transparent;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      color: var(--text-muted);
-      font-size: 0.7rem;
-      letter-spacing: 0.1em;
-      border-radius: 3px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .btn-logout:hover {
-      color: var(--text-primary);
-    }
-
-    .sidebar-section {
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    .sb-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.9rem 1.4rem;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .sb-header:hover {
-      background: rgba(255, 255, 255, 0.03);
-    }
-
-    .sb-title {
-      font-size: 0.72rem;
-      font-weight: 500;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--text-secondary);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .sb-arrow {
-      font-size: 0.6rem;
-      color: var(--text-muted);
-      transition: transform 0.25s;
-    }
-
-    .sidebar-section.open .sb-arrow {
-      transform: rotate(90deg);
-    }
-
-    .sb-body {
-      display: none;
-    }
-
-    .sidebar-section.open .sb-body {
-      display: block;
-    }
-
-    .league-list {
-      list-style: none;
-    }
-
-    .li-header {
-      display: flex;
-      align-items: center;
-      gap: 0.7rem;
-      padding: 0.6rem 1.4rem 0.6rem 1.6rem;
-      cursor: pointer;
-      font-size: 0.8rem;
-      transition: background 0.2s;
-    }
-
-    .li-header:hover {
-      background: rgba(255, 255, 255, 0.04);
-    }
-
-    .l-orb {
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.55rem;
-      font-family: 'Cinzel', serif;
-      font-weight: 700;
-      flex-shrink: 0;
-      border: 1px solid;
-    }
-
-    .oq {
-      background: radial-gradient(circle at 35% 35%, #ffe87a, #f0c040);
-      border-color: #f0c040;
-      color: #3a2000
-    }
-
-    .on {
-      background: radial-gradient(circle at 35% 35%, #d4aaff, #b87fff);
-      border-color: #b87fff;
-      color: #1e0050
-    }
-
-    .op {
-      background: radial-gradient(circle at 35% 35%, #80ffe8, #40e0d0);
-      border-color: #40e0d0;
-      color: #003830
-    }
-
-    .os {
-      background: radial-gradient(circle at 35% 35%, #a0c8ff, #60a8ff);
-      border-color: #60a8ff;
-      color: #001040
-    }
-
-    .od {
-      background: radial-gradient(circle at 35% 35%, #c0c8d8, #8899bb);
-      border-color: #8899bb;
-      color: #0a0f1e
-    }
-
-    .l-count {
-      font-size: 0.65rem;
-      color: var(--text-muted);
-      margin-left: auto;
-    }
-
-    .l-arrow {
-      font-size: 0.55rem;
-      color: var(--text-muted);
-      transition: transform 0.2s;
-    }
-
-    .league-item.open .l-arrow {
-      transform: rotate(90deg);
-    }
-
-    .fandom-list {
-      display: none;
-      list-style: none;
-      background: rgba(0, 0, 0, 0.2);
-    }
-
-    .league-item.open .fandom-list {
-      display: block;
-    }
-
-    .fandom-item {
-      padding: 0.45rem 1.4rem 0.45rem 3.4rem;
-      font-size: 0.75rem;
-      color: var(--text-secondary);
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .fandom-item:hover {
-      background: rgba(255, 255, 255, 0.04);
-      color: var(--text-primary);
-    }
-
-    .f-rank {
-      font-family: 'Orbitron', monospace;
-      font-size: 0.55rem;
-      color: var(--text-muted);
-      min-width: 14px;
-    }
-
-    .ark-box {
-      padding: 1rem 1.4rem;
-    }
-
-    .ark-card {
-      background: linear-gradient(135deg, rgba(184, 127, 255, 0.08), rgba(240, 192, 64, 0.05));
-      border: 1px solid rgba(184, 127, 255, 0.2);
-      border-radius: 6px;
-      padding: 1rem;
-      text-align: center;
-    }
-
-    .ark-avatar {
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      background: radial-gradient(circle at 35% 35%, #d4aaff, #b87fff, #5520a0);
-      margin: 0 auto 0.6rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Cinzel', serif;
-      font-size: 1.1rem;
-      font-weight: 900;
-      color: #fff;
-      border: 2px solid rgba(184, 127, 255, 0.5);
-    }
-
-    .ark-name {
-      font-family: 'Cinzel', serif;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--nova-purple);
-      margin-bottom: 0.3rem;
-    }
-
-    .ark-league-txt {
-      font-family: 'Orbitron', monospace;
-      font-size: 0.55rem;
-      letter-spacing: 0.15em;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      margin-bottom: 0.7rem;
-    }
-
-    .ark-stats {
-      display: flex;
-      justify-content: space-around;
-    }
-
-    .ark-stat-v {
-      font-family: 'Cinzel', serif;
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--quasar-gold);
-    }
-
-    .ark-stat-l {
-      font-size: 0.58rem;
-      color: var(--text-muted);
-    }
-
-    .prompt-txt {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      text-align: center;
-      padding: 0.5rem 0;
-      line-height: 1.6;
-    }
-
-    .info-box {
-      padding: 0.8rem 1.4rem 1rem;
-    }
-
-    .info-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.4rem 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-    }
-
-    .info-row:last-child {
-      border-bottom: none;
-    }
-
-    .info-k {
-      font-size: 0.68rem;
-      color: var(--text-muted);
-    }
-
-    .info-v {
-      font-size: 0.75rem;
-      font-weight: 500;
-    }
-
-    /* ── 메인 ── */
-    .main-content {
-      flex: 1;
-      height: 100vh;
-      overflow-y: auto;
-      position: relative;
-      z-index: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .main-header {
-      padding: 1rem 2rem;
-      background: rgba(3, 1, 10, 0.85);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(8px);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-shrink: 0;
-    }
-
-    .mh-title {
-      font-family: 'Orbitron', monospace;
-      font-size: 0.65rem;
-      letter-spacing: 0.3em;
-      color: var(--quasar-gold);
-      text-transform: uppercase;
-    }
-
-    .mh-sub {
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      margin-top: 0.2rem;
-    }
-
-    /* ── 도넛 섹션 ── */
-    .donut-section {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 1.5rem 1rem;
-    }
-
-    .s-eyebrow {
-      font-family: 'Orbitron', monospace;
-      font-size: 0.62rem;
-      letter-spacing: 0.35em;
-      color: var(--nova-purple);
-      text-transform: uppercase;
-      margin-bottom: 0.4rem;
-    }
-
-    .s-heading {
-      font-family: 'Cinzel Decorative', serif;
-      font-size: 1.6rem;
-      font-weight: 700;
-      margin-bottom: 1.5rem;
-      text-align: center;
-    }
-
-    .s-heading em {
-      font-style: normal;
-      background: linear-gradient(90deg, var(--quasar-gold), var(--nova-purple));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    /* 도넛 컨테이너 */
-    .donut-container {
-      position: relative;
-      width: min(560px, calc(100vh - 220px));
-      aspect-ratio: 1;
-    }
-
-    /* SVG */
-    .donut-svg {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-    }
-
-    /* 중앙 1위 */
-    .center-card {
-      position: absolute;
-      width: 32%;
-      aspect-ratio: 1;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 5;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      background: rgba(15, 7, 2, 0.97);
-      border-radius: 50%;
-      border: 2px solid rgba(240, 192, 64, 0.6);
-      box-shadow: 0 0 50px rgba(240, 192, 64, 0.25), inset 0 0 30px rgba(240, 192, 64, 0.05);
-      cursor: pointer;
-      padding: 0.8rem;
-      transition: box-shadow 0.3s;
-    }
-
-    .center-card:hover {
-      box-shadow: 0 0 80px rgba(240, 192, 64, 0.4), inset 0 0 40px rgba(240, 192, 64, 0.1);
-    }
-
-    /* 섹터 카드 (도넛 링 위에 올라감) */
-    .sector-card {
-      position: absolute;
-      z-index: 4;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      cursor: pointer;
-      transition: opacity 0.3s;
-      width: 22%;
-    }
-
-    .sector-card:hover {
-      opacity: 0.8;
-    }
-
-    /* 위(2위) */
-    .s-top {
-      top: 3%;
-      left: 50%;
-      transform: translateX(-50%);
-    }
-
-    /* 오른쪽(3위) */
-    .s-right {
-      top: 50%;
-      right: 3%;
-      transform: translateY(-50%);
-    }
-
-    /* 아래(4위) */
-    .s-bottom {
-      bottom: 3%;
-      left: 50%;
-      transform: translateX(-50%);
-    }
-
-    /* 왼쪽(5위) */
-    .s-left {
-      top: 50%;
-      left: 3%;
-      transform: translateY(-50%);
-    }
-
-    /* 카드 내용 */
-    .c-rank {
-      font-family: 'Orbitron', monospace;
-      font-size: 0.58rem;
-      letter-spacing: 0.18em;
-      margin-bottom: 0.25rem;
-    }
-
-    .c-emblem {
-      border-radius: 50%;
-      margin: 0 auto 0.3rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Cinzel', serif;
-      font-weight: 900;
-      border: 2px solid;
-    }
-
-    .center-card .c-emblem {
-      width: 48px;
-      height: 48px;
-      font-size: 1.1rem;
-    }
-
-    .sector-card .c-emblem {
-      width: 32px;
-      height: 32px;
-      font-size: 0.8rem;
-    }
-
-    .c-name {
-      font-family: 'Cinzel', serif;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      line-height: 1.2;
-    }
-
-    .center-card .c-name {
-      font-size: 0.88rem;
-      margin-bottom: 0.2rem;
-    }
-
-    .sector-card .c-name {
-      font-size: 0.7rem;
-      margin-bottom: 0.15rem;
-    }
-
-    .c-artist {
-      font-size: 0.6rem;
-      color: var(--text-muted);
-      margin-bottom: 0.2rem;
-    }
-
-    .c-power {
-      font-family: 'Orbitron', monospace;
-      letter-spacing: 0.06em;
-    }
-
-    .center-card .c-power {
-      font-size: 0.62rem;
-    }
-
-    .sector-card .c-power {
-      font-size: 0.55rem;
-    }
-
-    /* 모달 */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 200;
-      background: rgba(3, 1, 10, 0.88);
-      backdrop-filter: blur(8px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s;
-    }
-
-    .modal-overlay.active {
-      opacity: 1;
-      pointer-events: all;
-    }
-
-    .modal {
-      background: rgba(13, 5, 32, 0.98);
-      border: 1px solid rgba(184, 127, 255, 0.25);
-      border-radius: 6px;
-      padding: 2.5rem;
-      width: 100%;
-      max-width: 400px;
-      position: relative;
-      transform: translateY(20px);
-      transition: transform 0.3s;
-    }
-
-    .modal-overlay.active .modal {
-      transform: translateY(0);
-    }
-
-    .modal-close {
-      position: absolute;
-      top: 1rem;
-      right: 1.2rem;
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      font-size: 1.1rem;
-      cursor: pointer;
-    }
-
-    .modal-title {
-      font-family: 'Cinzel', serif;
-      font-size: 1.2rem;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      color: var(--quasar-gold);
-      margin-bottom: 0.3rem;
-    }
-
-    .modal-sub {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-bottom: 1.8rem;
-    }
-
-    .fg {
-      margin-bottom: 1rem;
-    }
-
-    .fg label {
-      display: block;
-      font-size: 0.65rem;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 0.4rem;
-      font-family: 'Orbitron', monospace;
-    }
-
-    .fg input {
-      width: 100%;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 3px;
-      padding: 0.75rem 0.9rem;
-      color: var(--text-primary);
-      font-family: 'Noto Sans KR', sans-serif;
-      font-size: 0.85rem;
-      outline: none;
-      transition: border-color 0.25s;
-    }
-
-    .fg input:focus {
-      border-color: rgba(184, 127, 255, 0.5);
-    }
-
-    .fg input::placeholder {
-      color: var(--text-muted);
-    }
-
-    .form-submit {
-      width: 100%;
-      font-family: 'Cinzel', serif;
-      font-size: 0.78rem;
-      font-weight: 600;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: #1a0a00;
-      background: linear-gradient(135deg, var(--quasar-gold), #ffaa30);
-      border: none;
-      padding: 0.85rem;
-      border-radius: 3px;
-      cursor: pointer;
-      margin-top: 0.6rem;
-      transition: filter 0.2s;
-    }
-
-    .form-submit:hover {
-      filter: brightness(1.08);
-    }
-
-    .form-switch {
-      text-align: center;
-      margin-top: 1.2rem;
-      font-size: 0.75rem;
-      color: var(--text-muted);
-    }
-
-    .form-switch a {
-      color: var(--nova-purple);
-      text-decoration: none;
-      cursor: pointer;
-    }
-
-    .toast {
-      position: fixed;
-      bottom: 2rem;
-      right: 2rem;
-      z-index: 300;
-      background: rgba(13, 5, 32, 0.95);
-      border: 1px solid rgba(184, 127, 255, 0.3);
-      border-radius: 4px;
-      padding: 0.9rem 1.4rem;
-      font-size: 0.8rem;
-      transform: translateY(20px);
-      opacity: 0;
-      transition: all 0.3s;
-      pointer-events: none;
-    }
-
-    .toast.show {
-      transform: translateY(0);
-      opacity: 1;
-    }
-
-    .toast.success {
-      border-color: rgba(64, 224, 208, 0.4);
-    }
-
-    .toast.error {
-      border-color: rgba(255, 80, 80, 0.4);
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASTERIA — 아스테리아</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --void:#030308; --panel:rgba(10,10,22,0.93);
+  --border:rgba(180,150,255,0.13); --gold:#f0c040;
+  --quasar:#c084fc; --quasar2:#818cf8; --quasar3:#38bdf8;
+  --text:#e8e4f0; --muted:rgba(200,190,220,0.5);
+}
+html,body { width:100%; height:100%; background:var(--void); color:var(--text); font-family:'Noto Sans KR',sans-serif; overflow:hidden; }
+#bgCanvas { position:fixed; inset:0; z-index:0; pointer-events:none; }
+#app { position:relative; z-index:1; display:flex; height:100vh; overflow:hidden; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width:260px; min-width:260px; height:100vh;
+  background:var(--panel); backdrop-filter:blur(24px);
+  border-right:1px solid var(--border);
+  display:flex; flex-direction:column; overflow-y:auto; position:relative; z-index:100;
+}
+.sidebar::-webkit-scrollbar{width:3px}
+.sidebar::-webkit-scrollbar-thumb{background:rgba(192,132,252,.3);border-radius:3px}
+.sidebar-logo { padding:26px 24px 18px; border-bottom:1px solid var(--border); }
+.logo-text {
+  font-family:'Orbitron',monospace; font-size:22px; font-weight:900; letter-spacing:4px;
+  background:linear-gradient(135deg,var(--gold),var(--quasar),var(--quasar3));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+}
+.sidebar-login { padding:18px 24px; border-bottom:1px solid var(--border); }
+.login-desc { font-size:13px; color:var(--muted); line-height:1.6; margin-bottom:12px; }
+.btn-login {
+  display:block; width:100%; padding:9px; border:1.5px solid var(--quasar);
+  border-radius:20px; color:var(--quasar); font-size:13px; font-weight:700;
+  cursor:pointer; background:transparent; font-family:'Noto Sans KR',sans-serif; transition:all .2s; text-align:center;
+}
+.btn-login:hover { background:var(--quasar); color:var(--void); }
+.btn-join {
+  display:block; width:100%; margin-top:9px; padding:10px; border-radius:20px;
+  background:linear-gradient(90deg,var(--gold),#e6a800); border:none; color:var(--void);
+  font-size:14px; font-weight:700; cursor:pointer; font-family:'Noto Sans KR',sans-serif;
+  letter-spacing:1px; transition:all .2s; box-shadow:0 0 16px rgba(240,192,64,.35);
+}
+.btn-join:hover { box-shadow:0 0 28px rgba(240,192,64,.65); transform:translateY(-1px); }
+.nav-item {
+  display:flex; align-items:center; gap:12px; padding:14px 24px;
+  border-bottom:1px solid var(--border); cursor:pointer; transition:background .2s;
+}
+.nav-item:hover { background:rgba(192,132,252,.09); }
+.nav-item.open { background:rgba(192,132,252,.07); }
+.nav-icon { font-size:16px; width:22px; text-align:center; }
+.nav-label { flex:1; font-size:14px; font-weight:500; }
+.nav-arrow { font-size:10px; color:var(--muted); transition:transform .25s; }
+.nav-item.open .nav-arrow { transform:rotate(90deg); }
+.league-sub { max-height:0; overflow:hidden; transition:max-height .35s cubic-bezier(.4,0,.2,1); background:rgba(0,0,0,.25); }
+.league-sub.open { max-height:320px; }
+.sub-item {
+  display:flex; align-items:center; gap:10px; padding:11px 24px 11px 40px;
+  cursor:pointer; transition:background .2s; border-bottom:1px solid rgba(180,150,255,.06);
+}
+.sub-item:hover { background:rgba(192,132,252,.13); }
+.sub-badge { width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:900; font-family:'Orbitron',monospace; flex-shrink:0; }
+.sub-name { font-size:13px; font-weight:500; flex:1; }
+.sub-tier { font-size:10px; color:var(--muted); }
+
+/* ── PAGES ── */
+.page { display:none; flex:1; flex-direction:column; height:100vh; overflow:hidden; }
+.page.active { display:flex; }
+
+/* ── HOME ── */
+#page-home { overflow-y:auto; }
+#page-home::-webkit-scrollbar{width:4px}
+#page-home::-webkit-scrollbar-thumb{background:rgba(192,132,252,.3);border-radius:4px}
+.hero { padding:56px 52px 36px; position:relative; overflow:hidden; flex-shrink:0; }
+.hero-glow {
+  position:absolute; right:-60px; top:50%; transform:translateY(-50%);
+  width:360px; height:360px;
+  background:radial-gradient(circle,rgba(192,132,252,.18) 0%,rgba(56,189,248,.07) 45%,transparent 70%);
+  pointer-events:none; animation:pulse-glow 4s ease-in-out infinite;
+}
+@keyframes pulse-glow{0%,100%{opacity:.6;transform:translateY(-50%) scale(1)}50%{opacity:1;transform:translateY(-50%) scale(1.08)}}
+.hero-tagline { font-family:'Orbitron',monospace; font-size:clamp(14px,2.4vw,28px); font-weight:900; letter-spacing:.5px; line-height:1.5; white-space:nowrap; }
+.hero-tagline .c { display:inline-block; animation:wave-shine 3.2s ease-in-out infinite; }
+@keyframes wave-shine {
+  0%,100%{ color:#fff; text-shadow:none; }
+  50%{ color:var(--gold); text-shadow:0 0 10px rgba(240,192,64,.95),0 0 24px rgba(192,132,252,.7),0 0 40px rgba(56,189,248,.4); }
+}
+.hero-sub { margin-top:10px; font-size:13px; color:var(--muted); font-weight:300; }
+
+/* ── QUASAR HEADER ── */
+.qhdr { display:flex; flex-direction:column; align-items:center; padding:20px 40px 12px; gap:5px; flex-shrink:0; }
+.qhdr-top { display:flex; align-items:center; gap:12px; }
+.qhdr-gem { color:var(--gold); font-size:16px; }
+.qhdr-title { font-family:'Orbitron',monospace; font-size:12px; letter-spacing:5px; color:var(--gold); text-transform:uppercase; }
+.qhdr-line { width:80%; height:1px; background:linear-gradient(90deg,transparent,rgba(180,150,255,.2),transparent); }
+.qhdr-sub { font-size:12px; color:var(--muted); letter-spacing:1.5px; }
+
+/* ── CONSTELLATION VIEWPORT ── */
+.cv { flex:1; overflow:hidden; position:relative; cursor:grab; min-height:520px; }
+.cv:active { cursor:grabbing; }
+.cw { position:absolute; width:1800px; height:1200px; }
+
+.q-ring {
+  position:absolute; border-radius:50%; border:1px solid rgba(192,132,252,.12);
+  top:50%; left:50%; animation:rr 25s linear infinite;
+}
+.q-ring:nth-child(2){border-color:rgba(56,189,248,.07);animation-duration:38s;animation-direction:reverse}
+.q-ring:nth-child(3){border-color:rgba(240,192,64,.05);animation-duration:55s}
+@keyframes rr{from{transform:translate(-50%,-50%) rotate(0)}to{transform:translate(-50%,-50%) rotate(360deg)}}
+.q-ring::after{content:'';position:absolute;top:-3px;left:50%;width:6px;height:6px;border-radius:50%;background:var(--quasar);transform:translateX(-50%);box-shadow:0 0 8px var(--quasar)}
+
+.q-lines { position:absolute; inset:0; pointer-events:none; }
+
+.q-node { position:absolute; display:flex; flex-direction:column; align-items:center; cursor:pointer; transition:filter .3s; }
+.q-node:hover { filter:brightness(1.25); z-index:50; }
+.q-orb { border-radius:50%; display:flex; align-items:center; justify-content:center; position:relative; }
+.q-orb.r1 {
+  width:380px; height:380px;
+  background:radial-gradient(circle at 35% 35%,rgba(255,215,0,.7),rgba(192,132,252,.45),rgba(7,7,15,.95));
+  box-shadow:0 0 0 3px rgba(240,192,64,.7),0 0 60px rgba(240,192,64,.6),0 0 140px rgba(192,132,252,.4),0 0 280px rgba(192,132,252,.2);
+  animation:op1 3s ease-in-out infinite;
+}
+@keyframes op1{0%,100%{box-shadow:0 0 0 3px rgba(240,192,64,.7),0 0 60px rgba(240,192,64,.6),0 0 140px rgba(192,132,252,.4),0 0 280px rgba(192,132,252,.2)}50%{box-shadow:0 0 0 5px rgba(240,192,64,1),0 0 100px rgba(240,192,64,.8),0 0 220px rgba(192,132,252,.6),0 0 380px rgba(192,132,252,.3)}}
+.q-orb.r2,.q-orb.r3,.q-orb.r4,.q-orb.r5 {
+  width:200px; height:200px;
+  background:radial-gradient(circle at 35% 35%,rgba(192,132,252,.55),rgba(56,189,248,.25),rgba(7,7,15,.95));
+  box-shadow:0 0 0 2px rgba(192,132,252,.55),0 0 40px rgba(192,132,252,.45),0 0 100px rgba(192,132,252,.2);
+  animation:op2 4s ease-in-out infinite;
+}
+.q-orb.r3{animation-delay:-1.3s}.q-orb.r4{animation-delay:-2.6s}.q-orb.r5{animation-delay:-.7s}
+@keyframes op2{0%,100%{box-shadow:0 0 0 2px rgba(192,132,252,.55),0 0 40px rgba(192,132,252,.45),0 0 100px rgba(192,132,252,.2)}50%{box-shadow:0 0 0 3px rgba(192,132,252,.9),0 0 70px rgba(192,132,252,.7),0 0 160px rgba(192,132,252,.4)}}
+.q-rank {
+  position:absolute; top:-8px; right:-8px; width:32px; height:32px; border-radius:50%;
+  background:var(--gold); color:var(--void); font-size:13px; font-weight:900;
+  font-family:'Orbitron',monospace; display:flex; align-items:center; justify-content:center;
+  box-shadow:0 0 12px rgba(240,192,64,.7);
+}
+.q-node.c1 .q-rank { width:44px; height:44px; font-size:19px; top:-10px; right:-10px; }
+.q-lbl { margin-top:14px; text-align:center; }
+.q-name { font-size:16px; font-weight:700; }
+.q-node.c1 .q-name { font-size:22px; }
+.q-score { font-size:12px; color:var(--gold); margin-top:4px; font-weight:500; }
+.q-hint { text-align:center; font-size:11px; color:var(--muted); letter-spacing:2px; padding:12px 0; animation:blink 2.5s ease-in-out infinite; flex-shrink:0; }
+@keyframes blink{0%,100%{opacity:.3}50%{opacity:1}}
+
+/* ── LEAGUE SELECT ── */
+#page-league-select { align-items:center; justify-content:center; flex-direction:column; padding:40px; overflow-y:auto; }
+.ls-title { font-family:'Orbitron',monospace; font-size:22px; font-weight:900; letter-spacing:3px; background:linear-gradient(90deg,var(--gold),var(--quasar)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:8px; text-align:center; }
+.ls-sub { font-size:13px; color:var(--muted); margin-bottom:44px; text-align:center; }
+.lc-grid { display:flex; flex-wrap:wrap; gap:18px; justify-content:center; max-width:860px; }
+.lc {
+  width:152px; background:var(--panel); border:1px solid var(--border); border-radius:18px;
+  padding:26px 14px 20px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:9px;
+  transition:all .3s; position:relative; overflow:hidden;
+}
+.lc:hover { transform:translateY(-6px); }
+.lc-icon { font-size:38px; }
+.lc-name { font-family:'Orbitron',monospace; font-size:11px; font-weight:700; letter-spacing:2px; }
+.lc-desc { font-size:11px; color:var(--muted); text-align:center; line-height:1.5; }
+.lc-tier { font-size:10px; color:var(--gold); font-weight:700; }
+.btn-back-ls { margin-top:36px; padding:10px 28px; border-radius:20px; background:transparent; border:1px solid var(--border); color:var(--muted); font-size:13px; cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:all .2s; }
+.btn-back-ls:hover { border-color:var(--quasar); color:var(--text); }
+
+/* ── LEAGUE MAP ── */
+#page-league { flex-direction:column; }
+.ltop {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 28px; border-bottom:1px solid var(--border);
+  background:var(--panel); backdrop-filter:blur(20px); z-index:50; flex-shrink:0;
+}
+.ltop-l { display:flex; align-items:center; gap:14px; }
+.btn-back { background:rgba(192,132,252,.12); border:1px solid rgba(192,132,252,.3); color:var(--quasar); padding:7px 18px; border-radius:20px; font-size:13px; cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:all .2s; font-weight:500; }
+.btn-back:hover { background:rgba(192,132,252,.25); }
+.ltitle { font-family:'Orbitron',monospace; font-size:14px; font-weight:900; letter-spacing:2px; background:linear-gradient(90deg,var(--gold),var(--quasar)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+
+.map-row { flex:1; display:flex; overflow:hidden; }
+.map-wrap { flex:1; position:relative; overflow:hidden; cursor:grab; }
+.map-wrap:active { cursor:grabbing; }
+.map-world {
+  position:absolute; width:3000px; height:2400px;
+  background:radial-gradient(ellipse at 40% 40%,rgba(18,8,45,.9) 0%,var(--void) 65%);
+}
+.map-world::before {
+  content:''; position:absolute; inset:0;
+  background-image:linear-gradient(rgba(180,150,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(180,150,255,.04) 1px,transparent 1px);
+  background-size:80px 80px;
+}
+
+.terr { position:absolute; border-radius:50%; pointer-events:none; }
+.mf { position:absolute; display:flex; flex-direction:column; align-items:center; cursor:pointer; transition:filter .3s; }
+.mf:hover { filter:brightness(1.2); z-index:30; }
+.mo { border-radius:50%; display:flex; align-items:center; justify-content:center; transition:transform .3s; }
+.mf:hover .mo { transform:scale(1.08); }
+.ml { margin-top:8px; text-align:center; }
+.mfn { font-size:13px; font-weight:700; }
+.mfs { font-size:11px; color:var(--gold); margin-top:2px; font-weight:500; }
+
+.cn { position:absolute; display:flex; flex-direction:column; align-items:center; cursor:pointer; transition:all .3s; z-index:20; }
+.cn:hover { z-index:40; }
+.cb { width:52px; height:52px; border-radius:14px; background:rgba(56,189,248,.12); border:1px solid rgba(56,189,248,.35); display:flex; align-items:center; justify-content:center; font-size:22px; transition:all .3s; backdrop-filter:blur(8px); }
+.cn:hover .cb { background:rgba(56,189,248,.28); box-shadow:0 0 24px rgba(56,189,248,.4); transform:scale(1.1); }
+.cn-name { font-size:10px; color:var(--quasar3); margin-top:5px; text-align:center; font-weight:500; }
+
+/* Avatar */
+.av { position:absolute; display:flex; flex-direction:column; align-items:center; z-index:60; pointer-events:none; transition:left .55s cubic-bezier(.34,1.2,.64,1),top .55s cubic-bezier(.34,1.2,.64,1); }
+.av-chat { position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:rgba(13,13,28,.95); border:1px solid var(--border); border-radius:12px 12px 12px 0; padding:6px 10px; font-size:11px; max-width:180px; white-space:normal; opacity:0; transition:opacity .3s; pointer-events:none; box-shadow:0 4px 20px rgba(0,0,0,.5); }
+.av-chat.show { opacity:1; }
+.av-body { width:52px; height:52px; border-radius:50%; background:linear-gradient(135deg,var(--quasar),var(--quasar2)); border:3px solid var(--gold); display:flex; align-items:center; justify-content:center; font-size:22px; box-shadow:0 0 0 4px rgba(240,192,64,.25),0 0 30px rgba(192,132,252,.5); animation:afloat 3s ease-in-out infinite; }
+@keyframes afloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.av-name { font-size:11px; color:var(--gold); margin-top:4px; font-weight:700; text-shadow:0 0 8px rgba(240,192,64,.6); }
+
+/* Right panel */
+.rp { width:294px; min-width:294px; background:var(--panel); backdrop-filter:blur(20px); border-left:1px solid var(--border); display:flex; flex-direction:column; }
+.rp-tabs { display:flex; border-bottom:1px solid var(--border); flex-shrink:0; }
+.rp-tab { flex:1; padding:13px 6px; text-align:center; font-size:13px; font-weight:500; cursor:pointer; color:var(--muted); border-bottom:2px solid transparent; transition:all .2s; }
+.rp-tab.active { color:var(--text); border-bottom-color:var(--quasar); }
+.rp-body { flex:1; overflow-y:auto; padding:18px 16px; }
+.rp-body::-webkit-scrollbar{width:3px}
+.rp-body::-webkit-scrollbar-thumb{background:rgba(192,132,252,.3);border-radius:3px}
+.tp { display:none; }
+.tp.active { display:block; }
+.ts { font-size:11px; color:var(--muted); letter-spacing:2px; margin-bottom:12px; text-transform:uppercase; }
+
+.ri { display:flex; align-items:center; gap:10px; padding:10px 8px; border-radius:10px; margin-bottom:5px; cursor:pointer; transition:background .2s; border:1px solid transparent; }
+.ri:hover { background:rgba(192,132,252,.08); border-color:var(--border); }
+.ri.hl { background:rgba(240,192,64,.06); border-color:rgba(240,192,64,.2); }
+.rn { font-family:'Orbitron',monospace; font-size:12px; font-weight:700; width:20px; text-align:center; color:var(--muted); }
+.ri.hl .rn { color:var(--gold); }
+.ro { width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; }
+.rf { flex:1; }
+.rfn { font-size:13px; font-weight:600; }
+.rfv { font-size:11px; color:var(--gold); font-weight:500; }
+
+/* Chat */
+#tab-chat-p { display:none; flex-direction:column; height:calc(100vh - 49px - 49px); }
+#tab-chat-p.active { display:flex; }
+.chat-area { flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:10px; }
+.chat-area::-webkit-scrollbar{width:3px}
+.chat-area::-webkit-scrollbar-thumb{background:rgba(192,132,252,.3);border-radius:3px}
+.cm { display:flex; align-items:flex-start; gap:8px; }
+.cm.mine { flex-direction:row-reverse; }
+.ca { width:30px; height:30px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:13px; }
+.cb2 { background:rgba(255,255,255,.06); border:1px solid var(--border); border-radius:12px 12px 12px 0; padding:7px 10px; max-width:190px; }
+.cm.mine .cb2 { background:rgba(192,132,252,.15); border-color:rgba(192,132,252,.3); border-radius:12px 12px 0 12px; }
+.cs { font-size:10px; color:var(--muted); margin-bottom:3px; }
+.ct { font-size:13px; line-height:1.5; }
+.cti { font-size:10px; color:var(--muted); margin-top:2px; text-align:right; }
+.chat-in { display:flex; gap:8px; padding:10px 14px; border-top:1px solid var(--border); flex-shrink:0; }
+.chat-input { flex:1; background:rgba(255,255,255,.05); border:1px solid var(--border); border-radius:20px; padding:8px 13px; color:var(--text); font-size:13px; font-family:'Noto Sans KR',sans-serif; outline:none; transition:border-color .2s; }
+.chat-input:focus { border-color:rgba(192,132,252,.5); }
+.chat-send { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,var(--quasar),var(--quasar2)); border:none; color:#fff; font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:transform .2s; flex-shrink:0; }
+.chat-send:hover { transform:scale(1.1); }
+
+/* Comm tab */
+.ci { display:flex; align-items:center; gap:10px; padding:10px 8px; border-radius:10px; cursor:pointer; transition:background .2s; margin-bottom:4px; }
+.ci:hover { background:rgba(56,189,248,.08); }
+
+/* Login modal */
+#lmodal { position:fixed; inset:0; z-index:9000; background:rgba(0,0,0,.72); backdrop-filter:blur(10px); display:none; align-items:center; justify-content:center; }
+#lmodal.show { display:flex; }
+.mbox { background:rgba(12,12,26,.97); border:1px solid var(--border); border-radius:20px; padding:38px 34px; width:350px; box-shadow:0 0 60px rgba(192,132,252,.2); }
+.mt { font-family:'Orbitron',monospace; font-size:18px; font-weight:900; letter-spacing:3px; background:linear-gradient(90deg,var(--gold),var(--quasar)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:6px; }
+.ms { font-size:13px; color:var(--muted); margin-bottom:26px; }
+.mf2 { margin-bottom:14px; }
+.mf2 label { font-size:12px; color:var(--muted); display:block; margin-bottom:5px; }
+.mf2 input { width:100%; background:rgba(255,255,255,.05); border:1px solid var(--border); border-radius:10px; padding:10px 13px; color:var(--text); font-size:14px; font-family:'Noto Sans KR',sans-serif; outline:none; transition:border-color .2s; }
+.mf2 input:focus { border-color:rgba(192,132,252,.5); }
+.msub { width:100%; padding:12px; border-radius:20px; background:linear-gradient(90deg,var(--quasar),var(--quasar2)); border:none; color:#fff; font-size:15px; font-weight:700; cursor:pointer; font-family:'Noto Sans KR',sans-serif; margin-top:4px; transition:all .2s; }
+.msub:hover { box-shadow:0 0 24px rgba(192,132,252,.5); }
+.mcl { width:100%; padding:10px; border-radius:20px; background:transparent; border:1px solid var(--border); color:var(--muted); font-size:13px; cursor:pointer; font-family:'Noto Sans KR',sans-serif; margin-top:8px; transition:all .2s; }
+.mcl:hover { border-color:var(--muted); color:var(--text); }
+
+/* Flash */
+#qflash { position:fixed; inset:0; z-index:8000; pointer-events:none; opacity:0; background:radial-gradient(circle,rgba(240,192,64,.95) 0%,rgba(192,132,252,.7) 35%,rgba(56,189,248,.3) 65%,transparent 85%); }
+</style>
 </head>
-
 <body>
-  <canvas id="star-canvas"></canvas>
+<canvas id="bgCanvas"></canvas>
+<div id="qflash"></div>
 
-  <!-- 사이드바 -->
+<!-- Login Modal -->
+<div id="lmodal">
+  <div class="mbox">
+    <div class="mt">ASTERIA</div>
+    <div class="ms">아스테리아 제국에 오신 것을 환영합니다</div>
+    <div class="mf2"><label>닉네임</label><input type="text" id="ln" placeholder="별빛 탐험가" maxlength="12"></div>
+    <div class="mf2"><label>아바타 이모지</label><input type="text" id="le" placeholder="🌟" maxlength="2"></div>
+    <button class="msub" onclick="doLogin()">제국에 입장하기</button>
+    <button class="mcl" onclick="closeModal()">취소</button>
+  </div>
+</div>
+
+<div id="app">
+  <!-- SIDEBAR -->
   <aside class="sidebar">
-    <div class="sidebar-logo">ASTER<span>IA</span></div>
-
-    <div class="auth-box">
-      <div id="auth-out">
-        <div class="auth-greeting">로그인하고<br />나만의 아스트라를 만나보세요!</div>
-        <div class="auth-buttons">
-          <button class="btn-login" onclick="openModal('login')">로그인</button>
-          <button class="btn-register" onclick="openModal('register')">제국에 참여하기</button>
-        </div>
-      </div>
-      <div id="auth-in" style="display:none">
-        <div class="auth-greeting">환영합니다,<br /><strong id="auth-nick">...</strong></div>
-        <div class="auth-buttons">
-          <button class="btn-dashboard" onclick="location.href='/dashboard.html'">내 대시보드</button>
-          <button class="btn-logout" onclick="logout()">로그아웃</button>
-        </div>
+    <div class="sidebar-logo"><div class="logo-text">ASTER1A</div></div>
+    <div class="sidebar-login" id="sid-login">
+      <div class="login-desc">로그인하고<br>나만의 아티스트를 만나보세요!</div>
+      <button class="btn-login" onclick="openModal()">로그인</button>
+      <button class="btn-join" onclick="openModal()">제국에 참여하기</button>
+    </div>
+    <div id="sid-user" style="display:none;padding:16px 24px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div id="su-av" style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--quasar),var(--quasar2));border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:20px">🌟</div>
+        <div><div id="su-name" style="font-size:14px;font-weight:700"></div><div style="font-size:11px;color:var(--gold);margin-top:2px;font-weight:500">✦ 아스트라 시민</div></div>
       </div>
     </div>
-
-    <!-- 리그 안내 -->
-    <div class="sidebar-section" id="sec-league">
-      <div class="sb-header" onclick="toggleSec('league')">
-        <div class="sb-title"><span>🌌</span>리그 안내</div>
-        <span class="sb-arrow">▶</span>
+    <!-- NAV -->
+    <div class="nav-item" id="nav-league" onclick="toggleLeague()">
+      <span class="nav-icon">🌐</span><span class="nav-label">리그 안내</span>
+      <span class="nav-arrow" id="na">▶</span>
+    </div>
+    <div class="league-sub" id="lsub">
+      <div class="sub-item" onclick="goLeague('QUASAR')">
+        <div class="sub-badge" style="background:linear-gradient(135deg,#f0c040,#c084fc);color:#030308">Q</div>
+        <span class="sub-name">퀘이사 리그</span><span class="sub-tier">최상위</span>
       </div>
-      <div class="sb-body">
-        <ul class="league-list">
-          <li class="league-item" id="li-q">
-            <div class="li-header" onclick="toggleLi('q')">
-              <div class="l-orb oq">Q</div>
-              <span style="color:var(--quasar-gold)">퀘이사</span>
-              <span class="l-count">상위 5개</span>
-              <span class="l-arrow">▶</span>
-            </div>
-            <ul class="fandom-list">
-              <li class="fandom-item"><span class="f-rank">1</span>아르테미스</li>
-              <li class="fandom-item"><span class="f-rank">2</span>스텔라리움</li>
-              <li class="fandom-item"><span class="f-rank">3</span>루나틱스</li>
-              <li class="fandom-item"><span class="f-rank">4</span>오로라 팩션</li>
-              <li class="fandom-item"><span class="f-rank">5</span>갤럭시아</li>
-            </ul>
-          </li>
-          <li class="league-item" id="li-n">
-            <div class="li-header" onclick="toggleLi('n')">
-              <div class="l-orb on">N</div>
-              <span style="color:var(--nova-purple)">노바</span>
-              <span class="l-count">다음 10개</span>
-              <span class="l-arrow">▶</span>
-            </div>
-            <ul class="fandom-list">
-              <li class="fandom-item"><span class="f-rank">1</span>솔라 엠파이어</li>
-              <li class="fandom-item"><span class="f-rank">2</span>네뷸라 크루</li>
-              <li class="fandom-item"><span class="f-rank">3</span>코스모스 팩트</li>
-            </ul>
-          </li>
-          <li class="league-item" id="li-p">
-            <div class="li-header" onclick="toggleLi('p')">
-              <div class="l-orb op">P</div>
-              <span style="color:var(--planet-teal)">플래닛</span>
-              <span class="l-count">다음 20개</span>
-              <span class="l-arrow">▶</span>
-            </div>
-            <ul class="fandom-list">
-              <li class="fandom-item"><span class="f-rank">1</span>테라 팬덤</li>
-              <li class="fandom-item"><span class="f-rank">2</span>오빗 클럽</li>
-            </ul>
-          </li>
-          <li class="league-item" id="li-s">
-            <div class="li-header" onclick="toggleLi('s')">
-              <div class="l-orb os">S</div>
-              <span style="color:var(--star-blue)">스타</span>
-              <span class="l-count">다음 40개</span>
-              <span class="l-arrow">▶</span>
-            </div>
-            <ul class="fandom-list">
-              <li class="fandom-item"><span class="f-rank">1</span>스타더스트</li>
-              <li class="fandom-item"><span class="f-rank">2</span>라이트크루</li>
-            </ul>
-          </li>
-          <li class="league-item" id="li-d">
-            <div class="li-header" onclick="toggleLi('d')">
-              <div class="l-orb od">D</div>
-              <span style="color:var(--dust-gray)">더스트</span>
-              <span class="l-count">그 외</span>
-              <span class="l-arrow">▶</span>
-            </div>
-            <ul class="fandom-list">
-              <li class="fandom-item"><span class="f-rank">1</span>퍼스트 스타</li>
-            </ul>
-          </li>
-        </ul>
+      <div class="sub-item" onclick="goLeague('NOVA')">
+        <div class="sub-badge" style="background:linear-gradient(135deg,#c084fc,#818cf8);color:#fff">N</div>
+        <span class="sub-name">노바 리그</span><span class="sub-tier">1부</span>
+      </div>
+      <div class="sub-item" onclick="goLeague('NEBULA')">
+        <div class="sub-badge" style="background:linear-gradient(135deg,#818cf8,#38bdf8);color:#fff">NB</div>
+        <span class="sub-name">성운 리그</span><span class="sub-tier">2부</span>
+      </div>
+      <div class="sub-item" onclick="goLeague('COMET')">
+        <div class="sub-badge" style="background:linear-gradient(135deg,#38bdf8,#34d399);color:#030308">C</div>
+        <span class="sub-name">혜성 리그</span><span class="sub-tier">3부</span>
+      </div>
+      <div class="sub-item" onclick="goLeague('DUST')">
+        <div class="sub-badge" style="background:linear-gradient(135deg,#94a3b8,#64748b);color:#fff">D</div>
+        <span class="sub-name">성진 리그</span><span class="sub-tier">4부</span>
       </div>
     </div>
-
-    <!-- 내 아스트라 성궤 -->
-    <div class="sidebar-section" id="sec-ark">
-      <div class="sb-header" onclick="toggleSec('ark')">
-        <div class="sb-title"><span>✦</span>내 아스트라 성궤</div>
-        <span class="sb-arrow">▶</span>
-      </div>
-      <div class="sb-body">
-        <div class="ark-box">
-          <div class="ark-card">
-            <div class="prompt-txt" id="ark-prompt">로그인하면 나만의<br />아스트라 성궤를 확인할 수 있어요.</div>
-            <div id="ark-info" style="display:none">
-              <div class="ark-avatar" id="ark-av">?</div>
-              <div class="ark-name" id="ark-nm">-</div>
-              <div class="ark-league-txt" id="ark-lg">DUST LEAGUE</div>
-              <div class="ark-stats">
-                <div>
-                  <div class="ark-stat-v" id="ark-lv">1</div>
-                  <div class="ark-stat-l">LEVEL</div>
-                </div>
-                <div>
-                  <div class="ark-stat-v" id="ark-ap">0</div>
-                  <div class="ark-stat-l">AP</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 내 아스트라 정보 -->
-    <div class="sidebar-section" id="sec-info">
-      <div class="sb-header" onclick="toggleSec('info')">
-        <div class="sb-title"><span>⚡</span>내 아스트라 정보</div>
-        <span class="sb-arrow">▶</span>
-      </div>
-      <div class="sb-body">
-        <div class="info-box">
-          <div class="prompt-txt" id="info-prompt">로그인이 필요합니다.</div>
-          <div id="info-data" style="display:none">
-            <div class="info-row"><span class="info-k">닉네임</span><span class="info-v" id="i-nick">-</span></div>
-            <div class="info-row"><span class="info-k">리그</span><span class="info-v" id="i-league">-</span></div>
-            <div class="info-row"><span class="info-k">레벨</span><span class="info-v" id="i-level">-</span></div>
-            <div class="info-row"><span class="info-k">활동 포인트</span><span class="info-v" id="i-ap"
-                style="color:var(--quasar-gold)">-</span></div>
-            <div class="info-row"><span class="info-k">가입일</span><span class="info-v" id="i-date">-</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <div class="nav-item"><span class="nav-icon">✦</span><span class="nav-label">내 아스트라 성궤</span><span class="nav-arrow">▶</span></div>
+    <div class="nav-item"><span class="nav-icon">⚡</span><span class="nav-label">내 아스트라 정보</span><span class="nav-arrow">▶</span></div>
   </aside>
 
-  <!-- 메인 -->
-  <main class="main-content">
-    <div class="main-header">
-      <div>
-        <div class="mh-title">✦ Quasar League — 제국의 정점</div>
-        <div class="mh-sub">실시간 팬클럽 화력 순위</div>
+  <!-- PAGES -->
+
+  <!-- HOME -->
+  <div id="page-home" class="page active">
+    <div class="hero">
+      <div style="position:relative;z-index:2">
+        <div class="hero-tagline" id="htag"></div>
+        <div class="hero-sub">Every star begins with a single fan. You are the universe.</div>
       </div>
-      <div style="font-family:'Orbitron',monospace;font-size:0.6rem;color:var(--text-muted);letter-spacing:0.1em">
-        ASTERIA.ME.KR</div>
+      <div class="hero-glow"></div>
     </div>
-
-    <div class="donut-section">
-      <div class="s-eyebrow">Quasar League · Top 5</div>
-      <div class="s-heading">제국의 <em>5대 성좌</em></div>
-
-      <div class="donut-container">
-        <!-- SVG 도넛 -->
-        <svg class="donut-svg" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+    <div class="qhdr">
+      <div class="qhdr-top"><span class="qhdr-gem">✦</span><span class="qhdr-title">Quasar League</span><span class="qhdr-gem">✦</span></div>
+      <div class="qhdr-line"></div>
+      <div class="qhdr-sub">— 제국의 정점 · 실시간 팬클럽 화력 순위 —</div>
+    </div>
+    <!-- Draggable constellation -->
+    <div class="cv" id="cv">
+      <div class="cw" id="cw">
+        <div class="q-ring" style="width:520px;height:520px"></div>
+        <div class="q-ring" style="width:800px;height:800px"></div>
+        <div class="q-ring" style="width:1060px;height:1060px"></div>
+        <svg class="q-lines" viewBox="0 0 1800 1200" preserveAspectRatio="none">
           <defs>
-            <radialGradient id="glow-gold" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="rgba(240,192,64,0.15)" />
-              <stop offset="100%" stop-color="rgba(240,192,64,0)" />
-            </radialGradient>
+            <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="rgba(240,192,64,0.5)"/>
+              <stop offset="100%" stop-color="rgba(192,132,252,0.5)"/>
+            </linearGradient>
           </defs>
-          <!-- 글로우 배경 -->
-          <circle cx="250" cy="250" r="240" fill="url(#glow-gold)" />
-          <!-- 바깥 원 -->
-          <circle cx="250" cy="250" r="238" fill="none" stroke="rgba(240,192,64,0.15)" stroke-width="1.5" />
-          <!-- 섹터 구분선 -->
-          <line x1="250" y1="12" x2="250" y2="488" stroke="rgba(255,255,255,0.07)" stroke-width="1" />
-          <line x1="12" y1="250" x2="488" y2="250" stroke="rgba(255,255,255,0.07)" stroke-width="1" />
-          <!-- 섹터 채우기 -->
-          <!-- 2위 섹터 (위 오른쪽) -->
-          <path d="M250,250 L250,12 A238,238 0 0,1 488,250 Z" fill="rgba(184,127,255,0.05)" stroke="none" />
-          <!-- 3위 섹터 (아래 오른쪽) -->
-          <path d="M250,250 L488,250 A238,238 0 0,1 250,488 Z" fill="rgba(64,224,208,0.05)" stroke="none" />
-          <!-- 4위 섹터 (아래 왼쪽) -->
-          <path d="M250,250 L250,488 A238,238 0 0,1 12,250 Z" fill="rgba(96,168,255,0.05)" stroke="none" />
-          <!-- 5위 섹터 (위 왼쪽) -->
-          <path d="M250,250 L12,250 A238,238 0 0,1 250,12 Z" fill="rgba(136,153,187,0.05)" stroke="none" />
-          <!-- 내부 원 (도넛 구멍 경계) -->
-          <circle cx="250" cy="250" r="130" fill="rgba(3,1,10,0.0)" stroke="rgba(240,192,64,0.25)" stroke-width="1.5" />
-          <!-- 순위 레이블 -->
-          <text x="390" y="130" text-anchor="middle" fill="rgba(184,127,255,0.5)" font-family="Orbitron,monospace"
-            font-size="11" letter-spacing="2">2ND</text>
-          <text x="390" y="390" text-anchor="middle" fill="rgba(64,224,208,0.5)" font-family="Orbitron,monospace"
-            font-size="11" letter-spacing="2">3RD</text>
-          <text x="110" y="390" text-anchor="middle" fill="rgba(96,168,255,0.5)" font-family="Orbitron,monospace"
-            font-size="11" letter-spacing="2">4TH</text>
-          <text x="110" y="130" text-anchor="middle" fill="rgba(136,153,187,0.5)" font-family="Orbitron,monospace"
-            font-size="11" letter-spacing="2">5TH</text>
+          <line x1="900" y1="600" x2="900" y2="200" stroke="url(#lg)" stroke-width="1.5" stroke-dasharray="6,6" opacity="0.5"/>
+          <line x1="900" y1="600" x2="900" y2="1000" stroke="url(#lg)" stroke-width="1.5" stroke-dasharray="6,6" opacity="0.5"/>
+          <line x1="900" y1="600" x2="360" y2="600" stroke="url(#lg)" stroke-width="1.5" stroke-dasharray="6,6" opacity="0.5"/>
+          <line x1="900" y1="600" x2="1440" y2="600" stroke="url(#lg)" stroke-width="1.5" stroke-dasharray="6,6" opacity="0.5"/>
         </svg>
-
-        <!-- 중앙 1위 -->
-        <div class="center-card">
-          <div class="c-rank" style="color:var(--quasar-gold)">🏆 1ST</div>
-          <div class="c-emblem"
-            style="background:radial-gradient(circle at 35% 35%,#ffe87a,#f0c040,#c07a00);border-color:#f0c040;color:#3a2000">
-            A</div>
-          <div class="c-name" style="color:var(--quasar-gold)">아르테미스</div>
-          <div class="c-artist">ARTIST NAME</div>
-          <div class="c-power" style="color:var(--quasar-gold)">⚡ 9,842,100 CP</div>
+        <!-- RANK 1 center (900,600) orb 380px offset 190 -->
+        <div class="q-node c1" data-fan="SERENADE" style="left:710px;top:410px" onclick="goFromNode(this)">
+          <div class="q-orb r1"><span style="font-size:100px">🌟</span><div class="q-rank">1</div></div>
+          <div class="q-lbl"><div class="q-name">SERENADE</div><div class="q-score">127,450 QP</div></div>
         </div>
-
-        <!-- 2위: 위 오른쪽 -->
-        <div class="sector-card s-top">
-          <div class="c-rank" style="color:var(--nova-purple)">2ND</div>
-          <div class="c-emblem"
-            style="background:radial-gradient(circle at 35% 35%,#d4aaff,#b87fff);border-color:#b87fff;color:#fff">S
-          </div>
-          <div class="c-name" style="color:var(--nova-purple)">스텔라리움</div>
-          <div class="c-artist">ARTIST NAME</div>
-          <div class="c-power" style="color:var(--nova-purple)">⚡ 7,231,400</div>
+        <!-- RANK 2 north -->
+        <div class="q-node" data-fan="NOVA CORE" style="left:800px;top:55px" onclick="goFromNode(this)">
+          <div class="q-orb r2"><span style="font-size:54px">💜</span><div class="q-rank">2</div></div>
+          <div class="q-lbl"><div class="q-name">NOVA CORE</div><div class="q-score">98,320 QP</div></div>
         </div>
-
-        <!-- 3위: 아래 오른쪽 -->
-        <div class="sector-card s-right">
-          <div class="c-rank" style="color:var(--planet-teal)">3RD</div>
-          <div class="c-emblem"
-            style="background:radial-gradient(circle at 35% 35%,#80ffe8,#40e0d0);border-color:#40e0d0;color:#003830">L
-          </div>
-          <div class="c-name" style="color:var(--planet-teal)">루나틱스</div>
-          <div class="c-artist">ARTIST NAME</div>
-          <div class="c-power" style="color:var(--planet-teal)">⚡ 5,890,200</div>
+        <!-- RANK 3 south -->
+        <div class="q-node" data-fan="ECLIPSE" style="left:800px;top:950px" onclick="goFromNode(this)">
+          <div class="q-orb r3"><span style="font-size:54px">🔵</span><div class="q-rank">3</div></div>
+          <div class="q-lbl"><div class="q-name">ECLIPSE</div><div class="q-score">82,100 QP</div></div>
         </div>
-
-        <!-- 4위: 아래 왼쪽 -->
-        <div class="sector-card s-bottom">
-          <div class="c-rank" style="color:var(--star-blue)">4TH</div>
-          <div class="c-emblem"
-            style="background:radial-gradient(circle at 35% 35%,#a0c8ff,#60a8ff);border-color:#60a8ff;color:#001040">O
-          </div>
-          <div class="c-name" style="color:var(--star-blue)">오로라 팩션</div>
-          <div class="c-artist">ARTIST NAME</div>
-          <div class="c-power" style="color:var(--star-blue)">⚡ 4,120,800</div>
+        <!-- RANK 4 west -->
+        <div class="q-node" data-fan="AURORA" style="left:155px;top:500px" onclick="goFromNode(this)">
+          <div class="q-orb r4"><span style="font-size:54px">💚</span><div class="q-rank">4</div></div>
+          <div class="q-lbl"><div class="q-name">AURORA</div><div class="q-score">71,880 QP</div></div>
         </div>
-
-        <!-- 5위: 위 왼쪽 -->
-        <div class="sector-card s-left">
-          <div class="c-rank" style="color:var(--dust-gray)">5TH</div>
-          <div class="c-emblem"
-            style="background:radial-gradient(circle at 35% 35%,#c0c8d8,#8899bb);border-color:#8899bb;color:#0a0f1e">G
-          </div>
-          <div class="c-name" style="color:var(--dust-gray)">갤럭시아</div>
-          <div class="c-artist">ARTIST NAME</div>
-          <div class="c-power" style="color:var(--dust-gray)">⚡ 3,450,600</div>
+        <!-- RANK 5 east -->
+        <div class="q-node" data-fan="SOLARIS" style="left:1445px;top:500px" onclick="goFromNode(this)">
+          <div class="q-orb r5"><span style="font-size:54px">🔴</span><div class="q-rank">5</div></div>
+          <div class="q-lbl"><div class="q-name">SOLARIS</div><div class="q-score">63,240 QP</div></div>
         </div>
       </div>
     </div>
-  </main>
-
-  <!-- 로그인 모달 -->
-  <div class="modal-overlay" id="modal-login">
-    <div class="modal">
-      <button class="modal-close" onclick="closeModal('login')">✕</button>
-      <div class="modal-title">제국에 귀환하기</div>
-      <div class="modal-sub">RETURN TO THE EMPIRE</div>
-      <div class="fg"><label>이메일</label><input type="email" id="login-email" placeholder="your@email.com" /></div>
-      <div class="fg"><label>비밀번호</label><input type="password" id="login-pw" placeholder="••••••••" /></div>
-      <button class="form-submit" onclick="handleLogin()">귀환하기</button>
-      <div class="form-switch">아직 아스트라가 아니신가요? <a onclick="switchModal('login','register')">지금 탄생하기</a></div>
-    </div>
+    <div class="q-hint">✦ 팬덤을 클릭하면 리그 맵으로 이동합니다 · 드래그로 탐험하세요 ✦</div>
   </div>
 
-  <!-- 회원가입 모달 -->
-  <div class="modal-overlay" id="modal-register">
-    <div class="modal">
-      <button class="modal-close" onclick="closeModal('register')">✕</button>
-      <div class="modal-title">아스트라로 탄생하기</div>
-      <div class="modal-sub">BIRTH OF A NEW STAR</div>
-      <div class="fg"><label>닉네임</label><input type="text" id="reg-nick" placeholder="당신의 별 이름" /></div>
-      <div class="fg"><label>이메일</label><input type="email" id="reg-email" placeholder="your@email.com" /></div>
-      <div class="fg"><label>비밀번호</label><input type="password" id="reg-pw" placeholder="8자 이상" /></div>
-      <div class="fg"><label>비밀번호 확인</label><input type="password" id="reg-pw2" placeholder="비밀번호 재입력" /></div>
-      <button class="form-submit" onclick="handleRegister()">탄생하기</button>
-      <div class="form-switch">이미 아스트라이신가요? <a onclick="switchModal('register','login')">귀환하기</a></div>
+  <!-- LEAGUE SELECT -->
+  <div id="page-league-select" class="page">
+    <div class="ls-title">리그 선택</div>
+    <div class="ls-sub">입장할 리그를 선택하세요</div>
+    <div class="lc-grid">
+      <div class="lc" onclick="goLeagueMap('QUASAR')" style="border-color:rgba(240,192,64,.3)">
+        <div class="lc-icon">⚡</div><div class="lc-name" style="color:#f0c040">QUASAR</div>
+        <div class="lc-desc">최상위 팬덤들의<br>전쟁터</div><div class="lc-tier">TOP TIER</div>
+      </div>
+      <div class="lc" onclick="goLeagueMap('NOVA')" style="border-color:rgba(192,132,252,.3)">
+        <div class="lc-icon">🌠</div><div class="lc-name" style="color:#c084fc">NOVA</div>
+        <div class="lc-desc">폭발적인 성장<br>노바 리그</div><div class="lc-tier">1부 리그</div>
+      </div>
+      <div class="lc" onclick="goLeagueMap('NEBULA')" style="border-color:rgba(129,140,248,.3)">
+        <div class="lc-icon">🌌</div><div class="lc-name" style="color:#818cf8">NEBULA</div>
+        <div class="lc-desc">성운의 힘으로<br>도약하라</div><div class="lc-tier">2부 리그</div>
+      </div>
+      <div class="lc" onclick="goLeagueMap('COMET')" style="border-color:rgba(56,189,248,.3)">
+        <div class="lc-icon">☄️</div><div class="lc-name" style="color:#38bdf8">COMET</div>
+        <div class="lc-desc">빠르게 치고<br>올라가는 혜성</div><div class="lc-tier">3부 리그</div>
+      </div>
+      <div class="lc" onclick="goLeagueMap('DUST')" style="border-color:rgba(148,163,184,.3)">
+        <div class="lc-icon">✨</div><div class="lc-name" style="color:#94a3b8">DUST</div>
+        <div class="lc-desc">별먼지에서<br>퀘이사로</div><div class="lc-tier">4부 리그</div>
+      </div>
     </div>
+    <button class="btn-back-ls" onclick="showPage('page-home')">← 홈으로</button>
   </div>
 
-  <div class="toast" id="toast"></div>
+  <!-- LEAGUE MAP -->
+  <div id="page-league" class="page">
+    <div class="ltop">
+      <div class="ltop-l">
+        <button class="btn-back" onclick="showPage('page-home')">← 홈</button>
+        <div><div class="ltitle" id="ltitle">QUASAR LEAGUE MAP</div><div style="font-size:11px;color:var(--muted);margin-top:2px" id="lsub2"></div></div>
+      </div>
+      <div style="font-size:11px;color:var(--muted)">🔴 LIVE · 전체 팬덤 세력도</div>
+    </div>
+    <div class="map-row">
+      <div class="map-wrap" id="mwrap">
+        <div class="map-world" id="mworld">
+          <!-- territories -->
+          <div class="terr" style="width:700px;height:700px;top:600px;left:900px;background:radial-gradient(circle,rgba(240,192,64,.09),transparent 70%)"></div>
+          <div class="terr" style="width:450px;height:450px;top:200px;left:300px;background:radial-gradient(circle,rgba(192,132,252,.08),transparent 70%)"></div>
+          <div class="terr" style="width:420px;height:420px;top:1100px;left:1600px;background:radial-gradient(circle,rgba(56,189,248,.08),transparent 70%)"></div>
+          <div class="terr" style="width:400px;height:400px;top:1500px;left:500px;background:radial-gradient(circle,rgba(52,211,153,.07),transparent 70%)"></div>
+          <div class="terr" style="width:380px;height:380px;top:400px;left:2100px;background:radial-gradient(circle,rgba(251,113,133,.07),transparent 70%)"></div>
+          <!-- top5 -->
+          <div class="mf" style="left:1010px;top:700px">
+            <div class="mo" style="width:200px;height:200px;background:radial-gradient(circle at 35% 35%,rgba(255,215,0,.65),rgba(192,132,252,.4),rgba(7,7,15,.95));box-shadow:0 0 0 3px rgba(240,192,64,.7),0 0 50px rgba(240,192,64,.6),0 0 120px rgba(192,132,252,.35);font-size:64px;animation:op1 3s ease-in-out infinite">🌟</div>
+            <div class="ml"><div class="mfn">SERENADE</div><div class="mfs">#1 · 127,450 QP</div></div>
+          </div>
+          <div class="mf" style="left:380px;top:280px">
+            <div class="mo" style="width:130px;height:130px;background:radial-gradient(circle at 35% 35%,rgba(192,132,252,.55),rgba(56,189,248,.25),rgba(7,7,15,.95));box-shadow:0 0 0 2px rgba(192,132,252,.6),0 0 30px rgba(192,132,252,.5);font-size:40px">💜</div>
+            <div class="ml"><div class="mfn">NOVA CORE</div><div class="mfs">#2 · 98,320 QP</div></div>
+          </div>
+          <div class="mf" style="left:1700px;top:1180px">
+            <div class="mo" style="width:120px;height:120px;background:radial-gradient(circle at 35% 35%,rgba(56,189,248,.55),rgba(192,132,252,.25),rgba(7,7,15,.95));box-shadow:0 0 0 2px rgba(56,189,248,.6),0 0 30px rgba(56,189,248,.5);font-size:38px">🔵</div>
+            <div class="ml"><div class="mfn">ECLIPSE</div><div class="mfs">#3 · 82,100 QP</div></div>
+          </div>
+          <div class="mf" style="left:560px;top:1560px">
+            <div class="mo" style="width:110px;height:110px;background:radial-gradient(circle at 35% 35%,rgba(52,211,153,.55),rgba(56,189,248,.25),rgba(7,7,15,.95));box-shadow:0 0 0 2px rgba(52,211,153,.6),0 0 28px rgba(52,211,153,.5);font-size:36px">💚</div>
+            <div class="ml"><div class="mfn">AURORA</div><div class="mfs">#4 · 71,880 QP</div></div>
+          </div>
+          <div class="mf" style="left:2180px;top:450px">
+            <div class="mo" style="width:110px;height:110px;background:radial-gradient(circle at 35% 35%,rgba(251,113,133,.55),rgba(192,132,252,.25),rgba(7,7,15,.95));box-shadow:0 0 0 2px rgba(251,113,133,.6),0 0 28px rgba(251,113,133,.5);font-size:36px">🔴</div>
+            <div class="ml"><div class="mfn">SOLARIS</div><div class="mfs">#5 · 63,240 QP</div></div>
+          </div>
+          <!-- extra fandoms fill map -->
+          <div class="mf" style="left:100px;top:900px"><div class="mo" style="width:80px;height:80px;background:radial-gradient(circle at 35% 35%,rgba(251,191,36,.45),rgba(7,7,15,.95));box-shadow:0 0 0 1.5px rgba(251,191,36,.5),0 0 20px rgba(251,191,36,.4);font-size:28px">🌙</div><div class="ml"><div class="mfn" style="font-size:11px">LUNARIS</div><div class="mfs" style="font-size:10px">#6</div></div></div>
+          <div class="mf" style="left:1300px;top:200px"><div class="mo" style="width:80px;height:80px;background:radial-gradient(circle at 35% 35%,rgba(248,113,113,.45),rgba(7,7,15,.95));box-shadow:0 0 0 1.5px rgba(248,113,113,.5),0 0 20px rgba(248,113,113,.4);font-size:28px">🔥</div><div class="ml"><div class="mfn" style="font-size:11px">IGNIS</div><div class="mfs" style="font-size:10px">#7</div></div></div>
+          <div class="mf" style="left:2400px;top:1100px"><div class="mo" style="width:80px;height:80px;background:radial-gradient(circle at 35% 35%,rgba(167,243,208,.45),rgba(7,7,15,.95));box-shadow:0 0 0 1.5px rgba(167,243,208,.5),0 0 20px rgba(167,243,208,.4);font-size:28px">🌿</div><div class="ml"><div class="mfn" style="font-size:11px">VERDANT</div><div class="mfs" style="font-size:10px">#8</div></div></div>
+          <div class="mf" style="left:2600px;top:1700px"><div class="mo" style="width:80px;height:80px;background:radial-gradient(circle at 35% 35%,rgba(196,181,253,.45),rgba(7,7,15,.95));box-shadow:0 0 0 1.5px rgba(196,181,253,.5),0 0 20px rgba(196,181,253,.4);font-size:28px">💫</div><div class="ml"><div class="mfn" style="font-size:11px">SPECTRA</div><div class="mfs" style="font-size:10px">#9</div></div></div>
+          <div class="mf" style="left:200px;top:1900px"><div class="mo" style="width:80px;height:80px;background:radial-gradient(circle at 35% 35%,rgba(147,197,253,.45),rgba(7,7,15,.95));box-shadow:0 0 0 1.5px rgba(147,197,253,.5),0 0 20px rgba(147,197,253,.4);font-size:28px">🌊</div><div class="ml"><div class="mfn" style="font-size:11px">OCEANUS</div><div class="mfs" style="font-size:10px">#10</div></div></div>
+          <div class="mf" style="left:1900px;top:1900px"><div class="mo" style="width:80px;height:80px;background:radial-gradient(circle at 35% 35%,rgba(253,186,116,.45),rgba(7,7,15,.95));box-shadow:0 0 0 1.5px rgba(253,186,116,.5),0 0 20px rgba(253,186,116,.4);font-size:28px">🌅</div><div class="ml"><div class="mfn" style="font-size:11px">DAWN</div><div class="mfs" style="font-size:10px">#11</div></div></div>
+          <div class="mf" style="left:800px;top:2100px"><div class="mo" style="width:80px;height:80px;background:radial-gradient(circle at 35% 35%,rgba(249,168,212,.45),rgba(7,7,15,.95));box-shadow:0 0 0 1.5px rgba(249,168,212,.5),0 0 20px rgba(249,168,212,.4);font-size:28px">🌸</div><div class="ml"><div class="mfn" style="font-size:11px">BLOOM</div><div class="mfs" style="font-size:10px">#12</div></div></div>
+          <div class="mf" style="left:2200px;top:250px"><div class="mo" style="width:70px;height:70px;background:radial-gradient(circle at 35% 35%,rgba(165,180,252,.4),rgba(7,7,15,.95));box-shadow:0 0 0 1.5px rgba(165,180,252,.5),0 0 16px rgba(165,180,252,.4);font-size:24px">❄️</div><div class="ml"><div class="mfn" style="font-size:11px">FROST</div><div class="mfs" style="font-size:10px">#13</div></div></div>
+          <div class="mf" style="left:1500px;top:1900px"><div class="mo" style="width:70px;height:70px;background:radial-gradient(circle at 35% 35%,rgba(251,146,60,.4),rgba(7,7,15,.95));box-shadow:0 0 0 1.5px rgba(251,146,60,.5),0 0 16px rgba(251,146,60,.4);font-size:24px">🌋</div><div class="ml"><div class="mfn" style="font-size:11px">MAGMA</div><div class="mfs" style="font-size:10px">#14</div></div></div>
+          <div class="mf" style="left:2700px;top:700px"><div class="mo" style="width:70px;height:70px;background:radial-gradient(circle at 35% 35%,rgba(134,239,172,.4),rgba(7,7,15,.95));box-shadow:0 0 0 1.5px rgba(134,239,172,.5),0 0 16px rgba(134,239,172,.4);font-size:24px">🍃</div><div class="ml"><div class="mfn" style="font-size:11px">GALE</div><div class="mfs" style="font-size:10px">#15</div></div></div>
+          <!-- communities -->
+          <div class="cn" style="left:780px;top:880px"><div class="cb">💬</div><div class="cn-name">자유 광장</div></div>
+          <div class="cn" style="left:1280px;top:960px"><div class="cb">🎵</div><div class="cn-name">뮤직 존</div></div>
+          <div class="cn" style="left:1050px;top:500px"><div class="cb">📸</div><div class="cn-name">포토 갤러리</div></div>
+          <div class="cn" style="left:650px;top:1200px"><div class="cb">⚔️</div><div class="cn-name">배틀 존</div></div>
+          <div class="cn" style="left:1400px;top:700px"><div class="cb">🏆</div><div class="cn-name">리그 본부</div></div>
+          <div class="cn" style="left:300px;top:1300px"><div class="cb">🌟</div><div class="cn-name">스타 존</div></div>
+          <div class="cn" style="left:2000px;top:800px"><div class="cb">🎪</div><div class="cn-name">이벤트 존</div></div>
+          <div class="cn" style="left:1700px;top:400px"><div class="cb">📢</div><div class="cn-name">공지 광장</div></div>
+          <div class="cn" style="left:900px;top:1500px"><div class="cb">🎭</div><div class="cn-name">팬아트 존</div></div>
+          <div class="cn" style="left:2300px;top:1500px"><div class="cb">💡</div><div class="cn-name">아이디어 광장</div></div>
+          <!-- AVATAR -->
+          <div class="av" id="avnode" style="display:none;left:1090px;top:680px">
+            <div class="av-chat" id="avchat"></div>
+            <div class="av-body" id="avbody">🌟</div>
+            <div class="av-name" id="avname"></div>
+          </div>
+        </div>
+      </div>
+      <!-- RIGHT PANEL -->
+      <div class="rp">
+        <div class="rp-tabs">
+          <div class="rp-tab active" onclick="switchTab(0)">화력 순위</div>
+          <div class="rp-tab" onclick="switchTab(1)">채팅</div>
+          <div class="rp-tab" onclick="switchTab(2)">커뮤니티</div>
+        </div>
+        <!-- rank -->
+        <div id="tp0" class="tp active"><div class="rp-body">
+          <div class="ts">✦ 실시간 화력 순위</div>
+          <div class="ri hl"><div class="rn">1</div><div class="ro" style="background:radial-gradient(circle,rgba(255,215,0,.5),rgba(7,7,15,.9))">🌟</div><div class="rf"><div class="rfn">SERENADE</div><div class="rfv">127,450 QP</div></div></div>
+          <div class="ri"><div class="rn">2</div><div class="ro" style="background:radial-gradient(circle,rgba(192,132,252,.4),rgba(7,7,15,.9))">💜</div><div class="rf"><div class="rfn">NOVA CORE</div><div class="rfv">98,320 QP</div></div></div>
+          <div class="ri"><div class="rn">3</div><div class="ro" style="background:radial-gradient(circle,rgba(56,189,248,.4),rgba(7,7,15,.9))">🔵</div><div class="rf"><div class="rfn">ECLIPSE</div><div class="rfv">82,100 QP</div></div></div>
+          <div class="ri"><div class="rn">4</div><div class="ro" style="background:radial-gradient(circle,rgba(52,211,153,.4),rgba(7,7,15,.9))">💚</div><div class="rf"><div class="rfn">AURORA</div><div class="rfv">71,880 QP</div></div></div>
+          <div class="ri"><div class="rn">5</div><div class="ro" style="background:radial-gradient(circle,rgba(251,113,133,.4),rgba(7,7,15,.9))">🔴</div><div class="rf"><div class="rfn">SOLARIS</div><div class="rfv">63,240 QP</div></div></div>
+        </div></div>
+        <!-- chat -->
+        <div id="tp1" class="tp" style="display:flex;flex-direction:column;height:calc(100% - 49px)">
+          <div class="chat-area" id="chatArea">
+            <div class="cm"><div class="ca" style="background:linear-gradient(135deg,#c084fc,#818cf8)">💜</div><div><div class="cb2"><div class="cs">NovaFan99</div><div class="ct">퀘이사 리그 진입했다!! 🎉</div><div class="cti">12:34</div></div></div></div>
+            <div class="cm"><div class="ca" style="background:linear-gradient(135deg,#38bdf8,#818cf8)">🔵</div><div><div class="cb2"><div class="cs">EclipseKing</div><div class="ct">SERENADE 팬덤 진짜 화력 넘사벽이네요 ㄷㄷ</div><div class="cti">12:35</div></div></div></div>
+            <div class="cm"><div class="ca" style="background:linear-gradient(135deg,#f0c040,#e6a800)">🌟</div><div><div class="cb2"><div class="cs">StarQueen</div><div class="ct">오늘 이벤트 시간에 같이 화력 쏘실 분~?</div><div class="cti">12:36</div></div></div></div>
+          </div>
+          <div class="chat-in">
+            <input class="chat-input" id="chatInput" placeholder="로그인 후 채팅 가능합니다" disabled onkeydown="if(event.key==='Enter')sendChat()">
+            <button class="chat-send" onclick="sendChat()">➤</button>
+          </div>
+        </div>
+        <!-- community -->
+        <div id="tp2" class="tp"><div class="rp-body">
+          <div class="ts">✦ 커뮤니티 공간</div>
+          <div class="ci"><span style="font-size:20px">💬</span><div><div style="font-size:13px;font-weight:600">자유 광장</div><div style="font-size:11px;color:var(--quasar3)">3,241명 활동 중</div></div></div>
+          <div class="ci"><span style="font-size:20px">🎵</span><div><div style="font-size:13px;font-weight:600">뮤직 존</div><div style="font-size:11px;color:var(--quasar3)">1,872명 활동 중</div></div></div>
+          <div class="ci"><span style="font-size:20px">📸</span><div><div style="font-size:13px;font-weight:600">포토 갤러리</div><div style="font-size:11px;color:var(--quasar3)">2,104명 활동 중</div></div></div>
+          <div class="ci"><span style="font-size:20px">⚔️</span><div><div style="font-size:13px;font-weight:600">배틀 존</div><div style="font-size:11px;color:var(--quasar3)">891명 활동 중</div></div></div>
+          <div class="ci"><span style="font-size:20px">🏆</span><div><div style="font-size:13px;font-weight:600">리그 본부</div><div style="font-size:11px;color:var(--quasar3)">512명 활동 중</div></div></div>
+          <div class="ci"><span style="font-size:20px">🎭</span><div><div style="font-size:13px;font-weight:600">팬아트 존</div><div style="font-size:11px;color:var(--quasar3)">748명 활동 중</div></div></div>
+          <div class="ci"><span style="font-size:20px">🎪</span><div><div style="font-size:13px;font-weight:600">이벤트 존</div><div style="font-size:11px;color:var(--quasar3)">1,340명 활동 중</div></div></div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</div><!-- /app -->
 
-  <script>
-    const canvas = document.getElementById('star-canvas');
-    const ctx = canvas.getContext('2d');
-    let W, H, stars = [];
-    function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
-    resize(); window.addEventListener('resize', resize);
-    function mkStar() { return { x: Math.random() * W, y: Math.random() * H, r: Math.random() * 1.2 + 0.2, a: Math.random(), da: (Math.random() - 0.5) * 0.003, vx: (Math.random() - 0.5) * 0.04, vy: (Math.random() - 0.5) * 0.02, c: Math.random() < 0.15 ? '#b87fff' : Math.random() < 0.1 ? '#60a8ff' : '#e0d8ff' }; }
-    for (let i = 0; i < 260; i++) stars.push(mkStar());
-    function drawStars() {
-      ctx.clearRect(0, 0, W, H);
-      stars.forEach(s => {
-        s.x += s.vx; s.y += s.vy; s.a += s.da;
-        if (s.x < 0) s.x = W; if (s.x > W) s.x = 0; if (s.y < 0) s.y = H; if (s.y > H) s.y = 0;
-        if (s.a < 0.1) s.da = Math.abs(s.da); if (s.a > 1) s.da = -Math.abs(s.da);
-        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        ctx.fillStyle = s.c; ctx.globalAlpha = s.a * 0.7; ctx.fill();
-      });
-      ctx.globalAlpha = 1; requestAnimationFrame(drawStars);
-    }
-    drawStars();
+<script>
+// ═══ PARTICLES ═══
+const cv2=document.getElementById('bgCanvas'),cx=cv2.getContext('2d');
+let W,H,stars=[],bursts=[];
+function rsz(){W=cv2.width=window.innerWidth;H=cv2.height=window.innerHeight;}
+rsz(); window.addEventListener('resize',rsz);
+let mx=-9999,my=-9999;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
+class Star{
+  constructor(){this.r();}
+  r(){this.x=Math.random()*W;this.y=Math.random()*H;this.s=Math.random()*1.8+.3;this.ba=Math.random()*.55+.1;this.a=this.ba;this.vx=(Math.random()-.5)*.12;this.vy=(Math.random()-.5)*.12;this.ph=Math.random()*Math.PI*2;this.sp=Math.random()*.018+.004;const r=Math.random();this.col=r<.07?'#f0c040':r<.12?'#c084fc':r<.15?'#38bdf8':'#fff';}
+  u(){this.ph+=this.sp;const dx=mx-this.x,dy=my-this.y,d=Math.sqrt(dx*dx+dy*dy);if(d<180){this.vx+=dx/d*.03;this.vy+=dy/d*.03;}this.vx*=.985;this.vy*=.985;this.x+=this.vx;this.y+=this.vy;this.a=this.ba*(.45+.55*Math.sin(this.ph));if(this.x<0)this.x=W;if(this.x>W)this.x=0;if(this.y<0)this.y=H;if(this.y>H)this.y=0;}
+  d(){cx.save();cx.globalAlpha=this.a;cx.fillStyle=this.col;if(this.s>1.2){cx.shadowColor=this.col;cx.shadowBlur=5;}cx.beginPath();cx.arc(this.x,this.y,this.s,0,Math.PI*2);cx.fill();cx.restore();}
+}
+class Burst{
+  constructor(bx,by){this.life=1;this.pts=Array.from({length:90},(_,i)=>{const a=i/90*Math.PI*2,sp=Math.random()*5+1;return{x:bx,y:by,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,s:Math.random()*3+1,c:Math.random()<.4?'#f0c040':Math.random()<.5?'#c084fc':'#38bdf8'};});}
+  u(){this.life-=.022;this.pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vx*=.94;p.vy*=.94;});}
+  d(){this.pts.forEach(p=>{cx.save();cx.globalAlpha=this.life*.85;cx.fillStyle=p.c;cx.shadowColor=p.c;cx.shadowBlur=8;cx.beginPath();cx.arc(p.x,p.y,p.s,0,Math.PI*2);cx.fill();cx.restore();});}
+  dead(){return this.life<=0;}
+}
+for(let i=0;i<300;i++)stars.push(new Star());
+function raf(){
+  cx.clearRect(0,0,W,H);
+  const g=cx.createRadialGradient(W*.65,H*.3,0,W*.65,H*.3,W*.38);
+  g.addColorStop(0,'rgba(70,30,110,.07)');g.addColorStop(1,'transparent');
+  cx.fillStyle=g;cx.fillRect(0,0,W,H);
+  stars.forEach(s=>{s.u();s.d();});
+  bursts=bursts.filter(b=>!b.dead());
+  bursts.forEach(b=>{b.u();b.d();});
+  requestAnimationFrame(raf);
+}
+requestAnimationFrame(raf);
 
-    function toggleSec(id) { document.getElementById('sec-' + id).classList.toggle('open'); }
-    function toggleLi(id) { document.getElementById('li-' + id).classList.toggle('open'); }
-    function openModal(type) { document.getElementById('modal-' + type).classList.add('active'); }
-    function closeModal(type) { document.getElementById('modal-' + type).classList.remove('active'); }
-    function switchModal(from, to) { closeModal(from); setTimeout(() => openModal(to), 200); }
-    document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('active'); }));
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active')); });
+// ═══ WAVE HERO TEXT ═══
+const txt='당신이 빛날 때, 아스테리아가 태어난다';
+const htag=document.getElementById('htag');
+txt.split('').forEach((ch,i)=>{
+  const sp=document.createElement('span');
+  sp.className='c';
+  sp.textContent=ch===' '?'\u00A0':ch;
+  sp.style.animationDelay=`${i*0.085}s`;
+  htag.appendChild(sp);
+});
 
-    function showToast(msg, type = '') {
-      const t = document.getElementById('toast');
-      t.textContent = msg; t.className = 'toast ' + type; t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 3200);
-    }
+// ═══ PAGE NAV ═══
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
 
-    async function checkAuth() {
-      const token = localStorage.getItem('asteria_token');
-      if (!token) return;
-      try {
-        const res = await fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + token } });
-        if (!res.ok) { localStorage.removeItem('asteria_token'); return; }
-        const user = await res.json();
-        updateUI(user);
-      } catch { }
-    }
+// ═══ LEAGUE SUBMENU ═══
+function toggleLeague(){
+  document.getElementById('nav-league').classList.toggle('open');
+  document.getElementById('lsub').classList.toggle('open');
+}
 
-    function updateUI(user) {
-      const ln = { dust: '더스트', star: '스타', planet: '플래닛', nova: '노바', quasar: '퀘이사' };
-      document.getElementById('auth-out').style.display = 'none';
-      document.getElementById('auth-in').style.display = 'block';
-      document.getElementById('auth-nick').textContent = user.nickname;
-      document.getElementById('ark-prompt').style.display = 'none';
-      document.getElementById('ark-info').style.display = 'block';
-      document.getElementById('ark-av').textContent = user.nickname[0].toUpperCase();
-      document.getElementById('ark-nm').textContent = user.nickname;
-      document.getElementById('ark-lg').textContent = (ln[user.league] || user.league).toUpperCase() + ' LEAGUE';
-      document.getElementById('ark-lv').textContent = user.level;
-      document.getElementById('ark-ap').textContent = (user.ap || 0).toLocaleString();
-      document.getElementById('info-prompt').style.display = 'none';
-      document.getElementById('info-data').style.display = 'block';
-      document.getElementById('i-nick').textContent = user.nickname;
-      document.getElementById('i-league').textContent = ln[user.league] || user.league;
-      document.getElementById('i-level').textContent = 'Lv.' + user.level;
-      document.getElementById('i-ap').textContent = (user.ap || 0).toLocaleString() + ' AP';
-      document.getElementById('i-date').textContent = user.created_at ? new Date(user.created_at).toLocaleDateString('ko-KR') : '-';
-    }
+function goLeague(key){
+  // go to league select page first
+  showPage('page-league-select');
+}
 
-    async function handleLogin() {
-      const email = document.getElementById('login-email').value.trim();
-      const pw = document.getElementById('login-pw').value;
-      if (!email || !pw) { showToast('이메일과 비밀번호를 입력해 주세요.', 'error'); return; }
-      try {
-        const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password: pw }) });
-        const data = await res.json();
-        if (res.ok) { localStorage.setItem('asteria_token', data.token); closeModal('login'); showToast('✦ 제국에 귀환하셨습니다. ' + data.nickname, 'success'); checkAuth(); }
-        else showToast(data.message || '로그인 실패', 'error');
-      } catch { showToast('서버 연결 오류', 'error'); }
-    }
+function goLeagueMap(key){
+  const names={QUASAR:'QUASAR LEAGUE MAP',NOVA:'NOVA LEAGUE MAP',NEBULA:'NEBULA LEAGUE MAP',COMET:'COMET LEAGUE MAP',DUST:'DUST LEAGUE MAP'};
+  const subs={QUASAR:'최상위 · 5개 팬덤 전쟁',NOVA:'1부 리그 · 도전자들의 무대',NEBULA:'2부 리그 · 성운의 전사',COMET:'3부 리그 · 혜성처럼 질주',DUST:'4부 리그 · 먼지에서 별로'};
+  document.getElementById('ltitle').textContent=names[key]||'LEAGUE MAP';
+  document.getElementById('lsub2').textContent=subs[key]||'';
+  flash(()=>{ showPage('page-league'); centerMap(); });
+}
 
-    async function handleRegister() {
-      const nick = document.getElementById('reg-nick').value.trim();
-      const email = document.getElementById('reg-email').value.trim();
-      const pw = document.getElementById('reg-pw').value;
-      const pw2 = document.getElementById('reg-pw2').value;
-      if (!nick || !email || !pw) { showToast('모든 항목을 입력해 주세요.', 'error'); return; }
-      if (pw !== pw2) { showToast('비밀번호가 일치하지 않습니다.', 'error'); return; }
-      if (pw.length < 8) { showToast('비밀번호는 8자 이상이어야 합니다.', 'error'); return; }
-      try {
-        const res = await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nickname: nick, email, password: pw }) });
-        const data = await res.json();
-        if (res.ok) { localStorage.setItem('asteria_token', data.token); closeModal('register'); showToast('✦ 아스트라 ' + nick + ', 환영합니다!', 'success'); checkAuth(); }
-        else showToast(data.message || '회원가입 실패', 'error');
-      } catch { showToast('서버 연결 오류', 'error'); }
-    }
+function goFromNode(el){
+  const fan=el.getAttribute('data-fan');
+  const rect=el.getBoundingClientRect();
+  bursts.push(new Burst(rect.left+rect.width/2,rect.top+rect.height/2));
+  document.getElementById('ltitle').textContent='QUASAR LEAGUE MAP';
+  document.getElementById('lsub2').textContent=`→ ${fan} 팬덤 선택`;
+  flash(()=>{ showPage('page-league'); centerMap(); });
+}
 
-    function logout() { localStorage.removeItem('asteria_token'); location.reload(); }
-    checkAuth();
-  </script>
+function flash(cb){
+  const f=document.getElementById('qflash');
+  f.style.transition='none';f.style.opacity='0';f.style.display='block';
+  requestAnimationFrame(()=>{
+    f.style.transition='opacity .32s ease';f.style.opacity='1';
+    setTimeout(()=>{cb();f.style.transition='opacity .42s ease';f.style.opacity='0';setTimeout(()=>f.style.display='none',420);},320);
+  });
+}
+
+// ═══ CONSTELLATION DRAG ═══
+(function(){
+  const vp=document.getElementById('cv'),wd=document.getElementById('cw');
+  let drag=false,sx,sy,tx=0,ty=0;
+  function init(){const vw=vp.clientWidth,vh=vp.clientHeight;tx=vw/2-900;ty=vh/2-600;clamp();apply();}
+  function clamp(){const vw=vp.clientWidth,vh=vp.clientHeight;tx=Math.min(0,Math.max(vw-1800,tx));ty=Math.min(0,Math.max(vh-1200,ty));}
+  function apply(){wd.style.transform=`translate(${tx}px,${ty}px)`;}
+  setTimeout(init,60); window.addEventListener('resize',init);
+  vp.addEventListener('mousedown',e=>{if(e.target.closest('.q-node'))return;drag=true;sx=e.clientX-tx;sy=e.clientY-ty;vp.style.cursor='grabbing';});
+  window.addEventListener('mousemove',e=>{if(!drag)return;tx=e.clientX-sx;ty=e.clientY-sy;clamp();apply();});
+  window.addEventListener('mouseup',()=>{drag=false;vp.style.cursor='grab';});
+  vp.addEventListener('touchstart',e=>{if(e.target.closest('.q-node'))return;drag=true;sx=e.touches[0].clientX-tx;sy=e.touches[0].clientY-ty;},{passive:true});
+  window.addEventListener('touchmove',e=>{if(!drag)return;tx=e.touches[0].clientX-sx;ty=e.touches[0].clientY-sy;clamp();apply();},{passive:true});
+  window.addEventListener('touchend',()=>drag=false);
+})();
+
+// ═══ MAP DRAG ═══
+let mtx=0,mty=0;
+function centerMap(){
+  const wr=document.getElementById('mwrap');if(!wr)return;
+  const vw=wr.clientWidth,vh=wr.clientHeight;
+  mtx=vw/2-1200;mty=vh/2-900;clampM();applyM();
+}
+function clampM(){const wr=document.getElementById('mwrap');if(!wr)return;const vw=wr.clientWidth,vh=wr.clientHeight;mtx=Math.min(0,Math.max(vw-3000,mtx));mty=Math.min(0,Math.max(vh-2400,mty));}
+function applyM(){const mw=document.getElementById('mworld');if(mw)mw.style.transform=`translate(${mtx}px,${mty}px)`;}
+(function(){
+  const wr=document.getElementById('mwrap');
+  let drag=false,sx,sy;
+  wr.addEventListener('mousedown',e=>{if(e.target.closest('.mf')||e.target.closest('.cn')||e.target.closest('.av'))return;drag=true;sx=e.clientX-mtx;sy=e.clientY-mty;wr.style.cursor='grabbing';});
+  window.addEventListener('mousemove',e=>{if(!drag)return;mtx=e.clientX-sx;mty=e.clientY-sy;clampM();applyM();});
+  window.addEventListener('mouseup',()=>{drag=false;wr.style.cursor='grab';});
+  wr.addEventListener('touchstart',e=>{if(e.target.closest('.mf')||e.target.closest('.cn'))return;drag=true;sx=e.touches[0].clientX-mtx;sy=e.touches[0].clientY-mty;},{passive:true});
+  window.addEventListener('touchmove',e=>{if(!drag)return;mtx=e.touches[0].clientX-sx;mty=e.touches[0].clientY-sy;clampM();applyM();},{passive:true});
+  window.addEventListener('touchend',()=>drag=false);
+})();
+
+// Click map to move avatar
+document.getElementById('mwrap').addEventListener('click',e=>{
+  if(!curUser)return;
+  if(e.target.closest('.mf')||e.target.closest('.cn')||e.target.closest('.av'))return;
+  const wr=document.getElementById('mwrap');
+  const rect=wr.getBoundingClientRect();
+  const wx=e.clientX-rect.left-mtx;
+  const wy=e.clientY-rect.top-mty;
+  moveAv(wx,wy);
+});
+
+// ═══ LOGIN ═══
+let curUser=null;
+function openModal(){document.getElementById('lmodal').classList.add('show');}
+function closeModal(){document.getElementById('lmodal').classList.remove('show');}
+function doLogin(){
+  const nick=document.getElementById('ln').value.trim()||'별빛 탐험가';
+  const emoji=document.getElementById('le').value.trim()||'🌟';
+  curUser={nick,emoji};
+  document.getElementById('sid-login').style.display='none';
+  document.getElementById('sid-user').style.display='block';
+  document.getElementById('su-av').textContent=emoji;
+  document.getElementById('su-name').textContent=nick;
+  const av=document.getElementById('avnode');
+  av.style.display='flex';
+  document.getElementById('avbody').textContent=emoji;
+  document.getElementById('avname').textContent=nick;
+  const ci=document.getElementById('chatInput');
+  ci.disabled=false; ci.placeholder='메시지를 입력하세요...';
+  closeModal();
+}
+
+function moveAv(wx,wy){
+  const av=document.getElementById('avnode');
+  av.style.left=(wx-26)+'px';
+  av.style.top=(wy-70)+'px';
+}
+
+// ═══ CHAT ═══
+function switchTab(idx){
+  document.querySelectorAll('.rp-tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
+  [0,1,2].forEach(i=>{
+    const el=document.getElementById('tp'+i);
+    el.classList.toggle('active',i===idx);
+    if(i===1){el.style.display=idx===1?'flex':'none';}
+    else{el.style.display=idx===i?'block':'none';}
+  });
+}
+
+function sendChat(){
+  if(!curUser)return;
+  const inp=document.getElementById('chatInput');
+  const msg=inp.value.trim(); if(!msg)return; inp.value='';
+  const area=document.getElementById('chatArea');
+  const now=new Date();
+  const time=`${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const el=document.createElement('div');
+  el.className='cm mine';
+  el.innerHTML=`<div class="ca" style="background:linear-gradient(135deg,var(--quasar),var(--quasar2))">${curUser.emoji}</div><div><div class="cb2"><div class="cs">${curUser.nick}</div><div class="ct">${msg}</div><div class="cti">${time}</div></div></div>`;
+  area.appendChild(el); area.scrollTop=area.scrollHeight;
+  showAvChat(msg);
+}
+
+function showAvChat(msg){
+  const b=document.getElementById('avchat');
+  b.textContent=msg; b.classList.add('show');
+  clearTimeout(b._t); b._t=setTimeout(()=>b.classList.remove('show'),3500);
+}
+</script>
 </body>
-
 </html>
