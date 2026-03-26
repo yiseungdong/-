@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>아스트라 성궤 — ASTERIA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --void:#030308; --panel:rgba(10,10,22,0.93);
+  --border:rgba(180,150,255,0.13); --gold:#f0c040;
+  --quasar:#c084fc; --quasar2:#818cf8; --quasar3:#38bdf8;
+  --text:#e8e4f0; --muted:rgba(200,190,220,0.5);
+  --nebula-bg: #030308;
+  --nebula-accent: #c084fc;
+}
+html, body { width:100%; height:100%; background:var(--void); color:var(--text); font-family:'Noto Sans KR',sans-serif; overflow-x:hidden; }
+
+/* ── BG Canvas ── */
+#bgCanvas { position:fixed; inset:0; z-index:0; pointer-events:none; }
+
+/* ── Layout ── */
+#app { position:relative; z-index:1; display:flex; min-height:100vh; }
+
+/* ── Sidebar ── */
+.sidebar {
+  width:260px; min-width:260px; height:100vh; position:sticky; top:0;
+  background:var(--panel); backdrop-filter:blur(24px);
+  border-right:1px solid var(--border);
+  display:flex; flex-direction:column; overflow-y:auto; z-index:100;
+}
+.sidebar::-webkit-scrollbar{width:3px}
+.sidebar::-webkit-scrollbar-thumb{background:rgba(192,132,252,.3);border-radius:3px}
+
+.logo-area { padding:24px 24px 16px; border-bottom:1px solid var(--border); }
+.logo-text {
+  font-family:'Orbitron',monospace; font-size:20px; font-weight:900; letter-spacing:4px;
+  background:linear-gradient(135deg,var(--gold),var(--quasar),var(--quasar3));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+}
+
+/* User area */
+.user-area { padding:16px 20px; border-bottom:1px solid var(--border); }
+.user-card {
+  display:flex; align-items:center; gap:12px;
+  background:rgba(192,132,252,.07); border:1px solid var(--border);
+  border-radius:14px; padding:12px 14px;
+}
+.user-av {
+  width:46px; height:46px; border-radius:50%;
+  background:linear-gradient(135deg,var(--quasar),var(--quasar2));
+  border:2px solid var(--gold); display:flex; align-items:center; justify-content:center;
+  font-size:22px; flex-shrink:0; position:relative;
+}
+.pioneer-badge {
+  position:absolute; top:-4px; right:-4px;
+  width:16px; height:16px; background:var(--gold); border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font-size:8px;
+}
+.user-info { flex:1; min-width:0; }
+.user-name { font-size:14px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.user-grade { font-size:10px; color:var(--gold); margin-top:2px; font-weight:500; }
+.user-serial { font-size:9px; color:var(--muted); margin-top:1px; font-family:'Orbitron',monospace; }
+
+/* Stats mini */
+.stats-mini { padding:14px 20px; border-bottom:1px solid var(--border); }
+.stats-title { font-size:10px; color:var(--muted); letter-spacing:2px; margin-bottom:10px; text-transform:uppercase; }
+.stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+.stat-pill {
+  background:rgba(255,255,255,.04); border:1px solid var(--border); border-radius:8px;
+  padding:6px 4px; text-align:center;
+}
+.stat-pill-label { font-size:9px; color:var(--muted); }
+.stat-pill-val { font-size:13px; font-weight:700; margin-top:2px; }
+.stat-loy { color:#f0c040; }
+.stat-act { color:#ef4444; }
+.stat-soc { color:#38bdf8; }
+.stat-eco { color:#10b981; }
+.stat-cre { color:#a78bfa; }
+.stat-int { color:#fbbf24; }
+
+/* Resources */
+.resources { padding:12px 20px; border-bottom:1px solid var(--border); display:flex; gap:8px; }
+.res-chip {
+  flex:1; background:rgba(255,255,255,.04); border:1px solid var(--border);
+  border-radius:8px; padding:6px 8px; text-align:center;
+}
+.res-chip-label { font-size:9px; color:var(--muted); }
+.res-chip-val { font-size:12px; font-weight:700; color:var(--gold); margin-top:2px; }
+
+/* Nav */
+.nav-btn {
+  display:flex; align-items:center; gap:10px; padding:13px 20px;
+  border-bottom:1px solid var(--border); cursor:pointer; transition:background .2s; text-decoration:none; color:var(--text);
+}
+.nav-btn:hover { background:rgba(192,132,252,.09); }
+.nav-btn.active { background:rgba(192,132,252,.12); border-left:3px solid var(--quasar); }
+.nav-icon { font-size:16px; width:20px; text-align:center; }
+.nav-label { font-size:13px; font-weight:500; }
+
+/* ── Main Content ── */
+.main { flex:1; overflow-y:auto; }
+.main::-webkit-scrollbar{width:4px}
+.main::-webkit-scrollbar-thumb{background:rgba(192,132,252,.3);border-radius:4px}
+
+/* ── Nebula Space ── */
+.nebula-space {
+  min-height:100vh; position:relative;
+  background: radial-gradient(ellipse at 50% 30%, rgba(var(--nebula-accent-rgb,192,132,252),0.15) 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 80%, rgba(56,189,248,0.08) 0%, transparent 50%),
+              var(--nebula-bg);
+  transition: background 1s ease;
+}
+
+/* Serial badge */
+.serial-badge {
+  position:absolute; top:20px; right:20px;
+  background:rgba(240,192,64,.12); border:1px solid rgba(240,192,64,.4);
+  border-radius:10px; padding:6px 14px;
+  font-family:'Orbitron',monospace; font-size:11px; color:var(--gold);
+  letter-spacing:2px;
+}
+
+/* Evolution stage indicator */
+.stage-indicator {
+  position:absolute; top:20px; left:20px;
+  display:flex; gap:6px; align-items:center;
+}
+.stage-dot {
+  width:8px; height:8px; border-radius:50%;
+  background:rgba(255,255,255,.2);
+  transition: all .3s;
+}
+.stage-dot.active { background:var(--quasar); box-shadow:0 0 8px var(--quasar); }
+
+/* Central altar */
+.altar-section {
+  display:flex; flex-direction:column; align-items:center;
+  padding:80px 40px 40px;
+  position:relative;
+}
+
+/* Character orb */
+.char-orb-wrap { position:relative; margin-bottom:16px; }
+.char-orb {
+  width:140px; height:140px; border-radius:50%;
+  background:linear-gradient(135deg,var(--quasar),var(--quasar2));
+  border:3px solid var(--gold);
+  display:flex; align-items:center; justify-content:center;
+  font-size:60px;
+  box-shadow: 0 0 0 6px rgba(240,192,64,.15), 0 0 40px rgba(192,132,252,.5), 0 0 80px rgba(192,132,252,.2);
+  animation:charFloat 4s ease-in-out infinite;
+  position:relative;
+  cursor:pointer; transition:transform .3s;
+}
+.char-orb:hover { transform:scale(1.05); }
+@keyframes charFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+
+/* Grade ring */
+.grade-ring {
+  position:absolute; inset:-12px; border-radius:50%;
+  border:2px solid transparent;
+  animation:ringRotate 8s linear infinite;
+}
+@keyframes ringRotate{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+
+/* Level badge */
+.level-badge {
+  position:absolute; bottom:-8px; left:50%; transform:translateX(-50%);
+  background:var(--gold); color:var(--void); font-family:'Orbitron',monospace;
+  font-size:11px; font-weight:900; padding:3px 12px; border-radius:20px;
+  white-space:nowrap; box-shadow:0 0 12px rgba(240,192,64,.5);
+}
+
+/* Char info */
+.char-name { font-size:22px; font-weight:900; text-align:center; margin-bottom:4px; }
+.char-grade-label {
+  font-size:12px; color:var(--gold); text-align:center; letter-spacing:2px;
+  font-family:'Orbitron',monospace;
+}
+.archetype-tag {
+  margin-top:8px; background:rgba(192,132,252,.12); border:1px solid rgba(192,132,252,.3);
+  border-radius:20px; padding:4px 14px; font-size:11px; color:var(--quasar); text-align:center;
+}
+
+/* Hexagon stats chart */
+.hexagon-section {
+  padding:0 40px 40px;
+  display:flex; flex-direction:column; align-items:center;
+}
+.hexagon-title { font-size:11px; color:var(--muted); letter-spacing:2px; margin-bottom:20px; text-align:center; text-transform:uppercase; }
+
+.hex-chart-wrap { position:relative; width:240px; height:240px; }
+#hexChart { width:100%; height:100%; }
+
+.hex-labels {
+  position:absolute; inset:0; pointer-events:none;
+}
+.hex-label {
+  position:absolute; font-size:10px; font-weight:700; text-align:center;
+  transform:translate(-50%,-50%);
+}
+
+/* Nebula slots */
+.slots-section { padding:20px 24px 40px; }
+.slots-title { font-size:11px; color:var(--muted); letter-spacing:2px; margin-bottom:16px; text-transform:uppercase; }
+.slots-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+.slot {
+  aspect-ratio:1; border-radius:14px;
+  background:rgba(255,255,255,.03); border:1px dashed rgba(180,150,255,.2);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  cursor:pointer; transition:all .25s; position:relative; overflow:hidden;
+}
+.slot:hover { border-color:var(--quasar); background:rgba(192,132,252,.06); }
+.slot.filled { border-style:solid; border-color:rgba(192,132,252,.4); background:rgba(192,132,252,.08); }
+.slot.legendary { border-color:var(--gold); background:rgba(240,192,64,.06); }
+.slot-emoji { font-size:24px; }
+.slot-name { font-size:9px; color:var(--muted); margin-top:4px; text-align:center; max-width:60px; }
+.slot-rarity { position:absolute; top:4px; right:4px; width:6px; height:6px; border-radius:50%; }
+.slot-rarity.common { background:#94a3b8; }
+.slot-rarity.rare { background:#38bdf8; }
+.slot-rarity.epic { background:#c084fc; }
+.slot-rarity.legendary { background:var(--gold); box-shadow:0 0 6px var(--gold); }
+.slot-empty-icon { font-size:20px; opacity:.3; }
+.slot-add-text { font-size:9px; color:var(--muted); margin-top:4px; opacity:.6; }
+
+/* CP section */
+.cp-section { padding:0 24px 40px; }
+.cp-card {
+  background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:16px; padding:20px;
+}
+.cp-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.cp-title { font-size:13px; font-weight:700; }
+.cp-value { font-family:'Orbitron',monospace; font-size:18px; font-weight:900; color:var(--gold); }
+.cp-bars { display:flex; flex-direction:column; gap:8px; }
+.cp-bar-row { display:flex; align-items:center; gap:10px; }
+.cp-bar-label { font-size:11px; color:var(--muted); width:80px; flex-shrink:0; }
+.cp-bar-bg { flex:1; height:6px; background:rgba(255,255,255,.06); border-radius:3px; overflow:hidden; }
+.cp-bar-fill { height:100%; border-radius:3px; transition:width .8s cubic-bezier(.4,0,.2,1); }
+.cp-bar-val { font-size:11px; color:var(--text); width:40px; text-align:right; flex-shrink:0; }
+
+/* Guestbook */
+.guestbook-section { padding:0 24px 40px; }
+.gb-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.gb-title { font-size:11px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; }
+.gb-entries { display:flex; flex-direction:column; gap:8px; margin-bottom:12px; max-height:200px; overflow-y:auto; }
+.gb-entries::-webkit-scrollbar{width:3px}
+.gb-entries::-webkit-scrollbar-thumb{background:rgba(192,132,252,.3);border-radius:3px}
+.gb-entry {
+  background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:10px; padding:10px 12px;
+}
+.gb-entry-top { display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+.gb-entry-name { font-size:12px; font-weight:600; }
+.gb-entry-time { font-size:10px; color:var(--muted); margin-left:auto; }
+.gb-entry-msg { font-size:12px; color:var(--muted); line-height:1.5; }
+.gb-input-wrap { display:flex; gap:8px; }
+.gb-input {
+  flex:1; background:rgba(255,255,255,.05); border:1px solid var(--border);
+  border-radius:10px; padding:9px 12px; color:var(--text); font-size:13px;
+  font-family:'Noto Sans KR',sans-serif; outline:none; transition:border-color .2s;
+}
+.gb-input:focus { border-color:rgba(192,132,252,.5); }
+.gb-send {
+  background:linear-gradient(135deg,var(--quasar),var(--quasar2));
+  border:none; border-radius:10px; padding:0 16px; color:#fff;
+  font-size:13px; cursor:pointer; font-family:'Noto Sans KR',sans-serif; font-weight:700;
+  transition:all .2s;
+}
+.gb-send:hover { box-shadow:0 0 16px rgba(192,132,252,.4); }
+
+/* Advent banner */
+.advent-banner {
+  margin:0 24px 24px; padding:16px 20px;
+  background:linear-gradient(135deg,rgba(240,192,64,.12),rgba(192,132,252,.12));
+  border:1px solid rgba(240,192,64,.4); border-radius:16px;
+  display:none; animation:adventGlow 2s ease-in-out infinite;
+}
+.advent-banner.show { display:flex; align-items:center; gap:14px; }
+@keyframes adventGlow{0%,100%{box-shadow:0 0 20px rgba(240,192,64,.2)}50%{box-shadow:0 0 40px rgba(240,192,64,.4)}}
+.advent-icon { font-size:32px; }
+.advent-msg { flex:1; }
+.advent-title { font-size:13px; font-weight:700; color:var(--gold); margin-bottom:4px; }
+.advent-text { font-size:12px; color:var(--muted); line-height:1.5; }
+
+/* Theme editor panel */
+.theme-panel {
+  position:fixed; right:0; top:0; height:100vh; width:280px;
+  background:var(--panel); backdrop-filter:blur(24px);
+  border-left:1px solid var(--border); z-index:200;
+  transform:translateX(100%); transition:transform .35s cubic-bezier(.4,0,.2,1);
+  overflow-y:auto; padding:24px;
+}
+.theme-panel.open { transform:translateX(0); }
+.theme-panel::-webkit-scrollbar{width:3px}
+.theme-panel-title { font-family:'Orbitron',monospace; font-size:14px; font-weight:700; margin-bottom:20px; letter-spacing:2px; color:var(--quasar); }
+.theme-close { float:right; background:none; border:none; color:var(--muted); font-size:18px; cursor:pointer; }
+
+.theme-section { margin-bottom:20px; }
+.theme-section-label { font-size:11px; color:var(--muted); letter-spacing:1.5px; margin-bottom:10px; text-transform:uppercase; }
+.color-grid { display:flex; flex-wrap:wrap; gap:8px; }
+.color-swatch {
+  width:32px; height:32px; border-radius:50%; cursor:pointer; border:2px solid transparent;
+  transition:all .2s;
+}
+.color-swatch.active, .color-swatch:hover { border-color:#fff; transform:scale(1.1); }
+
+.theme-presets { display:flex; flex-direction:column; gap:8px; }
+.preset-btn {
+  padding:10px 14px; border-radius:10px; border:1px solid var(--border);
+  background:rgba(255,255,255,.04); cursor:pointer; font-family:'Noto Sans KR',sans-serif;
+  font-size:13px; color:var(--text); text-align:left; transition:all .2s;
+  display:flex; align-items:center; gap:10px;
+}
+.preset-btn:hover { border-color:var(--quasar); background:rgba(192,132,252,.08); }
+
+/* Item modal */
+.item-modal {
+  position:fixed; inset:0; z-index:9000;
+  background:rgba(0,0,0,.7); backdrop-filter:blur(10px);
+  display:none; align-items:center; justify-content:center;
+}
+.item-modal.show { display:flex; }
+.item-modal-box {
+  background:rgba(12,12,26,.97); border:1px solid var(--border);
+  border-radius:20px; padding:32px; width:360px; max-height:80vh; overflow-y:auto;
+}
+.item-modal-box::-webkit-scrollbar{width:3px}
+.item-modal-title { font-family:'Orbitron',monospace; font-size:15px; font-weight:700; color:var(--quasar); margin-bottom:16px; }
+.inventory-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.inv-item {
+  background:rgba(255,255,255,.04); border:1px solid var(--border); border-radius:12px;
+  padding:12px 8px; text-align:center; cursor:pointer; transition:all .2s;
+}
+.inv-item:hover { border-color:var(--quasar); background:rgba(192,132,252,.1); }
+.inv-item-emoji { font-size:28px; margin-bottom:6px; }
+.inv-item-name { font-size:10px; color:var(--text); font-weight:500; }
+.inv-item-rarity { font-size:9px; margin-top:3px; }
+.rarity-common { color:#94a3b8; }
+.rarity-rare { color:#38bdf8; }
+.rarity-epic { color:#c084fc; }
+.rarity-legendary { color:var(--gold); }
+
+.modal-close-btn {
+  width:100%; margin-top:16px; padding:10px; border-radius:12px;
+  background:transparent; border:1px solid var(--border); color:var(--muted);
+  font-size:13px; cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:all .2s;
+}
+.modal-close-btn:hover { border-color:var(--quasar); color:var(--text); }
+
+/* Toast */
+.toast {
+  position:fixed; bottom:30px; left:50%; transform:translateX(-50%);
+  background:rgba(12,12,26,.97); border:1px solid var(--border); border-radius:12px;
+  padding:12px 24px; font-size:13px; z-index:9999;
+  opacity:0; transition:opacity .3s; pointer-events:none;
+  box-shadow:0 8px 32px rgba(0,0,0,.5);
+}
+.toast.show { opacity:1; }
+
+/* Floating action btn */
+.fab-wrap { position:fixed; bottom:30px; right:30px; z-index:500; display:flex; flex-direction:column; gap:10px; align-items:flex-end; }
+.fab {
+  width:52px; height:52px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px; cursor:pointer; border:none; transition:all .25s;
+  box-shadow:0 4px 20px rgba(0,0,0,.4);
+}
+.fab-main { background:linear-gradient(135deg,var(--quasar),var(--quasar2)); color:#fff; }
+.fab-main:hover { transform:scale(1.08); box-shadow:0 4px 30px rgba(192,132,252,.5); }
+.fab-sub { background:rgba(240,192,64,.9); color:var(--void); width:44px; height:44px; font-size:16px; }
+.fab-sub:hover { transform:scale(1.08); }
+
+/* Login prompt */
+.login-prompt {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:80px 40px; text-align:center; min-height:60vh;
+}
+.lp-icon { font-size:64px; margin-bottom:20px; }
+.lp-title { font-family:'Orbitron',monospace; font-size:18px; font-weight:900; color:var(--quasar); margin-bottom:8px; }
+.lp-text { font-size:13px; color:var(--muted); line-height:1.7; margin-bottom:28px; }
+.lp-btn {
+  padding:12px 32px; border-radius:20px;
+  background:linear-gradient(90deg,var(--quasar),var(--quasar2));
+  border:none; color:#fff; font-size:15px; font-weight:700;
+  cursor:pointer; font-family:'Noto Sans KR',sans-serif;
+}
+</style>
+</head>
+<body>
+<canvas id="bgCanvas"></canvas>
+<div id="toast" class="toast"></div>
+
+<!-- Theme Panel -->
+<div class="theme-panel" id="themePanel">
+  <button class="theme-close" onclick="closeTheme()">✕</button>
+  <div class="theme-panel-title">성궤 테마</div>
+
+  <div class="theme-section">
+    <div class="theme-section-label">프리셋</div>
+    <div class="theme-presets">
+      <button class="preset-btn" onclick="applyPreset('void')">🌑 보이드 — 어두운 우주</button>
+      <button class="preset-btn" onclick="applyPreset('nebula')">💜 성운 — 보라빛 은하</button>
+      <button class="preset-btn" onclick="applyPreset('nova')">🔥 노바 — 폭발하는 별</button>
+      <button class="preset-btn" onclick="applyPreset('ocean')">🌊 심해 — 깊은 바다</button>
+      <button class="preset-btn" onclick="applyPreset('gold')">✨ 제국 — 황금빛 궁전</button>
+      <button class="preset-btn" onclick="applyPreset('crystal')">❄️ 수정 — 얼음 궁전</button>
+    </div>
+  </div>
+
+  <div class="theme-section">
+    <div class="theme-section-label">포인트 컬러</div>
+    <div class="color-grid">
+      <div class="color-swatch active" style="background:#c084fc" onclick="setAccent('#c084fc',this)"></div>
+      <div class="color-swatch" style="background:#f0c040" onclick="setAccent('#f0c040',this)"></div>
+      <div class="color-swatch" style="background:#38bdf8" onclick="setAccent('#38bdf8',this)"></div>
+      <div class="color-swatch" style="background:#ef4444" onclick="setAccent('#ef4444',this)"></div>
+      <div class="color-swatch" style="background:#10b981" onclick="setAccent('#10b981',this)"></div>
+      <div class="color-swatch" style="background:#f97316" onclick="setAccent('#f97316',this)"></div>
+      <div class="color-swatch" style="background:#ec4899" onclick="setAccent('#ec4899',this)"></div>
+      <div class="color-swatch" style="background:#ffffff" onclick="setAccent('#ffffff',this)"></div>
+    </div>
+  </div>
+
+  <button onclick="saveTheme()" style="width:100%;padding:12px;border-radius:12px;background:linear-gradient(90deg,var(--quasar),var(--quasar2));border:none;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;margin-top:10px">저장하기</button>
+</div>
+
+<!-- Item Modal -->
+<div class="item-modal" id="itemModal">
+  <div class="item-modal-box">
+    <div class="item-modal-title">아이템 선택 — 슬롯 <span id="targetSlot">1</span></div>
+    <div class="inventory-grid" id="inventoryGrid"></div>
+    <button class="modal-close-btn" onclick="closeItemModal()">닫기</button>
+  </div>
+</div>
+
+<div id="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo-area">
+      <a href="/" style="text-decoration:none"><div class="logo-text">ASTER1A</div></a>
+    </div>
+
+    <!-- User info -->
+    <div class="user-area" id="sidebarUser">
+      <div class="login-prompt" style="padding:20px;min-height:auto;text-align:left">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px">로그인하고 나만의 성궤를 꾸며보세요</div>
+        <a href="/" style="display:block;text-align:center;padding:8px;border-radius:12px;background:linear-gradient(90deg,var(--quasar),var(--quasar2));color:#fff;font-size:13px;font-weight:700;text-decoration:none">로그인</a>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-mini" id="statsMini" style="display:none">
+      <div class="stats-title">✦ 헥사곤 스탯</div>
+      <div class="stats-grid">
+        <div class="stat-pill"><div class="stat-pill-label">성실</div><div class="stat-pill-val stat-loy" id="s_loy">0</div></div>
+        <div class="stat-pill"><div class="stat-pill-label">행동</div><div class="stat-pill-val stat-act" id="s_act">0</div></div>
+        <div class="stat-pill"><div class="stat-pill-label">사회</div><div class="stat-pill-val stat-soc" id="s_soc">0</div></div>
+        <div class="stat-pill"><div class="stat-pill-label">경제</div><div class="stat-pill-val stat-eco" id="s_eco">0</div></div>
+        <div class="stat-pill"><div class="stat-pill-label">창의</div><div class="stat-pill-val stat-cre" id="s_cre">0</div></div>
+        <div class="stat-pill"><div class="stat-pill-label">지성</div><div class="stat-pill-val stat-int" id="s_int">0</div></div>
+      </div>
+    </div>
+
+    <!-- Resources -->
+    <div class="resources" id="resources" style="display:none">
+      <div class="res-chip"><div class="res-chip-label">AP</div><div class="res-chip-val" id="r_ap">0</div></div>
+      <div class="res-chip"><div class="res-chip-label">CP</div><div class="res-chip-val" id="r_cp">0</div></div>
+      <div class="res-chip"><div class="res-chip-label">☆</div><div class="res-chip-val" id="r_sd">500</div></div>
+    </div>
+
+    <!-- Nav -->
+    <a class="nav-btn" href="/"><span class="nav-icon">🏠</span><span class="nav-label">홈</span></a>
+    <a class="nav-btn active" href="/nebula.html"><span class="nav-icon">🌌</span><span class="nav-label">내 성궤</span></a>
+    <a class="nav-btn" href="/"><span class="nav-icon">🌐</span><span class="nav-label">리그 맵</span></a>
+    <a class="nav-btn" href="/"><span class="nav-icon">✦</span><span class="nav-label">아스트라 성궤</span></a>
+    <a class="nav-btn" href="/"><span class="nav-icon">⚡</span><span class="nav-label">내 아스트라 정보</span></a>
+  </aside>
+
+  <!-- Main nebula space -->
+  <main class="main">
+    <div class="nebula-space" id="nebulaSpace">
+
+      <!-- Serial badge -->
+      <div class="serial-badge" id="serialBadge" style="display:none">성궤 #<span id="serialNum">???</span></div>
+
+      <!-- Stage indicators -->
+      <div class="stage-indicator">
+        <div class="stage-dot active" id="stage1"></div>
+        <div class="stage-dot" id="stage2"></div>
+        <div class="stage-dot" id="stage3"></div>
+        <span style="font-size:10px;color:var(--muted);margin-left:6px" id="stageLabel">Void</span>
+      </div>
+
+      <!-- Not logged in -->
+      <div class="login-prompt" id="loginPrompt">
+        <div class="lp-icon">🌌</div>
+        <div class="lp-title">아스트라 성궤</div>
+        <div class="lp-text">당신만의 신성한 공간.<br>로그인하고 성궤를 꾸며보세요.<br>당신의 덕질 역사가 영원히 박제됩니다.</div>
+        <button class="lp-btn" onclick="window.location='/'">로그인하러 가기</button>
+      </div>
+
+      <!-- Logged in content -->
+      <div id="nebulaContent" style="display:none">
+
+        <!-- Advent banner -->
+        <div class="advent-banner" id="adventBanner">
+          <div class="advent-icon">✨</div>
+          <div class="advent-msg">
+            <div class="advent-title">성령의 흔적 — 아티스트가 다녀갔습니다!</div>
+            <div class="advent-text" id="adventText">이 성궤는 성지가 되었습니다. 24시간 동안 방문자에게 AP 보너스가 제공됩니다.</div>
+          </div>
+        </div>
+
+        <!-- Altar (캐릭터) -->
+        <div class="altar-section">
+          <div class="char-orb-wrap">
+            <div class="char-orb" id="charOrb" onclick="openTheme()">
+              <span id="charEmoji">🌟</span>
+              <div class="grade-ring" id="gradeRing" style="border-color:rgba(192,132,252,.4)"></div>
+            </div>
+            <div class="level-badge">Lv.<span id="charLevel">1</span> <span id="charGradeShort">성진</span></div>
+          </div>
+          <div class="char-name" id="charName">아스트라</div>
+          <div class="char-grade-label" id="charGradeLabel">STARDUST — 우주의 부름</div>
+          <div class="archetype-tag" id="archetypeTag">⬡ 아키타입 분석 중...</div>
+        </div>
+
+        <!-- Hexagon chart -->
+        <div class="hexagon-section">
+          <div class="hexagon-title">✦ 6대 스탯 — 헥사곤</div>
+          <div class="hex-chart-wrap">
+            <svg id="hexChart" viewBox="0 0 200 200">
+              <defs>
+                <linearGradient id="hexGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="rgba(192,132,252,0.8)"/>
+                  <stop offset="100%" stop-color="rgba(56,189,248,0.6)"/>
+                </linearGradient>
+              </defs>
+              <!-- Grid -->
+              <polygon id="hexGrid3" points="" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+              <polygon id="hexGrid2" points="" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+              <polygon id="hexGrid1" points="" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+              <!-- Axes -->
+              <g id="hexAxes" stroke="rgba(255,255,255,0.08)" stroke-width="1"></g>
+              <!-- Data -->
+              <polygon id="hexData" points="" fill="url(#hexGrad)" fill-opacity="0.35" stroke="rgba(192,132,252,0.8)" stroke-width="1.5"/>
+              <!-- Labels -->
+              <g id="hexLabels" font-family="'Noto Sans KR'" font-size="9" fill="rgba(200,190,220,0.7)" text-anchor="middle"></g>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Item slots -->
+        <div class="slots-section">
+          <div class="slots-title">✦ 성궤 아이템 슬롯</div>
+          <div class="slots-grid" id="slotsGrid"></div>
+        </div>
+
+        <!-- CP card -->
+        <div class="cp-section">
+          <div class="cp-card">
+            <div class="cp-header">
+              <div class="cp-title">✦ 문화력 지수 (CP)</div>
+              <div class="cp-value" id="cpValue">0</div>
+            </div>
+            <div class="cp-bars">
+              <div class="cp-bar-row">
+                <div class="cp-bar-label">아이템 가치</div>
+                <div class="cp-bar-bg"><div class="cp-bar-fill" id="cpBar1" style="width:0%;background:linear-gradient(90deg,#c084fc,#818cf8)"></div></div>
+                <div class="cp-bar-val" id="cpVal1">0</div>
+              </div>
+              <div class="cp-bar-row">
+                <div class="cp-bar-label">방문자 에너지</div>
+                <div class="cp-bar-bg"><div class="cp-bar-fill" id="cpBar2" style="width:0%;background:linear-gradient(90deg,#38bdf8,#818cf8)"></div></div>
+                <div class="cp-bar-val" id="cpVal2">0</div>
+              </div>
+              <div class="cp-bar-row">
+                <div class="cp-bar-label">역사 점수</div>
+                <div class="cp-bar-bg"><div class="cp-bar-fill" id="cpBar3" style="width:0%;background:linear-gradient(90deg,#f0c040,#f97316)"></div></div>
+                <div class="cp-bar-val" id="cpVal3">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Guestbook -->
+        <div class="guestbook-section">
+          <div class="gb-header">
+            <div class="gb-title">✦ 방명록</div>
+            <span style="font-size:11px;color:var(--muted)" id="visitorCount">방문 0회</span>
+          </div>
+          <div class="gb-entries" id="gbEntries">
+            <div style="text-align:center;color:var(--muted);font-size:12px;padding:20px">아직 방명록이 없습니다.<br>다른 유저를 초대해보세요!</div>
+          </div>
+          <div class="gb-input-wrap">
+            <input class="gb-input" id="gbInput" placeholder="방명록을 남겨보세요..." maxlength="200">
+            <button class="gb-send" onclick="sendGuestbook()">남기기</button>
+          </div>
+        </div>
+
+      </div><!-- /nebulaContent -->
+    </div>
+  </main>
+</div>
+
+<!-- FAB -->
+<div class="fab-wrap" id="fabWrap" style="display:none">
+  <div class="fab fab-sub" onclick="openTheme()" title="테마 편집">🎨</div>
+  <div class="fab fab-main" onclick="openItemModal(0)" title="아이템 추가">+</div>
+</div>
+
+<script>
+// ══════════════════════════════════
+// PARTICLE BACKGROUND
+// ══════════════════════════════════
+const canvas = document.getElementById('bgCanvas');
+const ctx = canvas.getContext('2d');
+let W, H, stars = [];
+function rsz(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;}
+rsz(); window.addEventListener('resize',rsz);
+
+class Star {
+  constructor(){this.reset();}
+  reset(){
+    this.x=Math.random()*W; this.y=Math.random()*H;
+    this.s=Math.random()*1.5+.2; this.a=Math.random()*.5+.1;
+    this.vx=(Math.random()-.5)*.08; this.vy=(Math.random()-.5)*.08;
+    this.ph=Math.random()*Math.PI*2; this.sp=Math.random()*.015+.004;
+    const r=Math.random();
+    this.col=r<.08?'#f0c040':r<.14?'#c084fc':r<.18?'#38bdf8':'#fff';
+  }
+  update(){
+    this.ph+=this.sp; this.x+=this.vx; this.y+=this.vy;
+    this.alpha=this.a*(.4+.6*Math.sin(this.ph));
+    if(this.x<0)this.x=W; if(this.x>W)this.x=0;
+    if(this.y<0)this.y=H; if(this.y>H)this.y=0;
+  }
+  draw(){
+    ctx.save(); ctx.globalAlpha=this.alpha; ctx.fillStyle=this.col;
+    if(this.s>1){ctx.shadowColor=this.col;ctx.shadowBlur=4;}
+    ctx.beginPath(); ctx.arc(this.x,this.y,this.s,0,Math.PI*2); ctx.fill(); ctx.restore();
+  }
+}
+for(let i=0;i<250;i++) stars.push(new Star());
+function animBG(){
+  ctx.clearRect(0,0,W,H);
+  stars.forEach(s=>{s.update();s.draw();});
+  requestAnimationFrame(animBG);
+}
+animBG();
+
+// ══════════════════════════════════
+// STATE
+// ══════════════════════════════════
+let currentUser = null;
+let nebulaData = null;
+let inventory = [];
+let currentTheme = 'void';
+let currentAccent = '#c084fc';
+let selectedSlot = null;
+
+const API = '';  // 같은 도메인
+
+const THEMES = {
+  void:    { bg:'#030308', accent:'#c084fc', label:'보이드' },
+  nebula:  { bg:'#0a0520', accent:'#c084fc', label:'성운' },
+  nova:    { bg:'#1a0505', accent:'#ef4444', label:'노바' },
+  ocean:   { bg:'#020f1a', accent:'#38bdf8', label:'심해' },
+  gold:    { bg:'#0d0a00', accent:'#f0c040', label:'제국' },
+  crystal: { bg:'#020a18', accent:'#bae6fd', label:'수정' },
+};
+
+const GRADE_LABELS = {
+  stardust:  ['성진', '우주의 부름', 'rgba(180,180,180,.6)'],
+  seed:      ['성아', '자아의 각성', 'rgba(134,239,172,.7)'],
+  spirit:    ['성령', '정체성의 확립', 'rgba(165,180,252,.7)'],
+  citizen:   ['성민', '공적 목소리', 'rgba(192,132,252,.8)'],
+  knight:    ['성기사', '용맹한 수호', 'rgba(251,191,36,.8)'],
+  baron:     ['성주', '전략의 중심', 'rgba(240,192,64,.9)'],
+  earl:      ['성령주', '영향력의 확산', 'rgba(251,146,60,.9)'],
+  sage:      ['성현', '지혜의 통치', 'rgba(56,189,248,.9)'],
+  highlord:  ['성존', '절대적 권위', 'rgba(192,132,252,1)'],
+  celestial: ['성신', '신성의 완성', 'rgba(255,215,0,1)'],
+};
+
+const ARCHETYPES = {
+  balancer:   '⬡ 균형자 — 제국의 기둥',
+  tactician:  '⚔️ 전략 지휘관 — 전쟁의 설계자',
+  patron:     '💰 제국의 후원자 — 든든한 자본',
+  muse:       '🎨 천재 아티스트 — 문화의 아이콘',
+  core:       '🌟 성단의 핵 — 흔들리지 않는 충성',
+};
+
+// ══════════════════════════════════
+// INIT
+// ══════════════════════════════════
+async function init() {
+  const token = localStorage.getItem('asteria_token');
+  if (!token) {
+    document.getElementById('loginPrompt').style.display = 'flex';
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API}/api/nebula/me`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error('auth');
+    nebulaData = await res.json();
+    currentUser = nebulaData;
+    renderNebula();
+  } catch {
+    // 데모 모드 (API 없을 때)
+    loadDemo();
+  }
+}
+
+function loadDemo() {
+  // 데모 데이터
+  currentUser = {
+    id: 1, nickname: '별빛 탐험가', emoji: '🌟',
+    level: 23, grade: 'spirit',
+    stat_loy: 145, stat_act: 89, stat_soc: 67,
+    stat_eco: 34, stat_cre: 112, stat_int: 78,
+    ap: 4820, cp: 380, stardust: 2150,
+    is_pioneer: true, pioneer_rank: 42,
+    archetype: 'muse',
+    serial_number: 42,
+    evolution_stage: 2,
+    theme: 'nebula',
+    cultural_power: 380,
+    visitor_count: 127,
+    total_hearts: 89,
+    resonance_index: 0.73,
+    has_advent: false,
+    guestbook: [
+      { visitor_name: 'NovaFan99', message: '정말 멋진 성궤예요! 창의 스탯이 엄청나네요 ✨', created_at: '2026-03-26T10:30:00Z' },
+      { visitor_name: 'StarQueen', message: '퀴즈 정답률이 대단해요 👑', created_at: '2026-03-26T09:15:00Z' },
+    ],
+  };
+  inventory = [
+    { id:1, name:'기본 별빛 조명', type:'decor', rarity:'common', emoji:'💡', stat_bonus:{loy:2}, is_displayed:true, nebula_slot:1 },
+    { id:2, name:'아스트라 포스터', type:'decor', rarity:'common', emoji:'🖼️', stat_bonus:{act:3}, is_displayed:true, nebula_slot:2 },
+    { id:3, name:'무지개 수정', type:'artifact', rarity:'rare', emoji:'💎', stat_bonus:{cre:10}, is_displayed:false },
+    { id:4, name:'오라클 테이블', type:'furniture', rarity:'rare', emoji:'🔮', stat_bonus:{int:15}, is_displayed:true, nebula_slot:4 },
+    { id:5, name:'아티스트 홀로그램', type:'special', rarity:'epic', emoji:'✨', stat_bonus:{rel:25}, is_displayed:false },
+    { id:6, name:'사유의 의자', type:'furniture', rarity:'common', emoji:'🪑', stat_bonus:{int:5}, is_displayed:false },
+  ];
+  renderNebula();
+}
+
+function renderNebula() {
+  const u = currentUser;
+  document.getElementById('loginPrompt').style.display = 'none';
+  document.getElementById('nebulaContent').style.display = 'block';
+  document.getElementById('fabWrap').style.display = 'flex';
+
+  // Sidebar user
+  const su = document.getElementById('sidebarUser');
+  const gradeInfo = GRADE_LABELS[u.grade] || GRADE_LABELS.stardust;
+  su.innerHTML = `
+    <div class="user-card">
+      <div class="user-av">
+        ${u.emoji}
+        ${u.is_pioneer ? '<div class="pioneer-badge">⭐</div>' : ''}
+      </div>
+      <div class="user-info">
+        <div class="user-name">${u.nickname}</div>
+        <div class="user-grade">Lv.${u.level} ${gradeInfo[0]}</div>
+        ${u.serial_number ? `<div class="user-serial">성궤 #${String(u.serial_number).padStart(5,'0')}</div>` : ''}
+      </div>
+    </div>
+  `;
+
+  // Stats
+  document.getElementById('statsMini').style.display = 'block';
+  document.getElementById('resources').style.display = 'flex';
+  document.getElementById('s_loy').textContent = u.stat_loy;
+  document.getElementById('s_act').textContent = u.stat_act;
+  document.getElementById('s_soc').textContent = u.stat_soc;
+  document.getElementById('s_eco').textContent = u.stat_eco;
+  document.getElementById('s_cre').textContent = u.stat_cre;
+  document.getElementById('s_int').textContent = u.stat_int;
+  document.getElementById('r_ap').textContent = u.ap.toLocaleString();
+  document.getElementById('r_cp').textContent = u.cp.toLocaleString();
+  document.getElementById('r_sd').textContent = u.stardust.toLocaleString();
+
+  // Serial badge
+  if (u.serial_number) {
+    document.getElementById('serialBadge').style.display = 'block';
+    document.getElementById('serialNum').textContent = String(u.serial_number).padStart(5,'0');
+  }
+
+  // Stage
+  const stage = u.evolution_stage || 1;
+  const stageLabels = ['', 'Void', 'Ignition', 'Supernova'];
+  for (let i=1;i<=3;i++) {
+    document.getElementById(`stage${i}`).classList.toggle('active', i <= stage);
+  }
+  document.getElementById('stageLabel').textContent = stageLabels[stage] || 'Void';
+
+  // Theme
+  applyPreset(u.theme || 'void', false);
+
+  // Character
+  document.getElementById('charEmoji').textContent = u.emoji;
+  document.getElementById('charName').textContent = u.nickname;
+  document.getElementById('charLevel').textContent = u.level;
+  document.getElementById('charGradeShort').textContent = gradeInfo[0];
+  document.getElementById('charGradeLabel').textContent = `${u.grade.toUpperCase()} — ${gradeInfo[1]}`;
+  document.getElementById('gradeRing').style.borderColor = gradeInfo[2];
+
+  // Archetype
+  const arc = u.archetype ? (ARCHETYPES[u.archetype] || '⬡ 아키타입 분석 중...') : '⬡ 아키타입 분석 중...';
+  document.getElementById('archetypeTag').textContent = arc;
+
+  // Hexagon
+  drawHexagon(u.stat_loy, u.stat_act, u.stat_soc, u.stat_eco, u.stat_cre, u.stat_int);
+
+  // Slots
+  renderSlots();
+
+  // CP
+  const cp = u.cultural_power || 0;
+  document.getElementById('cpValue').textContent = cp.toLocaleString();
+  const itemVal = Math.floor(cp * 0.6);
+  const heartVal = Math.floor((u.total_hearts||0) * 2);
+  const histVal = Math.floor(cp * 0.1);
+  const maxCP = Math.max(cp, 100);
+  document.getElementById('cpVal1').textContent = itemVal;
+  document.getElementById('cpVal2').textContent = heartVal;
+  document.getElementById('cpVal3').textContent = histVal;
+  document.getElementById('cpBar1').style.width = Math.min(100, itemVal/maxCP*100) + '%';
+  document.getElementById('cpBar2').style.width = Math.min(100, heartVal/maxCP*100*5) + '%';
+  document.getElementById('cpBar3').style.width = Math.min(100, histVal/maxCP*100*3) + '%';
+
+  // Visitor count
+  document.getElementById('visitorCount').textContent = `방문 ${(u.visitor_count||0).toLocaleString()}회`;
+
+  // Guestbook
+  renderGuestbook(u.guestbook || []);
+
+  // Advent
+  if (u.has_advent) {
+    document.getElementById('adventBanner').classList.add('show');
+    if (u.advent_message) document.getElementById('adventText').textContent = u.advent_message;
+  }
+}
+
+// ══════════════════════════════════
+// HEXAGON CHART
+// ══════════════════════════════════
+function drawHexagon(loy, act, soc, eco, cre, int_) {
+  const cx = 100, cy = 100, maxR = 70;
+  const vals = [loy, act, soc, eco, cre, int_];
+  const labels = ['LOY','ACT','SOC','ECO','CRE','INT'];
+  const colors = ['#f0c040','#ef4444','#38bdf8','#10b981','#a78bfa','#fbbf24'];
+  const maxVal = Math.max(200, ...vals);
+
+  function hexPts(r) {
+    return Array.from({length:6},(_,i)=>{
+      const a = (i*60-90)*Math.PI/180;
+      return `${cx+r*Math.cos(a)},${cy+r*Math.sin(a)}`;
+    }).join(' ');
+  }
+
+  document.getElementById('hexGrid1').setAttribute('points', hexPts(maxR));
+  document.getElementById('hexGrid2').setAttribute('points', hexPts(maxR*0.66));
+  document.getElementById('hexGrid3').setAttribute('points', hexPts(maxR*0.33));
+
+  const axes = document.getElementById('hexAxes');
+  axes.innerHTML = '';
+  for(let i=0;i<6;i++){
+    const a=(i*60-90)*Math.PI/180;
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',cx); line.setAttribute('y1',cy);
+    line.setAttribute('x2',cx+maxR*Math.cos(a)); line.setAttribute('y2',cy+maxR*Math.sin(a));
+    axes.appendChild(line);
+  }
+
+  const dataPts = vals.map((v,i)=>{
+    const a=(i*60-90)*Math.PI/180;
+    const r=maxR*(v/maxVal);
+    return `${cx+r*Math.cos(a)},${cy+r*Math.sin(a)}`;
+  }).join(' ');
+  document.getElementById('hexData').setAttribute('points', dataPts);
+
+  const labelsEl = document.getElementById('hexLabels');
+  labelsEl.innerHTML = '';
+  labels.forEach((l,i)=>{
+    const a=(i*60-90)*Math.PI/180;
+    const r=maxR+14;
+    const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+    text.setAttribute('x', cx+r*Math.cos(a));
+    text.setAttribute('y', cy+r*Math.sin(a)+3);
+    text.setAttribute('fill', colors[i]);
+    text.setAttribute('font-weight','700');
+    text.textContent = l;
+    labelsEl.appendChild(text);
+  });
+}
+
+// ══════════════════════════════════
+// SLOTS
+// ══════════════════════════════════
+function renderSlots() {
+  const grid = document.getElementById('slotsGrid');
+  const stage = currentUser?.evolution_stage || 1;
+  const slotCount = stage >= 3 ? 12 : stage >= 2 ? 8 : 6;
+  grid.innerHTML = '';
+
+  for(let i=1; i<=slotCount; i++) {
+    const placed = inventory.find(item => item.is_displayed && item.nebula_slot === i);
+    const div = document.createElement('div');
+    div.className = `slot${placed ? ' filled' : ''}${placed?.rarity==='legendary' ? ' legendary':''} `;
+    div.onclick = () => openItemModal(i);
+
+    if(placed) {
+      div.innerHTML = `
+        <div class="slot-rarity ${placed.rarity}"></div>
+        <div class="slot-emoji">${placed.emoji}</div>
+        <div class="slot-name">${placed.name}</div>
+      `;
+    } else {
+      div.innerHTML = `
+        <div class="slot-empty-icon">+</div>
+        <div class="slot-add-text">슬롯 ${i}</div>
+      `;
+    }
+    grid.appendChild(div);
+  }
+}
+
+// ══════════════════════════════════
+// ITEM MODAL
+// ══════════════════════════════════
+function openItemModal(slot) {
+  selectedSlot = slot;
+  document.getElementById('targetSlot').textContent = slot;
+  const grid = document.getElementById('inventoryGrid');
+  const available = inventory.filter(item => !item.is_displayed || item.nebula_slot === slot);
+
+  if(available.length === 0) {
+    grid.innerHTML = '<div style="grid-column:span 3;text-align:center;color:var(--muted);font-size:12px;padding:20px">보유한 아이템이 없습니다.<br>미션을 완료하여 아이템을 획득하세요!</div>';
+  } else {
+    grid.innerHTML = available.map(item => `
+      <div class="inv-item" onclick="placeItem(${item.id})">
+        <div class="inv-item-emoji">${item.emoji}</div>
+        <div class="inv-item-name">${item.name}</div>
+        <div class="inv-item-rarity rarity-${item.rarity}">${item.rarity.toUpperCase()}</div>
+      </div>
+    `).join('');
+  }
+  // 빈 슬롯 옵션
+  if(slot > 0 && inventory.some(i=>i.nebula_slot===slot && i.is_displayed)) {
+    grid.innerHTML += `<div class="inv-item" onclick="removeItem(${slot})" style="grid-column:span 3;margin-top:8px">
+      <div style="font-size:12px;color:var(--muted);text-align:center">✕ 아이템 제거</div>
+    </div>`;
+  }
+  document.getElementById('itemModal').classList.add('show');
+}
+
+function closeItemModal() {
+  document.getElementById('itemModal').classList.remove('show');
+  selectedSlot = null;
+}
+
+function placeItem(itemId) {
+  if(!selectedSlot) return;
+  // 기존 슬롯 해제
+  inventory.forEach(i => { if(i.nebula_slot === selectedSlot) { i.is_displayed=false; i.nebula_slot=null; } });
+  // 새 배치
+  const item = inventory.find(i=>i.id===itemId);
+  if(item) { item.is_displayed=true; item.nebula_slot=selectedSlot; }
+  renderSlots();
+  closeItemModal();
+  showToast(`${item?.emoji} ${item?.name}을(를) 슬롯 ${selectedSlot}에 배치했습니다!`);
+  recalcCPLocal();
+
+  // API 호출 (있으면)
+  const token = localStorage.getItem('asteria_token');
+  if(token) {
+    fetch(`${API}/api/nebula/place`, {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},
+      body: JSON.stringify({ artifact_id: itemId, slot: selectedSlot })
+    }).catch(()=>{});
+  }
+}
+
+function removeItem(slot) {
+  inventory.forEach(i => { if(i.nebula_slot === slot) { i.is_displayed=false; i.nebula_slot=null; } });
+  renderSlots();
+  closeItemModal();
+  showToast('아이템을 제거했습니다.');
+  recalcCPLocal();
+}
+
+function recalcCPLocal() {
+  const displayed = inventory.filter(i=>i.is_displayed);
+  let itemVal = 0;
+  displayed.forEach(i => {
+    if(i.stat_bonus) itemVal += Object.values(i.stat_bonus).reduce((a,b)=>a+b,0);
+  });
+  const hearts = currentUser?.total_hearts || 0;
+  const cp = Math.floor(itemVal * 1.0 + hearts * 2);
+  if(currentUser) currentUser.cultural_power = cp;
+
+  document.getElementById('cpValue').textContent = cp.toLocaleString();
+  const maxCP = Math.max(cp, 100);
+  document.getElementById('cpVal1').textContent = itemVal;
+  document.getElementById('cpBar1').style.width = Math.min(100, itemVal/maxCP*100)+'%';
+  document.getElementById('r_cp').textContent = cp.toLocaleString();
+}
+
+// ══════════════════════════════════
+// THEME
+// ══════════════════════════════════
+function openTheme() { document.getElementById('themePanel').classList.add('open'); }
+function closeTheme() { document.getElementById('themePanel').classList.remove('open'); }
+
+function applyPreset(name, save=true) {
+  const t = THEMES[name] || THEMES.void;
+  currentTheme = name;
+  document.documentElement.style.setProperty('--nebula-bg', t.bg);
+  document.documentElement.style.setProperty('--nebula-accent', t.accent);
+  // RGB for radial gradient
+  const hex = t.accent.replace('#','');
+  const r=parseInt(hex.slice(0,2),16),g=parseInt(hex.slice(2,4),16),b=parseInt(hex.slice(4,6),16);
+  document.documentElement.style.setProperty('--nebula-accent-rgb',`${r},${g},${b}`);
+
+  const ns = document.getElementById('nebulaSpace');
+  if(ns) ns.style.background = `
+    radial-gradient(ellipse at 50% 30%, rgba(${r},${g},${b},0.15) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 80%, rgba(56,189,248,0.08) 0%, transparent 50%),
+    ${t.bg}`;
+
+  if(save && currentUser) {
+    const token = localStorage.getItem('asteria_token');
+    if(token) {
+      fetch(`${API}/api/nebula/theme`,{
+        method:'PUT', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},
+        body: JSON.stringify({ theme: name, accent_color: t.accent })
+      }).catch(()=>{});
+    }
+  }
+}
+
+function setAccent(color, el) {
+  document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('active'));
+  el.classList.add('active');
+  currentAccent = color;
+  const hex=color.replace('#','');
+  const r=parseInt(hex.slice(0,2),16),g=parseInt(hex.slice(2,4),16),b=parseInt(hex.slice(4,6),16);
+  document.documentElement.style.setProperty('--nebula-accent',color);
+  document.documentElement.style.setProperty('--nebula-accent-rgb',`${r},${g},${b}`);
+  const ns=document.getElementById('nebulaSpace');
+  if(ns) ns.style.background = `radial-gradient(ellipse at 50% 30%, rgba(${r},${g},${b},0.15) 0%, transparent 60%), radial-gradient(ellipse at 80% 80%, rgba(56,189,248,0.08) 0%, transparent 50%), var(--nebula-bg)`;
+}
+
+function saveTheme() {
+  closeTheme();
+  showToast('✨ 성궤 테마가 저장되었습니다!');
+}
+
+// ══════════════════════════════════
+// GUESTBOOK
+// ══════════════════════════════════
+function renderGuestbook(entries) {
+  const el = document.getElementById('gbEntries');
+  if(!entries || entries.length===0) {
+    el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px">아직 방명록이 없습니다.</div>';
+    return;
+  }
+  el.innerHTML = entries.slice(-20).reverse().map(e=>`
+    <div class="gb-entry">
+      <div class="gb-entry-top">
+        <span class="gb-entry-name">${e.visitor_name || '익명'}</span>
+        <span class="gb-entry-time">${formatTime(e.created_at)}</span>
+      </div>
+      <div class="gb-entry-msg">${e.message}</div>
+    </div>
+  `).join('');
+}
+
+async function sendGuestbook() {
+  const input = document.getElementById('gbInput');
+  const msg = input.value.trim();
+  if(!msg) return;
+  input.value = '';
+
+  // Demo: 로컬 추가
+  const entry = { visitor_name: currentUser?.nickname || '방문자', message: msg, created_at: new Date().toISOString() };
+  if(currentUser) {
+    if(!currentUser.guestbook) currentUser.guestbook = [];
+    currentUser.guestbook.push(entry);
+    renderGuestbook(currentUser.guestbook);
+  }
+  showToast('방명록을 남겼습니다!');
+}
+
+function formatTime(iso) {
+  if(!iso) return '';
+  const d = new Date(iso);
+  return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+// ══════════════════════════════════
+// TOAST
+// ══════════════════════════════════
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._t); t._t = setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+// START
+init();
+</script>
+</body>
+</html>

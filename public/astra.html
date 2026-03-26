@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>아스트라 — ASTERIA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --void:#030308; --panel:rgba(10,10,22,0.95);
+  --border:rgba(180,150,255,0.13); --gold:#f0c040;
+  --quasar:#c084fc; --quasar2:#818cf8; --quasar3:#38bdf8;
+  --text:#e8e4f0; --muted:rgba(200,190,220,0.5);
+}
+html, body {
+  width:100%; height:100%;
+  background:var(--void); color:var(--text);
+  font-family:'Noto Sans KR',sans-serif;
+  overflow-x:hidden;
+  /* 모바일 앱 느낌 */
+  -webkit-tap-highlight-color:transparent;
+  -webkit-touch-callout:none;
+  user-select:none;
+}
+
+/* ── 메인 레이아웃 ── */
+#app {
+  max-width:480px; /* 모바일 앱 기준 */
+  margin:0 auto; min-height:100vh;
+  position:relative; overflow:hidden;
+}
+
+/* ══════════════════════════════
+   CANVAS BACKGROUND
+══════════════════════════════ */
+#bgCanvas {
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  max-width:480px; margin:0 auto; left:50%; transform:translateX(-50%);
+}
+
+/* ══════════════════════════════
+   TOP BAR
+══════════════════════════════ */
+.topbar {
+  position:sticky; top:0; z-index:100;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 20px;
+  background:var(--panel); backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+.tb-logo { font-family:'Orbitron',monospace; font-size:16px; font-weight:900; letter-spacing:3px;
+  background:linear-gradient(135deg,var(--gold),var(--quasar)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.tb-right { display:flex; align-items:center; gap:12px; }
+.tb-sd { font-size:12px; color:var(--gold); font-weight:700; }
+.tb-notif { width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,.06); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:14px; cursor:pointer; }
+
+/* ══════════════════════════════
+   AVATAR STAGE — 메인 시각
+══════════════════════════════ */
+.avatar-stage {
+  position:relative; height:420px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  overflow:hidden;
+}
+
+/* 리그별 배경 nebula */
+.stage-bg {
+  position:absolute; inset:0;
+  transition: background 1.5s ease, opacity 1s ease;
+}
+
+/* 궤도 링들 */
+.orbit-rings {
+  position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  pointer-events:none;
+}
+.orbit {
+  position:absolute; border-radius:50%;
+  border:1px solid rgba(255,255,255,.06);
+  animation:orbitRotate 20s linear infinite;
+}
+.orbit:nth-child(2) { animation-duration:30s; animation-direction:reverse; }
+.orbit:nth-child(3) { animation-duration:45s; }
+@keyframes orbitRotate { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+.orbit::after {
+  content:''; position:absolute; top:-3px; left:50%;
+  width:6px; height:6px; border-radius:50%;
+  transform:translateX(-50%);
+}
+
+/* 아바타 캐릭터 캔버스 */
+#avatarCanvas {
+  position:relative; z-index:10;
+  width:200px; height:200px;
+  cursor:pointer;
+  filter:drop-shadow(0 0 20px rgba(192,132,252,.4));
+  transition:filter .5s;
+}
+
+/* 아바타 정보 오버레이 */
+.avatar-info {
+  position:relative; z-index:10;
+  text-align:center; margin-top:12px;
+}
+.av-name { font-size:20px; font-weight:900; letter-spacing:1px; }
+.av-grade {
+  font-family:'Orbitron',monospace; font-size:10px; letter-spacing:3px;
+  margin-top:4px; padding:3px 12px; border-radius:20px; display:inline-block;
+}
+.av-league-badge {
+  margin-top:8px; display:flex; align-items:center; justify-content:center; gap:6px;
+}
+.league-icon { font-size:16px; }
+.league-name { font-size:12px; font-weight:700; letter-spacing:1px; }
+
+/* 레벨 + EXP 바 */
+.level-bar-wrap {
+  position:relative; z-index:10;
+  width:100%; padding:0 32px; margin-top:16px;
+}
+.level-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+.level-txt { font-family:'Orbitron',monospace; font-size:13px; font-weight:700; }
+.level-next { font-size:11px; color:var(--muted); }
+.exp-bar-bg {
+  width:100%; height:8px; background:rgba(255,255,255,.07);
+  border-radius:4px; overflow:hidden; position:relative;
+}
+.exp-bar-fill {
+  height:100%; border-radius:4px;
+  transition:width 1s cubic-bezier(.4,0,.2,1);
+  position:relative; overflow:hidden;
+}
+.exp-bar-fill::after {
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);
+  animation:expShine 2s ease-in-out infinite;
+}
+@keyframes expShine { 0%{transform:translateX(-100%)} 100%{transform:translateX(200%)} }
+
+/* ══════════════════════════════
+   STAT HEXAGON
+══════════════════════════════ */
+.hex-section {
+  padding:20px 20px 0;
+  position:relative; z-index:10;
+}
+.section-title {
+  font-size:10px; color:var(--muted); letter-spacing:2.5px;
+  text-transform:uppercase; margin-bottom:14px;
+  display:flex; align-items:center; gap:8px;
+}
+.section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+.hex-row { display:flex; align-items:center; gap:16px; }
+#hexCanvas { width:180px; height:180px; flex-shrink:0; }
+
+/* Stat list */
+.stat-list { flex:1; display:flex; flex-direction:column; gap:8px; }
+.stat-row { display:flex; align-items:center; gap:8px; }
+.stat-icon { font-size:14px; width:20px; text-align:center; }
+.stat-label { font-size:10px; color:var(--muted); width:28px; }
+.stat-bar-bg { flex:1; height:5px; background:rgba(255,255,255,.07); border-radius:3px; overflow:hidden; }
+.stat-bar-fill { height:100%; border-radius:3px; transition:width .8s cubic-bezier(.4,0,.2,1); }
+.stat-val { font-size:11px; font-weight:700; width:28px; text-align:right; }
+
+/* ══════════════════════════════
+   AURA EFFECTS — 리그별 특수 효과
+══════════════════════════════ */
+.aura-display {
+  padding:16px 20px;
+  position:relative; z-index:10;
+}
+.aura-card {
+  background:rgba(255,255,255,.03); border:1px solid var(--border);
+  border-radius:16px; padding:16px;
+  display:flex; align-items:center; gap:14px;
+}
+.aura-visual {
+  width:56px; height:56px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:24px; position:relative; flex-shrink:0;
+}
+.aura-info { flex:1; }
+.aura-name { font-size:13px; font-weight:700; margin-bottom:3px; }
+.aura-desc { font-size:11px; color:var(--muted); line-height:1.5; }
+.aura-unlock { font-size:10px; margin-top:4px; font-weight:600; }
+
+/* ══════════════════════════════
+   COMPETITION PANEL — 경쟁 심리
+══════════════════════════════ */
+.competition-panel {
+  padding:0 20px 16px;
+  position:relative; z-index:10;
+}
+.comp-card {
+  background:rgba(255,255,255,.03); border:1px solid var(--border);
+  border-radius:16px; overflow:hidden;
+}
+.comp-header {
+  padding:12px 16px; background:rgba(255,255,255,.03);
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.comp-title { font-size:12px; font-weight:700; }
+.comp-live { font-size:10px; color:#ef4444; font-weight:700; display:flex; align-items:center; gap:4px; }
+.comp-live::before { content:''; width:6px; height:6px; border-radius:50%; background:#ef4444; animation:livePulse 1.2s ease-in-out infinite; }
+@keyframes livePulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+.comp-rows { padding:12px 16px; display:flex; flex-direction:column; gap:10px; }
+.comp-row { display:flex; align-items:center; gap:10px; }
+.comp-rank { font-family:'Orbitron',monospace; font-size:11px; font-weight:700; width:22px; text-align:center; }
+.comp-av { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+.comp-info { flex:1; }
+.comp-name { font-size:12px; font-weight:600; }
+.comp-score { font-size:10px; color:var(--gold); font-weight:500; }
+.comp-delta { font-size:10px; font-weight:700; }
+.comp-delta.up { color:#10b981; }
+.comp-delta.down { color:#ef4444; }
+.comp-me { background:rgba(240,192,64,.06); border:1px solid rgba(240,192,64,.2); border-radius:10px; padding:4px 8px; }
+
+/* 경쟁 알림 배너 */
+.comp-alert {
+  margin:0 20px 16px;
+  padding:12px 16px; border-radius:14px;
+  display:flex; align-items:center; gap:12px;
+  animation:alertPulse 3s ease-in-out infinite;
+}
+@keyframes alertPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.01)} }
+.alert-icon { font-size:20px; }
+.alert-msg { flex:1; }
+.alert-title { font-size:12px; font-weight:700; }
+.alert-body { font-size:11px; color:var(--muted); margin-top:2px; }
+.alert-btn { font-size:11px; font-weight:700; padding:5px 12px; border-radius:20px; border:none; cursor:pointer; font-family:'Noto Sans KR',sans-serif; }
+
+/* ══════════════════════════════
+   GROWTH MISSIONS
+══════════════════════════════ */
+.missions-section {
+  padding:0 20px 16px;
+  position:relative; z-index:10;
+}
+.mission-list { display:flex; flex-direction:column; gap:8px; }
+.mission-card {
+  background:rgba(255,255,255,.03); border:1px solid var(--border);
+  border-radius:14px; padding:13px 14px;
+  display:flex; align-items:center; gap:12px;
+  cursor:pointer; transition:all .2s; active:scale(.98);
+}
+.mission-card:hover { border-color:rgba(192,132,252,.3); background:rgba(192,132,252,.05); }
+.mission-card.completed { opacity:.5; }
+.mission-icon { font-size:22px; width:36px; text-align:center; }
+.mission-info { flex:1; }
+.mission-name { font-size:13px; font-weight:600; }
+.mission-desc { font-size:11px; color:var(--muted); margin-top:2px; }
+.mission-reward { display:flex; align-items:center; gap:6px; margin-top:5px; }
+.reward-chip { font-size:10px; font-weight:700; padding:2px 8px; border-radius:20px; }
+.mission-check { width:24px; height:24px; border-radius:50%; border:2px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; }
+.mission-check.done { background:var(--quasar); border-color:var(--quasar); }
+
+/* ══════════════════════════════
+   LEAGUE PROGRESS
+══════════════════════════════ */
+.league-progress {
+  padding:0 20px 100px;
+  position:relative; z-index:10;
+}
+.league-road {
+  position:relative;
+  padding:10px 0;
+}
+.league-step {
+  display:flex; align-items:center; gap:14px;
+  padding:12px 0; position:relative;
+}
+.league-step::before {
+  content:''; position:absolute; left:19px; top:44px;
+  width:2px; height:calc(100% - 10px);
+  background:linear-gradient(to bottom, var(--step-color,rgba(180,150,255,.2)), transparent);
+}
+.league-step:last-child::before { display:none; }
+.step-orb {
+  width:40px; height:40px; border-radius:50%; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; position:relative; z-index:1;
+  transition:all .3s;
+}
+.step-orb.current {
+  box-shadow:0 0 0 4px rgba(240,192,64,.2), 0 0 20px rgba(240,192,64,.4);
+  animation:currentPulse 2s ease-in-out infinite;
+}
+@keyframes currentPulse { 0%,100%{box-shadow:0 0 0 4px rgba(240,192,64,.2),0 0 20px rgba(240,192,64,.4)} 50%{box-shadow:0 0 0 8px rgba(240,192,64,.1),0 0 40px rgba(240,192,64,.6)} }
+.step-info { flex:1; }
+.step-name { font-size:13px; font-weight:700; }
+.step-req { font-size:11px; color:var(--muted); margin-top:2px; }
+.step-status { font-size:10px; font-weight:700; padding:3px 10px; border-radius:20px; }
+
+/* ══════════════════════════════
+   BOTTOM NAV (앱 스타일)
+══════════════════════════════ */
+.bottom-nav {
+  position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+  width:100%; max-width:480px;
+  background:var(--panel); backdrop-filter:blur(24px);
+  border-top:1px solid var(--border);
+  display:flex; z-index:200;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.nav-item {
+  flex:1; display:flex; flex-direction:column; align-items:center;
+  padding:10px 0 8px; cursor:pointer; transition:all .2s;
+  text-decoration:none; color:var(--muted);
+}
+.nav-item.active { color:var(--quasar); }
+.nav-item:hover { color:var(--text); }
+.nav-item-icon { font-size:20px; margin-bottom:3px; }
+.nav-item-label { font-size:9px; font-weight:500; letter-spacing:.5px; }
+
+/* ══════════════════════════════
+   LEVELUP MODAL
+══════════════════════════════ */
+#levelupModal {
+  position:fixed; inset:0; z-index:9999;
+  display:none; align-items:center; justify-content:center;
+  background:rgba(0,0,0,.8); backdrop-filter:blur(15px);
+}
+#levelupModal.show { display:flex; }
+.levelup-box {
+  width:320px; text-align:center;
+  background:rgba(12,12,26,.98); border:1px solid rgba(240,192,64,.4);
+  border-radius:24px; padding:40px 28px;
+  box-shadow:0 0 60px rgba(240,192,64,.25);
+  animation:levelupPop .5s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes levelupPop { from{transform:scale(.5);opacity:0} to{transform:scale(1);opacity:1} }
+.lu-emoji { font-size:64px; margin-bottom:12px; animation:luBounce 1s ease-in-out infinite; }
+@keyframes luBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+.lu-title { font-family:'Orbitron',monospace; font-size:22px; font-weight:900; color:var(--gold); margin-bottom:6px; }
+.lu-grade { font-size:14px; color:var(--quasar); margin-bottom:16px; }
+.lu-bonuses { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:20px; }
+.lu-bonus { font-size:11px; font-weight:700; padding:5px 12px; border-radius:20px; background:rgba(192,132,252,.15); border:1px solid rgba(192,132,252,.3); color:var(--quasar); }
+.lu-btn { width:100%; padding:13px; border-radius:20px; background:linear-gradient(90deg,var(--gold),#e6a800); border:none; color:var(--void); font-size:15px; font-weight:700; cursor:pointer; font-family:'Noto Sans KR',sans-serif; }
+
+/* ══════════════════════════════
+   TOAST
+══════════════════════════════ */
+.toast {
+  position:fixed; bottom:90px; left:50%; transform:translateX(-50%);
+  background:rgba(12,12,26,.97); border:1px solid var(--border);
+  border-radius:12px; padding:11px 22px; font-size:13px;
+  z-index:8000; opacity:0; transition:opacity .3s;
+  pointer-events:none; white-space:nowrap;
+  box-shadow:0 8px 32px rgba(0,0,0,.5);
+}
+.toast.show { opacity:1; }
+
+/* 파티클 효과 */
+.particle-burst {
+  position:fixed; pointer-events:none; z-index:9998;
+}
+</style>
+</head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+<div id="toast" class="toast"></div>
+
+<!-- 레벨업 모달 -->
+<div id="levelupModal">
+  <div class="levelup-box">
+    <div class="lu-emoji" id="luEmoji">⭐</div>
+    <div class="lu-title">LEVEL UP!</div>
+    <div class="lu-grade" id="luGrade">Lv.2 달성</div>
+    <div class="lu-bonuses" id="luBonuses"></div>
+    <button class="lu-btn" onclick="closeLevelup()">계속하기 ✦</button>
+  </div>
+</div>
+
+<div id="app">
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="tb-logo">ASTER1A</div>
+    <div class="tb-right">
+      <div class="tb-sd">☆ <span id="tbSD">2,150</span></div>
+      <div class="tb-notif">🔔</div>
+    </div>
+  </div>
+
+  <!-- ═══ AVATAR STAGE ═══ -->
+  <div class="avatar-stage" id="avatarStage">
+    <div class="stage-bg" id="stageBg"></div>
+    <div class="orbit-rings" id="orbitRings"></div>
+    <canvas id="avatarCanvas" width="200" height="200" onclick="onAvatarTap()"></canvas>
+    <div class="avatar-info">
+      <div class="av-name" id="avName">별빛 탐험가</div>
+      <div class="av-grade" id="avGrade">SPIRIT · 정체성의 확립</div>
+      <div class="av-league-badge">
+        <span class="league-icon" id="leagueIcon">🌠</span>
+        <span class="league-name" id="leagueName">더스트 리그</span>
+      </div>
+    </div>
+    <div class="level-bar-wrap">
+      <div class="level-row">
+        <div class="level-txt">Lv.<span id="levelNum">1</span></div>
+        <div class="level-next"><span id="expCurrent">0</span> / <span id="expNext">100</span> AP</div>
+      </div>
+      <div class="exp-bar-bg">
+        <div class="exp-bar-fill" id="expFill" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ HEXAGON STATS ═══ -->
+  <div class="hex-section">
+    <div class="section-title">✦ 헥사곤 스탯</div>
+    <div class="hex-row">
+      <canvas id="hexCanvas" width="180" height="180"></canvas>
+      <div class="stat-list" id="statList"></div>
+    </div>
+  </div>
+
+  <!-- ═══ AURA EFFECT ═══ -->
+  <div class="aura-display">
+    <div class="section-title">✦ 아우라 이펙트</div>
+    <div class="aura-card" id="auraCard">
+      <div class="aura-visual" id="auraVisual"></div>
+      <div class="aura-info">
+        <div class="aura-name" id="auraName">먼지의 잔상</div>
+        <div class="aura-desc" id="auraDesc">당신은 이제 막 우주에 발을 내딛었습니다. 희미하게 빛나는 입자들이 당신 주변을 맴돕니다.</div>
+        <div class="aura-unlock" id="auraUnlock"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ 경쟁 알림 배너 ═══ -->
+  <div class="comp-alert" id="compAlert"
+    style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3)">
+    <div class="alert-icon">⚔️</div>
+    <div class="alert-msg">
+      <div class="alert-title" id="alertTitle">심연에서 별이 올라오고 있습니다!</div>
+      <div class="alert-body" id="alertBody">EclipseKing이 당신과 단 120 AP 차이입니다.</div>
+    </div>
+    <button class="alert-btn" style="background:#ef4444;color:#fff" onclick="doMission()">반격하기</button>
+  </div>
+
+  <!-- ═══ 실시간 순위 ═══ -->
+  <div class="competition-panel">
+    <div class="section-title">✦ 팬덤 화력 순위</div>
+    <div class="comp-card">
+      <div class="comp-header">
+        <div class="comp-title">퀘이사 리그 TOP 5</div>
+        <div class="comp-live">LIVE</div>
+      </div>
+      <div class="comp-rows" id="compRows"></div>
+    </div>
+  </div>
+
+  <!-- ═══ 오늘의 성장 미션 ═══ -->
+  <div class="missions-section">
+    <div class="section-title">✦ 오늘의 성장 미션</div>
+    <div class="mission-list" id="missionList"></div>
+  </div>
+
+  <!-- ═══ 리그 성장 로드맵 ═══ -->
+  <div class="league-progress">
+    <div class="section-title">✦ 리그 성장 로드맵</div>
+    <div class="league-road" id="leagueRoad"></div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <a class="nav-item" href="/"><div class="nav-item-icon">🏠</div><div class="nav-item-label">홈</div></a>
+    <a class="nav-item active" href="#"><div class="nav-item-icon">⭐</div><div class="nav-item-label">아스트라</div></a>
+    <a class="nav-item" href="/nebula.html"><div class="nav-item-icon">🌌</div><div class="nav-item-label">성궤</div></a>
+    <a class="nav-item" href="/"><div class="nav-item-icon">⚔️</div><div class="nav-item-label">리그전</div></a>
+    <a class="nav-item" href="#"><div class="nav-item-icon">👤</div><div class="nav-item-label">MY</div></a>
+  </nav>
+</div>
+
+<script>
+// ════════════════════════════════════════
+//  BACKGROUND PARTICLES
+// ════════════════════════════════════════
+const bgC = document.getElementById('bgCanvas');
+const bgX = bgC.getContext('2d');
+let W, H;
+function rsz() {
+  W = bgC.width = Math.min(480, window.innerWidth);
+  H = bgC.height = window.innerHeight;
+}
+rsz(); window.addEventListener('resize', rsz);
+
+class BGStar {
+  constructor() { this.reset(); }
+  reset() {
+    this.x = Math.random()*W; this.y = Math.random()*H;
+    this.s = Math.random()*1.4+.2; this.a = Math.random()*.45+.08;
+    this.vx = (Math.random()-.5)*.07; this.vy = (Math.random()-.5)*.07;
+    this.ph = Math.random()*Math.PI*2; this.sp = Math.random()*.013+.003;
+    const r = Math.random();
+    this.col = r<.07?'#f0c040':r<.13?'#c084fc':r<.17?'#38bdf8':'#fff';
+  }
+  tick() {
+    this.ph += this.sp; this.x += this.vx; this.y += this.vy;
+    this.ca = this.a*(.4+.6*Math.sin(this.ph));
+    if(this.x<0)this.x=W; if(this.x>W)this.x=0;
+    if(this.y<0)this.y=H; if(this.y>H)this.y=0;
+  }
+  draw() {
+    bgX.save(); bgX.globalAlpha=this.ca; bgX.fillStyle=this.col;
+    if(this.s>1){bgX.shadowColor=this.col;bgX.shadowBlur=4;}
+    bgX.beginPath(); bgX.arc(this.x,this.y,this.s,0,Math.PI*2); bgX.fill(); bgX.restore();
+  }
+}
+const bgStars = Array.from({length:200}, ()=>new BGStar());
+function bgLoop() {
+  bgX.clearRect(0,0,W,H);
+  bgStars.forEach(s=>{s.tick();s.draw();});
+  requestAnimationFrame(bgLoop);
+}
+bgLoop();
+
+// ════════════════════════════════════════
+//  리그 & 등급 설계
+// ════════════════════════════════════════
+const LEAGUES = {
+  dust: {
+    name:'더스트 리그', icon:'✨', color:'#94a3b8',
+    bg: 'radial-gradient(ellipse at 50% 30%, rgba(100,100,120,.25) 0%, transparent 65%)',
+    orbitColor: 'rgba(148,163,184,.15)',
+    aura: { name:'먼지의 잔상', emoji:'💨', color:'rgba(148,163,184,.3)', desc:'희미하게 빛나는 먼지 입자들이 당신 주변을 맴돕니다.', effect:'dust' },
+    expColor: 'linear-gradient(90deg,#64748b,#94a3b8)',
+    gradeColor: '#94a3b8',
+    unlockMsg: null,
+  },
+  star: {
+    name:'스타 리그', icon:'🌟', color:'#fbbf24',
+    bg: 'radial-gradient(ellipse at 50% 30%, rgba(251,191,36,.2) 0%, rgba(192,132,252,.1) 50%, transparent 70%)',
+    orbitColor: 'rgba(251,191,36,.2)',
+    aura: { name:'별빛 오라', emoji:'⭐', color:'rgba(251,191,36,.5)', desc:'당신의 열정이 빛이 되었습니다. 별처럼 스스로 발광하기 시작합니다.', effect:'star' },
+    expColor: 'linear-gradient(90deg,#f59e0b,#fbbf24)',
+    gradeColor: '#fbbf24',
+    unlockMsg: '10만 멤버 + 클린 활동 지수 충족',
+  },
+  planet: {
+    name:'플래닛 리그', icon:'🪐', color:'#34d399',
+    bg: 'radial-gradient(ellipse at 40% 40%, rgba(52,211,153,.18) 0%, rgba(56,189,248,.1) 50%, transparent 70%)',
+    orbitColor: 'rgba(52,211,153,.2)',
+    aura: { name:'행성 오라', emoji:'🪐', color:'rgba(52,211,153,.5)', desc:'단단한 구체의 중력이 느껴집니다. 요새처럼 흔들리지 않는 실체가 생겼습니다.', effect:'planet' },
+    expColor: 'linear-gradient(90deg,#10b981,#34d399)',
+    gradeColor: '#34d399',
+    unlockMsg: '50만 멤버 + 3개월 우상향 유지',
+  },
+  nova: {
+    name:'노바 리그', icon:'💥', color:'#c084fc',
+    bg: 'radial-gradient(ellipse at 50% 25%, rgba(192,132,252,.3) 0%, rgba(239,68,68,.1) 40%, transparent 70%)',
+    orbitColor: 'rgba(192,132,252,.25)',
+    aura: { name:'초신성 오라', emoji:'💫', color:'rgba(192,132,252,.7)', desc:'폭발하듯 퍼져나가는 에너지. 당신의 존재가 우주를 물들입니다.', effect:'nova' },
+    expColor: 'linear-gradient(90deg,#a855f7,#c084fc)',
+    gradeColor: '#c084fc',
+    unlockMsg: '500만 멤버 + 글로벌 3대륙 활동',
+  },
+  quasar: {
+    name:'퀘이사 리그', icon:'⚡', color:'#f0c040',
+    bg: 'radial-gradient(ellipse at 50% 20%, rgba(240,192,64,.35) 0%, rgba(192,132,252,.2) 35%, rgba(56,189,248,.1) 60%, transparent 80%)',
+    orbitColor: 'rgba(240,192,64,.3)',
+    aura: { name:'퀘이사 광채', emoji:'🌌', color:'rgba(240,192,64,.9)', desc:'우주를 관통하는 빛. 당신은 이제 제국 그 자체입니다.', effect:'quasar' },
+    expColor: 'linear-gradient(90deg,#f0c040,#ffd700)',
+    gradeColor: '#f0c040',
+    unlockMsg: '1000만 멤버 + 8단계 조직 완성',
+  },
+};
+
+const GRADES = [
+  { min:1,  max:10,  key:'stardust', label:'성진', sub:'우주의 부름',      color:'#94a3b8' },
+  { min:11, max:20,  key:'seed',     label:'성아', sub:'자아의 각성',      color:'#86efac' },
+  { min:21, max:30,  key:'spirit',   label:'성령', sub:'정체성의 확립',    color:'#a5b4fc' },
+  { min:31, max:40,  key:'citizen',  label:'성민', sub:'공적 목소리',      color:'#c084fc' },
+  { min:41, max:50,  key:'knight',   label:'성기사',sub:'용맹한 수호',     color:'#fbbf24' },
+  { min:51, max:60,  key:'baron',    label:'성주', sub:'전략의 중심',      color:'#f0c040' },
+  { min:61, max:70,  key:'earl',     label:'성령주',sub:'영향력의 확산',   color:'#fb923c' },
+  { min:71, max:80,  key:'sage',     label:'성현', sub:'지혜의 통치',      color:'#38bdf8' },
+  { min:81, max:90,  key:'highlord', label:'성존', sub:'절대적 권위',      color:'#e879f9' },
+  { min:91, max:100, key:'celestial',label:'성신', sub:'신성의 완성',      color:'#ffd700' },
+];
+
+const STAT_CONFIG = [
+  { key:'loy', label:'LOY', icon:'🌟', color:'#f0c040', name:'성실' },
+  { key:'act', label:'ACT', icon:'⚡', color:'#ef4444', name:'행동' },
+  { key:'soc', label:'SOC', icon:'💬', color:'#38bdf8', name:'사회' },
+  { key:'eco', label:'ECO', icon:'💰', color:'#10b981', name:'경제' },
+  { key:'cre', label:'CRE', icon:'🎨', color:'#a78bfa', name:'창의' },
+  { key:'int', label:'INT', icon:'📚', color:'#fbbf24', name:'지성' },
+];
+
+const MISSIONS = [
+  { id:'stream', icon:'🎵', name:'스트리밍 총공', desc:'음원 15분 이상 청취', ap:20, stat:'loy', completed:false },
+  { id:'vote',   icon:'🗳️', name:'음방 투표',    desc:'오늘의 음악방송 투표', ap:100, stat:'act', completed:false },
+  { id:'post',   icon:'✍️', name:'응원 게시물',  desc:'팬클럽 게시판에 글 작성', ap:5, stat:'soc', completed:false },
+  { id:'share',  icon:'📢', name:'SNS 해시태그', desc:'#아스테리아 게시물 공유', ap:50, stat:'act', completed:true },
+  { id:'quiz',   icon:'🔮', name:'아티스트 퀴즈', desc:'오라클 아카데미 1문제', ap:50, stat:'int', completed:false },
+  { id:'decor',  icon:'🪑', name:'성궤 꾸미기',  desc:'아이템 1개 배치', ap:30, stat:'cre', completed:false },
+];
+
+const LEAGUE_ROAD = [
+  { key:'dust',   label:'더스트', req:'가입 즉시',           current:true  },
+  { key:'star',   label:'스타',   req:'10만 멤버 + 활동 지수', current:false },
+  { key:'planet', label:'플래닛', req:'50만 멤버 + 3개월 유지', current:false },
+  { key:'nova',   label:'노바',   req:'500만 멤버 + 글로벌',   current:false },
+  { key:'quasar', label:'퀘이사', req:'1000만 멤버 + 8단계 조직',current:false },
+];
+
+const RANKING = [
+  { rank:1,  name:'SERENADE',  emoji:'🌟', qp:'127,450', delta:'+1,200', up:true,  me:false },
+  { rank:2,  name:'NOVA CORE', emoji:'💜', qp:'98,320',  delta:'+890',   up:true,  me:false },
+  { rank:3,  name:'ECLIPSE',   emoji:'🔵', qp:'82,100',  delta:'-320',   up:false, me:false },
+  { rank:4,  name:'AURORA',    emoji:'💚', qp:'71,880',  delta:'+2,100', up:true,  me:true  },
+  { rank:5,  name:'SOLARIS',   emoji:'🔴', qp:'63,240',  delta:'-180',   up:false, me:false },
+];
+
+// ════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════
+let state = {
+  name: '별빛 탐험가',
+  emoji: '🌟',
+  level: 23,
+  ap: 4820,
+  league: 'dust',
+  stats: { loy:145, act:89, soc:67, eco:34, cre:112, int:78 },
+  tapCount: 0,
+};
+
+// AP → 레벨 계산
+function apToLevel(ap) {
+  if(ap < 100) return 1;
+  return Math.min(100, Math.floor(Math.log(ap/50)*8)+1);
+}
+function levelToExpNeeded(lv) { return Math.floor(50 * Math.pow(lv, 1.5)); }
+
+function getGrade(level) {
+  return GRADES.find(g => level >= g.min && level <= g.max) || GRADES[0];
+}
+
+// ════════════════════════════════════════
+//  AVATAR CANVAS RENDERER
+// ════════════════════════════════════════
+const ac = document.getElementById('avatarCanvas');
+const ax = ac.getContext('2d');
+let animFrame = 0;
+let auraParticles = [];
+
+class AuraParticle {
+  constructor(effect, cx, cy) {
+    this.effect = effect;
+    this.reset(cx, cy);
+  }
+  reset(cx=100, cy=100) {
+    const a = Math.random()*Math.PI*2;
+    const r = 55 + Math.random()*30;
+    this.x = cx + Math.cos(a)*r;
+    this.y = cy + Math.sin(a)*r;
+    this.vx = (Math.random()-.5)*.8;
+    this.vy = (Math.random()-.5)*.8 - .3;
+    this.life = 1; this.decay = Math.random()*.02+.008;
+    this.size = Math.random()*3+1;
+    this.cx = cx; this.cy = cy;
+  }
+  update() { this.x+=this.vx; this.y+=this.vy; this.life-=this.decay; }
+  dead() { return this.life<=0; }
+}
+
+function getAuraColor(effect, alpha=1) {
+  const map = {
+    dust:   `rgba(148,163,184,${alpha})`,
+    star:   `rgba(251,191,36,${alpha})`,
+    planet: `rgba(52,211,153,${alpha})`,
+    nova:   `rgba(192,132,252,${alpha})`,
+    quasar: `rgba(240,192,64,${alpha})`,
+  };
+  return map[effect] || map.dust;
+}
+
+function drawAvatar() {
+  const cx=100, cy=95;
+  ax.clearRect(0,0,200,200);
+  animFrame++;
+
+  const league = LEAGUES[state.league] || LEAGUES.dust;
+  const effect = league.aura.effect;
+  const grade = getGrade(state.level);
+
+  // ── 아우라 레이어 (리그별) ──
+  if(effect === 'quasar') {
+    // 퀘이사: 우주 관통 빛
+    const grd = ax.createRadialGradient(cx,cy,10,cx,cy,90);
+    grd.addColorStop(0,'rgba(240,192,64,.6)');
+    grd.addColorStop(.4,'rgba(192,132,252,.3)');
+    grd.addColorStop(1,'transparent');
+    ax.fillStyle=grd; ax.beginPath(); ax.arc(cx,cy,90,0,Math.PI*2); ax.fill();
+    // 십자 광선
+    for(let i=0;i<4;i++){
+      ax.save(); ax.translate(cx,cy); ax.rotate(i*Math.PI/2+animFrame*.005);
+      const g=ax.createLinearGradient(0,-80,0,0);
+      g.addColorStop(0,'transparent');
+      g.addColorStop(1,'rgba(240,192,64,.5)');
+      ax.fillStyle=g; ax.fillRect(-3,-80,6,80);
+      ax.restore();
+    }
+  } else if(effect === 'nova') {
+    // 노바: 폭발 파동
+    const wave = Math.sin(animFrame*.04)*5;
+    for(let r=45;r<90;r+=15){
+      ax.beginPath();
+      ax.arc(cx,cy,r+wave,0,Math.PI*2);
+      ax.strokeStyle=`rgba(192,132,252,${.15-(r-45)*.002})`;
+      ax.lineWidth=1.5; ax.stroke();
+    }
+  } else if(effect === 'planet') {
+    // 플래닛: 궤도 링
+    for(let i=0;i<3;i++){
+      ax.save(); ax.translate(cx,cy);
+      ax.rotate(animFrame*.008*(i%2===0?1:-1)+i*Math.PI/3);
+      ax.beginPath();
+      ax.ellipse(0,0,60+i*8,(30+i*5)*Math.abs(Math.sin(animFrame*.01+i)),0,0,Math.PI*2);
+      ax.strokeStyle=`rgba(52,211,153,${.2-i*.05})`; ax.lineWidth=1; ax.stroke();
+      ax.restore();
+    }
+  } else if(effect === 'star') {
+    // 스타: 발광 별빛
+    for(let i=0;i<8;i++){
+      const a=i*Math.PI/4+animFrame*.01;
+      const r=55+Math.sin(animFrame*.05+i)*5;
+      ax.beginPath();
+      ax.arc(cx+Math.cos(a)*r, cy+Math.sin(a)*r, 2, 0, Math.PI*2);
+      ax.fillStyle=`rgba(251,191,36,${.6+Math.sin(animFrame*.08+i)*.4})`;
+      ax.fill();
+    }
+  }
+
+  // ── 아우라 파티클 ──
+  if(Math.random()<.15) auraParticles.push(new AuraParticle(effect,cx,cy));
+  auraParticles = auraParticles.filter(p=>!p.dead());
+  auraParticles.forEach(p=>{
+    p.update();
+    ax.save();
+    ax.globalAlpha = p.life * .7;
+    ax.fillStyle = getAuraColor(effect);
+    ax.shadowColor = getAuraColor(effect);
+    ax.shadowBlur = 6;
+    ax.beginPath(); ax.arc(p.x,p.y,p.size,0,Math.PI*2); ax.fill();
+    ax.restore();
+  });
+
+  // ── 캐릭터 본체 ──
+  // 기저 글로우
+  const baseGrd = ax.createRadialGradient(cx,cy,5,cx,cy,55);
+  baseGrd.addColorStop(0,getAuraColor(effect,.7));
+  baseGrd.addColorStop(.6,getAuraColor(effect,.2));
+  baseGrd.addColorStop(1,'transparent');
+  ax.fillStyle=baseGrd;
+  ax.beginPath(); ax.arc(cx,cy,55,0,Math.PI*2); ax.fill();
+
+  // 몸통 원
+  const bodyY = cy + Math.sin(animFrame*.02)*4; // 부유 애니메이션
+  const bodyGrd = ax.createRadialGradient(cx-10,bodyY-10,5,cx,bodyY,42);
+  bodyGrd.addColorStop(0,getAuraColor(effect,.8));
+  bodyGrd.addColorStop(.5,getAuraColor(effect,.4));
+  bodyGrd.addColorStop(1,`rgba(7,7,15,.9)`);
+  ax.fillStyle=bodyGrd;
+  ax.beginPath(); ax.arc(cx,bodyY,42,0,Math.PI*2); ax.fill();
+
+  // 테두리 링
+  ax.beginPath(); ax.arc(cx,bodyY,43,0,Math.PI*2);
+  ax.strokeStyle=getAuraColor(effect,.7); ax.lineWidth=1.5; ax.stroke();
+
+  // 이모지
+  ax.font='38px serif'; ax.textAlign='center'; ax.textBaseline='middle';
+  ax.fillText(state.emoji, cx, bodyY);
+
+  // 레벨 등급 링 (고레벨일수록 화려)
+  if(state.level >= 50) {
+    for(let i=0;i<3;i++){
+      ax.save(); ax.translate(cx,bodyY);
+      ax.rotate(animFrame*.012+i*(Math.PI*2/3));
+      ax.beginPath(); ax.arc(44,0,3+Math.sin(animFrame*.05+i),0,Math.PI*2);
+      ax.fillStyle=getAuraColor(effect,.9);
+      ax.shadowColor=getAuraColor(effect); ax.shadowBlur=8;
+      ax.fill(); ax.restore();
+    }
+  }
+  if(state.level >= 80) {
+    // 날개 형태
+    ax.save(); ax.translate(cx,bodyY);
+    for(let side of [-1,1]) {
+      ax.beginPath();
+      ax.moveTo(0,0);
+      ax.bezierCurveTo(side*30+side*Math.sin(animFrame*.03)*5,-20,side*60,-10,side*50,20);
+      ax.bezierCurveTo(side*40,30,side*20,20,0,0);
+      ax.fillStyle=getAuraColor(effect,.2);
+      ax.fill();
+    }
+    ax.restore();
+  }
+
+  // 등급 왕관 (91+)
+  if(state.level >= 91) {
+    ax.font='18px serif'; ax.textAlign='center'; ax.textBaseline='middle';
+    ax.fillText('👑', cx, bodyY-52+Math.sin(animFrame*.03)*3);
+  }
+
+  requestAnimationFrame(drawAvatar);
+}
+
+// ════════════════════════════════════════
+//  HEXAGON STATS CHART
+// ════════════════════════════════════════
+const hc = document.getElementById('hexCanvas');
+const hx = hc.getContext('2d');
+
+function drawHex() {
+  const cx=90, cy=90, maxR=65;
+  const vals = STAT_CONFIG.map(s => state.stats[s.key] || 0);
+  const maxVal = Math.max(200, ...vals);
+  hx.clearRect(0,0,180,180);
+
+  // 배경 격자
+  for(let r of [.33,.66,1]) {
+    hx.beginPath();
+    STAT_CONFIG.forEach((_,i)=>{
+      const a=(i*60-90)*Math.PI/180;
+      const x=cx+maxR*r*Math.cos(a), y=cy+maxR*r*Math.sin(a);
+      i===0 ? hx.moveTo(x,y) : hx.lineTo(x,y);
+    }); hx.closePath();
+    hx.strokeStyle=`rgba(180,150,255,${.06+r*.04})`; hx.lineWidth=1; hx.stroke();
+  }
+
+  // 축선
+  STAT_CONFIG.forEach((_,i)=>{
+    const a=(i*60-90)*Math.PI/180;
+    hx.beginPath(); hx.moveTo(cx,cy);
+    hx.lineTo(cx+maxR*Math.cos(a), cy+maxR*Math.sin(a));
+    hx.strokeStyle='rgba(180,150,255,.1)'; hx.lineWidth=1; hx.stroke();
+  });
+
+  // 데이터
+  hx.beginPath();
+  vals.forEach((v,i)=>{
+    const a=(i*60-90)*Math.PI/180;
+    const r=maxR*(v/maxVal);
+    const x=cx+r*Math.cos(a), y=cy+r*Math.sin(a);
+    i===0 ? hx.moveTo(x,y) : hx.lineTo(x,y);
+  }); hx.closePath();
+  const league = LEAGUES[state.league] || LEAGUES.dust;
+  hx.fillStyle=`rgba(${hexToRGB(league.color)},.25)`;
+  hx.strokeStyle=league.color; hx.lineWidth=1.5;
+  hx.fill(); hx.stroke();
+
+  // 포인트 dot
+  vals.forEach((v,i)=>{
+    const a=(i*60-90)*Math.PI/180;
+    const r=maxR*(v/maxVal);
+    hx.beginPath();
+    hx.arc(cx+r*Math.cos(a), cy+r*Math.sin(a), 3, 0, Math.PI*2);
+    hx.fillStyle=STAT_CONFIG[i].color;
+    hx.shadowColor=STAT_CONFIG[i].color; hx.shadowBlur=6;
+    hx.fill(); hx.shadowBlur=0;
+  });
+
+  // 라벨
+  STAT_CONFIG.forEach((s,i)=>{
+    const a=(i*60-90)*Math.PI/180;
+    const r=maxR+14;
+    hx.font='bold 9px Orbitron,monospace';
+    hx.textAlign='center'; hx.textBaseline='middle';
+    hx.fillStyle=s.color;
+    hx.fillText(s.label, cx+r*Math.cos(a), cy+r*Math.sin(a));
+  });
+}
+
+function hexToRGB(hex) {
+  const h=hex.replace('#','');
+  return `${parseInt(h.slice(0,2),16)},${parseInt(h.slice(2,4),16)},${parseInt(h.slice(4,6),16)}`;
+}
+
+// ════════════════════════════════════════
+//  RENDER UI
+// ════════════════════════════════════════
+function renderAll() {
+  const level = apToLevel(state.ap);
+  const grade = getGrade(level);
+  const league = LEAGUES[state.league] || LEAGUES.dust;
+  const prevLevel = state.level;
+  state.level = level;
+
+  // 레벨업 체크
+  if(level > prevLevel && prevLevel > 0) triggerLevelup(level, grade);
+
+  // 배경
+  document.getElementById('stageBg').style.background = league.bg;
+
+  // 궤도 링
+  renderOrbits(league);
+
+  // 캐릭터 정보
+  document.getElementById('avName').textContent = state.name;
+  document.getElementById('avGrade').textContent = `${grade.key.toUpperCase()} · ${grade.sub}`;
+  document.getElementById('avGrade').style.color = grade.color;
+  document.getElementById('avGrade').style.border = `1px solid ${grade.color}40`;
+  document.getElementById('avGrade').style.padding = '3px 12px';
+  document.getElementById('avGrade').style.borderRadius = '20px';
+  document.getElementById('avGrade').style.display = 'inline-block';
+  document.getElementById('avGrade').style.background = `${grade.color}12`;
+  document.getElementById('leagueIcon').textContent = league.icon;
+  document.getElementById('leagueName').textContent = league.name;
+  document.getElementById('leagueName').style.color = league.color;
+
+  // 레벨 & EXP
+  document.getElementById('levelNum').textContent = level;
+  const expCur = state.ap - levelToExpNeeded(level-1);
+  const expNeeded = levelToExpNeeded(level) - levelToExpNeeded(level-1);
+  const pct = Math.min(100, Math.max(0, expCur/expNeeded*100));
+  document.getElementById('expCurrent').textContent = state.ap.toLocaleString();
+  document.getElementById('expNext').textContent = levelToExpNeeded(level).toLocaleString();
+  document.getElementById('expFill').style.width = pct+'%';
+  document.getElementById('expFill').style.background = league.expColor;
+
+  // 아우라 카드
+  const aura = league.aura;
+  const auraV = document.getElementById('auraVisual');
+  auraV.textContent = aura.emoji;
+  auraV.style.background = aura.color;
+  auraV.style.boxShadow = `0 0 20px ${aura.color}, 0 0 40px ${aura.color.replace('.','.3')}`;
+  document.getElementById('auraName').textContent = aura.name;
+  document.getElementById('auraDesc').textContent = aura.desc;
+  const unlock = document.getElementById('auraUnlock');
+  if(league.unlockMsg) {
+    unlock.textContent = `🔓 해금: ${league.unlockMsg}`;
+    unlock.style.color = league.color;
+  }
+
+  // Stat list
+  renderStatList(league);
+
+  // Hexagon
+  drawHex();
+
+  // Ranking
+  renderRanking();
+
+  // Missions
+  renderMissions();
+
+  // League road
+  renderLeagueRoad(league);
+}
+
+function renderOrbits(league) {
+  const wrap = document.getElementById('orbitRings');
+  wrap.innerHTML = '';
+  const sizes = [120, 160, 200];
+  sizes.forEach((s,i)=>{
+    const d = document.createElement('div');
+    d.className = 'orbit';
+    d.style.cssText = `width:${s}px;height:${s}px;border-color:${league.orbitColor};animation-duration:${20+i*12}s;${i%2?'animation-direction:reverse':''}`;
+    d.style.top = `calc(50% - ${s/2}px)`;
+    d.style.left = `calc(50% - ${s/2}px)`;
+    // 궤도 위 점
+    const dot = document.createElement('div');
+    dot.style.cssText=`position:absolute;top:-3px;left:50%;width:6px;height:6px;border-radius:50%;background:${league.color};box-shadow:0 0 8px ${league.color};transform:translateX(-50%)`;
+    d.appendChild(dot);
+    wrap.appendChild(d);
+  });
+}
+
+function renderStatList(league) {
+  const list = document.getElementById('statList');
+  list.innerHTML = STAT_CONFIG.map(s=>{
+    const val = state.stats[s.key] || 0;
+    const pct = Math.min(100, val/200*100);
+    return `
+      <div class="stat-row">
+        <div class="stat-icon">${s.icon}</div>
+        <div class="stat-label">${s.name}</div>
+        <div class="stat-bar-bg">
+          <div class="stat-bar-fill" style="width:${pct}%;background:${s.color}"></div>
+        </div>
+        <div class="stat-val" style="color:${s.color}">${val}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderRanking() {
+  const rows = document.getElementById('compRows');
+  rows.innerHTML = RANKING.map(r=>`
+    <div class="comp-row ${r.me?'comp-me':''}">
+      <div class="comp-rank" style="color:${r.rank===1?'var(--gold)':r.rank<=3?'var(--quasar)':'var(--muted)'}">${r.rank}</div>
+      <div class="comp-av" style="background:radial-gradient(circle,rgba(192,132,252,.3),rgba(7,7,15,.9))">${r.emoji}</div>
+      <div class="comp-info">
+        <div class="comp-name">${r.name}${r.me?' (나)':''}</div>
+        <div class="comp-score">${r.qp} QP</div>
+      </div>
+      <div class="comp-delta ${r.up?'up':'down'}">${r.delta}</div>
+    </div>
+  `).join('');
+}
+
+function renderMissions() {
+  const list = document.getElementById('missionList');
+  list.innerHTML = MISSIONS.map(m=>{
+    const stat = STAT_CONFIG.find(s=>s.key===m.stat);
+    return `
+      <div class="mission-card ${m.completed?'completed':''}" onclick="completeMission('${m.id}')">
+        <div class="mission-icon">${m.icon}</div>
+        <div class="mission-info">
+          <div class="mission-name">${m.name}</div>
+          <div class="mission-desc">${m.desc}</div>
+          <div class="mission-reward">
+            <span class="reward-chip" style="background:rgba(240,192,64,.15);border:1px solid rgba(240,192,64,.3);color:var(--gold)">+${m.ap} AP</span>
+            <span class="reward-chip" style="background:${stat?.color}20;border:1px solid ${stat?.color}40;color:${stat?.color}">+${stat?.name} ${m.stat==='act'?3:m.stat==='cre'?5:m.stat==='int'?4:1}</span>
+          </div>
+        </div>
+        <div class="mission-check ${m.completed?'done':''}">${m.completed?'✓':''}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderLeagueRoad(curLeague) {
+  const road = document.getElementById('leagueRoad');
+  road.innerHTML = LEAGUE_ROAD.map(step=>{
+    const lg = LEAGUES[step.key];
+    const isCurrent = step.key === state.league;
+    const isDone = ['dust','star','planet','nova','quasar'].indexOf(step.key) <
+                   ['dust','star','planet','nova','quasar'].indexOf(state.league);
+    return `
+      <div class="league-step" style="--step-color:${lg.color}40">
+        <div class="step-orb ${isCurrent?'current':''}"
+          style="background:${isDone?lg.color:isCurrent?`${lg.color}30`:'rgba(255,255,255,.04)'};
+                 border:2px solid ${isCurrent?lg.color:isDone?lg.color:'rgba(180,150,255,.15)'}">
+          ${isDone?'✓':lg.icon}
+        </div>
+        <div class="step-info">
+          <div class="step-name" style="color:${isCurrent||isDone?lg.color:'var(--muted)'}">${lg.name}</div>
+          <div class="step-req">${step.req}</div>
+        </div>
+        <div class="step-status" style="background:${isCurrent?`${lg.color}20`:isDone?'rgba(16,185,129,.15)':'rgba(255,255,255,.04)'};color:${isCurrent?lg.color:isDone?'#10b981':'var(--muted)'}">
+          ${isCurrent?'현재':isDone?'달성':'잠김'}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ════════════════════════════════════════
+//  INTERACTIONS
+// ════════════════════════════════════════
+function onAvatarTap() {
+  state.tapCount++;
+  // 탭할 때마다 소량 AP 획득 (1일 10회 한도)
+  if(state.tapCount <= 10) {
+    addAP(5);
+    showToast(`✨ +5 AP 획득! (${state.tapCount}/10)`);
+    // 파티클 버스트
+    burstParticles(ac.getBoundingClientRect());
+  } else {
+    showToast('오늘 탭 보너스를 모두 사용했어요!');
+  }
+}
+
+function completeMission(id) {
+  const m = MISSIONS.find(x=>x.id===id);
+  if(!m || m.completed) return;
+  m.completed = true;
+  addAP(m.ap);
+  state.stats[m.stat] = (state.stats[m.stat]||0) + (m.stat==='cre'?5:m.stat==='int'?4:m.stat==='act'?3:1);
+  showToast(`${m.icon} ${m.name} 완료! +${m.ap} AP`);
+  burstParticles(event.currentTarget.getBoundingClientRect());
+  renderAll();
+}
+
+function doMission() {
+  addAP(100);
+  showToast('⚔️ 반격 성공! +100 AP');
+  renderAll();
+}
+
+function addAP(amount) {
+  state.ap += amount;
+  renderAll();
+  drawHex();
+}
+
+// ════════════════════════════════════════
+//  LEVELUP
+// ════════════════════════════════════════
+function triggerLevelup(level, grade) {
+  const modal = document.getElementById('levelupModal');
+  document.getElementById('luEmoji').textContent = state.emoji;
+  document.getElementById('luGrade').textContent = `Lv.${level} — ${grade.label} (${grade.sub})`;
+
+  const bonuses = [
+    `스탯 포인트 +14`,
+    `성궤 슬롯 확장`,
+    `주권 가중치 +0.09x`,
+  ];
+  if(level % 10 === 0) bonuses.push('🔓 새 기능 해금!');
+  document.getElementById('luBonuses').innerHTML = bonuses.map(b=>`<div class="lu-bonus">${b}</div>`).join('');
+
+  modal.classList.add('show');
+
+  // 배경 파티클 폭발
+  setTimeout(()=>burstParticles({left:window.innerWidth/2,top:window.innerHeight/3,width:0,height:0}),100);
+}
+
+function closeLevelup() {
+  document.getElementById('levelupModal').classList.remove('show');
+}
+
+// ════════════════════════════════════════
+//  PARTICLE BURST
+// ════════════════════════════════════════
+function burstParticles(rect) {
+  const cx = rect.left + rect.width/2;
+  const cy = rect.top + rect.height/2;
+  for(let i=0;i<20;i++){
+    const p = document.createElement('div');
+    p.className = 'particle-burst';
+    const colors=['#f0c040','#c084fc','#38bdf8','#fff'];
+    const color = colors[Math.floor(Math.random()*colors.length)];
+    const size = Math.random()*6+3;
+    const angle = Math.random()*Math.PI*2;
+    const dist = Math.random()*80+30;
+    p.style.cssText=`left:${cx}px;top:${cy}px;width:${size}px;height:${size}px;border-radius:50%;background:${color};box-shadow:0 0 6px ${color};transition:all ${.4+Math.random()*.4}s ease-out;transform:translate(-50%,-50%)`;
+    document.body.appendChild(p);
+    requestAnimationFrame(()=>{
+      p.style.transform=`translate(calc(-50% + ${Math.cos(angle)*dist}px),calc(-50% + ${Math.sin(angle)*dist}px))`;
+      p.style.opacity='0';
+    });
+    setTimeout(()=>p.remove(), 900);
+  }
+}
+
+// ════════════════════════════════════════
+//  LEAGUE SIMULATOR (테스트용 버튼)
+// ════════════════════════════════════════
+// 키보드 단축키로 리그 변경 테스트
+document.addEventListener('keydown', e=>{
+  if(e.key==='1'){state.league='dust';state.ap=50;}
+  if(e.key==='2'){state.league='star';state.ap=5000;}
+  if(e.key==='3'){state.league='planet';state.ap=15000;}
+  if(e.key==='4'){state.league='nova';state.ap=35000;}
+  if(e.key==='5'){state.league='quasar';state.ap=80000;}
+  renderAll(); drawHex();
+});
+
+// ════════════════════════════════════════
+//  TOAST
+// ════════════════════════════════════════
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+// ════════════════════════════════════════
+//  REALTIME COMPETITION ALERT
+// ════════════════════════════════════════
+const alerts = [
+  { title:'⚔️ 심연에서 별이 올라오고 있습니다!', body:'EclipseKing이 단 120 AP 차이로 추격 중!', color:'rgba(239,68,68,.08)', border:'rgba(239,68,68,.3)', btn:'반격하기', btnColor:'#ef4444' },
+  { title:'🏆 저 별의 자리가 머지않았습니다!', body:'AURORA가 3위 ECLIPSE를 500 QP 차이로 추격 중!', color:'rgba(240,192,64,.08)', border:'rgba(240,192,64,.3)', btn:'화력 집중!', btnColor:'#f0c040' },
+  { title:'⚡ 총공 시간! 지금이 기회입니다!', body:'3위 팀이 흔들리고 있어요. 동시 스밍 시작!', color:'rgba(192,132,252,.08)', border:'rgba(192,132,252,.3)', btn:'참여하기', btnColor:'#c084fc' },
+];
+let alertIdx = 0;
+function rotateAlert() {
+  const a = alerts[alertIdx % alerts.length];
+  const el = document.getElementById('compAlert');
+  el.style.background = a.color;
+  el.style.borderColor = a.border;
+  document.getElementById('alertTitle').textContent = a.title;
+  document.getElementById('alertBody').textContent = a.body;
+  el.querySelector('.alert-btn').style.background = a.btnColor;
+  alertIdx++;
+}
+setInterval(rotateAlert, 5000);
+
+// ════════════════════════════════════════
+//  START
+// ════════════════════════════════════════
+renderAll();
+drawAvatar();
+
+// 랭킹 실시간 시뮬 (3초마다 숫자 변동)
+setInterval(()=>{
+  RANKING.forEach(r=>{
+    const d = Math.floor(Math.random()*50)-20;
+    r.delta = (d>0?'+':'')+d.toLocaleString();
+    r.up = d>0;
+  });
+  renderRanking();
+}, 3000);
+</script>
+</body>
+</html>
