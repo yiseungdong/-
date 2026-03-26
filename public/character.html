@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>캐릭터 설정 — ASTERIA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --void:#030308; --panel:rgba(10,10,22,0.96);
+  --border:rgba(180,150,255,0.13); --gold:#f0c040;
+  --accent:#c084fc; --accent2:#818cf8; --accent3:#38bdf8;
+  --text:#e8e4f0; --muted:rgba(200,190,220,0.5);
+}
+html,body {
+  width:100%; height:100%; background:var(--void); color:var(--text);
+  font-family:'Noto Sans KR',sans-serif;
+  -webkit-tap-highlight-color:transparent; overflow:hidden;
+}
+#starCanvas { position:fixed; inset:0; z-index:0; pointer-events:none; }
+#app { width:100%; height:100vh; display:flex; flex-direction:column; max-width:900px; margin:0 auto; position:relative; z-index:1; }
+
+/* ── TOP NAV ── */
+.top-nav {
+  display:flex; background:var(--panel); backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border); overflow-x:auto; flex-shrink:0;
+}
+.top-nav::-webkit-scrollbar{display:none}
+.tni {
+  flex-shrink:0; display:flex; flex-direction:column; align-items:center;
+  padding:10px 14px; cursor:pointer; text-decoration:none; color:var(--muted);
+  border-bottom:2px solid transparent; gap:3px; transition:all .2s;
+}
+.tni.active { color:var(--accent); border-bottom-color:var(--accent); }
+.tni-icon { font-size:18px; }
+.tni-label { font-size:9px; font-weight:500; white-space:nowrap; }
+
+/* ── 탭 시스템 ── */
+.page-tabs {
+  display:flex; background:var(--panel); border-bottom:1px solid var(--border); flex-shrink:0;
+}
+.page-tab {
+  flex:1; padding:12px; text-align:center; font-size:12px; font-weight:600;
+  color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; transition:all .2s;
+}
+.page-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+
+/* ── 메인 영역 ── */
+.main-area { flex:1; overflow:hidden; display:flex; flex-direction:column; }
+
+/* ══════════════════════════
+   캐릭터 설정 탭
+══════════════════════════ */
+.char-setting { flex:1; overflow-y:auto; padding:20px 18px; }
+.char-setting::-webkit-scrollbar{width:3px}
+.char-setting::-webkit-scrollbar-thumb{background:rgba(192,132,252,.3);border-radius:3px}
+
+.sec-title {
+  font-size:10px; color:var(--muted); letter-spacing:2.5px; text-transform:uppercase;
+  margin-bottom:14px; display:flex; align-items:center; gap:8px;
+}
+.sec-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* 캐릭터 카드 */
+.char-card {
+  background:rgba(255,255,255,.03); border:1px solid var(--border);
+  border-radius:20px; padding:22px; margin-bottom:16px;
+  position:relative; overflow:hidden;
+}
+.char-card::before {
+  content:''; position:absolute; inset:0; opacity:.04;
+  background:linear-gradient(135deg, var(--accent), transparent);
+  pointer-events:none;
+}
+.char-card-header { display:flex; align-items:center; gap:14px; margin-bottom:18px; }
+.char-av {
+  width:64px; height:64px; border-radius:50%; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:30px;
+  position:relative; cursor:pointer;
+}
+.char-av-ring {
+  position:absolute; inset:-4px; border-radius:50%;
+  border:2px solid transparent; animation:ringRot 6s linear infinite;
+}
+@keyframes ringRot { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+.char-av-edit {
+  position:absolute; bottom:-2px; right:-2px;
+  width:22px; height:22px; border-radius:50%;
+  background:var(--accent); border:2px solid var(--void);
+  display:flex; align-items:center; justify-content:center; font-size:10px;
+}
+.char-header-info { flex:1; }
+.char-type-badge {
+  font-size:10px; font-weight:700; padding:3px 10px; border-radius:20px;
+  margin-bottom:6px; display:inline-block;
+}
+.my-badge { background:rgba(56,189,248,.15); border:1px solid rgba(56,189,248,.3); color:var(--accent3); }
+.artist-badge { background:rgba(240,192,64,.15); border:1px solid rgba(240,192,64,.3); color:var(--gold); }
+.char-current-name { font-size:18px; font-weight:900; }
+.char-name-sub { font-size:11px; color:var(--muted); margin-top:3px; }
+
+/* 이름 입력 */
+.name-input-wrap { display:flex; flex-direction:column; gap:10px; }
+.name-label { font-size:11px; color:var(--muted); font-weight:600; }
+.name-input-row { display:flex; gap:8px; }
+.name-input {
+  flex:1; background:rgba(255,255,255,.07); border:1px solid var(--border);
+  border-radius:12px; padding:11px 16px; color:var(--text); font-size:14px;
+  font-family:'Noto Sans KR',sans-serif; outline:none; transition:border-color .2s;
+}
+.name-input:focus { border-color:rgba(192,132,252,.5); }
+.name-input::placeholder { color:var(--muted); }
+.name-count { font-size:10px; color:var(--muted); text-align:right; margin-top:3px; }
+
+/* 변경 버튼 */
+.change-btn {
+  padding:11px 18px; border-radius:12px; border:none;
+  font-size:12px; font-weight:700; cursor:pointer;
+  font-family:'Noto Sans KR',sans-serif; transition:all .2s;
+  white-space:nowrap;
+}
+.change-btn.free { background:linear-gradient(90deg,var(--accent),var(--accent2)); color:#fff; }
+.change-btn.free:hover { box-shadow:0 0 16px rgba(192,132,252,.4); }
+.change-btn.cost { background:rgba(240,192,64,.15); border:1px solid rgba(240,192,64,.4); color:var(--gold); }
+.change-btn.cost:hover { background:rgba(240,192,64,.25); }
+.change-btn:disabled { opacity:.4; cursor:not-allowed; }
+
+/* 변경 비용 안내 */
+.cost-info {
+  display:flex; align-items:center; gap:8px;
+  background:rgba(255,255,255,.03); border:1px solid var(--border);
+  border-radius:10px; padding:10px 14px; margin-top:8px;
+}
+.cost-icon { font-size:16px; }
+.cost-text { flex:1; font-size:11px; color:var(--muted); line-height:1.5; }
+.cost-price { font-family:'Orbitron',monospace; font-size:13px; font-weight:700; color:var(--gold); }
+
+/* 무료 변경권 */
+.free-ticket {
+  display:flex; align-items:center; gap:10px;
+  background:linear-gradient(135deg,rgba(16,185,129,.1),rgba(56,189,248,.08));
+  border:1px solid rgba(16,185,129,.3); border-radius:12px;
+  padding:12px 14px; margin-top:10px;
+}
+.ft-icon { font-size:20px; }
+.ft-info { flex:1; }
+.ft-title { font-size:12px; font-weight:700; color:#10b981; }
+.ft-desc { font-size:10px; color:var(--muted); margin-top:2px; }
+.ft-count {
+  font-family:'Orbitron',monospace; font-size:18px; font-weight:900; color:#10b981;
+}
+
+/* 이름 히스토리 */
+.name-history { margin-top:14px; }
+.nh-title { font-size:10px; color:var(--muted); margin-bottom:8px; }
+.nh-list { display:flex; flex-direction:column; gap:6px; }
+.nh-item {
+  display:flex; align-items:center; gap:10px;
+  background:rgba(255,255,255,.02); border:1px solid var(--border);
+  border-radius:10px; padding:8px 12px;
+}
+.nh-name { flex:1; font-size:12px; }
+.nh-date { font-size:10px; color:var(--muted); }
+.nh-badge { font-size:9px; padding:2px 7px; border-radius:10px; }
+.nh-current { background:rgba(192,132,252,.15); color:var(--accent); }
+.nh-past { background:rgba(255,255,255,.05); color:var(--muted); }
+
+/* 아티스트 캐릭터 성궤 연동 안내 */
+.nebula-guide {
+  background:linear-gradient(135deg,rgba(240,192,64,.08),rgba(192,132,252,.08));
+  border:1px solid rgba(240,192,64,.25); border-radius:16px;
+  padding:16px 18px; margin-top:16px;
+  display:flex; align-items:center; gap:14px;
+}
+.ng-icon { font-size:32px; }
+.ng-info { flex:1; }
+.ng-title { font-size:13px; font-weight:700; color:var(--gold); margin-bottom:4px; }
+.ng-desc { font-size:11px; color:var(--muted); line-height:1.6; }
+.ng-btn {
+  padding:8px 16px; border-radius:20px; border:none;
+  background:linear-gradient(90deg,var(--gold),#e6a800);
+  color:var(--void); font-size:12px; font-weight:700;
+  cursor:pointer; font-family:'Noto Sans KR',sans-serif;
+  white-space:nowrap;
+}
+
+/* ══════════════════════════
+   리그 맵 탭 (캐릭터 이동)
+══════════════════════════ */
+.league-map { flex:1; position:relative; overflow:hidden; }
+#mapCanvas { width:100%; height:100%; display:block; }
+
+/* 맵 UI 오버레이 */
+.map-ui {
+  position:absolute; inset:0; pointer-events:none; z-index:10;
+}
+.map-header {
+  position:absolute; top:12px; left:12px; right:12px;
+  display:flex; align-items:center; gap:10px; pointer-events:all;
+}
+.map-title-card {
+  background:rgba(12,12,26,.85); backdrop-filter:blur(12px);
+  border:1px solid var(--border); border-radius:14px;
+  padding:8px 16px; flex:1;
+}
+.map-title { font-family:'Orbitron',monospace; font-size:12px; font-weight:700; color:var(--gold); }
+.map-sub { font-size:10px; color:var(--muted); margin-top:2px; }
+.map-my-card {
+  background:rgba(12,12,26,.85); backdrop-filter:blur(12px);
+  border:1px solid rgba(192,132,252,.3); border-radius:14px;
+  padding:8px 14px; display:flex; align-items:center; gap:8px;
+}
+.map-my-av { font-size:20px; }
+.map-my-name { font-size:11px; font-weight:700; color:var(--accent); }
+.map-my-pos { font-size:9px; color:var(--muted); }
+
+/* 방향키 컨트롤 */
+.dpad {
+  position:absolute; bottom:20px; right:20px; pointer-events:all;
+}
+.dpad-grid {
+  display:grid; grid-template-columns:repeat(3,40px);
+  grid-template-rows:repeat(3,40px); gap:4px;
+}
+.dpad-btn {
+  width:40px; height:40px; border-radius:10px;
+  background:rgba(12,12,26,.85); backdrop-filter:blur(8px);
+  border:1px solid var(--border); display:flex; align-items:center;
+  justify-content:center; font-size:16px; cursor:pointer;
+  color:var(--text); transition:all .15s; user-select:none;
+  -webkit-user-select:none;
+}
+.dpad-btn:active, .dpad-btn.pressed { background:rgba(192,132,252,.3); border-color:var(--accent); }
+.dpad-center { background:rgba(192,132,252,.15); border-color:rgba(192,132,252,.3); }
+
+/* 맵 주변 정보 */
+.map-bottom-info {
+  position:absolute; bottom:20px; left:12px;
+  background:rgba(12,12,26,.85); backdrop-filter:blur(12px);
+  border:1px solid var(--border); border-radius:14px; padding:10px 14px;
+  pointer-events:all; max-width:180px;
+}
+.mbi-title { font-size:10px; font-weight:700; color:var(--accent); margin-bottom:6px; }
+.mbi-users { display:flex; flex-direction:column; gap:4px; }
+.mbi-user { display:flex; align-items:center; gap:6px; font-size:11px; }
+.mbi-av { font-size:14px; }
+.mbi-name { color:var(--muted); }
+.mbi-name.nearby { color:var(--text); font-weight:600; }
+
+/* 캐릭터 말풍선 */
+.char-bubble {
+  position:absolute; background:rgba(12,12,26,.92);
+  border:1px solid var(--border); border-radius:12px;
+  padding:8px 12px; font-size:11px; white-space:nowrap;
+  pointer-events:none; z-index:20;
+  animation:bubbleIn .2s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes bubbleIn { from{transform:scale(.8) translateY(5px);opacity:0} to{transform:scale(1) translateY(0);opacity:1} }
+.char-bubble::after {
+  content:''; position:absolute; bottom:-6px; left:50%;
+  transform:translateX(-50%); width:0; height:0;
+  border-left:6px solid transparent; border-right:6px solid transparent;
+  border-top:6px solid var(--border);
+}
+
+/* 대화 팝업 */
+.chat-popup {
+  position:absolute; bottom:80px; left:50%; transform:translateX(-50%);
+  background:rgba(12,12,26,.96); border:1px solid rgba(192,132,252,.3);
+  border-radius:16px; padding:14px 16px; width:280px;
+  z-index:30; display:none;
+}
+.chat-popup.show { display:block; animation:bubbleIn .25s cubic-bezier(.34,1.56,.64,1); }
+.cp-header { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+.cp-av { font-size:22px; }
+.cp-name { font-size:13px; font-weight:700; flex:1; }
+.cp-close { font-size:16px; cursor:pointer; color:var(--muted); }
+.cp-msg { font-size:12px; color:var(--muted); background:rgba(255,255,255,.04); border-radius:8px; padding:8px 10px; margin-bottom:10px; line-height:1.5; }
+.cp-input-row { display:flex; gap:6px; }
+.cp-input { flex:1; background:rgba(255,255,255,.08); border:1px solid var(--border); border-radius:8px; padding:7px 10px; color:var(--text); font-size:12px; font-family:'Noto Sans KR',sans-serif; outline:none; }
+.cp-send { padding:0 12px; border-radius:8px; background:var(--accent); border:none; color:#fff; font-size:12px; cursor:pointer; font-family:'Noto Sans KR',sans-serif; }
+
+/* TOAST */
+.toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+  background:rgba(12,12,26,.97); border:1px solid var(--border);
+  border-radius:12px; padding:10px 20px; font-size:12px;
+  z-index:9999; opacity:0; transition:opacity .3s; pointer-events:none; white-space:nowrap; }
+.toast.show { opacity:1; }
+
+/* 이모지 선택 모달 */
+.emoji-modal {
+  position:fixed; inset:0; z-index:9000;
+  background:rgba(0,0,0,.75); backdrop-filter:blur(12px);
+  display:none; align-items:flex-end; justify-content:center;
+}
+.emoji-modal.show { display:flex; }
+.emoji-box {
+  width:100%; max-width:480px; background:rgba(12,12,26,.98);
+  border-top:1px solid var(--border); border-radius:24px 24px 0 0;
+  padding:20px 18px 36px; animation:slideUp .3s cubic-bezier(.4,0,.2,1);
+}
+@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.emoji-handle { width:36px; height:4px; border-radius:2px; background:rgba(255,255,255,.2); margin:0 auto 16px; }
+.emoji-title { font-size:14px; font-weight:700; color:var(--accent); margin-bottom:14px; }
+.emoji-grid { display:grid; grid-template-columns:repeat(8,1fr); gap:8px; }
+.emoji-btn { width:100%; aspect-ratio:1; border-radius:10px; border:1px solid var(--border); background:rgba(255,255,255,.04); font-size:22px; cursor:pointer; transition:all .2s; display:flex; align-items:center; justify-content:center; }
+.emoji-btn:hover { border-color:var(--accent); background:rgba(192,132,252,.1); transform:scale(1.1); }
+.emoji-cancel { width:100%; margin-top:12px; padding:11px; border-radius:12px; background:transparent; border:1px solid var(--border); color:var(--muted); font-size:13px; cursor:pointer; font-family:'Noto Sans KR',sans-serif; }
+</style>
+</head>
+<body>
+<canvas id="starCanvas"></canvas>
+<div id="toast" class="toast"></div>
+
+<!-- 이모지 선택 모달 -->
+<div class="emoji-modal" id="emojiModal">
+  <div class="emoji-box">
+    <div class="emoji-handle"></div>
+    <div class="emoji-title" id="emojiModalTitle">캐릭터 이모지 선택</div>
+    <div class="emoji-grid" id="emojiGrid"></div>
+    <button class="emoji-cancel" onclick="closeEmojiModal()">취소</button>
+  </div>
+</div>
+
+<div id="app">
+  <!-- TOP NAV -->
+  <nav class="top-nav">
+    <a class="tni" href="/"><div class="tni-icon">🏠</div><div class="tni-label">홈</div></a>
+    <a class="tni" href="/astra.html"><div class="tni-icon">⭐</div><div class="tni-label">아스트라</div></a>
+    <a class="tni" href="/room3d.html"><div class="tni-icon">🏡</div><div class="tni-label">내 방</div></a>
+    <a class="tni" href="/nebula.html"><div class="tni-icon">🌌</div><div class="tni-label">성궤</div></a>
+    <a class="tni active" href="#"><div class="tni-icon">🎭</div><div class="tni-label">캐릭터</div></a>
+    <a class="tni" href="/shop.html"><div class="tni-icon">🛒</div><div class="tni-label">상점</div></a>
+  </nav>
+
+  <!-- 페이지 탭 -->
+  <div class="page-tabs">
+    <div class="page-tab active" onclick="switchTab('setting',this)">🎭 캐릭터 설정</div>
+    <div class="page-tab" onclick="switchTab('map',this)">🗺️ 리그 맵 이동</div>
+  </div>
+
+  <!-- 메인 영역 -->
+  <div class="main-area">
+
+    <!-- ═══ 캐릭터 설정 탭 ═══ -->
+    <div class="char-setting" id="tab-setting">
+
+      <!-- 내 캐릭터 -->
+      <div class="sec-title">✦ 내 캐릭터</div>
+      <div class="char-card">
+        <div class="char-card-header">
+          <div class="char-av" onclick="openEmojiModal('my')" style="background:linear-gradient(135deg,rgba(56,189,248,.4),rgba(7,7,15,.9));border:2px solid rgba(56,189,248,.4)">
+            <div class="char-av-ring" style="border-top-color:rgba(56,189,248,.6)"></div>
+            <span id="myEmoji">🌟</span>
+            <div class="char-av-edit">✏️</div>
+          </div>
+          <div class="char-header-info">
+            <div class="char-type-badge my-badge">내 캐릭터 (아스트라)</div>
+            <div class="char-current-name" id="myCurrentName">별빛 탐험가</div>
+            <div class="char-name-sub">팬덤 리그 맵에서 이동하는 캐릭터</div>
+          </div>
+        </div>
+
+        <div class="name-input-wrap">
+          <div class="name-label">캐릭터 이름 변경</div>
+          <div class="name-input-row">
+            <input class="name-input" id="myNameInput" placeholder="새 이름을 입력하세요" maxlength="12"
+              oninput="updateCount('myNameInput','myNameCount')">
+            <button class="change-btn cost" id="myChangeBtn" onclick="changeName('my')">
+              변경 (500☆)
+            </button>
+          </div>
+          <div class="name-count" id="myNameCount">0 / 12</div>
+        </div>
+
+        <div class="cost-info">
+          <div class="cost-icon">💫</div>
+          <div class="cost-text">이름 변경 시 스타더스트가 소모돼요.<br>리그 승격 시 무료 변경권 1회 부여!</div>
+          <div class="cost-price">500 ☆</div>
+        </div>
+
+        <div class="free-ticket" id="myFreeTicket" style="display:none">
+          <div class="ft-icon">🎫</div>
+          <div class="ft-info">
+            <div class="ft-title">무료 변경권 보유중!</div>
+            <div class="ft-desc">리그 승격 보상 — 1회 무료 변경 가능해요</div>
+          </div>
+          <div class="ft-count" id="myTicketCount">1</div>
+        </div>
+
+        <div class="name-history" id="myHistory"></div>
+      </div>
+
+      <!-- 아티스트 캐릭터 -->
+      <div class="sec-title" style="margin-top:8px">✦ 아티스트 캐릭터</div>
+      <div class="char-card">
+        <div class="char-card-header">
+          <div class="char-av" onclick="openEmojiModal('artist')" style="background:linear-gradient(135deg,rgba(240,192,64,.4),rgba(7,7,15,.9));border:2px solid rgba(240,192,64,.4)">
+            <div class="char-av-ring" style="border-top-color:rgba(240,192,64,.6)"></div>
+            <span id="artistEmoji">🌙</span>
+            <div class="char-av-edit">✏️</div>
+          </div>
+          <div class="char-header-info">
+            <div class="char-type-badge artist-badge">아티스트 캐릭터</div>
+            <div class="char-current-name" id="artistCurrentName">LUNA</div>
+            <div class="char-name-sub">아스트라 성궤에서 대화하는 AI 캐릭터</div>
+          </div>
+        </div>
+
+        <div class="name-input-wrap">
+          <div class="name-label">아티스트 캐릭터 이름</div>
+          <div class="name-input-row">
+            <input class="name-input" id="artistNameInput" placeholder="아티스트 캐릭터 이름" maxlength="12"
+              oninput="updateCount('artistNameInput','artistNameCount')">
+            <button class="change-btn cost" id="artistChangeBtn" onclick="changeName('artist')">
+              변경 (500☆)
+            </button>
+          </div>
+          <div class="name-count" id="artistNameCount">0 / 12</div>
+        </div>
+
+        <div class="cost-info">
+          <div class="cost-icon">✨</div>
+          <div class="cost-text">아티스트 캐릭터는 <strong style="color:var(--gold)">아스트라 성궤 안에서만</strong> 초대/대화 가능해요.</div>
+        </div>
+
+        <div class="free-ticket" id="artistFreeTicket" style="display:none">
+          <div class="ft-icon">🎫</div>
+          <div class="ft-info">
+            <div class="ft-title">무료 변경권 보유중!</div>
+            <div class="ft-desc">리그 승격 보상</div>
+          </div>
+          <div class="ft-count" id="artistTicketCount">1</div>
+        </div>
+
+        <div class="name-history" id="artistHistory"></div>
+      </div>
+
+      <!-- 아스트라 성궤 연동 안내 -->
+      <div class="nebula-guide">
+        <div class="ng-icon">🌌</div>
+        <div class="ng-info">
+          <div class="ng-title">아스트라 성궤에서 대화하기</div>
+          <div class="ng-desc">
+            아티스트 캐릭터는 내 성궤 공간에서만 초대할 수 있어요.<br>
+            성궤로 이동해서 아티스트를 초대해보세요!
+          </div>
+        </div>
+        <button class="ng-btn" onclick="window.location='/nebula.html'">성궤 가기 →</button>
+      </div>
+
+      <div style="height:30px"></div>
+    </div>
+
+    <!-- ═══ 리그 맵 이동 탭 ═══ -->
+    <div style="display:none;flex:1;position:relative" id="tab-map">
+      <canvas id="mapCanvas"></canvas>
+
+      <!-- 맵 UI -->
+      <div class="map-ui">
+        <!-- 헤더 -->
+        <div class="map-header">
+          <div class="map-title-card">
+            <div class="map-title" id="mapTitle">SERENADE 팬덤 구역</div>
+            <div class="map-sub" id="mapSub">더스트 리그 · 현재 <span id="onlineCount">3</span>명 활동 중</div>
+          </div>
+          <div class="map-my-card">
+            <div class="map-my-av" id="mapMyAv">🌟</div>
+            <div>
+              <div class="map-my-name" id="mapMyName">별빛 탐험가</div>
+              <div class="map-my-pos" id="mapMyPos">x:0 y:0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 근처 유저 -->
+        <div class="map-bottom-info">
+          <div class="mbi-title">✦ 근처 캐릭터</div>
+          <div class="mbi-users" id="nearbyUsers"></div>
+        </div>
+
+        <!-- 방향키 -->
+        <div class="dpad">
+          <div class="dpad-grid">
+            <div></div>
+            <div class="dpad-btn" id="dpad-up" onpointerdown="startMove('up')" onpointerup="stopMove()" onpointerleave="stopMove()">↑</div>
+            <div></div>
+            <div class="dpad-btn" id="dpad-left" onpointerdown="startMove('left')" onpointerup="stopMove()" onpointerleave="stopMove()">←</div>
+            <div class="dpad-btn dpad-center" onclick="openNearbyChat()">💬</div>
+            <div class="dpad-btn" id="dpad-right" onpointerdown="startMove('right')" onpointerup="stopMove()" onpointerleave="stopMove()">→</div>
+            <div></div>
+            <div class="dpad-btn" id="dpad-down" onpointerdown="startMove('down')" onpointerup="stopMove()" onpointerleave="stopMove()">↓</div>
+            <div></div>
+          </div>
+        </div>
+
+        <!-- 대화 팝업 -->
+        <div class="chat-popup" id="chatPopup">
+          <div class="cp-header">
+            <div class="cp-av" id="cpAv">🌙</div>
+            <div class="cp-name" id="cpName">StarQueen</div>
+            <div class="cp-close" onclick="closeChatPopup()">✕</div>
+          </div>
+          <div class="cp-msg" id="cpMsg">안녕하세요! 같은 팬덤이네요 💜</div>
+          <div class="cp-input-row">
+            <input class="cp-input" id="cpInput" placeholder="메시지..." maxlength="50"
+              onkeydown="if(event.key==='Enter') sendPopupMsg()">
+            <button class="cp-send" onclick="sendPopupMsg()">전송</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════
+// 별빛 배경
+// ══════════════════════════════
+(function(){
+  const c=document.getElementById('starCanvas'),x=c.getContext('2d');let W,H;
+  function r(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;}r();window.addEventListener('resize',r);
+  const S=Array.from({length:280},()=>{const s=Math.random();return{x:Math.random()*2000,y:Math.random()*2000,r:s<.7?Math.random()*.8+.3:s<.9?Math.random()*1.2+1:Math.random()*2+2,b:Math.random()*.5+.3,p:Math.random()*Math.PI*2,sp:Math.random()*.008+.002,col:Math.random()<.08?'#f0c040':Math.random()<.06?'#c084fc':Math.random()<.04?'#38bdf8':'#fff',big:s>=.9}});
+  const M=Array.from({length:3},()=>({a:false,x:0,y:0,vx:0,vy:0,l:0,o:0,t:Math.random()*300}));
+  function loop(){x.clearRect(0,0,W,H);S.forEach(s=>{s.p+=s.sp;const a=s.b*(.5+.5*Math.sin(s.p));x.save();x.globalAlpha=a;if(s.big){const g=x.createRadialGradient(s.x%W,s.y%H,0,s.x%W,s.y%H,s.r*3);g.addColorStop(0,s.col);g.addColorStop(1,'transparent');x.fillStyle=g;x.beginPath();x.arc(s.x%W,s.y%H,s.r*3,0,Math.PI*2);x.fill();x.strokeStyle=s.col;x.lineWidth=0.5;x.globalAlpha=a*.5;const cx=s.x%W,cy=s.y%H,l=s.r*7;x.beginPath();x.moveTo(cx-l,cy);x.lineTo(cx+l,cy);x.moveTo(cx,cy-l);x.lineTo(cx,cy+l);x.stroke();}else{if(s.r>1){const g=x.createRadialGradient(s.x%W,s.y%H,0,s.x%W,s.y%H,s.r*2.5);g.addColorStop(0,s.col);g.addColorStop(1,'transparent');x.fillStyle=g;x.beginPath();x.arc(s.x%W,s.y%H,s.r*2.5,0,Math.PI*2);x.fill();x.globalAlpha=a;}x.fillStyle=s.col;x.beginPath();x.arc(s.x%W,s.y%H,s.r,0,Math.PI*2);x.fill();}x.restore();});
+  M.forEach(m=>{if(!m.a){m.t--;if(m.t<=0){m.a=true;m.x=Math.random()*W*1.2;m.y=Math.random()*H*.4;const a=Math.PI/4+(Math.random()-.5)*.3,sp=8+Math.random()*6;m.vx=Math.cos(a)*sp;m.vy=Math.sin(a)*sp;m.l=12+Math.random()*10;m.o=.9;}}else{m.x+=m.vx;m.y+=m.vy;m.o-=.015;if(m.o>0){const g=x.createLinearGradient(m.x,m.y,m.x-m.vx*m.l,m.y-m.vy*m.l);g.addColorStop(0,`rgba(255,255,255,${m.o})`);g.addColorStop(1,'transparent');x.save();x.strokeStyle=g;x.lineWidth=1.5;x.beginPath();x.moveTo(m.x,m.y);x.lineTo(m.x-m.vx*m.l,m.y-m.vy*m.l);x.stroke();x.restore();}if(m.o<=0||m.x>W+100||m.y>H+100){m.a=false;m.t=200+Math.random()*400;}}});
+  requestAnimationFrame(loop);}loop();
+})();
+
+// ══════════════════════════════
+// STATE
+// ══════════════════════════════
+let charData = JSON.parse(localStorage.getItem('asteria_chars') || 'null') || {
+  my: { name:'별빛 탐험가', emoji:'🌟', freeTickets:0,
+    history:[{name:'별빛 탐험가', date:'2026-03-27', current:true}] },
+  artist: { name:'LUNA', emoji:'🌙', freeTickets:1,
+    history:[{name:'LUNA', date:'2026-03-27', current:true}] },
+  wallet: 2150,
+};
+function saveCharData() { localStorage.setItem('asteria_chars', JSON.stringify(charData)); }
+
+// 이모지 목록
+const EMOJIS = [
+  '🌟','⭐','💫','✨','🌙','🌠','🪐','💜','💙','💛',
+  '🔮','🌸','🌺','🦋','🐉','🦄','👑','🗡️','🌊','🔥',
+  '❄️','🌈','🎭','🎪','🎨','🎵','🎶','🌌','🚀','💎',
+  '🌹','🌻','🍀','🦅','🐺','🦁','🐯','🌵','🏔️','🎯',
+];
+
+let currentEmojiTarget = null;
+
+// ══════════════════════════════
+// 캐릭터 설정
+// ══════════════════════════════
+function initSetting() {
+  const my = charData.my;
+  const ar = charData.artist;
+
+  document.getElementById('myEmoji').textContent = my.emoji;
+  document.getElementById('artistEmoji').textContent = ar.emoji;
+  document.getElementById('myCurrentName').textContent = my.name;
+  document.getElementById('artistCurrentName').textContent = ar.name;
+
+  // 무료 변경권
+  if(my.freeTickets > 0) {
+    document.getElementById('myFreeTicket').style.display = 'flex';
+    document.getElementById('myTicketCount').textContent = my.freeTickets;
+    document.getElementById('myChangeBtn').className = 'change-btn free';
+    document.getElementById('myChangeBtn').textContent = '무료 변경!';
+  }
+  if(ar.freeTickets > 0) {
+    document.getElementById('artistFreeTicket').style.display = 'flex';
+    document.getElementById('artistTicketCount').textContent = ar.freeTickets;
+    document.getElementById('artistChangeBtn').className = 'change-btn free';
+    document.getElementById('artistChangeBtn').textContent = '무료 변경!';
+  }
+
+  renderHistory('my');
+  renderHistory('artist');
+}
+
+function renderHistory(type) {
+  const data = charData[type];
+  const el = document.getElementById(`${type}History`);
+  if(data.history.length <= 1) { el.innerHTML = ''; return; }
+
+  el.innerHTML = `
+    <div class="name-history">
+      <div class="nh-title">이름 변경 기록</div>
+      <div class="nh-list">
+        ${data.history.slice().reverse().map(h=>`
+          <div class="nh-item">
+            <span class="nh-name">${h.name}</span>
+            <span class="nh-date">${h.date}</span>
+            <span class="nh-badge ${h.current?'nh-current':'nh-past'}">${h.current?'현재':'이전'}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function updateCount(inputId, countId) {
+  const v = document.getElementById(inputId).value;
+  document.getElementById(countId).textContent = `${v.length} / 12`;
+}
+
+function changeName(type) {
+  const inputId = type === 'my' ? 'myNameInput' : 'artistNameInput';
+  const newName = document.getElementById(inputId).value.trim();
+
+  if(!newName) { showToast('새 이름을 입력해주세요!'); return; }
+  if(newName.length < 2) { showToast('이름은 2글자 이상이어야 해요!'); return; }
+
+  const data = charData[type];
+  const isFree = data.freeTickets > 0;
+  const cost = 500;
+
+  if(!isFree && charData.wallet < cost) {
+    showToast(`스타더스트가 부족해요! (필요: ${cost}☆)`); return;
+  }
+
+  // 비용 차감
+  if(!isFree) {
+    charData.wallet -= cost;
+  } else {
+    data.freeTickets--;
+  }
+
+  // 기존 이름 history 업데이트
+  data.history.forEach(h => h.current = false);
+  data.history.push({
+    name: newName,
+    date: new Date().toISOString().slice(0,10),
+    current: true,
+  });
+  data.name = newName;
+  saveCharData();
+
+  // UI 업데이트
+  if(type === 'my') {
+    document.getElementById('myCurrentName').textContent = newName;
+    document.getElementById('myEmoji').textContent = data.emoji;
+    document.getElementById('myNameInput').value = '';
+    if(data.freeTickets <= 0) {
+      document.getElementById('myFreeTicket').style.display = 'none';
+      document.getElementById('myChangeBtn').className = 'change-btn cost';
+      document.getElementById('myChangeBtn').textContent = '변경 (500☆)';
+    } else {
+      document.getElementById('myTicketCount').textContent = data.freeTickets;
+    }
+  } else {
+    document.getElementById('artistCurrentName').textContent = newName;
+    document.getElementById('artistNameInput').value = '';
+    if(data.freeTickets <= 0) {
+      document.getElementById('artistFreeTicket').style.display = 'none';
+      document.getElementById('artistChangeBtn').className = 'change-btn cost';
+      document.getElementById('artistChangeBtn').textContent = '변경 (500☆)';
+    } else {
+      document.getElementById('artistTicketCount').textContent = data.freeTickets;
+    }
+  }
+
+  renderHistory(type);
+  showToast(`✨ "${newName}"으로 변경됐어요!`);
+  burst();
+}
+
+// ══════════════════════════════
+// 이모지 모달
+// ══════════════════════════════
+function openEmojiModal(type) {
+  currentEmojiTarget = type;
+  document.getElementById('emojiModalTitle').textContent =
+    type === 'my' ? '내 캐릭터 이모지 선택' : '아티스트 캐릭터 이모지 선택';
+  document.getElementById('emojiGrid').innerHTML = EMOJIS.map(e=>`
+    <button class="emoji-btn" onclick="selectEmoji('${e}')">${e}</button>
+  `).join('');
+  document.getElementById('emojiModal').classList.add('show');
+}
+
+function selectEmoji(emoji) {
+  if(!currentEmojiTarget) return;
+  charData[currentEmojiTarget].emoji = emoji;
+  saveCharData();
+  document.getElementById(currentEmojiTarget === 'my' ? 'myEmoji' : 'artistEmoji').textContent = emoji;
+  closeEmojiModal();
+  showToast(`${emoji} 이모지 변경됐어요!`);
+}
+
+function closeEmojiModal() {
+  document.getElementById('emojiModal').classList.remove('show');
+  currentEmojiTarget = null;
+}
+
+// ══════════════════════════════
+// 리그 맵 Three.js
+// ══════════════════════════════
+let mapScene, mapCamera, mapRenderer, mapAnimFrame;
+let myCharMesh, myCharPos = {x:0, z:0};
+let moveDir = null, moveInterval = null;
+const MAP_BOUNDS = { minX:-8, maxX:8, minZ:-8, maxZ:8 };
+
+// 다른 유저 시뮬
+const OTHER_USERS = [
+  { name:'StarQueen', emoji:'⭐', x:3, z:2, color:0xfbbf24 },
+  { name:'EclipseKing', emoji:'🌙', x:-4, z:3, color:0x818cf8 },
+  { name:'NovaFan99', emoji:'💫', x:1, z:-5, color:0xc084fc },
+];
+
+function initMap() {
+  const canvas = document.getElementById('mapCanvas');
+  const container = document.getElementById('tab-map');
+  const W = container.clientWidth;
+  const H = container.clientHeight;
+
+  mapScene = new THREE.Scene();
+  mapScene.background = new THREE.Color(0x030308);
+  mapScene.fog = new THREE.FogExp2(0x030308, 0.04);
+
+  mapCamera = new THREE.PerspectiveCamera(60, W/H, 0.1, 100);
+  mapCamera.position.set(0, 12, 8);
+  mapCamera.lookAt(0, 0, 0);
+
+  mapRenderer = new THREE.WebGLRenderer({canvas, antialias:true});
+  mapRenderer.setSize(W, H);
+  mapRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  mapRenderer.shadowMap.enabled = true;
+  mapRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  // 조명
+  const ambient = new THREE.AmbientLight(0x221133, 0.6);
+  mapScene.add(ambient);
+  const dirLight = new THREE.DirectionalLight(0xc084fc, 1.5);
+  dirLight.position.set(5, 10, 5);
+  dirLight.castShadow = true;
+  mapScene.add(dirLight);
+  const pointLight = new THREE.PointLight(0x4444ff, 1.0, 20);
+  pointLight.position.set(0, 5, 0);
+  mapScene.add(pointLight);
+
+  // 바닥 (팬덤 구역)
+  buildMapFloor();
+
+  // 구역 경계
+  buildMapBoundary();
+
+  // 내 캐릭터
+  myCharMesh = buildCharMesh(charData.my.emoji, 0x38bdf8);
+  myCharMesh.position.set(0, 0, 0);
+  mapScene.add(myCharMesh);
+
+  // 다른 유저들
+  OTHER_USERS.forEach(u => {
+    const mesh = buildCharMesh(u.emoji, u.color);
+    mesh.position.set(u.x, 0, u.z);
+    mesh.userData.userName = u.name;
+    mesh.userData.userEmoji = u.emoji;
+    mapScene.add(mesh);
+  });
+
+  // NPC (아티스트 캐릭터)
+  const npcMesh = buildCharMesh('🌙', 0xf0c040, true);
+  npcMesh.position.set(0, 0, -5);
+  npcMesh.userData.isNPC = true;
+  npcMesh.userData.userName = charData.artist.name;
+  mapScene.add(npcMesh);
+
+  // 키보드 이벤트
+  document.addEventListener('keydown', onKeyDown);
+  document.addEventListener('keyup', onKeyUp);
+
+  // 클릭 이동
+  canvas.addEventListener('click', onMapClick);
+
+  renderNearbyUsers();
+  mapAnimLoop();
+}
+
+function buildMapFloor() {
+  // 메인 바닥
+  const floorGeo = new THREE.PlaneGeometry(20, 20, 20, 20);
+  const floorMat = new THREE.MeshStandardMaterial({
+    color: 0x0d0820, roughness:0.9, metalness:0.1,
+  });
+  const floor = new THREE.Mesh(floorGeo, floorMat);
+  floor.rotation.x = -Math.PI/2;
+  floor.position.y = -0.5;
+  floor.receiveShadow = true;
+  mapScene.add(floor);
+
+  // 바닥 격자
+  const grid = new THREE.GridHelper(20, 20, 0xc084fc, 0xc084fc);
+  grid.position.y = -0.49;
+  grid.material.opacity = 0.06;
+  grid.material.transparent = true;
+  mapScene.add(grid);
+
+  // 팬덤 구역 표시 (보라빛 원형 영역)
+  const zoneGeo = new THREE.CircleGeometry(9, 64);
+  const zoneMat = new THREE.MeshStandardMaterial({
+    color: 0xc084fc, transparent:true, opacity:0.04, side:THREE.DoubleSide,
+  });
+  const zone = new THREE.Mesh(zoneGeo, zoneMat);
+  zone.rotation.x = -Math.PI/2;
+  zone.position.y = -0.48;
+  mapScene.add(zone);
+
+  // 구역 경계 원
+  const ringGeo = new THREE.RingGeometry(8.8, 9, 64);
+  const ringMat = new THREE.MeshBasicMaterial({
+    color:0xc084fc, transparent:true, opacity:0.3, side:THREE.DoubleSide,
+  });
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.rotation.x = -Math.PI/2;
+  ring.position.y = -0.47;
+  mapScene.add(ring);
+
+  // 팬덤 이름 표시판
+  const signGeo = new THREE.BoxGeometry(4, 0.5, 0.1);
+  const signMat = new THREE.MeshStandardMaterial({
+    color:0x221133, emissive:0xc084fc, emissiveIntensity:0.3,
+  });
+  const sign = new THREE.Mesh(signGeo, signMat);
+  sign.position.set(0, 0.2, -8.5);
+  mapScene.add(sign);
+}
+
+function buildMapBoundary() {
+  // 경계 기둥들
+  const pillarPositions = [
+    [-9,0,-9],[9,0,-9],[-9,0,9],[9,0,9],
+    [0,0,-9],[-9,0,0],[9,0,0],[0,0,9],
+  ];
+  const pillarGeo = new THREE.CylinderGeometry(0.15, 0.15, 2, 8);
+  const pillarMat = new THREE.MeshStandardMaterial({
+    color:0x441166, emissive:0xc084fc, emissiveIntensity:0.4,
+  });
+  pillarPositions.forEach(([x,y,z])=>{
+    const m = new THREE.Mesh(pillarGeo, pillarMat);
+    m.position.set(x, y+0.5, z);
+    mapScene.add(m);
+    // 기둥 위 빛
+    const light = new THREE.PointLight(0xc084fc, 0.5, 3);
+    light.position.set(x, 1.5, z);
+    mapScene.add(light);
+  });
+}
+
+function buildCharMesh(emoji, color, isNPC=false) {
+  const group = new THREE.Group();
+
+  // 몸통
+  const bodyGeo = new THREE.CylinderGeometry(0.25, 0.3, 0.7, 12);
+  const bodyMat = new THREE.MeshStandardMaterial({
+    color: color, emissive:color, emissiveIntensity:0.3, roughness:0.4,
+  });
+  const body = new THREE.Mesh(bodyGeo, bodyMat);
+  body.position.y = 0.35;
+  body.castShadow = true;
+  group.add(body);
+
+  // 머리
+  const headGeo = new THREE.SphereGeometry(0.24, 12, 12);
+  const headMat = new THREE.MeshStandardMaterial({
+    color:0xfdbcb4, emissive:color, emissiveIntensity:0.1,
+  });
+  const head = new THREE.Mesh(headGeo, headMat);
+  head.position.y = 0.95;
+  head.castShadow = true;
+  group.add(head);
+
+  // 아우라 링
+  const ringGeo = new THREE.TorusGeometry(0.4, 0.02, 6, 30);
+  const ringMat = new THREE.MeshStandardMaterial({
+    color:color, emissive:color, emissiveIntensity:1.5,
+    transparent:true, opacity:0.8,
+  });
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.position.y = 0.5;
+  ring.rotation.x = Math.PI/2;
+  ring.userData.isRing = true;
+  group.add(ring);
+
+  // NPC는 황금 왕관
+  if(isNPC) {
+    const crownGeo = new THREE.ConeGeometry(0.15, 0.25, 5);
+    const crownMat = new THREE.MeshStandardMaterial({
+      color:0xf0c040, emissive:0xf0c040, emissiveIntensity:0.8,
+    });
+    const crown = new THREE.Mesh(crownGeo, crownMat);
+    crown.position.y = 1.3;
+    group.add(crown);
+  }
+
+  // 이름표
+  const labelGeo = new THREE.BoxGeometry(1.2, 0.2, 0.02);
+  const labelMat = new THREE.MeshBasicMaterial({ color:0x110022, transparent:true, opacity:0.8 });
+  const label = new THREE.Mesh(labelGeo, labelMat);
+  label.position.y = 1.4;
+  group.add(label);
+
+  group.userData.baseY = 0;
+  group.userData.floatOffset = Math.random() * Math.PI * 2;
+  group.userData.isNPC = isNPC;
+
+  return group;
+}
+
+let mapTime = 0;
+function mapAnimLoop() {
+  mapAnimFrame = requestAnimationFrame(mapAnimLoop);
+  mapTime += 0.016;
+
+  // 내 캐릭터 이동 처리
+  if(moveDir) moveChar(moveDir);
+
+  // 모든 캐릭터 부유 애니메이션
+  mapScene.children.forEach(obj=>{
+    if(obj.userData.floatOffset !== undefined) {
+      obj.position.y = Math.sin(mapTime + obj.userData.floatOffset) * 0.08;
+      obj.children.forEach(child=>{
+        if(child.userData.isRing) child.rotation.z = mapTime * 0.8;
+      });
+    }
+  });
+
+  // 카메라가 내 캐릭터 따라가기
+  const target = myCharMesh.position;
+  mapCamera.position.x = target.x;
+  mapCamera.position.z = target.z + 8;
+  mapCamera.lookAt(target.x, 0, target.z);
+
+  // 근처 유저 업데이트
+  updateNearbyUsers();
+
+  mapRenderer.render(mapScene, mapCamera);
+}
+
+function moveChar(dir) {
+  const speed = 0.08;
+  let nx = myCharMesh.position.x;
+  let nz = myCharMesh.position.z;
+
+  if(dir === 'up')    nz -= speed;
+  if(dir === 'down')  nz += speed;
+  if(dir === 'left')  nx -= speed;
+  if(dir === 'right') nx += speed;
+
+  // 팬덤 구역 경계 제한
+  const dist = Math.sqrt(nx*nx + nz*nz);
+  if(dist < 8.5) {
+    myCharMesh.position.x = nx;
+    myCharMesh.position.z = nz;
+    myCharPos = {x:Math.round(nx*10)/10, z:Math.round(nz*10)/10};
+    document.getElementById('mapMyPos').textContent = `x:${myCharPos.x} z:${myCharPos.z}`;
+
+    // 이동 방향으로 캐릭터 회전
+    const angle = {up:0, down:Math.PI, left:Math.PI/2*3, right:Math.PI/2}[dir];
+    myCharMesh.rotation.y = angle;
+  } else {
+    showToast('⚠️ 팬덤 구역 밖으로 나갈 수 없어요!');
+  }
+}
+
+function onKeyDown(e) {
+  if(document.getElementById('tab-map').style.display === 'none') return;
+  const map = {ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right'};
+  if(map[e.key]) { e.preventDefault(); startMove(map[e.key]); }
+}
+function onKeyUp(e) {
+  const map = {ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right'};
+  if(map[e.key]) stopMove();
+}
+
+function startMove(dir) {
+  moveDir = dir;
+  document.getElementById(`dpad-${dir}`)?.classList.add('pressed');
+  if(!moveInterval) moveInterval = setInterval(()=>{ if(moveDir) moveChar(moveDir); }, 16);
+}
+function stopMove() {
+  clearInterval(moveInterval); moveInterval = null;
+  moveDir = null;
+  ['up','down','left','right'].forEach(d=>document.getElementById(`dpad-${d}`)?.classList.remove('pressed'));
+}
+
+function onMapClick(e) {
+  const canvas = document.getElementById('mapCanvas');
+  const rect = canvas.getBoundingClientRect();
+  const mouse = new THREE.Vector2(
+    ((e.clientX - rect.left) / rect.width) * 2 - 1,
+    -((e.clientY - rect.top) / rect.height) * 2 + 1
+  );
+  const raycaster = new THREE.Raycaster();
+  raycaster.setFromCamera(mouse, mapCamera);
+
+  // 다른 캐릭터 클릭 감지
+  const objs = mapScene.children.filter(o => o.userData.userName);
+  const hits = raycaster.intersectObjects(objs, true);
+  if(hits.length > 0) {
+    let target = hits[0].object;
+    while(target.parent && !target.userData.userName) target = target.parent;
+    if(target.userData.userName) {
+      openChatPopup(target.userData.userName, target.userData.userEmoji || '🌟', target.userData.isNPC);
+    }
+  }
+}
+
+function updateNearbyUsers() {
+  const nearbyList = [];
+  mapScene.children.forEach(obj=>{
+    if(!obj.userData.userName || obj === myCharMesh) return;
+    const dx = obj.position.x - myCharMesh.position.x;
+    const dz = obj.position.z - myCharMesh.position.z;
+    const dist = Math.sqrt(dx*dx + dz*dz);
+    if(dist < 4) nearbyList.push({name:obj.userData.userName, emoji:obj.userData.userEmoji||'🌟', dist});
+  });
+
+  const el = document.getElementById('nearbyUsers');
+  if(nearbyList.length === 0) {
+    el.innerHTML = '<div style="font-size:10px;color:var(--muted)">주변에 아무도 없어요</div>';
+  } else {
+    el.innerHTML = nearbyList.map(u=>`
+      <div class="mbi-user">
+        <div class="mbi-av">${u.emoji}</div>
+        <div class="mbi-name nearby">${u.name}</div>
+        <div style="font-size:9px;color:var(--muted)">${Math.round(u.dist*10)/10}m</div>
+      </div>
+    `).join('');
+  }
+}
+
+function renderNearbyUsers() {
+  document.getElementById('mapMyAv').textContent = charData.my.emoji;
+  document.getElementById('mapMyName').textContent = charData.my.name;
+}
+
+// ── 대화 팝업 ──
+function openChatPopup(name, emoji, isNPC) {
+  document.getElementById('cpAv').textContent = emoji;
+  document.getElementById('cpName').textContent = name;
+  document.getElementById('cpMsg').textContent = isNPC
+    ? `${name}이 성궤에서 기다리고 있어요 ✨`
+    : `${name}이 근처에 있어요! 대화를 시작해볼까요?`;
+  document.getElementById('chatPopup').classList.add('show');
+  if(isNPC) {
+    document.getElementById('cpInput').placeholder = '성궤에서만 대화 가능해요...';
+    document.getElementById('cpInput').disabled = true;
+  } else {
+    document.getElementById('cpInput').placeholder = '메시지...';
+    document.getElementById('cpInput').disabled = false;
+  }
+}
+function closeChatPopup() { document.getElementById('chatPopup').classList.remove('show'); }
+function openNearbyChat() {
+  const nearby = [];
+  mapScene.children.forEach(obj=>{
+    if(!obj.userData.userName || obj===myCharMesh) return;
+    const dx=obj.position.x-myCharMesh.position.x, dz=obj.position.z-myCharMesh.position.z;
+    if(Math.sqrt(dx*dx+dz*dz)<4) nearby.push(obj);
+  });
+  if(nearby.length===0){showToast('근처에 대화할 캐릭터가 없어요!');return;}
+  const t=nearby[0];
+  openChatPopup(t.userData.userName,t.userData.userEmoji||'🌟',t.userData.isNPC);
+}
+function sendPopupMsg() {
+  const inp=document.getElementById('cpInput');
+  if(!inp.value.trim()||inp.disabled)return;
+  showToast(`💬 "${inp.value}" 전송됐어요!`);
+  inp.value='';
+  closeChatPopup();
+}
+
+// ══════════════════════════════
+// 탭 전환
+// ══════════════════════════════
+let mapInitialized = false;
+function switchTab(name, btn) {
+  document.querySelectorAll('.page-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+
+  const setting = document.getElementById('tab-setting');
+  const map = document.getElementById('tab-map');
+
+  if(name === 'setting') {
+    setting.style.display = 'block';
+    map.style.display = 'none';
+    if(mapAnimFrame) cancelAnimationFrame(mapAnimFrame);
+  } else {
+    setting.style.display = 'none';
+    map.style.display = 'block';
+    if(!mapInitialized) { initMap(); mapInitialized = true; }
+    else mapAnimLoop();
+  }
+}
+
+// ══════════════════════════════
+// 파티클
+// ══════════════════════════════
+function burst() {
+  for(let i=0;i<14;i++){
+    const p=document.createElement('div');
+    const cols=['#f0c040','#c084fc','#38bdf8','#fff'];
+    const col=cols[Math.floor(Math.random()*cols.length)];
+    const sz=Math.random()*5+2, a=Math.random()*Math.PI*2, d=Math.random()*70+20;
+    const cx=window.innerWidth/2, cy=window.innerHeight/3;
+    p.style.cssText=`position:fixed;left:${cx}px;top:${cy}px;width:${sz}px;height:${sz}px;border-radius:50%;background:${col};box-shadow:0 0 6px ${col};z-index:9999;pointer-events:none;transition:all ${.4+Math.random()*.3}s ease-out;transform:translate(-50%,-50%)`;
+    document.body.appendChild(p);
+    requestAnimationFrame(()=>{p.style.transform=`translate(calc(-50% + ${Math.cos(a)*d}px),calc(-50% + ${Math.sin(a)*d}px))`;p.style.opacity='0';});
+    setTimeout(()=>p.remove(),800);
+  }
+}
+
+// ══════════════════════════════
+// TOAST
+// ══════════════════════════════
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// INIT
+initSetting();
+</script>
+</body>
+</html>
