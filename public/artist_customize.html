@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>아티스트 꾸미기 — ASTERIA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --void:#030308; --panel:rgba(10,10,22,0.96);
+  --border:rgba(180,150,255,0.13); --gold:#f0c040;
+  --accent:#c084fc; --accent2:#818cf8;
+  --text:#e8e4f0; --muted:rgba(200,190,220,0.5);
+}
+html,body {
+  width:100%; height:100%; background:var(--void); color:var(--text);
+  font-family:'Noto Sans KR',sans-serif;
+  -webkit-tap-highlight-color:transparent; overflow:hidden;
+}
+#starCanvas { position:fixed; inset:0; z-index:0; pointer-events:none; }
+#app { max-width:480px; margin:0 auto; height:100vh; display:flex; flex-direction:column; position:relative; z-index:1; }
+
+/* ── TOP NAV ── */
+.top-nav {
+  display:flex; background:var(--panel); backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border); overflow-x:auto; flex-shrink:0;
+}
+.top-nav::-webkit-scrollbar{display:none}
+.tni { flex-shrink:0; display:flex; flex-direction:column; align-items:center; padding:10px 14px; cursor:pointer; text-decoration:none; color:var(--muted); border-bottom:2px solid transparent; gap:3px; transition:all .2s; }
+.tni.active { color:var(--accent); border-bottom-color:var(--accent); }
+.tni-icon { font-size:18px; }
+.tni-label { font-size:9px; font-weight:500; white-space:nowrap; }
+
+/* ── TOP BAR ── */
+.topbar {
+  display:flex; align-items:center; gap:10px; padding:12px 16px;
+  background:var(--panel); backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border); flex-shrink:0;
+}
+.tb-back { width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,.06); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:13px; cursor:pointer; text-decoration:none; color:var(--text); flex-shrink:0; }
+.tb-title { font-family:'Orbitron',monospace; font-size:13px; font-weight:700; flex:1; letter-spacing:1px; color:var(--gold); }
+.tb-save { padding:7px 16px; border-radius:20px; border:none; background:linear-gradient(90deg,var(--gold),#e6a800); color:var(--void); font-size:12px; font-weight:700; cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:all .2s; }
+.tb-save:hover { box-shadow:0 0 16px rgba(240,192,64,.4); }
+.tb-chat { padding:7px 14px; border-radius:20px; border:1px solid rgba(192,132,252,.4); background:rgba(192,132,252,.1); color:var(--accent); font-size:12px; font-weight:700; cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:all .2s; }
+
+/* ── 프리뷰 영역 ── */
+.preview-area {
+  flex-shrink:0; height:260px; position:relative; overflow:hidden;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  background:radial-gradient(ellipse at 50% 30%, rgba(240,192,64,.15) 0%, transparent 65%);
+}
+.preview-stage-label {
+  position:absolute; top:12px; left:16px;
+  font-size:9px; color:var(--muted); letter-spacing:2px; text-transform:uppercase;
+}
+.preview-canvas-wrap { position:relative; }
+#artistCanvas { width:160px; height:160px; }
+
+/* 대화 반영 배지 */
+.chat-badge {
+  position:absolute; top:12px; right:16px;
+  background:rgba(192,132,252,.15); border:1px solid rgba(192,132,252,.3);
+  border-radius:20px; padding:4px 12px; font-size:10px; color:var(--accent);
+  font-weight:700; display:flex; align-items:center; gap:5px;
+}
+.chat-badge::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--accent); animation:chatPulse 1.5s ease-in-out infinite; }
+@keyframes chatPulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* 아티스트 이름 */
+.artist-name-wrap { text-align:center; margin-top:10px; }
+.artist-name { font-size:18px; font-weight:900; }
+.artist-role { font-size:10px; color:var(--gold); margin-top:3px; letter-spacing:2px; }
+.costume-tag { margin-top:6px; display:inline-flex; align-items:center; gap:6px; background:rgba(240,192,64,.1); border:1px solid rgba(240,192,64,.3); border-radius:20px; padding:3px 12px; font-size:10px; color:var(--gold); }
+
+/* ── 탭 ── */
+.tab-nav {
+  display:flex; background:var(--panel); backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border); overflow-x:auto; flex-shrink:0;
+}
+.tab-nav::-webkit-scrollbar{display:none}
+.tab-btn { flex-shrink:0; padding:11px 14px; font-size:11px; font-weight:600; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; transition:all .2s; display:flex; flex-direction:column; align-items:center; gap:3px; }
+.tab-btn.active { color:var(--accent); border-bottom-color:var(--accent); }
+.tab-icon { font-size:15px; }
+
+/* ── 탭 컨텐츠 ── */
+.tab-content { display:none; overflow-y:auto; flex:1; padding:14px 16px; }
+.tab-content.active { display:block; }
+.tab-content::-webkit-scrollbar { width:3px; }
+.tab-content::-webkit-scrollbar-thumb { background:rgba(192,132,252,.3); border-radius:3px; }
+
+/* 섹션 타이틀 */
+.sec-title { font-size:10px; color:var(--muted); letter-spacing:2.5px; text-transform:uppercase; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.sec-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* ── 얼굴 탭 ── */
+.face-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:18px; }
+.face-item { aspect-ratio:1; border-radius:12px; background:rgba(255,255,255,.04); border:2px solid var(--border); display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; transition:all .2s; gap:4px; position:relative; }
+.face-item:hover { border-color:var(--accent); }
+.face-item.active { border-color:var(--gold); background:rgba(240,192,64,.08); box-shadow:0 0 10px rgba(240,192,64,.2); }
+.face-emoji { font-size:26px; }
+.face-label { font-size:8px; color:var(--muted); }
+
+/* 피부색 */
+.skin-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
+.skin-dot { width:36px; height:36px; border-radius:50%; cursor:pointer; border:3px solid transparent; transition:all .2s; }
+.skin-dot:hover { transform:scale(1.1); }
+.skin-dot.active { border-color:#fff; box-shadow:0 0 10px rgba(255,255,255,.4); }
+
+/* ── 헤어 탭 ── */
+.hair-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:18px; }
+.hair-item { border-radius:12px; background:rgba(255,255,255,.04); border:2px solid var(--border); padding:12px 6px; display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; transition:all .2s; position:relative; }
+.hair-item:hover { border-color:var(--accent); }
+.hair-item.active { border-color:var(--gold); background:rgba(240,192,64,.07); }
+.hair-emoji { font-size:28px; }
+.hair-name { font-size:9px; color:var(--muted); text-align:center; }
+.hair-lock { position:absolute; inset:0; background:rgba(0,0,0,.65); border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; font-size:16px; }
+.hair-lock-txt { font-size:8px; color:var(--muted); }
+
+/* 헤어 컬러 */
+.color-row { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:18px; }
+.color-dot { width:32px; height:32px; border-radius:50%; cursor:pointer; border:3px solid transparent; transition:all .2s; }
+.color-dot:hover { transform:scale(1.1); }
+.color-dot.active { border-color:#fff; box-shadow:0 0 8px rgba(255,255,255,.4); }
+
+/* ── 의상 탭 ── */
+.outfit-type-tabs { display:flex; gap:6px; margin-bottom:12px; }
+.ot-btn { padding:5px 14px; border-radius:20px; font-size:11px; font-weight:600; border:1px solid var(--border); background:transparent; color:var(--muted); cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:all .2s; }
+.ot-btn.active { background:rgba(240,192,64,.12); border-color:var(--gold); color:var(--gold); }
+
+.outfit-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+.outfit-card { border-radius:14px; background:rgba(255,255,255,.04); border:2px solid var(--border); overflow:hidden; cursor:pointer; transition:all .2s; position:relative; }
+.outfit-card:hover { border-color:var(--accent); transform:translateY(-2px); }
+.outfit-card.active { border-color:var(--gold); background:rgba(240,192,64,.06); }
+.outfit-card.active .outfit-badge { display:flex; }
+.outfit-preview { width:100%; aspect-ratio:3/4; display:flex; align-items:center; justify-content:center; font-size:48px; position:relative; }
+.outfit-preview::after { content:''; position:absolute; inset:0; background:radial-gradient(circle,rgba(240,192,64,.08),transparent 70%); }
+.outfit-info { padding:10px; }
+.outfit-name { font-size:12px; font-weight:700; margin-bottom:3px; }
+.outfit-desc { font-size:10px; color:var(--muted); line-height:1.4; }
+.outfit-rarity { font-size:9px; font-weight:700; margin-top:4px; }
+.outfit-badge { position:absolute; top:6px; right:6px; background:var(--gold); color:var(--void); font-size:8px; font-weight:900; padding:2px 7px; border-radius:4px; display:none; }
+.outfit-lock { position:absolute; inset:0; background:rgba(0,0,0,.65); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; font-size:22px; }
+.outfit-lock-txt { font-size:9px; color:var(--muted); text-align:center; }
+
+/* ── 아우라 탭 ── */
+.aura-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+.aura-card { border-radius:14px; background:rgba(255,255,255,.04); border:2px solid var(--border); padding:16px 12px; display:flex; flex-direction:column; align-items:center; gap:8px; cursor:pointer; transition:all .2s; position:relative; }
+.aura-card:hover { border-color:var(--accent); }
+.aura-card.active { border-color:var(--gold); background:rgba(240,192,64,.06); }
+.aura-visual { width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px; position:relative; }
+.aura-ring { position:absolute; inset:-6px; border-radius:50%; border:2px solid transparent; animation:auraRot 4s linear infinite; }
+@keyframes auraRot { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+.aura-name { font-size:12px; font-weight:700; text-align:center; }
+.aura-desc { font-size:10px; color:var(--muted); text-align:center; line-height:1.4; }
+.aura-tag { font-size:9px; font-weight:700; padding:2px 8px; border-radius:10px; margin-top:2px; }
+
+/* ── 액세서리 탭 ── */
+.acc-section { margin-bottom:16px; }
+.acc-section-title { font-size:11px; color:var(--muted); font-weight:600; margin-bottom:10px; letter-spacing:1px; }
+.acc-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+.acc-item { aspect-ratio:1; border-radius:12px; background:rgba(255,255,255,.04); border:2px solid var(--border); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; cursor:pointer; transition:all .2s; position:relative; }
+.acc-item:hover { border-color:var(--accent); }
+.acc-item.active { border-color:var(--gold); background:rgba(240,192,64,.07); }
+.acc-emoji { font-size:22px; }
+.acc-name { font-size:8px; color:var(--muted); text-align:center; }
+.acc-lock { position:absolute; inset:0; background:rgba(0,0,0,.65); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:15px; }
+
+/* ── 표정 탭 ── */
+.emotion-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px; }
+.emotion-card { border-radius:14px; background:rgba(255,255,255,.04); border:2px solid var(--border); padding:14px 8px; display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; transition:all .25s; position:relative; }
+.emotion-card:hover { border-color:var(--accent); transform:scale(1.03); }
+.emotion-card.active { border-color:var(--gold); background:rgba(240,192,64,.07); }
+.emotion-emoji { font-size:32px; }
+.emotion-name { font-size:11px; font-weight:700; text-align:center; }
+.emotion-desc { font-size:9px; color:var(--muted); text-align:center; }
+.emotion-chat-tag { font-size:8px; color:var(--accent); font-weight:700; margin-top:2px; }
+
+/* 대화 반영 안내 */
+.chat-reflect-banner {
+  background:linear-gradient(135deg,rgba(192,132,252,.1),rgba(240,192,64,.08));
+  border:1px solid rgba(192,132,252,.3); border-radius:14px;
+  padding:14px 16px; margin-bottom:16px;
+  display:flex; align-items:center; gap:12px;
+}
+.crb-icon { font-size:24px; }
+.crb-info { flex:1; }
+.crb-title { font-size:12px; font-weight:700; color:var(--accent); }
+.crb-desc { font-size:10px; color:var(--muted); margin-top:3px; line-height:1.5; }
+.crb-btn { padding:7px 14px; border-radius:20px; border:none; background:linear-gradient(90deg,var(--accent),var(--accent2)); color:#fff; font-size:11px; font-weight:700; cursor:pointer; font-family:'Noto Sans KR',sans-serif; white-space:nowrap; }
+
+/* TOAST */
+.toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:rgba(12,12,26,.97); border:1px solid var(--border); border-radius:12px; padding:10px 20px; font-size:12px; z-index:8000; opacity:0; transition:opacity .3s; pointer-events:none; white-space:nowrap; }
+.toast.show { opacity:1; }
+</style>
+</head>
+<body>
+<canvas id="starCanvas"></canvas>
+<div id="toast" class="toast"></div>
+
+<div id="app">
+  <!-- TOP NAV -->
+  <nav class="top-nav">
+    <a class="tni" href="/"><div class="tni-icon">🏠</div><div class="tni-label">홈</div></a>
+    <a class="tni" href="/room3d.html"><div class="tni-icon">🏡</div><div class="tni-label">내 방</div></a>
+    <a class="tni" href="/nebula.html"><div class="tni-icon">🌌</div><div class="tni-label">성궤</div></a>
+    <a class="tni active" href="#"><div class="tni-icon">🎤</div><div class="tni-label">아티스트</div></a>
+    <a class="tni" href="/chat.html"><div class="tni-icon">💬</div><div class="tni-label">대화</div></a>
+    <a class="tni" href="/shop.html"><div class="tni-icon">🛒</div><div class="tni-label">상점</div></a>
+  </nav>
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <a class="tb-back" href="/nebula.html">←</a>
+    <div class="tb-title">아티스트 꾸미기</div>
+    <button class="tb-chat" onclick="goToChat()">대화하기 💬</button>
+    <button class="tb-save" onclick="saveArtist()">저장 ✦</button>
+  </div>
+
+  <!-- 프리뷰 -->
+  <div class="preview-area">
+    <div class="preview-stage-label">✦ 내 성궤의 아티스트</div>
+    <div class="chat-badge">대화에 반영됨</div>
+    <div class="preview-canvas-wrap">
+      <canvas id="artistCanvas" width="160" height="160"></canvas>
+    </div>
+    <div class="artist-name-wrap">
+      <div class="artist-name" id="previewName">LUNA</div>
+      <div class="artist-role">아스테리아 메인 보컬</div>
+      <div class="costume-tag">
+        <span id="costumeTag">✨ 스테이지 의상</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 탭 -->
+  <div class="tab-nav">
+    <div class="tab-btn active" onclick="switchTab('face',this)"><div class="tab-icon">👤</div>얼굴</div>
+    <div class="tab-btn" onclick="switchTab('hair',this)"><div class="tab-icon">💇</div>헤어</div>
+    <div class="tab-btn" onclick="switchTab('outfit',this)"><div class="tab-icon">👗</div>의상</div>
+    <div class="tab-btn" onclick="switchTab('aura',this)"><div class="tab-icon">✨</div>아우라</div>
+    <div class="tab-btn" onclick="switchTab('acc',this)"><div class="tab-icon">🎤</div>액세서리</div>
+    <div class="tab-btn" onclick="switchTab('emotion',this)"><div class="tab-icon">😊</div>표정</div>
+  </div>
+
+  <!-- ═══ 얼굴 탭 ═══ -->
+  <div class="tab-content active" id="tab-face">
+    <div class="sec-title">얼굴형</div>
+    <div class="face-grid" id="faceGrid"></div>
+    <div class="sec-title">피부색</div>
+    <div class="skin-row" id="skinRow"></div>
+  </div>
+
+  <!-- ═══ 헤어 탭 ═══ -->
+  <div class="tab-content" id="tab-hair">
+    <div class="sec-title">헤어스타일</div>
+    <div class="hair-grid" id="hairGrid"></div>
+    <div class="sec-title">헤어 컬러</div>
+    <div class="color-row" id="hairColorRow"></div>
+  </div>
+
+  <!-- ═══ 의상 탭 ═══ -->
+  <div class="tab-content" id="tab-outfit">
+    <div class="outfit-type-tabs">
+      <button class="ot-btn active" onclick="switchOutfitType('stage',this)">🎤 스테이지</button>
+      <button class="ot-btn" onclick="switchOutfitType('casual',this)">👕 일상복</button>
+      <button class="ot-btn" onclick="switchOutfitType('special',this)">✨ 특별복</button>
+    </div>
+    <div class="outfit-grid" id="outfitGrid"></div>
+  </div>
+
+  <!-- ═══ 아우라 탭 ═══ -->
+  <div class="tab-content" id="tab-aura">
+    <div class="chat-reflect-banner">
+      <div class="crb-icon">💫</div>
+      <div class="crb-info">
+        <div class="crb-title">아우라도 대화에 반영돼요!</div>
+        <div class="crb-desc">선택한 아우라가 LUNA의 분위기로 대화 스타일에도 영향을 줍니다.</div>
+      </div>
+    </div>
+    <div class="aura-grid" id="auraGrid"></div>
+  </div>
+
+  <!-- ═══ 액세서리 탭 ═══ -->
+  <div class="tab-content" id="tab-acc">
+    <div class="acc-section">
+      <div class="acc-section-title">🎤 마이크 / 악기</div>
+      <div class="acc-grid" id="accMic"></div>
+    </div>
+    <div class="acc-section">
+      <div class="acc-section-title">🎧 이어폰 / 헤드셋</div>
+      <div class="acc-grid" id="accEar"></div>
+    </div>
+    <div class="acc-section">
+      <div class="acc-section-title">👓 안경 / 선글라스</div>
+      <div class="acc-grid" id="accGlass"></div>
+    </div>
+  </div>
+
+  <!-- ═══ 표정 탭 ═══ -->
+  <div class="tab-content" id="tab-emotion">
+    <div class="chat-reflect-banner">
+      <div class="crb-icon">💬</div>
+      <div class="crb-info">
+        <div class="crb-title">표정이 대화 분위기를 바꿔요!</div>
+        <div class="crb-desc">선택한 표정에 따라 LUNA가 대화할 때 다른 감정과 말투로 반응합니다.</div>
+      </div>
+      <button class="crb-btn" onclick="goToChat()">지금 대화하기</button>
+    </div>
+    <div class="emotion-grid" id="emotionGrid"></div>
+  </div>
+
+</div>
+
+<script>
+// ══════════════════════════════════
+// 별빛 배경
+// ══════════════════════════════════
+(function(){
+  const c=document.getElementById('starCanvas'),x=c.getContext('2d');let W,H;
+  function r(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;}r();window.addEventListener('resize',r);
+  const S=Array.from({length:200},()=>{const s=Math.random();return{x:Math.random()*W,y:Math.random()*H,r:s<.7?Math.random()*.8+.3:s<.9?Math.random()*1.2+1:Math.random()*2+2,b:Math.random()*.5+.3,p:Math.random()*Math.PI*2,sp:Math.random()*.008+.002,col:Math.random()<.1?'#f0c040':Math.random()<.08?'#c084fc':'#fff',big:s>=.9}});
+  function loop(){
+    x.clearRect(0,0,W,H);
+    S.forEach(s=>{s.p+=s.sp;const a=s.b*(.5+.5*Math.sin(s.p));x.save();x.globalAlpha=a;if(s.big){const g=x.createRadialGradient(s.x,s.y,0,s.x,s.y,s.r*3);g.addColorStop(0,s.col);g.addColorStop(1,'transparent');x.fillStyle=g;x.beginPath();x.arc(s.x,s.y,s.r*3,0,Math.PI*2);x.fill();}x.fillStyle=s.col;x.beginPath();x.arc(s.x,s.y,s.r,0,Math.PI*2);x.fill();x.restore();});
+    requestAnimationFrame(loop);}loop();
+})();
+
+// ══════════════════════════════════
+// 데이터
+// ══════════════════════════════════
+const FACES = [
+  {id:'f1',emoji:'😊',name:'청순형',unlocked:true},
+  {id:'f2',emoji:'😎',name:'쿨한형',unlocked:true},
+  {id:'f3',emoji:'🌸',name:'발랄형',unlocked:true},
+  {id:'f4',emoji:'🌙',name:'신비형',unlocked:true},
+  {id:'f5',emoji:'⭐',name:'카리스마',unlocked:false,req:'Lv.30'},
+  {id:'f6',emoji:'💎',name:'우아형',unlocked:false,req:'상점'},
+  {id:'f7',emoji:'🔥',name:'강렬형',unlocked:false,req:'노바 리그'},
+  {id:'f8',emoji:'🌟',name:'천상계',unlocked:false,req:'퀘이사 전용'},
+];
+const SKINS = ['#FDBCB4','#F4A76F','#C68642','#8D4B2A','#FFF0D9','#E8B4B8','#C8B4E8','#B4D4E8'];
+const HAIRS = [
+  {id:'h1',emoji:'💆',name:'청순 단발',unlocked:true},
+  {id:'h2',emoji:'👱',name:'웨이브 장발',unlocked:true},
+  {id:'h3',emoji:'💇',name:'시크 단발',unlocked:true},
+  {id:'h4',emoji:'👸',name:'공주 웨이브',unlocked:true},
+  {id:'h5',emoji:'🌺',name:'올림머리',unlocked:false,req:'스타 리그'},
+  {id:'h6',emoji:'✨',name:'빛나는 헤어',unlocked:false,req:'상점'},
+  {id:'h7',emoji:'🌊',name:'물결 헤어',unlocked:false,req:'상점'},
+  {id:'h8',emoji:'🌈',name:'레인보우',unlocked:false,req:'퀘이사 전용'},
+  {id:'h9',emoji:'🎭',name:'투톤 컬러',unlocked:false,req:'노바 리그'},
+];
+const HAIR_COLORS = ['#1a1a1a','#3d2b1f','#c67c3a','#d4a853','#f7f3e9','#ff6b9d','#c084fc','#38bdf8','#f0c040','#ef4444','#10b981','#818cf8'];
+
+const OUTFITS = {
+  stage: [
+    {id:'s1',emoji:'🌟',name:'갤럭시 스테이지',desc:'은하수를 담은 퍼포먼스 의상',rarity:'EPIC',unlocked:true,equipped:true},
+    {id:'s2',emoji:'💜',name:'보라빛 무대복',desc:'노바 리그 스타일 퍼포먼스',rarity:'RARE',unlocked:true,equipped:false},
+    {id:'s3',emoji:'🌸',name:'벚꽃 스테이지',desc:'한정판 봄 시즌 무대복',rarity:'EPIC',unlocked:false,req:'시즌 한정'},
+    {id:'s4',emoji:'⚡',name:'제국 퍼포먼스',desc:'퀘이사 리그 전용 의상',rarity:'LEGENDARY',unlocked:false,req:'퀘이사 전용'},
+  ],
+  casual: [
+    {id:'c1',emoji:'👕',name:'캐주얼 데일리',desc:'LUNA의 편안한 일상복',rarity:'COMMON',unlocked:true,equipped:false},
+    {id:'c2',emoji:'🧥',name:'오버핏 후드',desc:'녹화 준비 중 즐겨 입는 옷',rarity:'RARE',unlocked:true,equipped:false},
+    {id:'c3',emoji:'👗',name:'원피스 데이트',desc:'팬미팅 때 입은 특별한 옷',rarity:'RARE',unlocked:false,req:'상점'},
+    {id:'c4',emoji:'🌿',name:'내추럴 홈웨어',desc:'연습실에서 편하게 입는 옷',rarity:'COMMON',unlocked:false,req:'미션'},
+  ],
+  special: [
+    {id:'sp1',emoji:'👘',name:'한복 (설날 한정)',desc:'팬들에게 선물 받은 한복',rarity:'LEGENDARY',unlocked:false,req:'시즌 한정'},
+    {id:'sp2',emoji:'🎓',name:'데뷔 기념 의상',desc:'데뷔 당일 착용한 역사적인 의상',rarity:'GENESIS',unlocked:false,req:'개척자 전용'},
+    {id:'sp3',emoji:'🌙',name:'달빛 이브닝',desc:'시상식 레드카펫 의상',rarity:'EPIC',unlocked:false,req:'상점'},
+    {id:'sp4',emoji:'✨',name:'아스테리아 공식 유니폼',desc:'플랫폼 출시 기념 한정',rarity:'LEGENDARY',unlocked:false,req:'개척자 전용'},
+  ],
+};
+
+const AURAS = [
+  {id:'a1',emoji:'🌟',name:'별빛 오라',desc:'부드럽게 반짝이는 별빛',color:'#fbbf24',tag:'기본',chat:'따뜻하고 밝은 말투'},
+  {id:'a2',emoji:'💜',name:'보라 오라',desc:'신비로운 보라빛 아우라',color:'#c084fc',tag:'신비',chat:'차분하고 신비로운 말투'},
+  {id:'a3',emoji:'🌸',name:'벚꽃 오라',desc:'분홍 꽃잎이 흩날려요',color:'#f472b6',tag:'발랄',chat:'밝고 귀여운 말투'},
+  {id:'a4',emoji:'⚡',name:'황금 광채',desc:'제국의 빛이 뿜어져요',color:'#f0c040',tag:'카리스마',chat:'카리스마 넘치는 말투'},
+  {id:'a5',emoji:'❄️',name:'빙결 오라',desc:'차갑게 반짝이는 얼음',color:'#bae6fd',tag:'쿨',chat:'쿨하고 도도한 말투'},
+  {id:'a6',emoji:'🔥',name:'불꽃 오라',desc:'뜨겁게 타오르는 에너지',color:'#ef4444',tag:'열정',chat:'열정적이고 강렬한 말투',locked:true,req:'노바 리그'},
+  {id:'a7',emoji:'🌊',name:'파동 오라',desc:'물결처럼 흘러요',color:'#38bdf8',tag:'감성',chat:'감성적이고 깊은 말투',locked:true,req:'상점'},
+  {id:'a8',emoji:'🌌',name:'퀘이사 광채',desc:'우주를 관통하는 빛',color:'#818cf8',tag:'전설',chat:'웅장하고 신성한 말투',locked:true,req:'퀘이사 전용'},
+];
+
+const ACCESSORIES = {
+  mic: [
+    {id:'m1',emoji:'🎤',name:'기본 마이크',unlocked:true},
+    {id:'m2',emoji:'🎸',name:'기타',unlocked:true},
+    {id:'m3',emoji:'🎹',name:'키보드',unlocked:false,req:'상점'},
+    {id:'m4',emoji:'🪗',name:'아코디언',unlocked:false,req:'미션'},
+  ],
+  ear: [
+    {id:'e1',emoji:'🎧',name:'헤드폰',unlocked:true},
+    {id:'e2',emoji:'🎵',name:'이어폰',unlocked:true},
+    {id:'e3',emoji:'📻',name:'레트로 헤드셋',unlocked:false,req:'상점'},
+    {id:'e4',emoji:'✨',name:'빛나는 이어폰',unlocked:false,req:'스타 리그'},
+  ],
+  glass: [
+    {id:'g1',emoji:'😎',name:'선글라스',unlocked:true},
+    {id:'g2',emoji:'🔮',name:'하트 안경',unlocked:true},
+    {id:'g3',emoji:'⭐',name:'별 안경',unlocked:false,req:'상점'},
+    {id:'g4',emoji:'💎',name:'다이아 안경',unlocked:false,req:'퀘이사 전용'},
+  ],
+};
+
+const EMOTIONS = [
+  {id:'e1',emoji:'😊',name:'따뜻한 미소',desc:'팬들에게 따뜻하게',chat:'다정하고 친근하게 대화해요'},
+  {id:'e2',emoji:'🥰',name:'사랑스럽게',desc:'팬을 사랑하는 표정',chat:'애정이 넘치는 말투로 대화해요'},
+  {id:'e3',emoji:'😎',name:'쿨하게',desc:'카리스마 넘치는',chat:'쿨하고 자신감 있게 대화해요'},
+  {id:'e4',emoji:'🤩',name:'신나게',desc:'에너지 넘치는',chat:'밝고 활기차게 대화해요'},
+  {id:'e5',emoji:'🥺',name:'애교있게',desc:'귀엽게 졸라요',chat:'귀엽고 애교있게 대화해요'},
+  {id:'e6',emoji:'😤',name:'당당하게',desc:'자신감 있게',chat:'당당하고 강하게 대화해요'},
+  {id:'e7',emoji:'🌙',name:'신비롭게',desc:'미스테리한 분위기',chat:'신비롭고 몽환적으로 대화해요'},
+  {id:'e8',emoji:'😇',name:'천사같이',desc:'순수하고 맑게',chat:'순수하고 맑게 대화해요'},
+  {id:'e9',emoji:'🔥',name:'열정적으로',desc:'뜨겁게 타오르며',chat:'열정적이고 힘차게 대화해요',locked:true,req:'노바 리그'},
+];
+
+// ══════════════════════════════════
+// STATE
+// ══════════════════════════════════
+let artist = JSON.parse(localStorage.getItem('asteria_artist') || 'null') || {
+  name: 'LUNA',
+  emoji: '🌙',
+  face: 'f1',
+  skin: '#FDBCB4',
+  hair: 'h1',
+  hairColor: '#1a1a1a',
+  outfit: 's1',
+  outfitType: 'stage',
+  aura: 'a1',
+  acc_mic: 'm1',
+  acc_ear: null,
+  acc_glass: null,
+  emotion: 'e1',
+};
+let currentOutfitType = 'stage';
+
+function saveData() { localStorage.setItem('asteria_artist', JSON.stringify(artist)); }
+
+// ══════════════════════════════════
+// CANVAS 렌더링
+// ══════════════════════════════════
+const ac = document.getElementById('artistCanvas');
+const ax = ac.getContext('2d');
+let frame = 0;
+
+function drawArtist() {
+  frame++;
+  ax.clearRect(0,0,160,160);
+  const cx=80, cy=75;
+
+  const aura = AURAS.find(a=>a.id===artist.aura) || AURAS[0];
+  const col = aura.color;
+
+  // 아우라 배경
+  const grd = ax.createRadialGradient(cx,cy,5,cx,cy,70);
+  grd.addColorStop(0,col+'55');
+  grd.addColorStop(.5,col+'22');
+  grd.addColorStop(1,'transparent');
+  ax.fillStyle=grd;
+  ax.beginPath();ax.arc(cx,cy,70,0,Math.PI*2);ax.fill();
+
+  // 아우라별 특수 이펙트
+  const emotion = EMOTIONS.find(e=>e.id===artist.emotion)||EMOTIONS[0];
+  if(aura.id==='a4'){
+    for(let i=0;i<4;i++){
+      ax.save();ax.translate(cx,cy);ax.rotate(i*Math.PI/2+frame*.006);
+      const g=ax.createLinearGradient(0,-60,0,0);g.addColorStop(0,'transparent');g.addColorStop(1,col+'66');
+      ax.fillStyle=g;ax.fillRect(-2,-60,4,60);ax.restore();
+    }
+  } else if(aura.id==='a3'){
+    for(let i=0;i<6;i++){
+      const a=i*Math.PI/3+frame*.01;
+      ax.beginPath();ax.arc(cx+Math.cos(a)*50,cy+Math.sin(a)*50,3,0,Math.PI*2);
+      ax.fillStyle=col+'aa';ax.fill();
+    }
+  } else if(aura.id==='a6'){
+    for(let r=30;r<65;r+=12){
+      ax.beginPath();ax.arc(cx,cy,r+Math.sin(frame*.04)*3,0,Math.PI*2);
+      ax.strokeStyle=col+'33';ax.lineWidth=1.5;ax.stroke();
+    }
+  }
+
+  // 몸 (피부색 기반)
+  const floatY = cy + Math.sin(frame*.02)*4;
+  const bodyGrd = ax.createRadialGradient(cx-6,floatY-6,3,cx,floatY,36);
+  bodyGrd.addColorStop(0, artist.skin+'dd');
+  bodyGrd.addColorStop(1,'rgba(7,7,15,.9)');
+  ax.fillStyle=bodyGrd;
+  ax.beginPath();ax.arc(cx,floatY,36,0,Math.PI*2);ax.fill();
+  ax.strokeStyle=col+'88';ax.lineWidth=1.5;ax.stroke();
+
+  // 이모지 (얼굴 표정)
+  ax.font='26px serif';ax.textAlign='center';ax.textBaseline='middle';
+  ax.fillText(emotion.emoji,cx,floatY);
+
+  // 아우라 링
+  ax.save();ax.translate(cx,floatY);
+  ax.rotate(frame*.008);
+  ax.beginPath();ax.arc(0,0,40,0,Math.PI*2);
+  ax.strokeStyle=col+'55';ax.lineWidth=1;ax.stroke();
+  ax.restore();
+
+  // 액세서리 — 마이크
+  if(artist.acc_mic){
+    const m=ACCESSORIES.mic.find(x=>x.id===artist.acc_mic);
+    if(m){ax.font='14px serif';ax.fillText(m.emoji,cx+34,floatY+8);}
+  }
+  // 안경
+  if(artist.acc_glass){
+    const g=ACCESSORIES.glass.find(x=>x.id===artist.acc_glass);
+    if(g){ax.font='12px serif';ax.fillText(g.emoji,cx,floatY-6);}
+  }
+  // 헤어 이모지 힌트
+  const h=HAIRS.find(x=>x.id===artist.hair);
+  if(h){ax.font='14px serif';ax.fillText(h.emoji,cx-32,floatY-30);}
+
+  requestAnimationFrame(drawArtist);
+}
+
+// ══════════════════════════════════
+// RENDER TABS
+// ══════════════════════════════════
+function renderFace(){
+  document.getElementById('faceGrid').innerHTML=FACES.map(f=>`
+    <div class="face-item ${artist.face===f.id?'active':''}" onclick="sel('face','${f.id}')">
+      ${!f.unlocked?`<div style="position:absolute;inset:0;background:rgba(0,0,0,.65);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px"><span style="font-size:14px">🔒</span><span style="font-size:7px;color:var(--muted)">${f.req}</span></div>`:''}
+      <div class="face-emoji">${f.emoji}</div>
+      <div class="face-label">${f.name}</div>
+    </div>
+  `).join('');
+  document.getElementById('skinRow').innerHTML=SKINS.map(s=>`
+    <div class="skin-dot ${artist.skin===s?'active':''}" style="background:${s}" onclick="selSkin('${s}')"></div>
+  `).join('');
+}
+
+function renderHair(){
+  document.getElementById('hairGrid').innerHTML=HAIRS.map(h=>`
+    <div class="hair-item ${artist.hair===h.id?'active':''}" onclick="sel('hair','${h.id}')">
+      ${!h.unlocked?`<div class="hair-lock">🔒<span class="hair-lock-txt">${h.req}</span></div>`:''}
+      <div class="hair-emoji">${h.emoji}</div>
+      <div class="hair-name">${h.name}</div>
+    </div>
+  `).join('');
+  document.getElementById('hairColorRow').innerHTML=HAIR_COLORS.map(c=>`
+    <div class="color-dot ${artist.hairColor===c?'active':''}" style="background:${c};border:1px solid rgba(255,255,255,.1)" onclick="selHairColor('${c}')"></div>
+  `).join('');
+}
+
+function renderOutfit(type='stage'){
+  const items=OUTFITS[type]||[];
+  document.getElementById('outfitGrid').innerHTML=items.map(o=>`
+    <div class="outfit-card ${artist.outfit===o.id?'active':''}" onclick="selOutfit('${o.id}','${type}')">
+      <div class="outfit-badge">착용중</div>
+      ${!o.unlocked?`<div class="outfit-lock"><span>🔒</span><span class="outfit-lock-txt">${o.req}</span></div>`:''}
+      <div class="outfit-preview" style="background:linear-gradient(135deg,rgba(240,192,64,.08),rgba(7,7,15,.9))">${o.emoji}</div>
+      <div class="outfit-info">
+        <div class="outfit-name">${o.name}</div>
+        <div class="outfit-desc">${o.desc}</div>
+        <div class="outfit-rarity" style="color:${o.rarity==='GENESIS'?'#ff6b6b':o.rarity==='LEGENDARY'?'#f0c040':o.rarity==='EPIC'?'#c084fc':'#38bdf8'}">${o.rarity}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderAura(){
+  document.getElementById('auraGrid').innerHTML=AURAS.map(a=>`
+    <div class="aura-card ${artist.aura===a.id?'active':''}" onclick="${a.locked?`showToast('🔒 ${a.req} 달성 시 해금!')`:`selAura('${a.id}')`}">
+      ${a.locked?`<div style="position:absolute;top:8px;right:8px;font-size:14px">🔒</div>`:''}
+      <div class="aura-visual" style="background:radial-gradient(circle,${a.color}30,transparent)">
+        <div class="aura-ring" style="border-top:2px solid ${a.color};border-right:2px solid transparent;border-bottom:2px solid transparent;border-left:2px solid transparent"></div>
+        <span style="font-size:26px">${a.emoji}</span>
+      </div>
+      <div class="aura-name" style="color:${a.color}">${a.name}</div>
+      <div class="aura-desc">${a.desc}</div>
+      <div class="aura-tag" style="background:${a.color}20;color:${a.color}">${a.tag}</div>
+      <div style="font-size:9px;color:var(--muted);text-align:center">💬 ${a.chat}</div>
+    </div>
+  `).join('');
+}
+
+function renderAcc(){
+  ['Mic','Ear','Glass'].forEach(t=>{
+    const key=t.toLowerCase();
+    document.getElementById(`acc${t}`).innerHTML=(ACCESSORIES[key]||[]).map(a=>`
+      <div class="acc-item ${artist[`acc_${key}`]===a.id?'active':''}" onclick="selAcc('${key}','${a.id}')">
+        ${!a.unlocked?`<div class="acc-lock">🔒</div>`:''}
+        <div class="acc-emoji">${a.emoji}</div>
+        <div class="acc-name">${a.name}</div>
+      </div>
+    `).join('');
+  });
+}
+
+function renderEmotion(){
+  document.getElementById('emotionGrid').innerHTML=EMOTIONS.map(e=>`
+    <div class="emotion-card ${artist.emotion===e.id?'active':''}" onclick="${e.locked?`showToast('🔒 ${e.req} 달성 시 해금!')`:`selEmotion('${e.id}')`}">
+      ${e.locked?`<div style="position:absolute;inset:0;background:rgba(0,0,0,.65);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px"><span style="font-size:18px">🔒</span><span style="font-size:8px;color:var(--muted)">${e.req}</span></div>`:''}
+      <div class="emotion-emoji">${e.emoji}</div>
+      <div class="emotion-name">${e.name}</div>
+      <div class="emotion-desc">${e.desc}</div>
+      <div class="emotion-chat-tag">💬 ${e.chat}</div>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════
+// SELECT HANDLERS
+// ══════════════════════════════════
+function sel(type, id) {
+  const map = {face:FACES, hair:HAIRS};
+  const item = (map[type]||[]).find(x=>x.id===id);
+  if(item && !item.unlocked) { showToast(`🔒 ${item.req} 달성 시 해금!`); return; }
+  artist[type]=id;
+  if(type==='face') renderFace();
+  if(type==='hair') renderHair();
+  burst(); showToast(`✨ ${item?.name||''} 변경!`);
+  saveData();
+}
+function selSkin(c){ artist.skin=c; renderFace(); burst(); saveData(); }
+function selHairColor(c){ artist.hairColor=c; renderHair(); burst(); saveData(); }
+function selOutfit(id, type){
+  const o=(OUTFITS[type]||[]).find(x=>x.id===id);
+  if(o && !o.unlocked){ showToast(`🔒 ${o.req} 달성 시 해금!`); return; }
+  (OUTFITS[type]||[]).forEach(x=>x.equipped=false);
+  if(o) o.equipped=true;
+  artist.outfit=id; artist.outfitType=type;
+  // 코스튬 태그 업데이트
+  const typeLabel = {stage:'🎤 스테이지 의상', casual:'👕 일상복', special:'✨ 특별복'};
+  document.getElementById('costumeTag').textContent = typeLabel[type]||'';
+  renderOutfit(type); burst();
+  showToast(`${o?.emoji} ${o?.name} 착용!`); saveData();
+}
+function selAura(id){
+  artist.aura=id; renderAura(); burst();
+  const a=AURAS.find(x=>x.id===id);
+  showToast(`${a?.emoji} ${a?.name} 아우라 적용!`);
+  saveData();
+}
+function selAcc(type, id){
+  const items=ACCESSORIES[type]||[];
+  const a=items.find(x=>x.id===id);
+  if(a && !a.unlocked){ showToast(`🔒 ${a.req} 달성 시 해금!`); return; }
+  artist[`acc_${type}`] = artist[`acc_${type}`]===id ? null : id;
+  renderAcc(); burst();
+  showToast(artist[`acc_${type}`] ? `${a?.emoji} ${a?.name} 장착!` : '액세서리 해제');
+  saveData();
+}
+function selEmotion(id){
+  artist.emotion=id; renderEmotion(); burst();
+  const e=EMOTIONS.find(x=>x.id===id);
+  showToast(`${e?.emoji} ${e?.name} — 대화에 반영돼요!`);
+  saveData();
+}
+
+function switchOutfitType(type, btn){
+  currentOutfitType=type;
+  document.querySelectorAll('.ot-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderOutfit(type);
+}
+
+// ══════════════════════════════════
+// TAB SWITCH
+// ══════════════════════════════════
+function switchTab(name, btn){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(name==='face') renderFace();
+  if(name==='hair') renderHair();
+  if(name==='outfit') renderOutfit(currentOutfitType);
+  if(name==='aura') renderAura();
+  if(name==='acc') renderAcc();
+  if(name==='emotion') renderEmotion();
+}
+
+// ══════════════════════════════════
+// SAVE & CHAT
+// ══════════════════════════════════
+function saveArtist(){ saveData(); burst(); showToast('✨ 아티스트 코스튬 저장 완료! 대화에 반영됩니다.'); }
+function goToChat(){ window.location.href='/chat.html'; }
+
+// ══════════════════════════════════
+// PARTICLES
+// ══════════════════════════════════
+function burst(){
+  const cx=window.innerWidth/2, cy=200;
+  for(let i=0;i<12;i++){
+    const p=document.createElement('div');
+    const cols=['#f0c040','#c084fc','#38bdf8','#fff'];
+    const col=cols[Math.floor(Math.random()*cols.length)];
+    const sz=Math.random()*5+2,a=Math.random()*Math.PI*2,d=Math.random()*60+20;
+    p.style.cssText=`position:fixed;left:${cx}px;top:${cy}px;width:${sz}px;height:${sz}px;border-radius:50%;background:${col};box-shadow:0 0 6px ${col};z-index:9999;pointer-events:none;transition:all ${.4+Math.random()*.3}s ease-out;transform:translate(-50%,-50%)`;
+    document.body.appendChild(p);
+    requestAnimationFrame(()=>{p.style.transform=`translate(calc(-50% + ${Math.cos(a)*d}px),calc(-50% + ${Math.sin(a)*d}px))`;p.style.opacity='0';});
+    setTimeout(()=>p.remove(),800);
+  }
+}
+
+// ══════════════════════════════════
+// TOAST
+// ══════════════════════════════════
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ══════════════════════════════════
+// INIT
+// ══════════════════════════════════
+renderFace();
+drawArtist();
+// 저장된 코스튬 태그 복원
+const typeLabel={stage:'🎤 스테이지 의상',casual:'👕 일상복',special:'✨ 특별복'};
+document.getElementById('costumeTag').textContent=typeLabel[artist.outfitType]||'🎤 스테이지 의상';
+</script>
+</body>
+</html>
