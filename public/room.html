@@ -23,11 +23,59 @@ html,body {
   -webkit-tap-highlight-color:transparent;
   user-select:none; overflow-x:hidden;
 }
-#app { max-width:480px; margin:0 auto; min-height:100vh; position:relative; }
+/* 모바일앱 기준이지만 2단 레이아웃은 더 넓게 */
+#app { max-width:900px; margin:0 auto; min-height:100vh; position:relative; }
+#bgCanvas { position:fixed; inset:0; z-index:0; pointer-events:none; }
+
+/* ════════════════════════════
+   2단 메인 레이아웃
+════════════════════════════ */
+.two-col {
+  display:flex; align-items:flex-start;
+  gap:0; min-height:calc(100vh - 120px);
+}
+
+/* 왼쪽 1/3 — 프로필 + 정보 */
+.col-left {
+  width:33.333%; flex-shrink:0;
+  border-right:1px solid var(--border);
+  overflow-y:auto; max-height:calc(100vh - 120px);
+  position:sticky; top:120px;
+}
+.col-left::-webkit-scrollbar { width:3px; }
+.col-left::-webkit-scrollbar-thumb { background:rgba(192,132,252,.3); border-radius:3px; }
+
+/* 오른쪽 2/3 — 방 + 방명록 */
+.col-right {
+  width:66.667%; flex-shrink:0;
+  overflow-y:auto;
+}
 
 /* ── 파티클 캔버스 ── */
 #bgCanvas { position:fixed; inset:0; z-index:0; pointer-events:none;
   max-width:480px; left:50%; transform:translateX(-50%); }
+
+/* ════════════════════════════
+   TOP NAV
+════════════════════════════ */
+.top-nav {
+  position:sticky; top:0; z-index:300;
+  display:flex; align-items:center;
+  background:var(--panel); backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  overflow-x:auto; -webkit-overflow-scrolling:touch;
+}
+.top-nav::-webkit-scrollbar { display:none; }
+.top-nav-item {
+  flex-shrink:0; display:flex; flex-direction:column; align-items:center;
+  padding:10px 14px; cursor:pointer; transition:all .2s;
+  text-decoration:none; color:var(--muted);
+  border-bottom:2px solid transparent; gap:3px;
+}
+.top-nav-item.active { color:var(--accent); border-bottom-color:var(--accent); }
+.top-nav-item:hover { color:var(--text); }
+.top-nav-icon { font-size:18px; }
+.top-nav-label { font-size:9px; font-weight:500; white-space:nowrap; }
 
 /* ════════════════════════════
    TOP BAR
@@ -62,8 +110,8 @@ html,body {
 ════════════════════════════ */
 .owner-profile {
   position:relative; z-index:10;
-  padding:20px 18px 0;
-  display:flex; align-items:center; gap:14px;
+  padding:16px 14px 0;
+  display:flex; align-items:center; gap:10px;
 }
 .owner-av {
   width:64px; height:64px; border-radius:50%;
@@ -91,9 +139,9 @@ html,body {
 ════════════════════════════ */
 .stage-banner {
   position:relative; z-index:10;
-  margin:14px 18px 0;
-  padding:10px 16px; border-radius:14px;
-  display:flex; align-items:center; gap:12px;
+  margin:10px 14px 0;
+  padding:8px 12px; border-radius:12px;
+  display:flex; align-items:center; gap:10px;
   background:rgba(255,255,255,.03); border:1px solid var(--border);
 }
 .stage-dots { display:flex; gap:6px; }
@@ -105,19 +153,17 @@ html,body {
 .stage-next { font-size:10px; color:var(--gold); font-weight:600; }
 
 /* ════════════════════════════
-   방 (THE ROOM) — 핵심 시각
+   방 (THE ROOM) — 오른쪽 상단 크게
 ════════════════════════════ */
 .room-wrap {
   position:relative; z-index:10;
-  margin:14px 18px 0;
+  margin:14px 14px 0;
   border-radius:20px; overflow:hidden;
   border:1px solid var(--border);
   box-shadow:0 0 40px rgba(192,132,252,.1);
 }
-
-/* 방 전체 */
 .room {
-  position:relative; width:100%; height:320px;
+  position:relative; width:100%; height:400px;
   transition: background 1s ease;
   overflow:hidden; cursor:pointer;
 }
@@ -260,7 +306,7 @@ html,body {
 .room-stats {
   position:relative; z-index:10;
   display:grid; grid-template-columns:repeat(3,1fr); gap:8px;
-  margin:12px 18px 0;
+  margin:10px 14px 0;
 }
 .room-stat-card {
   background:rgba(255,255,255,.03); border:1px solid var(--border);
@@ -275,7 +321,7 @@ html,body {
 ════════════════════════════ */
 .inventory-section {
   position:relative; z-index:10;
-  padding:16px 18px 0;
+  padding:14px 14px 0;
 }
 .inv-header {
   display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;
@@ -327,7 +373,7 @@ html,body {
 ════════════════════════════ */
 .theme-section {
   position:relative; z-index:10;
-  padding:16px 18px 0;
+  padding:14px 14px 0;
 }
 .theme-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
 .theme-card {
@@ -350,7 +396,7 @@ html,body {
 ════════════════════════════ */
 .visitors-section {
   position:relative; z-index:10;
-  padding:16px 18px 0;
+  padding:14px 14px 0;
 }
 .visitor-list { display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
 .visitor-card {
@@ -392,7 +438,7 @@ html,body {
 ════════════════════════════ */
 .share-section {
   position:relative; z-index:10;
-  padding:16px 18px 0;
+  padding:14px 14px 0;
 }
 .share-card {
   background:rgba(255,255,255,.03); border:1px solid var(--border);
@@ -546,9 +592,20 @@ html,body {
 </div>
 
 <div id="app">
+
+  <!-- TOP NAV -->
+  <nav class="top-nav">
+    <a class="top-nav-item" href="/"><div class="top-nav-icon">🏠</div><div class="top-nav-label">홈</div></a>
+    <a class="top-nav-item" href="/astra.html"><div class="top-nav-icon">⭐</div><div class="top-nav-label">아스트라</div></a>
+    <a class="top-nav-item active" href="#"><div class="top-nav-icon">🏡</div><div class="top-nav-label">내 방</div></a>
+    <a class="top-nav-item" href="/nebula.html"><div class="top-nav-icon">🌌</div><div class="top-nav-label">성궤</div></a>
+    <a class="top-nav-item" href="/avatar.html"><div class="top-nav-icon">🎭</div><div class="top-nav-label">아바타</div></a>
+    <a class="top-nav-item" href="#"><div class="top-nav-icon">🛒</div><div class="top-nav-label">상점</div></a>
+  </nav>
+
   <!-- TOP BAR -->
   <div class="topbar">
-    <a class="tb-back" href="/astra.html">←</a>
+    <a class="tb-back" href="/">←</a>
     <div class="tb-info">
       <div class="tb-name" id="tbName">별빛 탐험가의 방</div>
       <div class="tb-sub" id="tbSub">🌟 더스트 리그 · 성진 Lv.23</div>
@@ -559,180 +616,157 @@ html,body {
     </div>
   </div>
 
-  <!-- 방 주인 프로필 -->
-  <div class="owner-profile">
-    <div class="owner-av" id="ownerAv">
-      <div style="position:relative;width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,rgba(192,132,252,.4),rgba(7,7,15,.9));display:flex;align-items:center;justify-content:center;font-size:32px;border:2px solid rgba(240,192,64,.4)">
-        🌟
-        <div class="owner-av-ring" style="border-top:2px solid rgba(240,192,64,.5);border-right:2px solid transparent;border-bottom:2px solid transparent;border-left:2px solid transparent"></div>
-      </div>
-    </div>
-    <div class="owner-info">
-      <div class="owner-name">별빛 탐험가</div>
-      <div class="owner-grade">
-        <span style="background:rgba(148,163,184,.15);border:1px solid rgba(148,163,184,.3);color:#94a3b8;padding:2px 10px;border-radius:20px;font-size:10px">성진 Lv.23</span>
-        <span style="color:var(--muted);font-size:10px">더스트 리그</span>
-      </div>
-      <div class="owner-stats-row">
-        <div class="owner-stat">방문 <span id="visitCount">127</span></div>
-        <div class="owner-stat">하트 <span id="heartCount">89</span></div>
-        <div class="owner-stat">CP <span id="cpCount">380</span></div>
-      </div>
-    </div>
-  </div>
+  <!-- ═══ 2단 레이아웃 ═══ -->
+  <div class="two-col">
 
-  <!-- 방 진화 단계 -->
-  <div class="stage-banner">
-    <div class="stage-dots">
-      <div class="stage-dot active" id="sd1"></div>
-      <div class="stage-dot" id="sd2"></div>
-      <div class="stage-dot" id="sd3"></div>
-    </div>
-    <div class="stage-info">
-      <div class="stage-name" id="stageName">🌑 Void — 어두운 방</div>
-      <div class="stage-desc" id="stageDesc">아이템 3개 더 배치하면 Ignition 단계로 진화해요!</div>
-    </div>
-    <div class="stage-next" id="stageNext">1/3 ✦</div>
-  </div>
+    <!-- ══ 왼쪽 1/3 — 프로필 + 정보 ══ -->
+    <div class="col-left">
 
-  <!-- 경쟁 랭킹 배너 -->
-  <div class="ranking-banner">
-    <div class="rb-trophy">🏆</div>
-    <div class="rb-info">
-      <div class="rb-title">이번 주 방 꾸미기 대회</div>
-      <div class="rb-desc">더스트 리그 내 현재 순위</div>
-    </div>
-    <div>
-      <div class="rb-rank" id="roomRank">#47</div>
-      <div class="rb-rank-label">/ 2,841명</div>
-    </div>
-  </div>
-
-  <!-- 방 (메인 시각) -->
-  <div class="room-wrap" id="roomWrap">
-    <div class="room" id="theRoom" onclick="onRoomTap(event)">
-      <!-- 벽 -->
-      <div class="room-wall" id="roomWall"></div>
-      <!-- 바닥 -->
-      <div class="room-floor" id="roomFloor"></div>
-      <!-- 몰딩 -->
-      <div class="room-molding" id="roomMolding"></div>
-
-      <!-- 파티클 -->
-      <div class="room-particles" id="roomParticles"></div>
-
-      <!-- 배치된 아이템들 -->
-      <div class="room-items" id="roomItems"></div>
-
-      <!-- 아바타 -->
-      <div class="room-avatar" id="roomAvatar">
-        <div class="room-avatar-body" id="roomAvatarBody">
-          <div class="room-avatar-aura" id="roomAvatarAura"
-            style="border-top:2px solid rgba(192,132,252,.5);border-right:2px solid transparent;border-bottom:2px solid transparent;border-left:2px solid transparent;inset:-5px"></div>
-          🌟
+      <!-- 방 주인 프로필 -->
+      <div class="owner-profile">
+        <div class="owner-av" id="ownerAv">
+          <div style="position:relative;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,rgba(192,132,252,.4),rgba(7,7,15,.9));display:flex;align-items:center;justify-content:center;font-size:28px;border:2px solid rgba(240,192,64,.4)">
+            🌟
+            <div class="owner-av-ring" style="border-top:2px solid rgba(240,192,64,.5);border-right:2px solid transparent;border-bottom:2px solid transparent;border-left:2px solid transparent"></div>
+          </div>
         </div>
-        <div class="room-avatar-shadow"></div>
-      </div>
-
-      <!-- 방문자 수 -->
-      <div class="room-visitor-badge">
-        <div class="visitor-dot"></div>
-        <span id="liveVisitors">3명 방문 중</span>
-      </div>
-
-      <!-- 테마 배지 -->
-      <div class="room-theme-badge" id="roomThemeBadge">🌑 보이드 테마</div>
-    </div>
-  </div>
-
-  <!-- 방 통계 -->
-  <div class="room-stats">
-    <div class="room-stat-card">
-      <div class="rsc-icon">👁️</div>
-      <div class="rsc-val" id="statVisit">127</div>
-      <div class="rsc-label">총 방문</div>
-    </div>
-    <div class="room-stat-card">
-      <div class="rsc-icon">💜</div>
-      <div class="rsc-val" id="statHeart">89</div>
-      <div class="rsc-label">받은 하트</div>
-    </div>
-    <div class="room-stat-card">
-      <div class="rsc-icon">⚡</div>
-      <div class="rsc-val" id="statCP">380</div>
-      <div class="rsc-label">문화력 CP</div>
-    </div>
-  </div>
-
-  <!-- 인벤토리 -->
-  <div class="inventory-section">
-    <div class="section-title" style="margin-bottom:12px">✦ 내 아이템</div>
-    <div class="inv-filter">
-      <button class="filter-chip active" onclick="filterItems('all',this)">전체</button>
-      <button class="filter-chip" onclick="filterItems('furniture',this)">가구</button>
-      <button class="filter-chip" onclick="filterItems('artifact',this)">아티팩트</button>
-      <button class="filter-chip" onclick="filterItems('decor',this)">장식</button>
-      <button class="filter-chip" onclick="filterItems('special',this)">특수</button>
-    </div>
-    <div class="inv-grid" id="invGrid"></div>
-  </div>
-
-  <!-- 테마 선택 -->
-  <div class="theme-section">
-    <div class="section-title" style="margin-bottom:12px">✦ 방 테마</div>
-    <div class="theme-grid" id="themeGrid"></div>
-  </div>
-
-  <!-- 방문자 & 방명록 -->
-  <div class="visitors-section">
-    <div class="section-title" style="margin-bottom:12px">✦ 방명록</div>
-    <div class="visitor-list" id="visitorList"></div>
-    <div class="gb-input-wrap">
-      <input class="gb-input" id="gbInput" placeholder="방명록을 남겨보세요 ✨" maxlength="100">
-      <button class="gb-send" onclick="sendGuestbook()">남기기</button>
-    </div>
-  </div>
-
-  <!-- SNS 공유 -->
-  <div class="share-section">
-    <div class="section-title" style="margin-bottom:12px">✦ 뽐내기</div>
-    <div class="share-card">
-      <div class="share-preview" id="sharePreview">
-        <div class="share-preview-room" id="sharePreviewRoom">🌟</div>
-        <div class="share-preview-overlay">
-          <div class="share-preview-info">
-            <div class="share-preview-name">별빛 탐험가의 방</div>
-            <div class="share-preview-sub">ASTERIA · 더스트 리그 · #00042</div>
+        <div class="owner-info">
+          <div class="owner-name" style="font-size:14px">별빛 탐험가</div>
+          <div class="owner-grade">
+            <span style="background:rgba(148,163,184,.15);border:1px solid rgba(148,163,184,.3);color:#94a3b8;padding:2px 8px;border-radius:20px;font-size:9px">성진 Lv.23</span>
+          </div>
+          <div class="owner-stats-row" style="margin-top:5px">
+            <div class="owner-stat">방문 <span id="visitCount">127</span></div>
+            <div class="owner-stat">하트 <span id="heartCount">89</span></div>
           </div>
         </div>
       </div>
-      <div class="share-btns">
-        <button class="share-btn" onclick="shareToSNS('instagram')">
-          <div class="share-btn-icon">📸</div>인스타
-        </button>
-        <button class="share-btn" onclick="shareToSNS('twitter')">
-          <div class="share-btn-icon">🐦</div>X(트위터)
-        </button>
-        <button class="share-btn" onclick="shareToSNS('kakao')">
-          <div class="share-btn-icon">💬</div>카카오톡
-        </button>
-        <button class="share-btn" onclick="shareToSNS('copy')">
-          <div class="share-btn-icon">🔗</div>링크복사
-        </button>
+
+      <!-- 방 진화 단계 -->
+      <div class="stage-banner">
+        <div class="stage-dots">
+          <div class="stage-dot active" id="sd1"></div>
+          <div class="stage-dot" id="sd2"></div>
+          <div class="stage-dot" id="sd3"></div>
+        </div>
+        <div class="stage-info">
+          <div class="stage-name" id="stageName" style="font-size:11px">🌑 Void</div>
+          <div class="stage-desc" id="stageDesc" style="font-size:9px">아이템 더 배치하세요!</div>
+        </div>
+        <div class="stage-next" id="stageNext" style="font-size:10px">1/4 ✦</div>
       </div>
-    </div>
-  </div>
 
-  
+      <!-- 경쟁 랭킹 배너 -->
+      <div class="ranking-banner" style="margin:10px 14px 0">
+        <div class="rb-trophy" style="font-size:20px">🏆</div>
+        <div class="rb-info">
+          <div class="rb-title" style="font-size:11px">방 꾸미기 대회</div>
+          <div class="rb-desc" style="font-size:9px">더스트 리그</div>
+        </div>
+        <div>
+          <div class="rb-rank" id="roomRank" style="font-size:18px">#47</div>
+          <div class="rb-rank-label" style="font-size:8px">/ 2,841명</div>
+        </div>
+      </div>
 
-  <!-- BOTTOM NAV -->
-  <nav class="top-nav">
-    <a class="nav-item" href="/"><div class="nav-item-icon">🏠</div><div class="nav-item-label">홈</div></a>
-    <a class="nav-item" href="/astra.html"><div class="nav-item-icon">⭐</div><div class="nav-item-label">아스트라</div></a>
-    <a class="nav-item active" href="#"><div class="nav-item-icon">🏡</div><div class="nav-item-label">내 방</div></a>
-    <a class="nav-item" href="/nebula.html"><div class="nav-item-icon">🌌</div><div class="nav-item-label">성궤</div></a>
-    <a class="nav-item" href="#"><div class="nav-item-icon">👤</div><div class="nav-item-label">MY</div></a>
-  </nav>
+      <!-- 방 통계 -->
+      <div class="room-stats" style="grid-template-columns:1fr 1fr;margin:10px 14px 0">
+        <div class="room-stat-card" style="padding:10px">
+          <div class="rsc-icon" style="font-size:14px">👁️</div>
+          <div class="rsc-val" id="statVisit" style="font-size:14px">127</div>
+          <div class="rsc-label">방문</div>
+        </div>
+        <div class="room-stat-card" style="padding:10px">
+          <div class="rsc-icon" style="font-size:14px">💜</div>
+          <div class="rsc-val" id="statHeart" style="font-size:14px">89</div>
+          <div class="rsc-label">하트</div>
+        </div>
+        <div class="room-stat-card" style="padding:10px;grid-column:span 2">
+          <div class="rsc-icon" style="font-size:14px">⚡</div>
+          <div class="rsc-val" id="statCP" style="font-size:14px">380</div>
+          <div class="rsc-label">문화력 CP</div>
+        </div>
+      </div>
+
+      <!-- 인벤토리 -->
+      <div class="inventory-section">
+        <div class="section-title" style="margin-bottom:10px;font-size:9px">✦ 내 아이템</div>
+        <div class="inv-filter" style="gap:4px;margin-bottom:10px">
+          <button class="filter-chip active" style="font-size:10px;padding:4px 8px" onclick="filterItems('all',this)">전체</button>
+          <button class="filter-chip" style="font-size:10px;padding:4px 8px" onclick="filterItems('furniture',this)">가구</button>
+          <button class="filter-chip" style="font-size:10px;padding:4px 8px" onclick="filterItems('decor',this)">장식</button>
+        </div>
+        <div class="inv-grid" style="grid-template-columns:repeat(3,1fr);gap:6px" id="invGrid"></div>
+      </div>
+
+      <!-- 테마 선택 -->
+      <div class="theme-section">
+        <div class="section-title" style="margin-bottom:10px;font-size:9px">✦ 방 테마</div>
+        <div class="theme-grid" style="grid-template-columns:repeat(2,1fr)" id="themeGrid"></div>
+      </div>
+
+      <!-- 뽐내기 -->
+      <div class="share-section" style="padding-bottom:20px">
+        <div class="section-title" style="margin-bottom:10px;font-size:9px">✦ 뽐내기</div>
+        <div class="share-btns" style="grid-template-columns:repeat(2,1fr)">
+          <button class="share-btn" onclick="shareToSNS('instagram')">
+            <div class="share-btn-icon">📸</div>인스타
+          </button>
+          <button class="share-btn" onclick="shareToSNS('twitter')">
+            <div class="share-btn-icon">🐦</div>X
+          </button>
+          <button class="share-btn" onclick="shareToSNS('kakao')">
+            <div class="share-btn-icon">💬</div>카카오
+          </button>
+          <button class="share-btn" onclick="shareToSNS('copy')">
+            <div class="share-btn-icon">🔗</div>링크
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /col-left -->
+
+    <!-- ══ 오른쪽 2/3 — 방 + 방명록 ══ -->
+    <div class="col-right">
+
+      <!-- 방 (메인 시각) — 크게! -->
+      <div class="room-wrap" id="roomWrap">
+        <div class="room" id="theRoom" onclick="onRoomTap(event)">
+          <div class="room-wall" id="roomWall"></div>
+          <div class="room-floor" id="roomFloor"></div>
+          <div class="room-molding" id="roomMolding"></div>
+          <div class="room-particles" id="roomParticles"></div>
+          <div class="room-items" id="roomItems"></div>
+          <div class="room-avatar" id="roomAvatar">
+            <div class="room-avatar-body" id="roomAvatarBody">
+              <div class="room-avatar-aura" id="roomAvatarAura"
+                style="border-top:2px solid rgba(192,132,252,.5);border-right:2px solid transparent;border-bottom:2px solid transparent;border-left:2px solid transparent;inset:-5px"></div>
+              🌟
+            </div>
+            <div class="room-avatar-shadow"></div>
+          </div>
+          <div class="room-visitor-badge">
+            <div class="visitor-dot"></div>
+            <span id="liveVisitors">3명 방문 중</span>
+          </div>
+          <div class="room-theme-badge" id="roomThemeBadge">🌑 보이드 테마</div>
+        </div>
+      </div>
+
+      <!-- 방명록 — 방 바로 밑 -->
+      <div class="visitors-section" style="padding-bottom:20px">
+        <div class="section-title" style="margin-bottom:12px">✦ 방명록</div>
+        <div class="visitor-list" id="visitorList"></div>
+        <div class="gb-input-wrap">
+          <input class="gb-input" id="gbInput" placeholder="방명록을 남겨보세요 ✨" maxlength="100">
+          <button class="gb-send" onclick="sendGuestbook()">남기기</button>
+        </div>
+      </div>
+
+    </div><!-- /col-right -->
+
+  </div><!-- /two-col -->
+
 </div>
 
 <script>
@@ -926,7 +960,6 @@ function updateStage() {
   // CP 업데이트
   const cp = placedCount * 60 + 200;
   document.getElementById('statCP').textContent = cp;
-  document.getElementById('cpCount').textContent = cp;
 }
 
 // ════════════════════════════════════
