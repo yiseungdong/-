@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>리그 시스템 — ASTERIA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+/* ══ CSS 변수 — 리그별 동적 테마 ══ */
+:root {
+  --void:#030308;
+  --panel:rgba(10,10,22,0.96);
+  --text:#e8e4f0;
+  --muted:rgba(200,190,220,0.5);
+
+  /* 현재 리그 테마 (JS로 동적 변경) */
+  --league-primary: #94a3b8;
+  --league-secondary: #64748b;
+  --league-bg: #030308;
+  --league-glow: rgba(148,163,184,0.3);
+  --league-border: rgba(148,163,184,0.2);
+  --league-panel: rgba(148,163,184,0.05);
+  --league-gradient: linear-gradient(135deg, #0a0c10, #030308);
+}
+
+html,body {
+  width:100%; min-height:100%;
+  background:var(--league-bg); color:var(--text);
+  font-family:'Noto Sans KR',sans-serif;
+  transition:background 1.5s ease;
+  -webkit-tap-highlight-color:transparent;
+  overflow-x:hidden;
+}
+#starCanvas { position:fixed; inset:0; z-index:0; pointer-events:none; }
+#app { max-width:900px; margin:0 auto; min-height:100vh; position:relative; z-index:1; }
+
+/* ══ TOP NAV ══ */
+.top-nav {
+  position:sticky; top:0; z-index:300;
+  display:flex; background:var(--panel); backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--league-border);
+  overflow-x:auto; transition:border-color 1s;
+}
+.top-nav::-webkit-scrollbar{display:none}
+.tni {
+  flex-shrink:0; display:flex; flex-direction:column; align-items:center;
+  padding:10px 14px; cursor:pointer; text-decoration:none; color:var(--muted);
+  border-bottom:2px solid transparent; gap:3px; transition:all .2s;
+}
+.tni.active { color:var(--league-primary); border-bottom-color:var(--league-primary); }
+.tni-icon { font-size:18px; }
+.tni-label { font-size:9px; font-weight:500; white-space:nowrap; }
+
+/* ══ 리그 헤더 (대형) ══ */
+.league-hero {
+  position:relative; overflow:hidden;
+  padding:40px 20px 30px;
+  background: var(--league-gradient);
+  border-bottom:1px solid var(--league-border);
+  transition:all 1.5s ease;
+}
+.lh-bg-effect {
+  position:absolute; inset:0; pointer-events:none;
+  background:radial-gradient(ellipse at 50% 0%, var(--league-glow) 0%, transparent 70%);
+  animation:heroPulse 4s ease-in-out infinite;
+}
+@keyframes heroPulse { 0%,100%{opacity:.6} 50%{opacity:1} }
+
+/* 리그 아이콘 */
+.lh-icon-wrap {
+  display:flex; align-items:center; justify-content:center;
+  margin-bottom:16px; position:relative;
+}
+.lh-icon {
+  font-size:72px; position:relative; z-index:1;
+  animation:iconFloat 4s ease-in-out infinite;
+  filter:drop-shadow(0 0 20px var(--league-primary));
+}
+@keyframes iconFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+.lh-icon-ring {
+  position:absolute; width:120px; height:120px; border-radius:50%;
+  border:2px solid var(--league-primary); opacity:.3;
+  animation:ringPulse 2s ease-in-out infinite;
+}
+.lh-icon-ring2 {
+  position:absolute; width:160px; height:160px; border-radius:50%;
+  border:1px solid var(--league-primary); opacity:.15;
+  animation:ringPulse 2s ease-in-out infinite .5s;
+}
+@keyframes ringPulse { 0%,100%{transform:scale(1);opacity:.3} 50%{transform:scale(1.1);opacity:.6} }
+
+.lh-league-name {
+  font-family:'Orbitron',monospace; font-size:28px; font-weight:900;
+  text-align:center; color:var(--league-primary);
+  letter-spacing:4px; margin-bottom:4px;
+  text-shadow:0 0 20px var(--league-primary);
+}
+.lh-title {
+  font-size:12px; color:var(--muted); letter-spacing:3px;
+  text-align:center; margin-bottom:6px; text-transform:uppercase;
+}
+.lh-slogan {
+  font-size:13px; color:var(--text); text-align:center;
+  line-height:1.6; margin-bottom:20px; opacity:.8;
+}
+.lh-honorific {
+  display:inline-flex; align-items:center; gap:8px;
+  background:var(--league-panel); border:1px solid var(--league-border);
+  border-radius:20px; padding:6px 18px; margin:0 auto 0; display:flex;
+  justify-content:center; width:fit-content; margin:0 auto;
+}
+.lh-hon-label { font-size:10px; color:var(--muted); }
+.lh-hon-val { font-size:14px; font-weight:700; color:var(--league-primary); }
+
+/* ══ 시즌 + D-데이 카드 ══ */
+.season-strip {
+  background:var(--league-panel); border-bottom:1px solid var(--league-border);
+  padding:12px 20px; display:flex; align-items:center; gap:16px;
+  transition:all 1s;
+}
+.ss-season { flex:1; }
+.ss-season-label { font-size:9px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; }
+.ss-season-val { font-size:14px; font-weight:700; color:var(--league-primary); margin-top:2px; }
+.ss-divider { width:1px; height:36px; background:var(--league-border); }
+.ss-dday { text-align:center; }
+.ss-dday-label { font-size:9px; color:var(--muted); letter-spacing:1px; }
+.ss-dday-val { font-family:'Orbitron',monospace; font-size:20px; font-weight:900; color:var(--league-primary); }
+.ss-dday-sub { font-size:9px; color:var(--muted); margin-top:1px; }
+.ss-progress { flex:2; }
+.ss-prog-row { display:flex; justify-content:space-between; margin-bottom:4px; }
+.ss-prog-label { font-size:10px; color:var(--muted); }
+.ss-prog-val { font-size:10px; color:var(--league-primary); font-weight:700; }
+.ss-prog-bg { width:100%; height:6px; background:rgba(255,255,255,.07); border-radius:3px; overflow:hidden; }
+.ss-prog-fill { height:100%; border-radius:3px; transition:width 1s; }
+
+/* ══ 탭 ══ */
+.page-tabs {
+  display:flex; background:var(--panel); border-bottom:1px solid var(--league-border);
+  position:sticky; top:40px; z-index:200; transition:border-color 1s;
+}
+.page-tab {
+  flex:1; padding:11px 6px; text-align:center; font-size:11px; font-weight:600;
+  color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; transition:all .2s;
+}
+.page-tab.active { color:var(--league-primary); border-bottom-color:var(--league-primary); }
+
+/* ══ 탭 컨텐츠 ══ */
+.tab-content { display:none; padding:16px 18px; }
+.tab-content.active { display:block; }
+.sec-title {
+  font-size:10px; color:var(--muted); letter-spacing:2.5px; text-transform:uppercase;
+  margin-bottom:14px; display:flex; align-items:center; gap:8px;
+}
+.sec-title::after { content:''; flex:1; height:1px; background:var(--league-border); }
+
+/* ══ 승격 기준 카드 ══ */
+.promo-card {
+  background:var(--league-panel); border:1px solid var(--league-border);
+  border-radius:16px; padding:18px; margin-bottom:14px;
+  transition:all 1s;
+}
+.pc-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.pc-title { font-size:13px; font-weight:700; }
+.pc-formula {
+  font-family:'Orbitron',monospace; font-size:11px; color:var(--league-primary);
+  background:rgba(0,0,0,.3); border-radius:8px; padding:6px 12px;
+  margin-bottom:14px;
+}
+.pc-bars { display:flex; flex-direction:column; gap:8px; }
+.pc-bar-row { display:flex; align-items:center; gap:10px; }
+.pc-bar-label { font-size:11px; color:var(--muted); width:80px; flex-shrink:0; }
+.pc-bar-bg { flex:1; height:7px; background:rgba(255,255,255,.07); border-radius:4px; overflow:hidden; }
+.pc-bar-fill { height:100%; border-radius:4px; transition:width 1s cubic-bezier(.4,0,.2,1); }
+.pc-bar-pct { font-size:11px; font-weight:700; width:36px; text-align:right; }
+
+/* ══ 경계선 비교 (핵심 경쟁 심리) ══ */
+.boundary-card {
+  border-radius:16px; overflow:hidden; margin-bottom:14px;
+  border:1px solid var(--league-border); transition:all 1s;
+}
+.bc-header {
+  background:var(--league-panel); padding:12px 16px;
+  display:flex; align-items:center; justify-content:space-between;
+  border-bottom:1px solid var(--league-border);
+}
+.bc-title { font-size:12px; font-weight:700; }
+.bc-live { font-size:10px; color:#ef4444; display:flex; align-items:center; gap:4px; font-weight:700; }
+.bc-live::before { content:''; width:6px; height:6px; border-radius:50%; background:#ef4444; animation:livePulse 1.2s ease-in-out infinite; }
+@keyframes livePulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+.bc-rows { padding:12px 0; }
+.bc-row {
+  display:flex; align-items:center; gap:12px;
+  padding:10px 16px; transition:background .2s;
+}
+.bc-row:hover { background:rgba(255,255,255,.03); }
+.bc-row.gap-line {
+  justify-content:center; padding:6px;
+  font-size:10px; color:var(--muted);
+}
+.bc-rank { font-family:'Orbitron',monospace; font-size:11px; font-weight:700; width:36px; text-align:center; }
+.bc-league-badge { font-size:9px; font-weight:700; padding:2px 8px; border-radius:20px; flex-shrink:0; }
+.bc-info { flex:1; }
+.bc-name { font-size:13px; font-weight:600; }
+.bc-score { font-size:10px; color:var(--muted); margin-top:2px; }
+.bc-qp { font-family:'Orbitron',monospace; font-size:13px; font-weight:700; }
+.bc-delta { font-size:10px; font-weight:700; }
+.bc-delta.up { color:#10b981; }
+.bc-delta.dn { color:#ef4444; }
+
+/* 내 위치 강조 */
+.bc-row.me { background:rgba(var(--league-rgb,148,163,184),.06); }
+.bc-row.me .bc-name::after { content:' (나)'; color:var(--league-primary); font-size:10px; }
+
+/* 경계선 표시 */
+.bc-divider {
+  margin:0 16px; padding:8px 12px;
+  background:linear-gradient(90deg,transparent,var(--league-glow),transparent);
+  text-align:center; font-size:10px; font-weight:700; color:var(--league-primary);
+  border-top:1px dashed var(--league-border);
+  border-bottom:1px dashed var(--league-border);
+}
+
+/* 갭 분석 */
+.gap-analysis {
+  margin:0 16px 12px; padding:12px 14px;
+  background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.25);
+  border-radius:12px; display:flex; align-items:center; gap:12px;
+}
+.ga-icon { font-size:24px; }
+.ga-info { flex:1; }
+.ga-title { font-size:12px; font-weight:700; color:#ef4444; }
+.ga-desc { font-size:11px; color:var(--muted); margin-top:2px; }
+.ga-qp { font-family:'Orbitron',monospace; font-size:18px; font-weight:900; color:#ef4444; }
+.ga-label { font-size:9px; color:var(--muted); }
+
+/* ══ 전 커뮤니티 알림 피드 ══ */
+.alert-feed { display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
+.alert-item {
+  background:var(--league-panel); border:1px solid var(--league-border);
+  border-radius:12px; padding:12px 14px;
+  display:flex; align-items:center; gap:12px;
+  animation:alertSlideIn .4s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes alertSlideIn { from{transform:translateX(-20px);opacity:0} to{transform:translateX(0);opacity:1} }
+.alert-icon { font-size:22px; flex-shrink:0; }
+.alert-info { flex:1; }
+.alert-title { font-size:12px; font-weight:700; }
+.alert-desc { font-size:11px; color:var(--muted); margin-top:2px; }
+.alert-time { font-size:10px; color:var(--muted); flex-shrink:0; }
+.alert-new {
+  font-size:8px; font-weight:900; padding:2px 6px; border-radius:4px;
+  background:var(--league-primary); color:var(--void); flex-shrink:0;
+}
+
+/* ══ 리그별 전용 미션 ══ */
+.mission-list { display:flex; flex-direction:column; gap:8px; }
+.mission-card {
+  background:var(--league-panel); border:1px solid var(--league-border);
+  border-radius:14px; padding:13px 14px;
+  display:flex; align-items:center; gap:12px;
+  cursor:pointer; transition:all .2s; position:relative;
+}
+.mission-card:hover { border-color:var(--league-primary); }
+.mission-card.done { opacity:.5; }
+.mission-card.locked { opacity:.5; }
+.mc-icon { font-size:22px; width:36px; text-align:center; flex-shrink:0; }
+.mc-info { flex:1; }
+.mc-name { font-size:13px; font-weight:600; }
+.mc-desc { font-size:11px; color:var(--muted); margin-top:2px; }
+.mc-reward { display:flex; align-items:center; gap:6px; margin-top:5px; }
+.mc-chip { font-size:10px; font-weight:700; padding:2px 8px; border-radius:20px; }
+.mc-lock { position:absolute; right:14px; font-size:18px; }
+.mc-check { position:absolute; right:14px; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; }
+
+/* ══ 리그별 상점 미리보기 ══ */
+.shop-preview { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+.sp-item {
+  background:var(--league-panel); border:1px solid var(--league-border);
+  border-radius:14px; overflow:hidden; cursor:pointer; transition:all .2s;
+}
+.sp-item:hover { border-color:var(--league-primary); transform:translateY(-2px); }
+.sp-item-img { width:100%; aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-size:44px; position:relative; }
+.sp-item-img::after { content:''; position:absolute; inset:0; background:radial-gradient(circle,var(--league-glow),transparent 70%); }
+.sp-item-body { padding:10px; }
+.sp-name { font-size:12px; font-weight:700; margin-bottom:3px; }
+.sp-rarity { font-size:9px; font-weight:700; margin-bottom:6px; }
+.sp-exclusive { font-size:9px; color:var(--league-primary); font-weight:700; }
+.sp-price { font-family:'Orbitron',monospace; font-size:12px; font-weight:700; color:var(--league-primary); }
+.sp-lock-overlay {
+  position:absolute; inset:0; background:rgba(0,0,0,.7);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  font-size:24px; gap:4px;
+}
+.sp-lock-txt { font-size:10px; color:var(--muted); text-align:center; padding:0 8px; }
+
+/* ══ 상위 리그 미리보기 (욕망 자극) ══ */
+.next-league-card {
+  border-radius:16px; overflow:hidden; margin-bottom:14px;
+  border:2px dashed var(--league-border); position:relative;
+}
+.nlc-blur { filter:blur(2px); padding:16px; }
+.nlc-overlay {
+  position:absolute; inset:0; background:rgba(0,0,0,.6); backdrop-filter:blur(4px);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:10px; padding:20px; text-align:center;
+}
+.nlc-lock-icon { font-size:40px; }
+.nlc-title { font-size:14px; font-weight:700; color:var(--league-primary); }
+.nlc-desc { font-size:11px; color:var(--muted); line-height:1.6; }
+.nlc-upgrade-btn {
+  padding:10px 24px; border-radius:20px; border:none;
+  background:linear-gradient(90deg,var(--league-primary),var(--league-secondary));
+  color:var(--void); font-size:13px; font-weight:700;
+  cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:all .2s;
+}
+.nlc-upgrade-btn:hover { transform:scale(1.05); }
+
+/* ══ 리그 선택 스위처 ══ */
+.league-switcher {
+  display:flex; gap:6px; overflow-x:auto; padding:14px 18px;
+  border-bottom:1px solid var(--league-border);
+  background:var(--panel); position:sticky; top:80px; z-index:190;
+}
+.league-switcher::-webkit-scrollbar { display:none; }
+.ls-btn {
+  flex-shrink:0; padding:7px 16px; border-radius:20px;
+  border:1.5px solid rgba(255,255,255,.1); background:transparent;
+  font-size:12px; font-weight:700; cursor:pointer;
+  font-family:'Noto Sans KR',sans-serif; transition:all .3s;
+  display:flex; align-items:center; gap:6px; color:var(--muted);
+}
+.ls-btn:hover { border-color:rgba(255,255,255,.3); color:var(--text); }
+.ls-btn.active { color:var(--void); }
+.ls-btn .ls-icon { font-size:14px; }
+
+/* ══ 시즌 메달 ══ */
+.medal-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+.medal {
+  display:flex; align-items:center; gap:8px;
+  background:var(--league-panel); border:1px solid var(--league-border);
+  border-radius:12px; padding:8px 12px;
+}
+.medal-icon { font-size:20px; }
+.medal-info { }
+.medal-season { font-size:9px; color:var(--muted); }
+.medal-league { font-size:11px; font-weight:700; }
+
+/* ══ 승격 알림 배너 ══ */
+.promo-banner {
+  position:fixed; top:0; left:50%; transform:translateX(-50%);
+  width:100%; max-width:900px; z-index:9999;
+  background:linear-gradient(90deg,var(--league-primary),var(--league-secondary));
+  padding:14px 20px; text-align:center;
+  display:none; animation:bannerDrop .5s cubic-bezier(.34,1.56,.64,1);
+}
+.promo-banner.show { display:block; }
+@keyframes bannerDrop { from{transform:translateX(-50%) translateY(-100%)} to{transform:translateX(-50%) translateY(0)} }
+.pb-text { font-size:14px; font-weight:700; color:var(--void); }
+.pb-sub { font-size:11px; color:rgba(0,0,0,.6); margin-top:2px; }
+
+/* TOAST */
+.toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+  background:rgba(12,12,26,.97); border:1px solid var(--league-border);
+  border-radius:12px; padding:10px 20px; font-size:12px;
+  z-index:8000; opacity:0; transition:opacity .3s; pointer-events:none; white-space:nowrap; }
+.toast.show { opacity:1; }
+
+.spacer { height:40px; }
+</style>
+</head>
+<body>
+<canvas id="starCanvas"></canvas>
+<div id="toast" class="toast"></div>
+
+<!-- 승격 알림 배너 -->
+<div class="promo-banner" id="promoBanner">
+  <div class="pb-text" id="pbannerText">🎉 NOVA CORE가 퀘이사 리그로 승격했습니다!</div>
+  <div class="pb-sub">전 제국이 목격했습니다 ✦ 아스테리아 제국 공식 기록</div>
+</div>
+
+<div id="app">
+  <!-- TOP NAV -->
+  <nav class="top-nav">
+    <a class="tni" href="/"><div class="tni-icon">🏠</div><div class="tni-label">홈</div></a>
+    <a class="tni" href="/astra.html"><div class="tni-icon">⭐</div><div class="tni-label">아스트라</div></a>
+    <a class="tni" href="/room3d.html"><div class="tni-icon">🏡</div><div class="tni-label">내 방</div></a>
+    <a class="tni" href="/nebula.html"><div class="tni-icon">🌌</div><div class="tni-label">성궤</div></a>
+    <a class="tni active" href="#"><div class="tni-icon">⚡</div><div class="tni-label">리그</div></a>
+    <a class="tni" href="/shop.html"><div class="tni-icon">🛒</div><div class="tni-label">상점</div></a>
+  </nav>
+
+  <!-- 리그 선택 스위처 -->
+  <div class="league-switcher" id="leagueSwitcher"></div>
+
+  <!-- 리그 히어로 -->
+  <div class="league-hero" id="leagueHero">
+    <div class="lh-bg-effect"></div>
+    <div class="lh-icon-wrap">
+      <div class="lh-icon-ring2"></div>
+      <div class="lh-icon-ring"></div>
+      <div class="lh-icon" id="heroIcon">✨</div>
+    </div>
+    <div class="lh-league-name" id="heroLeagueName">더스트 리그</div>
+    <div class="lh-title" id="heroTitle">DUST LEAGUE · 성진의 땅</div>
+    <div class="lh-slogan" id="heroSlogan">"무한한 가능성, 은하계의 위대한 탄생지"</div>
+    <div class="lh-honorific">
+      <div class="lh-hon-label">리그 칭호</div>
+      <div class="lh-hon-val" id="heroHonorific">시리우스 (Sirius)</div>
+    </div>
+  </div>
+
+  <!-- 시즌 스트립 -->
+  <div class="season-strip">
+    <div class="ss-season">
+      <div class="ss-season-label">현재 시즌</div>
+      <div class="ss-season-val" id="seasonVal">시즌 1 · 2026년 3월</div>
+    </div>
+    <div class="ss-divider"></div>
+    <div class="ss-dday">
+      <div class="ss-dday-label">시즌 종료</div>
+      <div class="ss-dday-val" id="ddayVal">D-5</div>
+      <div class="ss-dday-sub">리셋 예정</div>
+    </div>
+    <div class="ss-divider"></div>
+    <div class="ss-progress">
+      <div class="ss-prog-row">
+        <div class="ss-prog-label">승격까지</div>
+        <div class="ss-prog-val" id="promoProgVal">67%</div>
+      </div>
+      <div class="ss-prog-bg">
+        <div class="ss-prog-fill" id="promoProgFill" style="width:67%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 페이지 탭 -->
+  <div class="page-tabs">
+    <div class="page-tab active" onclick="switchTab('overview',this)">📊 현황</div>
+    <div class="page-tab" onclick="switchTab('mission',this)">🎯 미션</div>
+    <div class="page-tab" onclick="switchTab('shop',this)">🛒 상점</div>
+    <div class="page-tab" onclick="switchTab('feed',this)">📣 알림</div>
+    <div class="page-tab" onclick="switchTab('season',this)">🏅 시즌</div>
+  </div>
+
+  <!-- ═══ 현황 탭 ═══ -->
+  <div class="tab-content active" id="tab-overview">
+
+    <!-- 승격 점수 공식 -->
+    <div class="sec-title">✦ 승격 점수 공식</div>
+    <div class="promo-card" id="promoCard">
+      <div class="pc-header">
+        <div class="pc-title" id="pcTitle">더스트 → 스타 승격 알고리즘</div>
+        <span style="font-size:10px;color:var(--muted)" id="pcAlgo">성운의 응축</span>
+      </div>
+      <div class="pc-formula" id="pcFormula">S = (IAI × 0.7) + (GSI × 0.3) - Penalty</div>
+      <div class="pc-bars" id="pcBars"></div>
+    </div>
+
+    <!-- 경계선 비교 (핵심!) -->
+    <div class="sec-title">✦ 승격 경계선 — 실시간</div>
+    <div class="boundary-card">
+      <div class="bc-header">
+        <div class="bc-title" id="bcTitle">더스트 ↔ 스타 리그 경계</div>
+        <div class="bc-live">LIVE</div>
+      </div>
+      <div class="bc-rows" id="bcRows"></div>
+    </div>
+
+    <!-- 상위 리그 미리보기 (잠금) -->
+    <div class="sec-title">✦ 상위 리그 미리보기</div>
+    <div class="next-league-card" id="nextLeagueCard">
+      <div class="nlc-blur" id="nlcBlur">
+        <div style="font-size:36px;text-align:center;margin-bottom:8px" id="nlcIcon">🌟</div>
+        <div style="font-size:16px;font-weight:700;text-align:center" id="nlcName">스타 리그</div>
+        <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:4px">
+          이곳에서만 볼 수 있는 것들...
+        </div>
+      </div>
+      <div class="nlc-overlay">
+        <div class="nlc-lock-icon">🔒</div>
+        <div class="nlc-title" id="nlcTitle">스타 리그 전용 혜택</div>
+        <div class="nlc-desc" id="nlcDesc">
+          ⭐ 황금 아우라 + 아크투루스 칭호<br>
+          💛 스타 전용 굿즈 3종 해금<br>
+          🎯 스타 전용 미션 + 2배 AP<br>
+          ✨ 아티스트 강림 확률 1.5배
+        </div>
+        <button class="nlc-upgrade-btn" onclick="showToast('💪 지금 바로 활동해서 승격하세요!')">
+          지금 승격하려면? →
+        </button>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+  </div>
+
+  <!-- ═══ 미션 탭 ═══ -->
+  <div class="tab-content" id="tab-mission">
+    <div class="sec-title" id="missionTitle">✦ 더스트 리그 전용 미션</div>
+    <div class="mission-list" id="missionList"></div>
+    <div class="spacer"></div>
+  </div>
+
+  <!-- ═══ 상점 탭 ═══ -->
+  <div class="tab-content" id="tab-shop">
+    <div class="sec-title" id="shopTitle">✦ 더스트 리그 전용 아이템</div>
+    <div class="shop-preview" id="shopPreview"></div>
+    <div class="spacer"></div>
+  </div>
+
+  <!-- ═══ 알림 탭 ═══ -->
+  <div class="tab-content" id="tab-feed">
+    <div class="sec-title">✦ 전 커뮤니티 승격/강등 알림</div>
+    <div class="alert-feed" id="alertFeed"></div>
+    <div class="spacer"></div>
+  </div>
+
+  <!-- ═══ 시즌 탭 ═══ -->
+  <div class="tab-content" id="tab-season">
+    <div class="sec-title">✦ 시즌 1 결산 예고</div>
+    <div class="promo-card" id="seasonCard" style="margin-bottom:14px">
+      <div style="text-align:center;padding:10px 0">
+        <div style="font-size:48px;margin-bottom:12px">🏆</div>
+        <div style="font-family:'Orbitron',monospace;font-size:16px;font-weight:900;color:var(--league-primary);margin-bottom:6px">시즌 1 종료까지</div>
+        <div style="font-family:'Orbitron',monospace;font-size:36px;font-weight:900;margin-bottom:8px" id="seasonCountdown">05:12:34:21</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.7">
+          시즌 종료 시 리그가 리셋됩니다.<br>
+          현재 리그 성적에 따라 <strong style="color:var(--league-primary)">시즌 메달</strong>이 영구 부여됩니다.
+        </div>
+      </div>
+    </div>
+
+    <div class="sec-title">✦ 내 시즌 메달 기록</div>
+    <div class="medal-row" id="medalRow"></div>
+
+    <div class="sec-title">✦ 시즌 보상 미리보기</div>
+    <div class="promo-card">
+      <div style="display:flex;flex-direction:column;gap:10px" id="seasonRewards"></div>
+    </div>
+    <div class="spacer"></div>
+  </div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════
+//  별빛 배경
+// ══════════════════════════════════════════
+(function(){
+  const c=document.getElementById('starCanvas'),x=c.getContext('2d');let W,H;
+  function r(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;}r();window.addEventListener('resize',r);
+  const S=Array.from({length:280},()=>{const s=Math.random();return{x:Math.random()*2000,y:Math.random()*2000,r:s<.7?Math.random()*.8+.3:s<.9?Math.random()*1.2+1:Math.random()*2+2,b:Math.random()*.5+.3,p:Math.random()*Math.PI*2,sp:Math.random()*.008+.002,col:Math.random()<.08?'#f0c040':Math.random()<.06?'#c084fc':Math.random()<.04?'#38bdf8':'#fff',big:s>=.9}});
+  const M=Array.from({length:3},()=>({a:false,x:0,y:0,vx:0,vy:0,l:0,o:0,t:Math.random()*300}));
+  function loop(){x.clearRect(0,0,W,H);S.forEach(s=>{s.p+=s.sp;const a=s.b*(.5+.5*Math.sin(s.p));x.save();x.globalAlpha=a;if(s.big){const g=x.createRadialGradient(s.x%W,s.y%H,0,s.x%W,s.y%H,s.r*3);g.addColorStop(0,s.col);g.addColorStop(1,'transparent');x.fillStyle=g;x.beginPath();x.arc(s.x%W,s.y%H,s.r*3,0,Math.PI*2);x.fill();x.strokeStyle=s.col;x.lineWidth=0.5;x.globalAlpha=a*.5;const cx=s.x%W,cy=s.y%H,l=s.r*7;x.beginPath();x.moveTo(cx-l,cy);x.lineTo(cx+l,cy);x.moveTo(cx,cy-l);x.lineTo(cx,cy+l);x.stroke();}else{if(s.r>1){const g=x.createRadialGradient(s.x%W,s.y%H,0,s.x%W,s.y%H,s.r*2.5);g.addColorStop(0,s.col);g.addColorStop(1,'transparent');x.fillStyle=g;x.beginPath();x.arc(s.x%W,s.y%H,s.r*2.5,0,Math.PI*2);x.fill();x.globalAlpha=a;}x.fillStyle=s.col;x.beginPath();x.arc(s.x%W,s.y%H,s.r,0,Math.PI*2);x.fill();}x.restore();});
+  M.forEach(m=>{if(!m.a){m.t--;if(m.t<=0){m.a=true;m.x=Math.random()*W*1.2;m.y=Math.random()*H*.4;const a=Math.PI/4+(Math.random()-.5)*.3,sp=8+Math.random()*6;m.vx=Math.cos(a)*sp;m.vy=Math.sin(a)*sp;m.l=12+Math.random()*10;m.o=.9;}}else{m.x+=m.vx;m.y+=m.vy;m.o-=.015;if(m.o>0){const g=x.createLinearGradient(m.x,m.y,m.x-m.vx*m.l,m.y-m.vy*m.l);g.addColorStop(0,`rgba(255,255,255,${m.o})`);g.addColorStop(1,'transparent');x.save();x.strokeStyle=g;x.lineWidth=1.5;x.beginPath();x.moveTo(m.x,m.y);x.lineTo(m.x-m.vx*m.l,m.y-m.vy*m.l);x.stroke();x.restore();}if(m.o<=0||m.x>W+100||m.y>H+100){m.a=false;m.t=200+Math.random()*400;}}});
+  requestAnimationFrame(loop);}loop();
+})();
+
+// ══════════════════════════════════════════
+//  리그 데이터 (엑셀 기반)
+// ══════════════════════════════════════════
+const LEAGUES = {
+  dust: {
+    id:'dust', name:'더스트 리그', icon:'✨', color:'#94a3b8', secondary:'#64748b',
+    bg:'#030308', gradient:'linear-gradient(135deg,#0a0c10,#030308)',
+    glow:'rgba(148,163,184,0.25)', border:'rgba(148,163,184,0.2)',
+    panel:'rgba(148,163,184,0.05)', rgb:'148,163,184',
+    slogan:'"무한한 가능성, 은하계의 위대한 탄생지"',
+    title:'DUST LEAGUE · 성진의 땅', honorific:'시리우스 (Sirius)',
+    formula:'S = (IAI × 0.7) + (GSI × 0.3) - Penalty',
+    algo:'성운의 응축 (Condensation)',
+    weights:{ IAI:70, GSI:30, PII:0 },
+    nextLeague:'star',
+    myScore:{ iai:67, gsi:45, total:58 },
+    promoScore:70,
+    missions:[
+      { icon:'📅', name:'매일 출석 체크', desc:'성진의 기초 — 성실함이 전부다', reward:50, stat:'LOY', done:true },
+      { icon:'🎵', name:'스트리밍 15분', desc:'아티스트의 빛을 10분 이상 소비', reward:20, stat:'LOY', done:true },
+      { icon:'✍️', name:'응원 게시글 작성', desc:'포인트 게시판에 응원 글 남기기', reward:5, stat:'SOC', done:false },
+      { icon:'🗳️', name:'음방 투표 참여', desc:'진행 중인 음방 투표 1회 참여', reward:100, stat:'ACT', done:false },
+      { icon:'👋', name:'뉴비 환영하기', desc:'신규 가입자 성궤 방문 + 방명록', reward:30, stat:'SOC', done:false },
+      { icon:'🌱', name:'더스트 전용: 첫 번째 총공', desc:'팬클럽 최초 스밍 총공 참여', reward:200, stat:'ACT', done:false, exclusive:true },
+    ],
+    shopItems:[
+      { name:'더스트 포스터', emoji:'🖼️', rarity:'COMMON', price:200, exclusive:false },
+      { name:'시리우스 배지', emoji:'⭐', rarity:'RARE', price:500, exclusive:true },
+      { name:'먼지 아우라', emoji:'💨', rarity:'COMMON', price:300, exclusive:false },
+      { name:'더스트 앨범', emoji:'💿', rarity:'COMMON', price:400, exclusive:false },
+    ],
+    boundary:{ upper:{ league:'스타', rank:1000, qp:45230 }, my:{ rank:847, qp:44890 }, gap:340 },
+    nextPreview:{ icon:'🌟', name:'스타 리그', desc:'⭐ 황금 아우라 + 아크투루스 칭호\n💛 스타 전용 굿즈 3종 해금\n🎯 스타 전용 미션 + 2배 AP\n✨ 아티스트 강림 확률 1.5배' },
+  },
+  star: {
+    id:'star', name:'스타 리그', icon:'🌟', color:'#fbbf24', secondary:'#f59e0b',
+    bg:'#0a0700', gradient:'linear-gradient(135deg,#1a1200,#0a0700)',
+    glow:'rgba(251,191,36,0.25)', border:'rgba(251,191,36,0.2)',
+    panel:'rgba(251,191,36,0.05)', rgb:'251,191,36',
+    slogan:'"빛의 시작, 우리만의 별자리를 그리다"',
+    title:'STAR LEAGUE · 발광의 시대', honorific:'아크투루스 (Arcturus)',
+    formula:'S = (IAI × 0.4) + (GSI × 0.4) + (PII × 0.2) - Penalty',
+    algo:'행성의 응고 (Solidification)',
+    weights:{ IAI:40, GSI:40, PII:20 },
+    nextLeague:'planet',
+    myScore:{ iai:72, gsi:68, pii:45, total:64 },
+    promoScore:75,
+    missions:[
+      { icon:'🤝', name:'유닛 협동 미션', desc:'소속 유닛원 5명과 동시 스밍', reward:150, stat:'SOC', done:false },
+      { icon:'📊', name:'화력 리포트 작성', desc:'이번 주 팬덤 활동 데이터 분석 제출', reward:200, stat:'INT', done:false },
+      { icon:'📢', name:'SNS 홍보 미션', desc:'지정 해시태그로 X/인스타 게시', reward:100, stat:'ACT', done:true },
+      { icon:'🌟', name:'스타 전용: 유닛 100명 결성', desc:'소속 유닛 인원 100명 채우기', reward:500, stat:'SOC', done:false, exclusive:true },
+      { icon:'💫', name:'스타 전용: 베이스 동기화', desc:'베이스 미션 100% 달성', reward:300, stat:'ACT', done:false, exclusive:true },
+    ],
+    shopItems:[
+      { name:'황금 별빛 조명', emoji:'💡', rarity:'RARE', price:800, exclusive:false },
+      { name:'아크투루스 왕관', emoji:'👑', rarity:'EPIC', price:2000, exclusive:true },
+      { name:'별빛 아우라', emoji:'⭐', rarity:'RARE', price:1200, exclusive:true },
+      { name:'스타 전용 벽지', emoji:'🌟', rarity:'EPIC', price:1500, exclusive:true },
+    ],
+    boundary:{ upper:{ league:'플래닛', rank:100, qp:98200 }, my:{ rank:87, qp:95600 }, gap:2600 },
+    nextPreview:{ icon:'🪐', name:'플래닛 리그', desc:'🪐 행성 궤도 아우라 해금\n💚 가이아 칭호 + 에메랄드 프레임\n🎯 플래닛 전용 미션 3배 AP\n✨ 아티스트 강림 확률 2배' },
+  },
+  planet: {
+    id:'planet', name:'플래닛 리그', icon:'🪐', color:'#34d399', secondary:'#10b981',
+    bg:'#000f08', gradient:'linear-gradient(135deg,#001a10,#000f08)',
+    glow:'rgba(52,211,153,0.25)', border:'rgba(52,211,153,0.2)',
+    panel:'rgba(52,211,153,0.05)', rgb:'52,211,153',
+    slogan:'"단단한 결집, 흔들리지 않는 팬덤의 터전"',
+    title:'PLANET LEAGUE · 결속의 행성', honorific:'가이아 (Gaia)',
+    formula:'S = (IAI × 0.3) + (GSI × 0.4) + (PII × 0.3) - Penalty',
+    algo:'신성의 폭발 (Expansion)',
+    weights:{ IAI:30, GSI:40, PII:30 },
+    nextLeague:'nova',
+    myScore:{ iai:78, gsi:82, pii:65, total:74 },
+    promoScore:80,
+    missions:[
+      { icon:'🛡️', name:'방어 미션', desc:'악플/루머 신고 및 정화 활동 10건', reward:300, stat:'ACT', done:false },
+      { icon:'🎨', name:'창작 콘텐츠', desc:'팬아트/영상 제작 + 게시', reward:500, stat:'CRE', done:false },
+      { icon:'📱', name:'글로벌 홍보', desc:'3개 대륙 팬들과 동시 해시태그', reward:400, stat:'ACT', done:false, exclusive:true },
+      { icon:'🏗️', name:'플래닛 전용: 테리토리 구축', desc:'테리토리 내 베이스 10개 활성화', reward:1000, stat:'SOC', done:false, exclusive:true },
+    ],
+    shopItems:[
+      { name:'궤도 링 아우라', emoji:'🪐', rarity:'EPIC', price:3000, exclusive:true },
+      { name:'가이아 왕좌', emoji:'💺', rarity:'LEGENDARY', price:5000, exclusive:true },
+      { name:'에메랄드 프레임', emoji:'💚', rarity:'EPIC', price:2500, exclusive:true },
+      { name:'행성 홀로그램', emoji:'✨', rarity:'EPIC', price:4000, exclusive:false },
+    ],
+    boundary:{ upper:{ league:'노바', rank:20, qp:220000 }, my:{ rank:18, qp:198000 }, gap:22000 },
+    nextPreview:{ icon:'💥', name:'노바 리그', desc:'💥 초신성 폭발 아우라\n💜 오리온 칭호 + 보라 왕관 프레임\n🌍 글로벌 팬과 연결되는 스퀘어\n👑 아티스트 특별 강림 이벤트 초대' },
+  },
+  nova: {
+    id:'nova', name:'노바 리그', icon:'💥', color:'#c084fc', secondary:'#a855f7',
+    bg:'#0d0020', gradient:'linear-gradient(135deg,#1a0035,#0d0020)',
+    glow:'rgba(192,132,252,0.3)', border:'rgba(192,132,252,0.25)',
+    panel:'rgba(192,132,252,0.06)', rgb:'192,132,252',
+    slogan:'"폭발하는 에너지, 최정상을 향한 뜨거운 도약"',
+    title:'NOVA LEAGUE · 폭발의 제국', honorific:'오리온 (Orion)',
+    formula:'S = (IAI × 0.2) + (GSI × 0.3) + (PII × 0.5) - Penalty',
+    algo:'제국의 탄생 (Sovereignty)',
+    weights:{ IAI:20, GSI:30, PII:50 },
+    nextLeague:'quasar',
+    myScore:{ iai:85, gsi:88, pii:72, total:79 },
+    promoScore:85,
+    missions:[
+      { icon:'🌍', name:'글로벌 차트 점령', desc:'세계 음악 차트 TOP10 진입 기여', reward:2000, stat:'ACT', done:false, exclusive:true },
+      { icon:'📡', name:'24시간 화력 체계', desc:'전 시간대 스밍 릴레이 조직', reward:1500, stat:'SOC', done:false, exclusive:true },
+      { icon:'🗳️', name:'주권 투표 참여', desc:'이번 시즌 모든 거버넌스 투표', reward:500, stat:'ACT', done:true },
+      { icon:'🏆', name:'노바 전용: 대외 영향력', desc:'언론/미디어 아티스트 기사 100개 확산', reward:3000, stat:'PII', done:false, exclusive:true },
+    ],
+    shopItems:[
+      { name:'초신성 아우라', emoji:'💫', rarity:'LEGENDARY', price:8000, exclusive:true },
+      { name:'오리온 갑옷', emoji:'⚔️', rarity:'LEGENDARY', price:10000, exclusive:true },
+      { name:'보라 왕관 프레임', emoji:'👑', rarity:'EPIC', price:5000, exclusive:true },
+      { name:'노바 제국 배경', emoji:'🌌', rarity:'LEGENDARY', price:7000, exclusive:true },
+    ],
+    boundary:{ upper:{ league:'퀘이사', rank:5, qp:850000 }, my:{ rank:4, qp:780000 }, gap:70000 },
+    nextPreview:{ icon:'⚡', name:'퀘이사 리그', desc:'⚡ 황금 십자 광채 (최상위 아우라)\n🌟 제국 신달 칭호 + 황금 제국 프레임\n👑 아티스트 공식 엠버서더 자격\n🏛️ 기획사와 직접 소통하는 주권 의회' },
+  },
+  quasar: {
+    id:'quasar', name:'퀘이사 리그', icon:'⚡', color:'#f0c040', secondary:'#e6a800',
+    bg:'#0a0700', gradient:'linear-gradient(135deg,#1a1000,#0a0800)',
+    glow:'rgba(240,192,64,0.4)', border:'rgba(240,192,64,0.3)',
+    panel:'rgba(240,192,64,0.07)', rgb:'240,192,64',
+    slogan:'"제국의 심장, 우주를 지배하는 5개의 태양"',
+    title:'QUASAR LEAGUE · 제국의 심장', honorific:'제국 신달 (Imperial Sindal)',
+    formula:'S = (IAI × 0.2) + (GSI × 0.3) + (PII × 0.5) - Penalty',
+    algo:'제국의 완성 (Sovereignty)',
+    weights:{ IAI:20, GSI:30, PII:50 },
+    nextLeague:null,
+    myScore:{ iai:95, gsi:92, pii:88, total:91 },
+    promoScore:100,
+    missions:[
+      { icon:'🌐', name:'글로벌 헤게모니', desc:'전 세계 트렌드 #1 달성 기여', reward:5000, stat:'PII', done:false, exclusive:true },
+      { icon:'📜', name:'주권 안건 발의', desc:'거버넌스 투표 안건 직접 제안', reward:3000, stat:'INT', done:false, exclusive:true },
+      { icon:'🏛️', name:'역사 기록 의무', desc:'이번 시즌 활동 연대기 작성', reward:2000, stat:'INT', done:false, exclusive:true },
+      { icon:'👑', name:'퀘이사 전용: 기획사 협력', desc:'아티스트 브랜드 가치 공동 창출', reward:10000, stat:'PII', done:false, exclusive:true },
+    ],
+    shopItems:[
+      { name:'퀘이사 광채 (최상위)', emoji:'🌌', rarity:'GENESIS', price:0, exclusive:true, special:'퀘이사 전용' },
+      { name:'황금 제국 프레임', emoji:'🖼️', rarity:'GENESIS', price:0, exclusive:true, special:'퀘이사 전용' },
+      { name:'제국 신달 의복', emoji:'👘', rarity:'GENESIS', price:0, exclusive:true, special:'퀘이사 전용' },
+      { name:'아티스트 엠버서더 배지', emoji:'💎', rarity:'GENESIS', price:0, exclusive:true, special:'기획사 승인 필요' },
+    ],
+    boundary:{ upper:null, my:{ rank:2, qp:980000 }, gap:0 },
+    nextPreview:null,
+  },
+};
+
+// ══════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════
+let currentLeague = 'dust';
+
+// ══════════════════════════════════════════
+//  리그 스위처 렌더
+// ══════════════════════════════════════════
+function renderSwitcher() {
+  const wrap = document.getElementById('leagueSwitcher');
+  wrap.innerHTML = Object.values(LEAGUES).map(l => `
+    <button class="ls-btn ${l.id===currentLeague?'active':''}"
+      style="${l.id===currentLeague?`background:${l.color};border-color:${l.color};`:`border-color:${l.border}`}"
+      onclick="switchLeague('${l.id}')">
+      <span class="ls-icon">${l.icon}</span>
+      ${l.name}
+    </button>
+  `).join('');
+}
+
+// ══════════════════════════════════════════
+//  리그 전환 (핵심 차별화)
+// ══════════════════════════════════════════
+function switchLeague(id) {
+  currentLeague = id;
+  const l = LEAGUES[id];
+
+  // CSS 변수 동적 변경 → 전체 테마 변환
+  document.documentElement.style.setProperty('--league-primary', l.color);
+  document.documentElement.style.setProperty('--league-secondary', l.secondary);
+  document.documentElement.style.setProperty('--league-bg', l.bg);
+  document.documentElement.style.setProperty('--league-glow', l.glow);
+  document.documentElement.style.setProperty('--league-border', l.border);
+  document.documentElement.style.setProperty('--league-panel', l.panel);
+  document.documentElement.style.setProperty('--league-gradient', l.gradient);
+  document.documentElement.style.setProperty('--league-rgb', l.rgb);
+  document.body.style.background = l.bg;
+
+  // 히어로 업데이트
+  document.getElementById('heroIcon').textContent = l.icon;
+  document.getElementById('heroIcon').style.filter = `drop-shadow(0 0 20px ${l.color})`;
+  document.getElementById('heroLeagueName').textContent = l.name;
+  document.getElementById('heroTitle').textContent = l.title;
+  document.getElementById('heroSlogan').textContent = l.slogan;
+  document.getElementById('heroHonorific').textContent = l.honorific;
+
+  // 승격 공식 카드
+  const weights = l.weights;
+  document.getElementById('pcTitle').textContent = l.nextLeague
+    ? `${l.name} → ${LEAGUES[l.nextLeague]?.name} 승격 알고리즘` : '최상위 리그 유지 알고리즘';
+  document.getElementById('pcAlgo').textContent = l.algo;
+  document.getElementById('pcFormula').textContent = l.formula;
+  document.getElementById('pcBars').innerHTML = [
+    { label:'IAI (개인 활동)', pct:weights.IAI, val:l.myScore.iai, color:l.color },
+    { label:'GSI (조직 시너지)', pct:weights.GSI, val:l.myScore.gsi, color:l.secondary },
+    { label:'PII (대외 영향력)', pct:weights.PII||0, val:l.myScore.pii||0, color:'#38bdf8' },
+  ].map(b => `
+    <div class="pc-bar-row">
+      <div class="pc-bar-label">${b.label} (${b.pct}%)</div>
+      <div class="pc-bar-bg"><div class="pc-bar-fill" style="width:${b.val}%;background:${b.color}"></div></div>
+      <div class="pc-bar-pct" style="color:${b.color}">${b.val}</div>
+    </div>
+  `).join('');
+
+  // 승격 진행도
+  const total = l.myScore.total;
+  const promo = l.promoScore;
+  const pct = Math.min(100, Math.round(total/promo*100));
+  document.getElementById('promoProgVal').textContent = pct + '%';
+  document.getElementById('promoProgFill').style.width = pct + '%';
+  document.getElementById('promoProgFill').style.background = l.color;
+
+  // 경계선 비교
+  renderBoundary(l);
+
+  // 상위 리그 미리보기
+  if(l.nextPreview) {
+    document.getElementById('nlcIcon').textContent = l.nextPreview.icon;
+    document.getElementById('nlcName').textContent = l.nextPreview.name;
+    document.getElementById('nlcTitle').textContent = `${l.nextPreview.name} 전용 혜택`;
+    document.getElementById('nlcDesc').innerHTML = l.nextPreview.desc.replace(/\n/g,'<br>');
+    document.getElementById('nextLeagueCard').style.display = 'block';
+  } else {
+    document.getElementById('nextLeagueCard').style.display = 'none';
+  }
+
+  // 미션
+  renderMissions(l);
+
+  // 상점
+  renderShop(l);
+
+  // 스위처 업데이트
+  renderSwitcher();
+}
+
+// ══════════════════════════════════════════
+//  경계선 비교 렌더
+// ══════════════════════════════════════════
+function renderBoundary(l) {
+  const title = l.nextLeague
+    ? `${l.name} ↔ ${LEAGUES[l.nextLeague]?.name} 경계`
+    : '퀘이사 리그 순위';
+  document.getElementById('bcTitle').textContent = title;
+
+  const b = l.boundary;
+  if(!b) return;
+
+  let html = '';
+
+  // 상위 리그 최하위
+  if(b.upper) {
+    html += `
+      <div class="bc-row">
+        <div class="bc-rank" style="color:#fbbf24">#${b.upper.rank}</div>
+        <div class="bc-league-badge" style="background:rgba(251,191,36,.15);color:#fbbf24;border:1px solid rgba(251,191,36,.3)">${b.upper.league}</div>
+        <div class="bc-info">
+          <div class="bc-name">SERENADE (최하위)</div>
+          <div class="bc-score">이 팀을 이겨야 승격!</div>
+        </div>
+        <div>
+          <div class="bc-qp" style="color:#fbbf24">${b.upper.qp.toLocaleString()}</div>
+          <div class="bc-delta up">QP</div>
+        </div>
+      </div>
+    `;
+    html += `
+      <div class="bc-divider">
+        ↑ 저기까지 ${b.gap.toLocaleString()} QP 차이 ↑
+      </div>
+    `;
+  }
+
+  // 내 위치
+  html += `
+    <div class="bc-row me">
+      <div class="bc-rank" style="color:${l.color}">#${b.my.rank}</div>
+      <div class="bc-league-badge" style="background:${l.panel};color:${l.color};border:1px solid ${l.border}">${l.name.replace(' 리그','')}</div>
+      <div class="bc-info">
+        <div class="bc-name">별빛 탐험가</div>
+        <div class="bc-score">내 현재 위치</div>
+      </div>
+      <div>
+        <div class="bc-qp" style="color:${l.color}">${b.my.qp.toLocaleString()}</div>
+        <div class="bc-delta" style="color:${l.color}">QP</div>
+      </div>
+    </div>
+  `;
+
+  // 갭 분석
+  if(b.gap > 0) {
+    html += `</div>
+    <div class="gap-analysis">
+      <div class="ga-icon">⚔️</div>
+      <div class="ga-info">
+        <div class="ga-title">승격까지 ${b.gap.toLocaleString()} QP 부족!</div>
+        <div class="ga-desc">오늘 활동 미션 모두 완료하면 약 +${Math.round(b.gap/10).toLocaleString()} QP 획득 가능해요</div>
+      </div>
+      <div>
+        <div class="ga-qp">-${b.gap.toLocaleString()}</div>
+        <div class="ga-label">QP 차이</div>
+      </div>
+    </div>
+    <div>`;
+  }
+
+  document.getElementById('bcRows').innerHTML = html;
+}
+
+// ══════════════════════════════════════════
+//  미션 렌더
+// ══════════════════════════════════════════
+function renderMissions(l) {
+  document.getElementById('missionTitle').textContent = `✦ ${l.name} 전용 미션`;
+  document.getElementById('missionList').innerHTML = l.missions.map(m => `
+    <div class="mission-card ${m.done?'done':''}">
+      <div class="mc-icon">${m.icon}</div>
+      <div class="mc-info">
+        <div class="mc-name">${m.name} ${m.exclusive?'<span style="font-size:9px;background:'+l.color+'25;border:1px solid '+l.border+';color:'+l.color+';padding:1px 6px;border-radius:10px;font-weight:700">전용</span>':''}</div>
+        <div class="mc-desc">${m.desc}</div>
+        <div class="mc-reward">
+          <span class="mc-chip" style="background:${l.panel};border:1px solid ${l.border};color:${l.color}">+${m.reward} AP</span>
+          <span class="mc-chip" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:var(--muted)">+${m.stat}</span>
+        </div>
+      </div>
+      ${m.done
+        ? `<div class="mc-check" style="background:${l.color}">✓</div>`
+        : `<div class="mc-check" style="border:2px solid ${l.border}"></div>`
+      }
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════════════
+//  상점 렌더
+// ══════════════════════════════════════════
+function renderShop(l) {
+  document.getElementById('shopTitle').textContent = `✦ ${l.name} 전용 아이템`;
+  document.getElementById('shopPreview').innerHTML = l.shopItems.map(item => `
+    <div class="sp-item">
+      <div class="sp-item-img" style="background:${l.gradient}">
+        ${item.emoji}
+        ${item.exclusive ? `<div class="sp-lock-overlay" style="display:none"></div>` : ''}
+      </div>
+      <div class="sp-item-body">
+        <div class="sp-name">${item.name}</div>
+        <div class="sp-rarity" style="color:${
+          item.rarity==='GENESIS'?'#ff6b6b':item.rarity==='LEGENDARY'?'#f0c040':item.rarity==='EPIC'?'#c084fc':'#38bdf8'
+        }">${item.rarity}</div>
+        ${item.exclusive ? `<div class="sp-exclusive">🔒 ${l.name} 전용</div>` : ''}
+        ${item.special ? `<div class="sp-exclusive" style="color:#ff6b6b">⚡ ${item.special}</div>` : ''}
+        <div class="sp-price">${item.price > 0 ? item.price.toLocaleString()+' ☆' : '활동 보상'}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════════════
+//  알림 피드
+// ══════════════════════════════════════════
+const ALERTS = [
+  { icon:'🎉', title:'NOVA CORE가 퀘이사 리그로 승격!', desc:'전 제국이 목격했습니다. 황금 아우라 해금 완료.', time:'2분 전', isNew:true, league:'quasar' },
+  { icon:'⬇️', title:'ECLIPSE가 더스트 리그로 강등', desc:'시즌 활동 지수 미달로 강등 처리됐습니다.', time:'15분 전', isNew:true, league:'dust' },
+  { icon:'🚀', title:'AURORA가 노바 리그 3위 진입!', desc:'이번 주 화력 급상승 — 퀘이사까지 단 2단계!', time:'1시간 전', isNew:false, league:'nova' },
+  { icon:'⚔️', title:'스타 리그 승격 경쟁 중!', desc:'3팀이 10위 자리를 두고 치열하게 경쟁 중입니다.', time:'2시간 전', isNew:false, league:'star' },
+  { icon:'🏆', title:'SERENADE 시즌 1 MVP 선정', desc:'이번 시즌 최다 QP 팬덤 — 황금 시즌 메달 부여.', time:'3시간 전', isNew:false, league:'quasar' },
+  { icon:'💜', title:'더스트 신규 팬덤 147개 결성', desc:'새로운 별들이 제국에 합류했습니다. 환영!', time:'5시간 전', isNew:false, league:'dust' },
+];
+
+function renderAlerts() {
+  const l = LEAGUES[currentLeague];
+  document.getElementById('alertFeed').innerHTML = ALERTS.map(a => `
+    <div class="alert-item">
+      <div class="alert-icon">${a.icon}</div>
+      <div class="alert-info">
+        <div class="alert-title">${a.title}</div>
+        <div class="alert-desc">${a.desc}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
+        <div class="alert-time">${a.time}</div>
+        ${a.isNew ? `<div class="alert-new">NEW</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════════════
+//  시즌 카운트다운
+// ══════════════════════════════════════════
+function updateCountdown() {
+  // 이번 달 말일 계산
+  const now = new Date();
+  const end = new Date(now.getFullYear(), now.getMonth()+1, 0, 23, 59, 59);
+  const diff = end - now;
+  if(diff <= 0) return;
+  const d = Math.floor(diff/86400000);
+  const h = Math.floor((diff%86400000)/3600000);
+  const m = Math.floor((diff%3600000)/60000);
+  const s = Math.floor((diff%60000)/1000);
+  document.getElementById('seasonCountdown').textContent =
+    `${String(d).padStart(2,'0')}:${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+
+  // D-데이
+  document.getElementById('ddayVal').textContent = `D-${d}`;
+}
+setInterval(updateCountdown, 1000);
+updateCountdown();
+
+// 현재 시즌
+const now = new Date();
+document.getElementById('seasonVal').textContent = `시즌 1 · ${now.getFullYear()}년 ${now.getMonth()+1}월`;
+
+// 시즌 메달
+document.getElementById('medalRow').innerHTML = [
+  { icon:'🥇', season:'시즌 0', league:'더스트', color:'#94a3b8' },
+].map(m=>`
+  <div class="medal">
+    <div class="medal-icon">${m.icon}</div>
+    <div class="medal-info">
+      <div class="medal-season">${m.season}</div>
+      <div class="medal-league" style="color:${m.color}">${m.league} 리그</div>
+    </div>
+  </div>
+`).join('') + `<div class="medal" style="opacity:.4">
+  <div class="medal-icon">🏅</div>
+  <div class="medal-info">
+    <div class="medal-season">시즌 1 진행중</div>
+    <div class="medal-league">결과 대기중...</div>
+  </div>
+</div>`;
+
+// 시즌 보상 미리보기
+document.getElementById('seasonRewards').innerHTML = [
+  { league:'더스트', reward:'시리우스 시즌 배지 + 스타더스트 1,000', icon:'✨' },
+  { league:'스타', reward:'아크투루스 시즌 배지 + 황금 별빛 조명', icon:'🌟' },
+  { league:'플래닛', reward:'가이아 시즌 배지 + 궤도 링 아우라', icon:'🪐' },
+  { league:'노바', reward:'오리온 시즌 배지 + 초신성 아우라 (한정)', icon:'💥' },
+  { league:'퀘이사', reward:'제국 신달 시즌 배지 + 황금 제국 전용 아이템', icon:'⚡' },
+].map(r=>`
+  <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--league-border)">
+    <div style="font-size:20px">${r.icon}</div>
+    <div>
+      <div style="font-size:11px;font-weight:700;color:var(--league-primary)">${r.league} 리그 달성 시</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px">${r.reward}</div>
+    </div>
+  </div>
+`).join('');
+
+// ══════════════════════════════════════════
+//  탭 전환
+// ══════════════════════════════════════════
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.page-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(name==='feed') renderAlerts();
+}
+
+// ══════════════════════════════════════════
+//  승격 배너 자동 표시
+// ══════════════════════════════════════════
+const PROMO_NOTIFICATIONS = [
+  { text:'🎉 NOVA CORE가 퀘이사 리그로 승격했습니다!', sub:'전 제국이 목격했습니다 ✦ 아스테리아 제국 공식 기록' },
+  { text:'⬇️ ECLIPSE가 더스트 리그로 강등됐습니다', sub:'시즌 활동 지수 미달 · 다음 시즌 재도전 가능' },
+  { text:'🚀 AURORA가 노바 리그 3위 진입!', sub:'이번 주 화력 급상승 — 경쟁 심화 중' },
+];
+let notifIdx = 0;
+function showPromoBanner() {
+  const n = PROMO_NOTIFICATIONS[notifIdx % PROMO_NOTIFICATIONS.length];
+  document.getElementById('pbannerText').textContent = n.text;
+  const banner = document.getElementById('promoBanner');
+  banner.classList.add('show');
+  setTimeout(()=>banner.classList.remove('show'), 4000);
+  notifIdx++;
+}
+setTimeout(showPromoBanner, 2000);
+setInterval(showPromoBanner, 15000);
+
+// ══════════════════════════════════════════
+//  랭킹 실시간 시뮬
+// ══════════════════════════════════════════
+setInterval(()=>{
+  const l = LEAGUES[currentLeague];
+  if(l.boundary?.my) {
+    const delta = Math.floor(Math.random()*200)-80;
+    l.boundary.my.qp = Math.max(0, l.boundary.my.qp + delta);
+    if(l.boundary.upper) {
+      l.boundary.gap = Math.max(0, l.boundary.upper.qp - l.boundary.my.qp);
+    }
+    renderBoundary(l);
+  }
+}, 5000);
+
+// ══════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+renderSwitcher();
+switchLeague('dust');
+</script>
+</body>
+</html>
