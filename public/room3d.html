@@ -506,6 +506,10 @@ let isEditMode = false;
 let selectedItem = null;
 let lightMode = 0;
 
+// ── 내 캐릭터 이동 목적지 ──
+let avatarTargetPos = null;
+let myAvatarMesh = null; // 내 캐릭터 메시 참조
+
 // Three.js 전역
 let scene, camera, renderer, roomGroup;
 let mouseDown = false, lastMouse = {x:0,y:0};
@@ -566,11 +570,18 @@ function initThree() {
   // 이벤트
   canvas.addEventListener('mousedown', onMouseDown);
   canvas.addEventListener('mousemove', onMouseMove);
-  canvas.addEventListener('mouseup', ()=>mouseDown=false);
+  canvas.addEventListener('mouseup', (e)=>{ mouseDown=false; });
+  canvas.addEventListener('click', onCanvasClick);
   canvas.addEventListener('wheel', onWheel, {passive:true});
   canvas.addEventListener('touchstart', onTouchStart, {passive:true});
   canvas.addEventListener('touchmove', onTouchMove, {passive:false});
-  canvas.addEventListener('touchend', ()=>mouseDown=false);
+  canvas.addEventListener('touchend', (e)=>{
+    mouseDown=false;
+    // 터치도 드래그 안 했으면 클릭으로 처리
+    if(!dragMoved && e.changedTouches.length===1) {
+      moveAvatarToClick(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+    }
+  });
 
   window.addEventListener('resize', onResize);
 
@@ -684,6 +695,13 @@ function buildRoom() {
 
 // ── 아바타 3D 표현 ──
 function buildAvatar() {
+  // 기존 아바타 제거
+  if(myAvatarMesh) { roomGroup.remove(myAvatarMesh); myAvatarMesh=null; }
+
+  const charData = JSON.parse(localStorage.getItem('asteria_chars')||'null');
+  const myEmoji = charData?.my?.emoji || '🌟';
+  const group = new THREE.Group();
+
   // 몸통
   const bodyGeo = new THREE.CylinderGeometry(0.25, 0.3, 0.8, 16);
   const bodyMat = new THREE.MeshStandardMaterial({
@@ -691,10 +709,9 @@ function buildAvatar() {
     roughness:0.4, metalness:0.3,
   });
   const body = new THREE.Mesh(bodyGeo, bodyMat);
-  body.position.set(0, -0.9, 0.5);
+  body.position.y = 0.35;
   body.castShadow = true;
-  body.userData.isAvatar = true;
-  roomGroup.add(body);
+  group.add(body);
 
   // 머리
   const headGeo = new THREE.SphereGeometry(0.28, 16, 16);
@@ -703,10 +720,9 @@ function buildAvatar() {
     roughness:0.6,
   });
   const head = new THREE.Mesh(headGeo, headMat);
-  head.position.set(0, -0.2, 0.5);
+  head.position.y = 0.95;
   head.castShadow = true;
-  head.userData.isAvatar = true;
-  roomGroup.add(head);
+  group.add(head);
 
   // 아우라 링
   const ringGeo = new THREE.TorusGeometry(0.45, 0.025, 8, 40);
@@ -715,10 +731,31 @@ function buildAvatar() {
     transparent:true, opacity:0.8,
   });
   const ring = new THREE.Mesh(ringGeo, ringMat);
-  ring.position.set(0, -0.55, 0.5);
+  ring.position.y = 0.4;
   ring.rotation.x = Math.PI/2;
   ring.userData.isAura = true;
-  roomGroup.add(ring);
+  group.add(ring);
+
+  // 발밑 그림자 원
+  const shadowGeo = new THREE.CircleGeometry(0.3, 16);
+  const shadowMat = new THREE.MeshBasicMaterial({color:0x000000, transparent:true, opacity:0.3});
+  const shadow = new THREE.Mesh(shadowGeo, shadowMat);
+  shadow.rotation.x = -Math.PI/2;
+  shadow.position.y = -1.48;
+  group.add(shadow);
+
+  // 이름표 (작은 발광 박스)
+  const labelGeo = new THREE.BoxGeometry(0.9, 0.18, 0.02);
+  const labelMat = new THREE.MeshStandardMaterial({color:0x110022, emissive:0xc084fc, emissiveIntensity:0.3, transparent:true, opacity:0.85});
+  const label = new THREE.Mesh(labelGeo, labelMat);
+  label.position.y = 1.4;
+  group.add(label);
+
+  group.position.set(0, -1.5, 0.5);
+  group.userData.isMyAvatar = true;
+  group.userData.floatOffset = 0;
+  roomGroup.add(group);
+  myAvatarMesh = group;
 }
 
 // ══════════════════════════════════════════
@@ -833,21 +870,44 @@ function animate() {
   requestAnimationFrame(animate);
   floatTime += 0.016;
 
-  // 아바타 부유
+  // ── 내 캐릭터 목적지로 부드럽게 이동 ──
+  if(myAvatarMesh && avatarTargetPos) {
+    const spd = 0.06;
+    const dx = avatarTargetPos.x - myAvatarMesh.position.x;
+    const dz = avatarTargetPos.z - myAvatarMesh.position.z;
+    const dist = Math.sqrt(dx*dx + dz*dz);
+    if(dist > 0.05) {
+      myAvatarMesh.position.x += dx * spd;
+      myAvatarMesh.position.z += dz * spd;
+      // 이동 방향으로 캐릭터 회전
+      myAvatarMesh.rotation.y = Math.atan2(dx, dz);
+    } else {
+      myAvatarMesh.position.x = avatarTargetPos.x;
+      myAvatarMesh.position.z = avatarTargetPos.z;
+      avatarTargetPos = null;
+    }
+  }
+
+  // 아바타 부유 애니메이션
+  if(myAvatarMesh) {
+    myAvatarMesh.position.y = -1.5 + Math.sin(floatTime*0.8)*0.06;
+    myAvatarMesh.children.forEach(child=>{
+      if(child.userData.isAura) child.rotation.z = floatTime*0.6;
+    });
+  }
+
+  // 아이템 부유
   if(roomGroup) {
     roomGroup.children.forEach(obj=>{
-      if(obj.userData.isAvatar) {
-        obj.position.y = obj.userData.baseY !== undefined
-          ? obj.userData.baseY + Math.sin(floatTime*0.8)*0.06
-          : (obj.position.y + Math.sin(floatTime*0.8)*0.001);
-      }
-      if(obj.userData.isAura) {
-        obj.rotation.z = floatTime * 0.5;
-      }
-      // 아이템 부유
       if(obj.userData.itemId !== undefined) {
         obj.position.y += Math.sin(floatTime + obj.userData.floatOffset)*0.0005;
         obj.rotation.y += 0.003;
+      }
+      if(obj.userData.isAura) obj.rotation.z = floatTime * 0.5;
+      // 클릭 링 이펙트 크기 확장
+      if(obj.userData.isClickRing) {
+        obj.scale.x += 0.08; obj.scale.y += 0.08;
+        if(obj.material) obj.material.opacity -= 0.05;
       }
     });
   }
@@ -856,9 +916,7 @@ function animate() {
   if(particleSystem) particleSystem.rotation.y += 0.0003;
 
   // 조명 펄스
-  if(accentLight) {
-    accentLight.intensity = 2.0 + Math.sin(floatTime*1.2)*0.5;
-  }
+  if(accentLight) accentLight.intensity = 2.0 + Math.sin(floatTime*1.2)*0.5;
 
   renderer.render(scene, camera);
 }
@@ -873,18 +931,92 @@ function updateCameraPos() {
   camera.lookAt(0, 0, 0);
 }
 
+// 클릭 vs 드래그 구분용
+let dragMoved = false;
+
 function onMouseDown(e) {
   mouseDown=true;
+  dragMoved=false;
   lastMouse={x:e.clientX, y:e.clientY};
 }
 function onMouseMove(e) {
   if(!mouseDown) return;
   const dx = (e.clientX - lastMouse.x) * 0.005;
   const dy = (e.clientY - lastMouse.y) * 0.003;
+  // 일정 거리 이상 움직이면 드래그로 판단
+  const dist = Math.sqrt(
+    Math.pow(e.clientX-lastMouse.x,2)+Math.pow(e.clientY-lastMouse.y,2)
+  );
+  if(dist > 4) dragMoved = true;
   camTheta -= dx;
   camPhi = Math.max(-0.1, Math.min(1.0, camPhi - dy));
   updateCameraPos();
   lastMouse={x:e.clientX, y:e.clientY};
+}
+
+// ── 클릭 시 내 캐릭터 이동 ──
+function onCanvasClick(e) {
+  if(dragMoved) return; // 드래그면 무시
+  moveAvatarToClick(e.clientX, e.clientY);
+}
+
+function moveAvatarToClick(clientX, clientY) {
+  const canvas = document.getElementById('threeCanvas');
+  const rect = canvas.getBoundingClientRect();
+  const mouse = new THREE.Vector2(
+    ((clientX - rect.left) / rect.width) * 2 - 1,
+    -((clientY - rect.top) / rect.height) * 2 + 1
+  );
+
+  const raycaster = new THREE.Raycaster();
+  raycaster.setFromCamera(mouse, camera);
+
+  // 바닥 평면과 교차점 계산
+  const floorPlane = new THREE.Plane(new THREE.Vector3(0,1,0), 1.5);
+  const target = new THREE.Vector3();
+  raycaster.ray.intersectPlane(floorPlane, target);
+
+  if(!target) return;
+
+  // 방 경계 안으로 제한
+  target.x = Math.max(-2.5, Math.min(2.5, target.x));
+  target.z = Math.max(-2.0, Math.min(2.0, target.z));
+
+  // 캐릭터 이동 목적지 설정
+  avatarTargetPos = target.clone();
+
+  // 클릭 위치에 파티클 효과
+  spawnClickEffect(target);
+  showToast('🌟 캐릭터가 이동 중...');
+}
+
+// 클릭 위치 파티클
+function spawnClickEffect(pos) {
+  for(let i=0;i<8;i++){
+    const geo = new THREE.SphereGeometry(0.04,6,6);
+    const mat = new THREE.MeshStandardMaterial({
+      color:0xc084fc, emissive:0xc084fc, emissiveIntensity:2, transparent:true, opacity:0.9
+    });
+    const p = new THREE.Mesh(geo, mat);
+    const angle = (i/8)*Math.PI*2;
+    p.position.set(
+      pos.x + Math.cos(angle)*0.3,
+      pos.y + 0.05,
+      pos.z + Math.sin(angle)*0.3
+    );
+    p.userData.life = 1.0;
+    scene.add(p);
+    setTimeout(()=>scene.remove(p), 800);
+  }
+  // 클릭 링 이펙트
+  const ringGeo = new THREE.RingGeometry(0.1, 0.15, 32);
+  const ringMat = new THREE.MeshBasicMaterial({color:0xc084fc, transparent:true, opacity:0.8, side:THREE.DoubleSide});
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.rotation.x = -Math.PI/2;
+  ring.position.set(pos.x, pos.y+0.02, pos.z);
+  ring.userData.isClickRing = true;
+  scene.add(ring);
+  setTimeout(()=>scene.remove(ring), 600);
 }
 function onWheel(e) {
   camRadius = Math.max(3, Math.min(12, camRadius + e.deltaY*0.01));
