@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>아스트라 방 — ASTERIA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --void:#030308; --panel:rgba(10,10,22,0.95);
+  --border:rgba(180,150,255,0.13); --gold:#f0c040;
+  --accent:#c084fc; --accent2:#818cf8; --accent3:#38bdf8;
+  --text:#e8e4f0; --muted:rgba(200,190,220,0.5);
+  --room-wall:#0d0820; --room-floor:#07051a;
+  --room-accent:#c084fc;
+}
+html,body {
+  width:100%; min-height:100%;
+  background:var(--void); color:var(--text);
+  font-family:'Noto Sans KR',sans-serif;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none; overflow-x:hidden;
+}
+#app { max-width:480px; margin:0 auto; min-height:100vh; position:relative; }
+
+/* ── 파티클 캔버스 ── */
+#bgCanvas { position:fixed; inset:0; z-index:0; pointer-events:none;
+  max-width:480px; left:50%; transform:translateX(-50%); }
+
+/* ════════════════════════════
+   TOP BAR
+════════════════════════════ */
+.topbar {
+  position:sticky; top:0; z-index:200;
+  display:flex; align-items:center; gap:12px;
+  padding:13px 18px;
+  background:var(--panel); backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+.tb-back { width:34px; height:34px; border-radius:50%;
+  background:rgba(255,255,255,.06); border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; cursor:pointer; text-decoration:none; color:var(--text); }
+.tb-info { flex:1; }
+.tb-name { font-size:15px; font-weight:700; }
+.tb-sub { font-size:10px; color:var(--muted); margin-top:1px; }
+.tb-actions { display:flex; gap:8px; }
+.tb-btn {
+  padding:7px 14px; border-radius:20px; border:none;
+  font-size:12px; font-weight:700; cursor:pointer;
+  font-family:'Noto Sans KR',sans-serif; transition:all .2s;
+}
+.tb-btn-share { background:rgba(240,192,64,.15); border:1px solid rgba(240,192,64,.4); color:var(--gold); }
+.tb-btn-share:hover { background:rgba(240,192,64,.25); }
+.tb-btn-edit { background:linear-gradient(90deg,var(--accent),var(--accent2)); color:#fff; }
+.tb-btn-edit:hover { box-shadow:0 0 16px rgba(192,132,252,.4); }
+
+/* ════════════════════════════
+   방 소유자 프로필
+════════════════════════════ */
+.owner-profile {
+  position:relative; z-index:10;
+  padding:20px 18px 0;
+  display:flex; align-items:center; gap:14px;
+}
+.owner-av {
+  width:64px; height:64px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font-size:30px;
+  position:relative; flex-shrink:0;
+  animation:avFloat 4s ease-in-out infinite;
+}
+@keyframes avFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+.owner-av-ring {
+  position:absolute; inset:-4px; border-radius:50%;
+  border:2px solid transparent;
+  animation:ringSpin 8s linear infinite;
+}
+@keyframes ringSpin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+.owner-info { flex:1; }
+.owner-name { font-size:18px; font-weight:900; }
+.owner-grade { font-size:11px; font-weight:600; margin-top:3px;
+  display:inline-flex; align-items:center; gap:6px; }
+.owner-stats-row { display:flex; gap:14px; margin-top:8px; }
+.owner-stat { font-size:11px; color:var(--muted); }
+.owner-stat span { color:var(--text); font-weight:700; }
+
+/* ════════════════════════════
+   방 진화 단계 배너
+════════════════════════════ */
+.stage-banner {
+  position:relative; z-index:10;
+  margin:14px 18px 0;
+  padding:10px 16px; border-radius:14px;
+  display:flex; align-items:center; gap:12px;
+  background:rgba(255,255,255,.03); border:1px solid var(--border);
+}
+.stage-dots { display:flex; gap:6px; }
+.stage-dot { width:28px; height:6px; border-radius:3px; background:rgba(255,255,255,.1); transition:all .5s; }
+.stage-dot.active { background:var(--room-accent); box-shadow:0 0 8px var(--room-accent); }
+.stage-info { flex:1; }
+.stage-name { font-size:12px; font-weight:700; }
+.stage-desc { font-size:10px; color:var(--muted); margin-top:1px; }
+.stage-next { font-size:10px; color:var(--gold); font-weight:600; }
+
+/* ════════════════════════════
+   방 (THE ROOM) — 핵심 시각
+════════════════════════════ */
+.room-wrap {
+  position:relative; z-index:10;
+  margin:14px 18px 0;
+  border-radius:20px; overflow:hidden;
+  border:1px solid var(--border);
+  box-shadow:0 0 40px rgba(192,132,252,.1);
+}
+
+/* 방 전체 */
+.room {
+  position:relative; width:100%; height:320px;
+  transition: background 1s ease;
+  overflow:hidden; cursor:pointer;
+}
+
+/* 원근감 바닥 */
+.room-floor {
+  position:absolute; bottom:0; left:0; right:0; height:45%;
+  transition: background 1s ease;
+}
+.room-floor::before {
+  content:''; position:absolute; inset:0;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(255,255,255,.03) 0px, rgba(255,255,255,.03) 1px,
+    transparent 1px, transparent 40px
+  ),
+  repeating-linear-gradient(
+    0deg,
+    rgba(255,255,255,.03) 0px, rgba(255,255,255,.03) 1px,
+    transparent 1px, transparent 40px
+  );
+}
+
+/* 방 벽 */
+.room-wall {
+  position:absolute; top:0; left:0; right:0; height:58%;
+  transition: background 1s ease;
+}
+.room-wall::after {
+  content:''; position:absolute; inset:0;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(255,255,255,.015) 0px, rgba(255,255,255,.015) 1px,
+    transparent 1px, transparent 80px
+  );
+}
+
+/* 천장 몰딩 */
+.room-molding {
+  position:absolute; top:40%; left:0; right:0; height:4px;
+  transition: background .5s;
+}
+
+/* ── 배치된 아이템들 ── */
+.room-items { position:absolute; inset:0; }
+.placed-item {
+  position:absolute;
+  display:flex; flex-direction:column; align-items:center;
+  cursor:grab; transition:filter .2s;
+  animation:itemFloat 3s ease-in-out infinite;
+}
+.placed-item:hover { filter:brightness(1.3); }
+.placed-item:active { cursor:grabbing; }
+@keyframes itemFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+.placed-item .item-emoji { font-size:36px; }
+.placed-item .item-label {
+  font-size:9px; color:rgba(255,255,255,.5); margin-top:3px;
+  white-space:nowrap; text-align:center;
+}
+.placed-item .item-glow {
+  position:absolute; inset:-10px; border-radius:50%;
+  opacity:.3; filter:blur(12px);
+  animation:glowPulse 2s ease-in-out infinite;
+}
+@keyframes glowPulse { 0%,100%{opacity:.2} 50%{opacity:.5} }
+
+/* 빈 슬롯 힌트 */
+.empty-slot {
+  position:absolute; width:60px; height:60px;
+  border:1.5px dashed rgba(192,132,252,.2); border-radius:14px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px; color:rgba(192,132,252,.2);
+  cursor:pointer; transition:all .25s;
+}
+.empty-slot:hover {
+  border-color:rgba(192,132,252,.5);
+  color:rgba(192,132,252,.5);
+  background:rgba(192,132,252,.05);
+}
+
+/* 아바타 in room */
+.room-avatar {
+  position:absolute; bottom:18%; left:50%; transform:translateX(-50%);
+  display:flex; flex-direction:column; align-items:center;
+  animation:avatarBob 3s ease-in-out infinite;
+  z-index:5;
+}
+@keyframes avatarBob { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(-6px)} }
+.room-avatar-body {
+  width:56px; height:56px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font-size:28px;
+  position:relative;
+}
+.room-avatar-aura {
+  position:absolute; inset:-6px; border-radius:50%;
+  animation:auraRotate 6s linear infinite;
+}
+@keyframes auraRotate { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+.room-avatar-shadow {
+  width:40px; height:8px; border-radius:50%;
+  background:rgba(0,0,0,.4); filter:blur(4px);
+  margin-top:4px;
+}
+
+/* 파티클 in room */
+.room-particles {
+  position:absolute; inset:0; pointer-events:none; overflow:hidden;
+}
+.room-particle {
+  position:absolute; width:3px; height:3px; border-radius:50%;
+  animation:roomParticle linear infinite;
+  opacity:.6;
+}
+@keyframes roomParticle {
+  from { transform:translateY(100%) translateX(0); opacity:.6; }
+  to   { transform:translateY(-20px) translateX(var(--dx,20px)); opacity:0; }
+}
+
+/* 방문자 수 오버레이 */
+.room-visitor-badge {
+  position:absolute; top:12px; right:12px;
+  background:rgba(0,0,0,.5); backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.1); border-radius:20px;
+  padding:5px 12px; font-size:11px; display:flex; align-items:center; gap:6px;
+}
+.visitor-dot { width:6px; height:6px; border-radius:50%; background:#10b981; animation:livePulse 1.2s infinite; }
+@keyframes livePulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* 방 테마 배지 */
+.room-theme-badge {
+  position:absolute; bottom:12px; left:12px;
+  background:rgba(0,0,0,.5); backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.1); border-radius:20px;
+  padding:5px 12px; font-size:11px; color:var(--muted);
+}
+
+/* ════════════════════════════
+   방 통계 카드
+════════════════════════════ */
+.room-stats {
+  position:relative; z-index:10;
+  display:grid; grid-template-columns:repeat(3,1fr); gap:8px;
+  margin:12px 18px 0;
+}
+.room-stat-card {
+  background:rgba(255,255,255,.03); border:1px solid var(--border);
+  border-radius:14px; padding:12px; text-align:center;
+}
+.rsc-icon { font-size:18px; margin-bottom:4px; }
+.rsc-val { font-size:16px; font-weight:900; }
+.rsc-label { font-size:10px; color:var(--muted); margin-top:2px; }
+
+/* ════════════════════════════
+   아이템 인벤토리
+════════════════════════════ */
+.inventory-section {
+  position:relative; z-index:10;
+  padding:16px 18px 0;
+}
+.inv-header {
+  display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;
+}
+.section-title {
+  font-size:10px; color:var(--muted); letter-spacing:2.5px;
+  text-transform:uppercase; display:flex; align-items:center; gap:8px;
+}
+.section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+.inv-filter { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+.filter-chip {
+  padding:5px 12px; border-radius:20px; font-size:11px; font-weight:600;
+  border:1px solid var(--border); background:transparent; color:var(--muted);
+  cursor:pointer; transition:all .2s; font-family:'Noto Sans KR',sans-serif;
+}
+.filter-chip.active { background:rgba(192,132,252,.15); border-color:var(--accent); color:var(--accent); }
+.inv-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+.inv-item {
+  background:rgba(255,255,255,.03); border:1px solid var(--border);
+  border-radius:14px; padding:12px 6px; text-align:center;
+  cursor:pointer; transition:all .25s; position:relative; overflow:hidden;
+}
+.inv-item:hover { border-color:var(--accent); background:rgba(192,132,252,.08); transform:scale(1.03); }
+.inv-item.placed { border-color:rgba(16,185,129,.5); background:rgba(16,185,129,.06); }
+.inv-item-emoji { font-size:26px; margin-bottom:5px; }
+.inv-item-name { font-size:9px; color:var(--text); font-weight:500; line-height:1.3; }
+.inv-item-rarity {
+  font-size:8px; margin-top:3px; font-weight:700; letter-spacing:.5px;
+}
+.rarity-common { color:#94a3b8; }
+.rarity-rare { color:#38bdf8; }
+.rarity-epic { color:#c084fc; }
+.rarity-legendary { color:var(--gold); }
+.rarity-genesis { color:#ff6b6b; }
+.inv-item-lock {
+  position:absolute; inset:0; background:rgba(0,0,0,.6);
+  display:flex; align-items:center; justify-content:center;
+  border-radius:14px; font-size:18px;
+}
+.placed-badge {
+  position:absolute; top:4px; right:4px;
+  width:14px; height:14px; border-radius:50%;
+  background:#10b981; display:flex; align-items:center; justify-content:center;
+  font-size:8px;
+}
+
+/* ════════════════════════════
+   테마 선택
+════════════════════════════ */
+.theme-section {
+  position:relative; z-index:10;
+  padding:16px 18px 0;
+}
+.theme-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.theme-card {
+  border-radius:14px; overflow:hidden; cursor:pointer;
+  border:2px solid transparent; transition:all .25s; position:relative;
+  aspect-ratio:16/9;
+}
+.theme-card.active { border-color:var(--gold); box-shadow:0 0 16px rgba(240,192,64,.3); }
+.theme-card:hover { transform:scale(1.02); }
+.theme-preview { width:100%; height:100%; display:flex; align-items:flex-end; padding:6px 8px; }
+.theme-name { font-size:10px; font-weight:700; text-shadow:0 1px 4px rgba(0,0,0,.8); }
+.theme-active-badge {
+  position:absolute; top:4px; right:4px;
+  background:var(--gold); color:var(--void); border-radius:20px;
+  font-size:8px; font-weight:900; padding:2px 6px;
+}
+
+/* ════════════════════════════
+   방문자 & 방명록
+════════════════════════════ */
+.visitors-section {
+  position:relative; z-index:10;
+  padding:16px 18px 0;
+}
+.visitor-list { display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
+.visitor-card {
+  background:rgba(255,255,255,.03); border:1px solid var(--border);
+  border-radius:12px; padding:12px 14px;
+  display:flex; align-items:center; gap:10px;
+}
+.visitor-av {
+  width:36px; height:36px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font-size:18px;
+  flex-shrink:0;
+}
+.visitor-info { flex:1; }
+.visitor-name { font-size:13px; font-weight:600; }
+.visitor-msg { font-size:11px; color:var(--muted); margin-top:2px; line-height:1.4; }
+.visitor-time { font-size:10px; color:var(--muted); flex-shrink:0; }
+.visitor-heart { font-size:16px; cursor:pointer; transition:transform .2s; }
+.visitor-heart:hover { transform:scale(1.3); }
+
+/* 방명록 입력 */
+.gb-input-wrap { display:flex; gap:8px; }
+.gb-input {
+  flex:1; background:rgba(255,255,255,.05); border:1px solid var(--border);
+  border-radius:12px; padding:10px 14px; color:var(--text); font-size:13px;
+  font-family:'Noto Sans KR',sans-serif; outline:none; transition:border-color .2s;
+}
+.gb-input:focus { border-color:rgba(192,132,252,.5); }
+.gb-send {
+  padding:0 18px; border-radius:12px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  border:none; color:#fff; font-size:13px; font-weight:700;
+  cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:all .2s;
+  white-space:nowrap;
+}
+.gb-send:hover { box-shadow:0 0 16px rgba(192,132,252,.4); }
+
+/* ════════════════════════════
+   SNS 공유 버튼
+════════════════════════════ */
+.share-section {
+  position:relative; z-index:10;
+  padding:16px 18px 0;
+}
+.share-card {
+  background:rgba(255,255,255,.03); border:1px solid var(--border);
+  border-radius:16px; padding:18px;
+}
+.share-preview {
+  width:100%; aspect-ratio:16/9; border-radius:12px; overflow:hidden;
+  margin-bottom:14px; position:relative;
+  background:linear-gradient(135deg,#0d0820,#07051a);
+  display:flex; align-items:center; justify-content:center;
+}
+.share-preview-room { font-size:48px; }
+.share-preview-overlay {
+  position:absolute; inset:0;
+  background:linear-gradient(to bottom, transparent 40%, rgba(0,0,0,.8));
+  display:flex; align-items:flex-end; padding:14px;
+}
+.share-preview-info { }
+.share-preview-name { font-size:14px; font-weight:700; }
+.share-preview-sub { font-size:11px; color:var(--muted); }
+.share-btns { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+.share-btn {
+  padding:10px 6px; border-radius:12px; border:1px solid var(--border);
+  background:rgba(255,255,255,.04); cursor:pointer; text-align:center;
+  font-size:11px; color:var(--text); font-family:'Noto Sans KR',sans-serif;
+  transition:all .2s; display:flex; flex-direction:column; align-items:center; gap:4px;
+}
+.share-btn:hover { border-color:var(--accent); background:rgba(192,132,252,.08); }
+.share-btn-icon { font-size:20px; }
+
+/* ════════════════════════════
+   경쟁 랭킹 배너
+════════════════════════════ */
+.ranking-banner {
+  position:relative; z-index:10;
+  margin:16px 18px 0;
+  padding:14px 16px; border-radius:16px;
+  background:linear-gradient(135deg,rgba(240,192,64,.08),rgba(192,132,252,.08));
+  border:1px solid rgba(240,192,64,.2);
+  display:flex; align-items:center; gap:12px;
+}
+.rb-trophy { font-size:28px; }
+.rb-info { flex:1; }
+.rb-title { font-size:12px; font-weight:700; color:var(--gold); }
+.rb-desc { font-size:11px; color:var(--muted); margin-top:2px; }
+.rb-rank {
+  font-family:'Orbitron',monospace; font-size:22px; font-weight:900;
+  color:var(--gold); text-align:center;
+}
+.rb-rank-label { font-size:9px; color:var(--muted); text-align:center; }
+
+/* ════════════════════════════
+   BOTTOM NAV
+════════════════════════════ */
+.bottom-nav {
+  position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+  width:100%; max-width:480px;
+  background:var(--panel); backdrop-filter:blur(24px);
+  border-top:1px solid var(--border);
+  display:flex; z-index:300;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.nav-item {
+  flex:1; display:flex; flex-direction:column; align-items:center;
+  padding:10px 0 8px; cursor:pointer; transition:all .2s;
+  text-decoration:none; color:var(--muted);
+}
+.nav-item.active { color:var(--accent); }
+.nav-item-icon { font-size:20px; margin-bottom:3px; }
+.nav-item-label { font-size:9px; font-weight:500; }
+
+/* ════════════════════════════
+   ITEM PLACE MODAL
+════════════════════════════ */
+.modal-overlay {
+  position:fixed; inset:0; z-index:9000;
+  background:rgba(0,0,0,.75); backdrop-filter:blur(12px);
+  display:none; align-items:flex-end; justify-content:center;
+}
+.modal-overlay.show { display:flex; }
+.modal-box {
+  width:100%; max-width:480px;
+  background:rgba(12,12,26,.98); border-top:1px solid var(--border);
+  border-radius:24px 24px 0 0; padding:24px 20px 40px;
+  animation:slideUp .3s cubic-bezier(.4,0,.2,1);
+  max-height:70vh; overflow-y:auto;
+}
+@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.modal-box::-webkit-scrollbar{width:3px}
+.modal-box::-webkit-scrollbar-thumb{background:rgba(192,132,252,.3);border-radius:3px}
+.modal-handle { width:40px; height:4px; border-radius:2px; background:rgba(255,255,255,.2); margin:0 auto 20px; }
+.modal-title { font-family:'Orbitron',monospace; font-size:14px; font-weight:700; color:var(--accent); margin-bottom:16px; }
+.modal-item-info {
+  display:flex; align-items:center; gap:14px;
+  background:rgba(255,255,255,.04); border-radius:14px; padding:14px; margin-bottom:16px;
+}
+.modal-item-emoji { font-size:40px; }
+.modal-item-detail { flex:1; }
+.modal-item-name { font-size:15px; font-weight:700; }
+.modal-item-rarity { font-size:11px; margin-top:2px; }
+.modal-item-bonus { font-size:12px; color:var(--accent); margin-top:6px; }
+.modal-slots { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:16px; }
+.slot-btn {
+  aspect-ratio:1; border-radius:12px; border:1.5px dashed rgba(192,132,252,.25);
+  background:rgba(255,255,255,.03); display:flex; flex-direction:column;
+  align-items:center; justify-content:center; cursor:pointer; transition:all .2s;
+  font-size:12px; color:var(--muted); gap:4px;
+}
+.slot-btn:hover { border-color:var(--accent); background:rgba(192,132,252,.08); color:var(--text); }
+.slot-btn.occupied { border-style:solid; border-color:rgba(192,132,252,.4); }
+.slot-btn.occupied:hover { border-color:#ef4444; }
+.slot-btn-emoji { font-size:22px; }
+.slot-btn-label { font-size:9px; }
+.modal-cancel {
+  width:100%; padding:12px; border-radius:14px;
+  background:transparent; border:1px solid var(--border);
+  color:var(--muted); font-size:14px; cursor:pointer;
+  font-family:'Noto Sans KR',sans-serif; transition:all .2s;
+}
+.modal-cancel:hover { border-color:var(--accent); color:var(--text); }
+
+/* ════════════════════════════
+   TOAST
+════════════════════════════ */
+.toast {
+  position:fixed; bottom:85px; left:50%; transform:translateX(-50%);
+  background:rgba(12,12,26,.97); border:1px solid var(--border);
+  border-radius:12px; padding:11px 22px; font-size:13px;
+  z-index:8000; opacity:0; transition:opacity .3s; pointer-events:none;
+  white-space:nowrap; box-shadow:0 8px 32px rgba(0,0,0,.5);
+}
+.toast.show { opacity:1; }
+
+.spacer { height:100px; }
+</style>
+</head>
+<body>
+<canvas id="bgCanvas"></canvas>
+<div id="toast" class="toast"></div>
+
+<!-- 아이템 배치 모달 -->
+<div class="modal-overlay" id="placeModal">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modalTitle">어디에 배치할까요?</div>
+    <div class="modal-item-info" id="modalItemInfo"></div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">슬롯을 선택하세요</div>
+    <div class="modal-slots" id="modalSlots"></div>
+    <button class="modal-cancel" onclick="closeModal()">취소</button>
+  </div>
+</div>
+
+<div id="app">
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <a class="tb-back" href="/astra.html">←</a>
+    <div class="tb-info">
+      <div class="tb-name" id="tbName">별빛 탐험가의 방</div>
+      <div class="tb-sub" id="tbSub">🌟 더스트 리그 · 성진 Lv.23</div>
+    </div>
+    <div class="tb-actions">
+      <button class="tb-btn tb-btn-share" onclick="shareRoom()">공유 📤</button>
+      <button class="tb-btn tb-btn-edit" id="editBtn" onclick="toggleEditMode()">꾸미기 ✏️</button>
+    </div>
+  </div>
+
+  <!-- 방 주인 프로필 -->
+  <div class="owner-profile">
+    <div class="owner-av" id="ownerAv">
+      <div style="position:relative;width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,rgba(192,132,252,.4),rgba(7,7,15,.9));display:flex;align-items:center;justify-content:center;font-size:32px;border:2px solid rgba(240,192,64,.4)">
+        🌟
+        <div class="owner-av-ring" style="border-top:2px solid rgba(240,192,64,.5);border-right:2px solid transparent;border-bottom:2px solid transparent;border-left:2px solid transparent"></div>
+      </div>
+    </div>
+    <div class="owner-info">
+      <div class="owner-name">별빛 탐험가</div>
+      <div class="owner-grade">
+        <span style="background:rgba(148,163,184,.15);border:1px solid rgba(148,163,184,.3);color:#94a3b8;padding:2px 10px;border-radius:20px;font-size:10px">성진 Lv.23</span>
+        <span style="color:var(--muted);font-size:10px">더스트 리그</span>
+      </div>
+      <div class="owner-stats-row">
+        <div class="owner-stat">방문 <span id="visitCount">127</span></div>
+        <div class="owner-stat">하트 <span id="heartCount">89</span></div>
+        <div class="owner-stat">CP <span id="cpCount">380</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 방 진화 단계 -->
+  <div class="stage-banner">
+    <div class="stage-dots">
+      <div class="stage-dot active" id="sd1"></div>
+      <div class="stage-dot" id="sd2"></div>
+      <div class="stage-dot" id="sd3"></div>
+    </div>
+    <div class="stage-info">
+      <div class="stage-name" id="stageName">🌑 Void — 어두운 방</div>
+      <div class="stage-desc" id="stageDesc">아이템 3개 더 배치하면 Ignition 단계로 진화해요!</div>
+    </div>
+    <div class="stage-next" id="stageNext">1/3 ✦</div>
+  </div>
+
+  <!-- 경쟁 랭킹 배너 -->
+  <div class="ranking-banner">
+    <div class="rb-trophy">🏆</div>
+    <div class="rb-info">
+      <div class="rb-title">이번 주 방 꾸미기 대회</div>
+      <div class="rb-desc">더스트 리그 내 현재 순위</div>
+    </div>
+    <div>
+      <div class="rb-rank" id="roomRank">#47</div>
+      <div class="rb-rank-label">/ 2,841명</div>
+    </div>
+  </div>
+
+  <!-- 방 (메인 시각) -->
+  <div class="room-wrap" id="roomWrap">
+    <div class="room" id="theRoom" onclick="onRoomTap(event)">
+      <!-- 벽 -->
+      <div class="room-wall" id="roomWall"></div>
+      <!-- 바닥 -->
+      <div class="room-floor" id="roomFloor"></div>
+      <!-- 몰딩 -->
+      <div class="room-molding" id="roomMolding"></div>
+
+      <!-- 파티클 -->
+      <div class="room-particles" id="roomParticles"></div>
+
+      <!-- 배치된 아이템들 -->
+      <div class="room-items" id="roomItems"></div>
+
+      <!-- 아바타 -->
+      <div class="room-avatar" id="roomAvatar">
+        <div class="room-avatar-body" id="roomAvatarBody">
+          <div class="room-avatar-aura" id="roomAvatarAura"
+            style="border-top:2px solid rgba(192,132,252,.5);border-right:2px solid transparent;border-bottom:2px solid transparent;border-left:2px solid transparent;inset:-5px"></div>
+          🌟
+        </div>
+        <div class="room-avatar-shadow"></div>
+      </div>
+
+      <!-- 방문자 수 -->
+      <div class="room-visitor-badge">
+        <div class="visitor-dot"></div>
+        <span id="liveVisitors">3명 방문 중</span>
+      </div>
+
+      <!-- 테마 배지 -->
+      <div class="room-theme-badge" id="roomThemeBadge">🌑 보이드 테마</div>
+    </div>
+  </div>
+
+  <!-- 방 통계 -->
+  <div class="room-stats">
+    <div class="room-stat-card">
+      <div class="rsc-icon">👁️</div>
+      <div class="rsc-val" id="statVisit">127</div>
+      <div class="rsc-label">총 방문</div>
+    </div>
+    <div class="room-stat-card">
+      <div class="rsc-icon">💜</div>
+      <div class="rsc-val" id="statHeart">89</div>
+      <div class="rsc-label">받은 하트</div>
+    </div>
+    <div class="room-stat-card">
+      <div class="rsc-icon">⚡</div>
+      <div class="rsc-val" id="statCP">380</div>
+      <div class="rsc-label">문화력 CP</div>
+    </div>
+  </div>
+
+  <!-- 인벤토리 -->
+  <div class="inventory-section">
+    <div class="section-title" style="margin-bottom:12px">✦ 내 아이템</div>
+    <div class="inv-filter">
+      <button class="filter-chip active" onclick="filterItems('all',this)">전체</button>
+      <button class="filter-chip" onclick="filterItems('furniture',this)">가구</button>
+      <button class="filter-chip" onclick="filterItems('artifact',this)">아티팩트</button>
+      <button class="filter-chip" onclick="filterItems('decor',this)">장식</button>
+      <button class="filter-chip" onclick="filterItems('special',this)">특수</button>
+    </div>
+    <div class="inv-grid" id="invGrid"></div>
+  </div>
+
+  <!-- 테마 선택 -->
+  <div class="theme-section">
+    <div class="section-title" style="margin-bottom:12px">✦ 방 테마</div>
+    <div class="theme-grid" id="themeGrid"></div>
+  </div>
+
+  <!-- 방문자 & 방명록 -->
+  <div class="visitors-section">
+    <div class="section-title" style="margin-bottom:12px">✦ 방명록</div>
+    <div class="visitor-list" id="visitorList"></div>
+    <div class="gb-input-wrap">
+      <input class="gb-input" id="gbInput" placeholder="방명록을 남겨보세요 ✨" maxlength="100">
+      <button class="gb-send" onclick="sendGuestbook()">남기기</button>
+    </div>
+  </div>
+
+  <!-- SNS 공유 -->
+  <div class="share-section">
+    <div class="section-title" style="margin-bottom:12px">✦ 뽐내기</div>
+    <div class="share-card">
+      <div class="share-preview" id="sharePreview">
+        <div class="share-preview-room" id="sharePreviewRoom">🌟</div>
+        <div class="share-preview-overlay">
+          <div class="share-preview-info">
+            <div class="share-preview-name">별빛 탐험가의 방</div>
+            <div class="share-preview-sub">ASTERIA · 더스트 리그 · #00042</div>
+          </div>
+        </div>
+      </div>
+      <div class="share-btns">
+        <button class="share-btn" onclick="shareToSNS('instagram')">
+          <div class="share-btn-icon">📸</div>인스타
+        </button>
+        <button class="share-btn" onclick="shareToSNS('twitter')">
+          <div class="share-btn-icon">🐦</div>X(트위터)
+        </button>
+        <button class="share-btn" onclick="shareToSNS('kakao')">
+          <div class="share-btn-icon">💬</div>카카오톡
+        </button>
+        <button class="share-btn" onclick="shareToSNS('copy')">
+          <div class="share-btn-icon">🔗</div>링크복사
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <a class="nav-item" href="/"><div class="nav-item-icon">🏠</div><div class="nav-item-label">홈</div></a>
+    <a class="nav-item" href="/astra.html"><div class="nav-item-icon">⭐</div><div class="nav-item-label">아스트라</div></a>
+    <a class="nav-item active" href="#"><div class="nav-item-icon">🏡</div><div class="nav-item-label">내 방</div></a>
+    <a class="nav-item" href="/nebula.html"><div class="nav-item-icon">🌌</div><div class="nav-item-label">성궤</div></a>
+    <a class="nav-item" href="#"><div class="nav-item-icon">👤</div><div class="nav-item-label">MY</div></a>
+  </nav>
+</div>
+
+<script>
+// ════════════════════════════════════
+// BG PARTICLES
+// ════════════════════════════════════
+const bgC = document.getElementById('bgCanvas');
+const bgX = bgC.getContext('2d');
+let W, H;
+function rsz() { W=bgC.width=Math.min(480,window.innerWidth); H=bgC.height=window.innerHeight; }
+rsz(); window.addEventListener('resize',rsz);
+const bgStars = Array.from({length:160},()=>({
+  x:Math.random()*480, y:Math.random()*800,
+  s:Math.random()*1.2+.2, a:Math.random()*.4+.08,
+  ph:Math.random()*Math.PI*2, sp:Math.random()*.012+.003,
+  col:['#f0c040','#c084fc','#38bdf8','#fff'][Math.floor(Math.random()*4)]
+}));
+function bgLoop() {
+  bgX.clearRect(0,0,W,H);
+  bgStars.forEach(s=>{
+    s.ph+=s.sp;
+    bgX.globalAlpha=s.a*(.4+.6*Math.sin(s.ph));
+    bgX.fillStyle=s.col;
+    bgX.beginPath(); bgX.arc(s.x%W,s.y%H,s.s,0,Math.PI*2); bgX.fill();
+  });
+  bgX.globalAlpha=1;
+  requestAnimationFrame(bgLoop);
+}
+bgLoop();
+
+// ════════════════════════════════════
+// DATA
+// ════════════════════════════════════
+const THEMES = [
+  { id:'void',    name:'보이드',   icon:'🌑', wall:'#0d0820', floor:'#07051a', molding:'#c084fc', accent:'#c084fc' },
+  { id:'nebula',  name:'성운',     icon:'💜', wall:'#120830', floor:'#0a0520', molding:'#a855f7', accent:'#a855f7' },
+  { id:'nova',    name:'노바',     icon:'🔥', wall:'#1a0808', floor:'#0f0505', molding:'#ef4444', accent:'#ef4444' },
+  { id:'ocean',   name:'심해',     icon:'🌊', wall:'#020f1a', floor:'#010a12', molding:'#38bdf8', accent:'#38bdf8' },
+  { id:'gold',    name:'제국',     icon:'✨', wall:'#0d0a00', floor:'#080700', molding:'#f0c040', accent:'#f0c040' },
+  { id:'crystal', name:'수정',     icon:'❄️', wall:'#020a18', floor:'#010810', molding:'#bae6fd', accent:'#bae6fd' },
+  { id:'forest',  name:'숲속',     icon:'🌿', wall:'#041208', floor:'#020b04', molding:'#4ade80', accent:'#4ade80' },
+  { id:'galaxy',  name:'은하수',   icon:'🌌', wall:'#050320', floor:'#030118', molding:'#818cf8', accent:'#818cf8' },
+  { id:'cherry',  name:'벚꽃',     icon:'🌸', wall:'#1a0510', floor:'#12030b', molding:'#f472b6', accent:'#f472b6' },
+];
+
+const ITEMS = [
+  { id:1,  name:'별빛 조명',   emoji:'💡', type:'decor',     rarity:'common',    bonus:'LOY +2',   placed:true,  slot:1,  pos:{left:'12%',top:'15%'} },
+  { id:2,  name:'아스트라 포스터', emoji:'🖼️', type:'decor', rarity:'common',    bonus:'ACT +3',   placed:true,  slot:2,  pos:{left:'70%',top:'12%'} },
+  { id:3,  name:'오라클 테이블',emoji:'🔮', type:'furniture', rarity:'rare',     bonus:'INT +15',  placed:true,  slot:3,  pos:{left:'32%',top:'55%'} },
+  { id:4,  name:'무지개 수정', emoji:'💎', type:'artifact',  rarity:'rare',      bonus:'CRE +10',  placed:false, slot:null },
+  { id:5,  name:'사유의 의자', emoji:'🪑', type:'furniture', rarity:'common',    bonus:'INT +5',   placed:false, slot:null },
+  { id:6,  name:'아티스트 홀로그램', emoji:'✨', type:'special', rarity:'epic', bonus:'REL +25',  placed:false, slot:null },
+  { id:7,  name:'우주 카펫',   emoji:'🌌', type:'decor',     rarity:'rare',      bonus:'SOC +8',   placed:false, slot:null },
+  { id:8,  name:'황금 액자',   emoji:'🖼️', type:'decor',    rarity:'epic',      bonus:'ECO +12',  placed:false, slot:null },
+  { id:9,  name:'음악 플레이어',emoji:'🎵', type:'furniture', rarity:'common',   bonus:'LOY +5',   placed:false, slot:null },
+  { id:10, name:'시간의 모래시계',emoji:'⏳',type:'special',  rarity:'legendary', bonus:'LOY +50',  placed:false, slot:null, locked:true, lockMsg:'365일 출석' },
+  { id:11, name:'뮤즈의 깃펜', emoji:'✒️', type:'special',  rarity:'legendary', bonus:'CRE +80',  placed:false, slot:null, locked:true, lockMsg:'팬아트 베스트 10회' },
+  { id:12, name:'제네시스 오브',emoji:'🔵', type:'artifact', rarity:'genesis',   bonus:'ALL +20',  placed:false, slot:null, locked:true, lockMsg:'개척자 전용' },
+];
+
+const GUESTBOOK = [
+  { name:'NovaFan99', emoji:'💫', msg:'진짜 방 꾸미기가 대박이에요! 오라클 테이블 어디서 얻었어요? ✨', time:'10분 전', hearts:3 },
+  { name:'StarQueen', emoji:'⭐', msg:'창의 스탯 112가 여기서 나오는군요 ㅋㅋ 방 너무 예쁘다!', time:'1시간 전', hearts:7 },
+  { name:'EclipseKing', emoji:'🌙', msg:'우리 리그 1등 노려봐요 같이 화이팅!', time:'3시간 전', hearts:2 },
+];
+
+// ════════════════════════════════════
+// STATE
+// ════════════════════════════════════
+let currentTheme = 'void';
+let isEditMode = false;
+let selectedItem = null;
+let currentFilter = 'all';
+let placedCount = ITEMS.filter(i=>i.placed).length;
+
+// ════════════════════════════════════
+// ROOM RENDER
+// ════════════════════════════════════
+function applyTheme(themeId, save=true) {
+  const t = THEMES.find(x=>x.id===themeId) || THEMES[0];
+  currentTheme = themeId;
+
+  document.getElementById('roomWall').style.background =
+    `linear-gradient(to bottom, ${t.wall}, ${t.floor}88)`;
+  document.getElementById('roomFloor').style.background =
+    `linear-gradient(to bottom, ${t.floor}88, ${t.floor})`;
+  document.getElementById('roomMolding').style.background =
+    `linear-gradient(90deg, transparent, ${t.molding}60, ${t.accent}, ${t.molding}60, transparent)`;
+  document.getElementById('roomMolding').style.boxShadow = `0 0 12px ${t.accent}80`;
+  document.getElementById('roomThemeBadge').textContent = `${t.icon} ${t.name} 테마`;
+  document.documentElement.style.setProperty('--room-accent', t.accent);
+
+  // 방 파티클 색상
+  document.querySelectorAll('.room-particle').forEach(p => p.style.background = t.accent);
+
+  // 아바타 아우라 색상
+  const ring = document.getElementById('roomAvatarAura');
+  if(ring) ring.style.borderTopColor = t.accent+'80';
+
+  // 테마 그리드 활성화
+  document.querySelectorAll('.theme-card').forEach(c => {
+    c.classList.toggle('active', c.dataset.theme === themeId);
+  });
+
+  if(save) showToast(`${t.icon} ${t.name} 테마로 변경됐어요!`);
+  updateStage();
+  renderRoomParticles(t.accent);
+}
+
+function renderRoomItems() {
+  const container = document.getElementById('roomItems');
+  container.innerHTML = '';
+
+  // 배치된 아이템
+  ITEMS.filter(i=>i.placed && i.pos).forEach(item=>{
+    const div = document.createElement('div');
+    div.className = 'placed-item';
+    div.style.cssText = `left:${item.pos.left};top:${item.pos.top};animation-delay:${Math.random()*2}s`;
+    div.innerHTML = `
+      <div class="item-glow" style="background:var(--room-accent)"></div>
+      <div class="item-emoji">${item.emoji}</div>
+      <div class="item-label">${item.name}</div>
+    `;
+    div.onclick = (e) => { e.stopPropagation(); if(isEditMode) removeItem(item.id); };
+    container.appendChild(div);
+  });
+
+  // 편집 모드일 때 빈 슬롯 표시
+  if(isEditMode) {
+    const emptySlots = [
+      {left:'55%',top:'55%'}, {left:'20%',top:'30%'}, {left:'78%',top:'45%'}
+    ];
+    emptySlots.forEach((pos,i)=>{
+      const div = document.createElement('div');
+      div.className = 'empty-slot';
+      div.style.cssText = `left:${pos.left};top:${pos.top}`;
+      div.textContent = '+';
+      div.onclick = (e) => { e.stopPropagation(); showToast('아래 인벤토리에서 아이템을 선택하세요!'); };
+      container.appendChild(div);
+    });
+  }
+
+  updateStage();
+}
+
+function renderRoomParticles(color='#c084fc') {
+  const container = document.getElementById('roomParticles');
+  container.innerHTML = '';
+  for(let i=0;i<12;i++){
+    const p = document.createElement('div');
+    p.className = 'room-particle';
+    p.style.cssText = `
+      left:${Math.random()*100}%;
+      bottom:${Math.random()*30}%;
+      width:${Math.random()*3+1}px;
+      height:${Math.random()*3+1}px;
+      background:${color};
+      box-shadow:0 0 4px ${color};
+      animation-duration:${3+Math.random()*4}s;
+      animation-delay:${Math.random()*4}s;
+      --dx:${(Math.random()-0.5)*40}px;
+    `;
+    container.appendChild(p);
+  }
+}
+
+function updateStage() {
+  placedCount = ITEMS.filter(i=>i.placed).length;
+  let stage=1, name='🌑 Void — 어두운 방', desc, next;
+
+  if(placedCount >= 8) {
+    stage=3; name='🌟 Supernova — 빛나는 우주';
+    desc='최고 단계! 당신의 방이 전 제국에 빛납니다.';
+    next='MAX ✦';
+  } else if(placedCount >= 4) {
+    stage=2; name='🔥 Ignition — 불꽃의 방';
+    desc=`아이템 ${8-placedCount}개 더 배치하면 Supernova로 진화해요!`;
+    next=`${placedCount}/8 ✦`;
+  } else {
+    desc=`아이템 ${4-placedCount}개 더 배치하면 Ignition 단계로 진화해요!`;
+    next=`${placedCount}/4 ✦`;
+  }
+
+  for(let i=1;i<=3;i++) {
+    document.getElementById(`sd${i}`).classList.toggle('active', i <= stage);
+  }
+  document.getElementById('stageName').textContent = name;
+  document.getElementById('stageDesc').textContent = desc;
+  document.getElementById('stageNext').textContent = next;
+
+  // CP 업데이트
+  const cp = placedCount * 60 + 200;
+  document.getElementById('statCP').textContent = cp;
+  document.getElementById('cpCount').textContent = cp;
+}
+
+// ════════════════════════════════════
+// INVENTORY
+// ════════════════════════════════════
+function renderInventory(filter='all') {
+  const grid = document.getElementById('invGrid');
+  const filtered = filter==='all' ? ITEMS : ITEMS.filter(i=>i.type===filter);
+
+  grid.innerHTML = filtered.map(item=>`
+    <div class="inv-item ${item.placed?'placed':''}" onclick="onItemClick(${item.id})">
+      ${item.placed ? '<div class="placed-badge">✓</div>' : ''}
+      ${item.locked ? `<div class="inv-item-lock" title="${item.lockMsg}">🔒</div>` : ''}
+      <div class="inv-item-emoji">${item.emoji}</div>
+      <div class="inv-item-name">${item.name}</div>
+      <div class="inv-item-rarity rarity-${item.rarity}">${item.rarity.toUpperCase()}</div>
+    </div>
+  `).join('');
+}
+
+function filterItems(type, btn) {
+  currentFilter = type;
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  renderInventory(type);
+}
+
+function onItemClick(itemId) {
+  const item = ITEMS.find(i=>i.id===itemId);
+  if(!item) return;
+  if(item.locked) { showToast(`🔒 ${item.lockMsg} 달성 시 해금!`); return; }
+  if(item.placed) { removeItem(itemId); return; }
+  openPlaceModal(item);
+}
+
+// ════════════════════════════════════
+// PLACE MODAL
+// ════════════════════════════════════
+function openPlaceModal(item) {
+  selectedItem = item;
+  document.getElementById('modalTitle').textContent = `"${item.name}" 배치하기`;
+  document.getElementById('modalItemInfo').innerHTML = `
+    <div class="modal-item-emoji">${item.emoji}</div>
+    <div class="modal-item-detail">
+      <div class="modal-item-name">${item.name}</div>
+      <div class="modal-item-rarity rarity-${item.rarity}">${item.rarity.toUpperCase()}</div>
+      <div class="modal-item-bonus">✦ ${item.bonus}</div>
+    </div>
+  `;
+
+  // 슬롯들
+  const slots = document.getElementById('modalSlots');
+  const SLOT_POSITIONS = [
+    {left:'12%',top:'15%'}, {left:'70%',top:'12%'}, {left:'32%',top:'55%'},
+    {left:'55%',top:'55%'}, {left:'20%',top:'30%'}, {left:'78%',top:'45%'},
+    {left:'8%',top:'50%'},  {left:'85%',top:'25%'},
+  ];
+  slots.innerHTML = SLOT_POSITIONS.map((pos,i)=>{
+    const occupant = ITEMS.find(x=>x.placed && x.slot===i+1);
+    return `
+      <div class="slot-btn ${occupant?'occupied':''}" onclick="placeItem(${i+1},'${pos.left}','${pos.top}')">
+        <div class="slot-btn-emoji">${occupant ? occupant.emoji : '+'}</div>
+        <div class="slot-btn-label">슬롯 ${i+1}</div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('placeModal').classList.add('show');
+}
+
+function placeItem(slot, left, top) {
+  if(!selectedItem) return;
+  // 기존 점유 해제
+  ITEMS.forEach(i=>{ if(i.slot===slot) { i.placed=false; i.slot=null; i.pos=null; } });
+  // 새 배치
+  selectedItem.placed = true;
+  selectedItem.slot = slot;
+  selectedItem.pos = {left, top};
+  closeModal();
+  renderRoomItems();
+  renderInventory(currentFilter);
+  updateStage();
+  showToast(`${selectedItem.emoji} ${selectedItem.name} 배치 완료! ${selectedItem.bonus}`);
+
+  // 파티클 효과
+  burstParticles(200, 300);
+}
+
+function removeItem(itemId) {
+  const item = ITEMS.find(i=>i.id===itemId);
+  if(!item) return;
+  item.placed=false; item.slot=null; item.pos=null;
+  renderRoomItems();
+  renderInventory(currentFilter);
+  updateStage();
+  showToast(`${item.emoji} ${item.name} 제거됐어요.`);
+}
+
+function closeModal() {
+  document.getElementById('placeModal').classList.remove('show');
+  selectedItem = null;
+}
+
+// ════════════════════════════════════
+// THEME GRID
+// ════════════════════════════════════
+function renderThemes() {
+  const grid = document.getElementById('themeGrid');
+  grid.innerHTML = THEMES.map(t=>`
+    <div class="theme-card ${t.id===currentTheme?'active':''}" data-theme="${t.id}" onclick="applyTheme('${t.id}')">
+      <div class="theme-preview"
+        style="background:linear-gradient(135deg,${t.wall},${t.floor});width:100%;height:100%;display:flex;align-items:flex-end;padding:6px 8px">
+        <span style="font-size:16px">${t.icon}</span>
+        <span style="font-size:10px;font-weight:700;margin-left:4px;text-shadow:0 1px 4px rgba(0,0,0,.8)">${t.name}</span>
+      </div>
+      ${t.id===currentTheme?'<div class="theme-active-badge">현재</div>':''}
+    </div>
+  `).join('');
+}
+
+// ════════════════════════════════════
+// GUESTBOOK
+// ════════════════════════════════════
+function renderGuestbook() {
+  const list = document.getElementById('visitorList');
+  list.innerHTML = GUESTBOOK.map((g,i)=>`
+    <div class="visitor-card">
+      <div class="visitor-av" style="background:radial-gradient(circle,rgba(192,132,252,.3),rgba(7,7,15,.9))">${g.emoji}</div>
+      <div class="visitor-info">
+        <div class="visitor-name">${g.name}</div>
+        <div class="visitor-msg">${g.msg}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0">
+        <div class="visitor-time">${g.time}</div>
+        <div class="visitor-heart" onclick="heartEntry(${i})">❤️ ${g.hearts}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function heartEntry(idx) {
+  GUESTBOOK[idx].hearts++;
+  renderGuestbook();
+  showToast('💜 하트를 남겼어요!');
+  document.getElementById('heartCount').textContent = parseInt(document.getElementById('heartCount').textContent)+1;
+  document.getElementById('statHeart').textContent = parseInt(document.getElementById('statHeart').textContent)+1;
+}
+
+function sendGuestbook() {
+  const input = document.getElementById('gbInput');
+  const msg = input.value.trim();
+  if(!msg) return;
+  GUESTBOOK.unshift({ name:'나', emoji:'🌟', msg, time:'방금', hearts:0 });
+  input.value = '';
+  renderGuestbook();
+  showToast('✨ 방명록을 남겼어요!');
+}
+
+// ════════════════════════════════════
+// EDIT MODE
+// ════════════════════════════════════
+function toggleEditMode() {
+  isEditMode = !isEditMode;
+  const btn = document.getElementById('editBtn');
+  btn.textContent = isEditMode ? '완료 ✓' : '꾸미기 ✏️';
+  btn.style.background = isEditMode
+    ? 'linear-gradient(90deg,#10b981,#059669)'
+    : 'linear-gradient(90deg,var(--accent),var(--accent2))';
+  renderRoomItems();
+  showToast(isEditMode ? '✏️ 편집 모드 ON — 아이템을 클릭해 배치/제거하세요!' : '✓ 방 꾸미기 완료!');
+}
+
+function onRoomTap(e) {
+  if(!isEditMode) {
+    // 방 탭 시 파티클 효과
+    const rect = e.currentTarget.getBoundingClientRect();
+    burstParticles(e.clientX, e.clientY);
+  }
+}
+
+// ════════════════════════════════════
+// SHARE
+// ════════════════════════════════════
+function shareRoom() {
+  const url = `https://asteria.me.kr/room.html`;
+  if(navigator.share) {
+    navigator.share({ title:'별빛 탐험가의 아스트라 방', text:'내 방 구경하러 와요! 🌟', url })
+      .catch(()=>{});
+  } else {
+    navigator.clipboard.writeText(url).then(()=>showToast('🔗 링크가 복사됐어요!'));
+  }
+}
+
+function shareToSNS(platform) {
+  const url = encodeURIComponent('https://asteria.me.kr/room.html');
+  const text = encodeURIComponent('별빛 탐험가의 아스트라 방을 구경해보세요! 🌟 #아스테리아 #팬덤');
+  const urls = {
+    twitter: `https://twitter.com/intent/tweet?text=${text}&url=${url}`,
+    kakao: `https://story.kakao.com/share?url=${url}`,
+    instagram: null,
+    copy: null,
+  };
+  if(platform==='copy') {
+    navigator.clipboard.writeText('https://asteria.me.kr/room.html')
+      .then(()=>showToast('🔗 링크가 복사됐어요!'));
+    return;
+  }
+  if(platform==='instagram') {
+    showToast('📸 이미지를 저장하고 인스타에 올려보세요!'); return;
+  }
+  if(urls[platform]) window.open(urls[platform],'_blank');
+  showToast('공유 완료! 🎉');
+}
+
+// ════════════════════════════════════
+// PARTICLES BURST
+// ════════════════════════════════════
+function burstParticles(x, y) {
+  for(let i=0;i<15;i++){
+    const p = document.createElement('div');
+    const colors=['#f0c040','#c084fc','#38bdf8','#fff','#10b981'];
+    const color=colors[Math.floor(Math.random()*colors.length)];
+    const size=Math.random()*5+2;
+    const angle=Math.random()*Math.PI*2;
+    const dist=Math.random()*70+20;
+    p.style.cssText=`position:fixed;left:${x}px;top:${y}px;width:${size}px;height:${size}px;border-radius:50%;background:${color};box-shadow:0 0 6px ${color};z-index:9999;pointer-events:none;transition:all ${.4+Math.random()*.3}s ease-out;transform:translate(-50%,-50%)`;
+    document.body.appendChild(p);
+    requestAnimationFrame(()=>{
+      p.style.transform=`translate(calc(-50% + ${Math.cos(angle)*dist}px),calc(-50% + ${Math.sin(angle)*dist}px))`;
+      p.style.opacity='0';
+    });
+    setTimeout(()=>p.remove(),800);
+  }
+}
+
+// ════════════════════════════════════
+// TOAST
+// ════════════════════════════════════
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+// ════════════════════════════════════
+// LIVE VISITORS 시뮬
+// ════════════════════════════════════
+function updateLiveVisitors() {
+  const n = Math.floor(Math.random()*5)+1;
+  document.getElementById('liveVisitors').textContent = `${n}명 방문 중`;
+}
+setInterval(updateLiveVisitors, 8000);
+
+// ════════════════════════════════════
+// INIT
+// ════════════════════════════════════
+applyTheme('void', false);
+renderRoomItems();
+renderInventory();
+renderThemes();
+renderGuestbook();
+</script>
+</body>
+</html>

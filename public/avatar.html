@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>아바타 꾸미기 — ASTERIA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --void:#030308; --panel:rgba(10,10,22,0.96);
+  --border:rgba(180,150,255,0.13); --gold:#f0c040;
+  --accent:#c084fc; --accent2:#818cf8; --accent3:#38bdf8;
+  --text:#e8e4f0; --muted:rgba(200,190,220,0.5);
+  --league-color: #94a3b8;
+}
+html,body {
+  width:100%; min-height:100%;
+  background:var(--void); color:var(--text);
+  font-family:'Noto Sans KR',sans-serif;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none; overflow-x:hidden;
+}
+#app { max-width:480px; margin:0 auto; min-height:100vh; position:relative; }
+#bgCanvas { position:fixed; inset:0; z-index:0; pointer-events:none;
+  max-width:480px; left:50%; transform:translateX(-50%); }
+
+/* ══════════════════════
+   TOP BAR
+══════════════════════ */
+.topbar {
+  position:sticky; top:0; z-index:200;
+  display:flex; align-items:center; gap:10px; padding:13px 18px;
+  background:var(--panel); backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+.tb-back { width:34px; height:34px; border-radius:50%;
+  background:rgba(255,255,255,.06); border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; cursor:pointer; text-decoration:none; color:var(--text); flex-shrink:0; }
+.tb-title { font-family:'Orbitron',monospace; font-size:14px; font-weight:700;
+  letter-spacing:2px; flex:1; }
+.tb-save {
+  padding:8px 18px; border-radius:20px; border:none;
+  background:linear-gradient(90deg,var(--gold),#e6a800);
+  color:var(--void); font-size:13px; font-weight:700;
+  cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:all .2s;
+}
+.tb-save:hover { box-shadow:0 0 16px rgba(240,192,64,.5); }
+
+/* ══════════════════════
+   AVATAR PREVIEW
+══════════════════════ */
+.preview-section {
+  position:relative; z-index:10;
+  height:320px; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  overflow:hidden;
+}
+.preview-bg {
+  position:absolute; inset:0;
+  background:radial-gradient(ellipse at 50% 40%, rgba(192,132,252,.15) 0%, transparent 65%);
+  transition:background 1s ease;
+}
+
+/* 아바타 캔버스 */
+#avatarPreview {
+  position:relative; z-index:5;
+  width:180px; height:180px;
+}
+
+/* 아바타 이름 & 등급 */
+.preview-info { position:relative; z-index:5; text-align:center; margin-top:10px; }
+.preview-name { font-size:17px; font-weight:900; }
+.preview-league {
+  display:inline-flex; align-items:center; gap:6px;
+  margin-top:5px; padding:3px 14px; border-radius:20px;
+  font-size:11px; font-weight:700;
+  border:1px solid var(--league-color);
+  background:rgba(var(--league-rgb,148,163,184),.1);
+  color:var(--league-color);
+}
+
+/* 자동성장 표시 */
+.auto-growth-bar {
+  position:relative; z-index:5;
+  width:calc(100% - 40px); margin-top:14px;
+}
+.agb-row { display:flex; justify-content:space-between; margin-bottom:5px; }
+.agb-label { font-size:10px; color:var(--muted); }
+.agb-val { font-size:10px; color:var(--gold); font-weight:700; }
+.agb-bg { width:100%; height:6px; background:rgba(255,255,255,.07); border-radius:3px; overflow:hidden; }
+.agb-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,var(--accent),var(--gold));
+  transition:width 1s cubic-bezier(.4,0,.2,1); position:relative; overflow:hidden; }
+.agb-fill::after { content:''; position:absolute; inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);
+  animation:shine 2s ease-in-out infinite; }
+@keyframes shine { 0%{transform:translateX(-100%)} 100%{transform:translateX(200%)} }
+
+/* ══════════════════════
+   TAB 네비게이션
+══════════════════════ */
+.tab-nav {
+  position:sticky; top:60px; z-index:190;
+  display:flex; background:var(--panel); backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border); overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.tab-nav::-webkit-scrollbar { display:none; }
+.tab-btn {
+  flex-shrink:0; padding:12px 16px;
+  font-size:12px; font-weight:600; color:var(--muted);
+  cursor:pointer; border-bottom:2px solid transparent;
+  transition:all .2s; white-space:nowrap;
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+}
+.tab-btn.active { color:var(--accent); border-bottom-color:var(--accent); }
+.tab-btn-icon { font-size:16px; }
+
+/* ══════════════════════
+   탭 컨텐츠
+══════════════════════ */
+.tab-content { display:none; padding:16px 18px; position:relative; z-index:10; }
+.tab-content.active { display:block; }
+
+/* 섹션 타이틀 */
+.sec-title {
+  font-size:10px; color:var(--muted); letter-spacing:2px;
+  text-transform:uppercase; margin-bottom:14px;
+  display:flex; align-items:center; gap:8px;
+}
+.sec-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* ══════════════════════
+   얼굴형 / 피부색 탭
+══════════════════════ */
+.face-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:20px; }
+.face-item {
+  aspect-ratio:1; border-radius:14px;
+  background:rgba(255,255,255,.04); border:2px solid var(--border);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  cursor:pointer; transition:all .2s; gap:5px;
+}
+.face-item:hover { border-color:var(--accent); background:rgba(192,132,252,.08); }
+.face-item.active { border-color:var(--accent); background:rgba(192,132,252,.12);
+  box-shadow:0 0 12px rgba(192,132,252,.3); }
+.face-item-emoji { font-size:28px; }
+.face-item-label { font-size:9px; color:var(--muted); }
+
+/* 피부색 팔레트 */
+.skin-palette { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px; }
+.skin-swatch {
+  width:40px; height:40px; border-radius:50%; cursor:pointer;
+  border:3px solid transparent; transition:all .2s;
+}
+.skin-swatch:hover { transform:scale(1.1); }
+.skin-swatch.active { border-color:#fff; box-shadow:0 0 10px rgba(255,255,255,.4); }
+
+/* ══════════════════════
+   헤어 탭
+══════════════════════ */
+.hair-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:20px; }
+.hair-item {
+  border-radius:14px; background:rgba(255,255,255,.04); border:2px solid var(--border);
+  padding:14px 8px; display:flex; flex-direction:column; align-items:center; gap:6px;
+  cursor:pointer; transition:all .2s; position:relative; overflow:hidden;
+}
+.hair-item:hover { border-color:var(--accent); }
+.hair-item.active { border-color:var(--accent); background:rgba(192,132,252,.1); }
+.hair-item-img { font-size:32px; }
+.hair-item-name { font-size:10px; color:var(--muted); text-align:center; }
+.hair-item-lock { position:absolute; inset:0; background:rgba(0,0,0,.6);
+  display:flex; align-items:center; justify-content:center; border-radius:12px; font-size:20px; }
+
+/* 헤어 컬러 */
+.hair-colors { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
+.hair-color {
+  width:36px; height:36px; border-radius:50%; cursor:pointer;
+  border:3px solid transparent; transition:all .2s;
+}
+.hair-color:hover { transform:scale(1.1); }
+.hair-color.active { border-color:#fff; box-shadow:0 0 10px rgba(255,255,255,.4); }
+
+/* ══════════════════════
+   의상 탭
+══════════════════════ */
+.outfit-tabs { display:flex; gap:8px; margin-bottom:14px; }
+.outfit-tab {
+  padding:6px 14px; border-radius:20px; font-size:11px; font-weight:600;
+  border:1px solid var(--border); background:transparent; color:var(--muted);
+  cursor:pointer; transition:all .2s; font-family:'Noto Sans KR',sans-serif;
+}
+.outfit-tab.active { background:rgba(192,132,252,.15); border-color:var(--accent); color:var(--accent); }
+.outfit-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.outfit-item {
+  border-radius:14px; background:rgba(255,255,255,.04); border:2px solid var(--border);
+  padding:12px 8px; display:flex; flex-direction:column; align-items:center; gap:6px;
+  cursor:pointer; transition:all .2s; position:relative;
+}
+.outfit-item:hover { border-color:var(--accent); }
+.outfit-item.active { border-color:var(--accent); background:rgba(192,132,252,.1); }
+.outfit-item.equipped { border-color:var(--gold); background:rgba(240,192,64,.06); }
+.outfit-emoji { font-size:30px; }
+.outfit-name { font-size:10px; color:var(--muted); text-align:center; line-height:1.3; }
+.outfit-rarity { font-size:9px; font-weight:700; }
+.outfit-new { position:absolute; top:4px; right:4px;
+  background:#ef4444; color:#fff; font-size:8px; font-weight:900;
+  padding:2px 5px; border-radius:4px; }
+.outfit-equipped { position:absolute; top:4px; left:4px;
+  background:var(--gold); color:var(--void); font-size:8px; font-weight:900;
+  padding:2px 5px; border-radius:4px; }
+.outfit-lock { position:absolute; inset:0; background:rgba(0,0,0,.6);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  border-radius:12px; font-size:18px; gap:3px; }
+.outfit-lock-txt { font-size:9px; color:var(--muted); text-align:center; padding:0 4px; }
+
+/* ══════════════════════
+   아우라 탭
+══════════════════════ */
+.aura-league-info {
+  background:rgba(255,255,255,.03); border:1px solid var(--border);
+  border-radius:14px; padding:14px 16px; margin-bottom:16px;
+  display:flex; align-items:center; gap:12px;
+}
+.ali-icon { font-size:28px; }
+.ali-info { flex:1; }
+.ali-title { font-size:13px; font-weight:700; }
+.ali-desc { font-size:11px; color:var(--muted); margin-top:3px; line-height:1.5; }
+.ali-auto { font-size:10px; color:var(--gold); margin-top:4px; font-weight:600; }
+
+.aura-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+.aura-item {
+  border-radius:14px; background:rgba(255,255,255,.04); border:2px solid var(--border);
+  padding:16px 12px; display:flex; flex-direction:column; align-items:center; gap:8px;
+  cursor:pointer; transition:all .2s; position:relative; overflow:hidden;
+}
+.aura-item:hover { border-color:var(--accent); }
+.aura-item.active { border-color:var(--accent); background:rgba(192,132,252,.1); }
+.aura-item.league-locked { opacity:.5; }
+.aura-preview {
+  width:60px; height:60px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font-size:26px;
+  position:relative;
+}
+.aura-ring {
+  position:absolute; inset:-6px; border-radius:50%;
+  border:2px solid transparent; animation:auraRing 4s linear infinite;
+}
+@keyframes auraRing { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+.aura-name { font-size:12px; font-weight:700; text-align:center; }
+.aura-desc { font-size:10px; color:var(--muted); text-align:center; line-height:1.4; }
+.aura-league-req {
+  font-size:9px; font-weight:700; padding:2px 8px; border-radius:10px; margin-top:2px;
+}
+.aura-lock { position:absolute; top:8px; right:8px; font-size:14px; }
+
+/* ══════════════════════
+   액세서리 탭
+══════════════════════ */
+.acc-category { font-size:11px; color:var(--muted); font-weight:600;
+  margin-bottom:10px; margin-top:16px; letter-spacing:1px; }
+.acc-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:8px; }
+.acc-item {
+  aspect-ratio:1; border-radius:12px; background:rgba(255,255,255,.04);
+  border:2px solid var(--border); display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:4px;
+  cursor:pointer; transition:all .2s; position:relative;
+}
+.acc-item:hover { border-color:var(--accent); }
+.acc-item.active { border-color:var(--accent); background:rgba(192,132,252,.1); }
+.acc-item.equipped { border-color:var(--gold); }
+.acc-emoji { font-size:22px; }
+.acc-name { font-size:8px; color:var(--muted); text-align:center; }
+.acc-lock { position:absolute; inset:0; background:rgba(0,0,0,.6);
+  display:flex; align-items:center; justify-content:center; border-radius:10px; font-size:16px; }
+
+/* ══════════════════════
+   표정/모션 탭
+══════════════════════ */
+.emotion-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:16px; }
+.emotion-item {
+  border-radius:12px; background:rgba(255,255,255,.04); border:2px solid var(--border);
+  padding:10px 6px; display:flex; flex-direction:column; align-items:center; gap:5px;
+  cursor:pointer; transition:all .2s;
+}
+.emotion-item:hover { border-color:var(--accent); }
+.emotion-item.active { border-color:var(--accent); background:rgba(192,132,252,.1); }
+.emotion-emoji { font-size:24px; }
+.emotion-name { font-size:9px; color:var(--muted); text-align:center; }
+.motion-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.motion-item {
+  border-radius:12px; background:rgba(255,255,255,.04); border:2px solid var(--border);
+  padding:12px 8px; display:flex; flex-direction:column; align-items:center; gap:5px;
+  cursor:pointer; transition:all .2s; position:relative;
+}
+.motion-item:hover { border-color:var(--accent); }
+.motion-item.active { border-color:var(--accent); background:rgba(192,132,252,.1); }
+.motion-emoji { font-size:26px; }
+.motion-name { font-size:9px; color:var(--muted); text-align:center; }
+.motion-lock { position:absolute; inset:0; background:rgba(0,0,0,.6);
+  display:flex; align-items:center; justify-content:center; border-radius:10px; font-size:18px; }
+
+/* ══════════════════════
+   자동성장 현황 탭
+══════════════════════ */
+.growth-card {
+  background:rgba(255,255,255,.03); border:1px solid var(--border);
+  border-radius:16px; padding:16px; margin-bottom:12px;
+}
+.gc-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.gc-title { font-size:13px; font-weight:700; display:flex; align-items:center; gap:8px; }
+.gc-pct { font-family:'Orbitron',monospace; font-size:16px; font-weight:900; color:var(--gold); }
+.gc-bar-bg { width:100%; height:8px; background:rgba(255,255,255,.07); border-radius:4px; overflow:hidden; margin-bottom:10px; }
+.gc-bar-fill { height:100%; border-radius:4px; transition:width 1s; position:relative; overflow:hidden; }
+.gc-bar-fill::after { content:''; position:absolute; inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);
+  animation:shine 2s ease-in-out infinite; }
+.gc-next { font-size:11px; color:var(--muted); }
+.gc-next span { color:var(--accent); font-weight:700; }
+
+.growth-timeline { display:flex; flex-direction:column; gap:10px; }
+.gt-item {
+  display:flex; align-items:center; gap:12px;
+  background:rgba(255,255,255,.03); border:1px solid var(--border);
+  border-radius:12px; padding:12px 14px;
+}
+.gt-icon { font-size:20px; width:32px; text-align:center; flex-shrink:0; }
+.gt-info { flex:1; }
+.gt-name { font-size:12px; font-weight:600; }
+.gt-desc { font-size:10px; color:var(--muted); margin-top:2px; }
+.gt-reward { font-size:10px; color:var(--accent); font-weight:700; flex-shrink:0; }
+.gt-done { width:22px; height:22px; border-radius:50%; background:var(--accent);
+  display:flex; align-items:center; justify-content:center; font-size:11px; flex-shrink:0; }
+.gt-pending { width:22px; height:22px; border-radius:50%; border:2px solid var(--border); flex-shrink:0; }
+
+/* ══════════════════════
+   BOTTOM NAV
+══════════════════════ */
+.bottom-nav {
+  position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+  width:100%; max-width:480px;
+  background:var(--panel); backdrop-filter:blur(24px);
+  border-top:1px solid var(--border);
+  display:flex; z-index:300;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.nav-item { flex:1; display:flex; flex-direction:column; align-items:center;
+  padding:10px 0 8px; cursor:pointer; transition:all .2s;
+  text-decoration:none; color:var(--muted); }
+.nav-item.active { color:var(--accent); }
+.nav-item-icon { font-size:20px; margin-bottom:3px; }
+.nav-item-label { font-size:9px; font-weight:500; }
+
+/* TOAST */
+.toast { position:fixed; bottom:85px; left:50%; transform:translateX(-50%);
+  background:rgba(12,12,26,.97); border:1px solid var(--border);
+  border-radius:12px; padding:11px 22px; font-size:13px;
+  z-index:8000; opacity:0; transition:opacity .3s; pointer-events:none;
+  white-space:nowrap; box-shadow:0 8px 32px rgba(0,0,0,.5); }
+.toast.show { opacity:1; }
+
+/* 파티클 */
+.particle { position:fixed; pointer-events:none; z-index:9998; border-radius:50%; }
+
+.spacer { height:90px; }
+</style>
+</head>
+<body>
+<canvas id="bgCanvas"></canvas>
+<div id="toast" class="toast"></div>
+
+<div id="app">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <a class="tb-back" href="/astra.html">←</a>
+    <div class="tb-title">아바타 꾸미기</div>
+    <button class="tb-save" onclick="saveAvatar()">저장 ✦</button>
+  </div>
+
+  <!-- 아바타 프리뷰 -->
+  <div class="preview-section">
+    <div class="preview-bg" id="previewBg"></div>
+    <canvas id="avatarPreview" width="180" height="180"></canvas>
+    <div class="preview-info">
+      <div class="preview-name" id="previewName">별빛 탐험가</div>
+      <div class="preview-league" id="previewLeague">✨ 더스트 리그</div>
+    </div>
+    <div class="auto-growth-bar">
+      <div class="agb-row">
+        <div class="agb-label">자동 성장 진행도</div>
+        <div class="agb-val" id="growthPct">47%</div>
+      </div>
+      <div class="agb-bg">
+        <div class="agb-fill" id="growthFill" style="width:47%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB NAV -->
+  <div class="tab-nav" id="tabNav">
+    <div class="tab-btn active" onclick="switchTab('face',this)">
+      <div class="tab-btn-icon">👤</div>얼굴
+    </div>
+    <div class="tab-btn" onclick="switchTab('hair',this)">
+      <div class="tab-btn-icon">💇</div>헤어
+    </div>
+    <div class="tab-btn" onclick="switchTab('outfit',this)">
+      <div class="tab-btn-icon">👗</div>의상
+    </div>
+    <div class="tab-btn" onclick="switchTab('aura',this)">
+      <div class="tab-btn-icon">✨</div>아우라
+    </div>
+    <div class="tab-btn" onclick="switchTab('acc',this)">
+      <div class="tab-btn-icon">👑</div>액세서리
+    </div>
+    <div class="tab-btn" onclick="switchTab('emotion',this)">
+      <div class="tab-btn-icon">😊</div>표정
+    </div>
+    <div class="tab-btn" onclick="switchTab('growth',this)">
+      <div class="tab-btn-icon">📈</div>성장
+    </div>
+  </div>
+
+  <!-- ═══ 얼굴 탭 ═══ -->
+  <div class="tab-content active" id="tab-face">
+    <div class="sec-title">얼굴형</div>
+    <div class="face-grid" id="faceGrid"></div>
+    <div class="sec-title">피부색</div>
+    <div class="skin-palette" id="skinPalette"></div>
+  </div>
+
+  <!-- ═══ 헤어 탭 ═══ -->
+  <div class="tab-content" id="tab-hair">
+    <div class="sec-title">헤어스타일</div>
+    <div class="hair-grid" id="hairGrid"></div>
+    <div class="sec-title">헤어 컬러</div>
+    <div class="hair-colors" id="hairColors"></div>
+  </div>
+
+  <!-- ═══ 의상 탭 ═══ -->
+  <div class="tab-content" id="tab-outfit">
+    <div class="outfit-tabs">
+      <button class="outfit-tab active" onclick="switchOutfit('top',this)">상의</button>
+      <button class="outfit-tab" onclick="switchOutfit('bottom',this)">하의</button>
+      <button class="outfit-tab" onclick="switchOutfit('full',this)">전신</button>
+    </div>
+    <div class="outfit-grid" id="outfitGrid"></div>
+  </div>
+
+  <!-- ═══ 아우라 탭 ═══ -->
+  <div class="tab-content" id="tab-aura">
+    <div class="aura-league-info">
+      <div class="ali-icon" id="aliIcon">✨</div>
+      <div class="ali-info">
+        <div class="ali-title" id="aliTitle">더스트 리그 아우라</div>
+        <div class="ali-desc" id="aliDesc">희미한 먼지 입자들이 당신 주변을 맴돕니다.</div>
+        <div class="ali-auto">🔄 활동량에 따라 자동으로 강해져요!</div>
+      </div>
+    </div>
+    <div class="sec-title">아우라 선택</div>
+    <div class="aura-grid" id="auraGrid"></div>
+  </div>
+
+  <!-- ═══ 액세서리 탭 ═══ -->
+  <div class="tab-content" id="tab-acc">
+    <div class="acc-category">👑 왕관 / 모자</div>
+    <div class="acc-grid" id="accCrown"></div>
+    <div class="acc-category">🪽 날개 / 등 장식</div>
+    <div class="acc-grid" id="accWing"></div>
+    <div class="acc-category">⚔️ 무기 / 소품</div>
+    <div class="acc-grid" id="accWeapon"></div>
+  </div>
+
+  <!-- ═══ 표정/모션 탭 ═══ -->
+  <div class="tab-content" id="tab-emotion">
+    <div class="sec-title">기본 표정</div>
+    <div class="emotion-grid" id="emotionGrid"></div>
+    <div class="sec-title">모션</div>
+    <div class="motion-grid" id="motionGrid"></div>
+  </div>
+
+  <!-- ═══ 자동 성장 탭 ═══ -->
+  <div class="tab-content" id="tab-growth">
+    <div class="growth-card">
+      <div class="gc-header">
+        <div class="gc-title">🌱 자동 성장 현황</div>
+        <div class="gc-pct" id="gcPct">47%</div>
+      </div>
+      <div class="gc-bar-bg">
+        <div class="gc-bar-fill" id="gcFill"
+          style="width:47%;background:linear-gradient(90deg,var(--accent),var(--gold))"></div>
+      </div>
+      <div class="gc-next">다음 자동 해금까지: <span id="gcNext">스밍 53분 더!</span></div>
+    </div>
+
+    <div class="sec-title">성장 조건</div>
+    <div class="growth-timeline" id="growthTimeline"></div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <a class="nav-item" href="/"><div class="nav-item-icon">🏠</div><div class="nav-item-label">홈</div></a>
+    <a class="nav-item active" href="#"><div class="nav-item-icon">🎭</div><div class="nav-item-label">아바타</div></a>
+    <a class="nav-item" href="/room.html"><div class="nav-item-icon">🏡</div><div class="nav-item-label">내 방</div></a>
+    <a class="nav-item" href="/astra.html"><div class="nav-item-icon">⭐</div><div class="nav-item-label">아스트라</div></a>
+    <a class="nav-item" href="#"><div class="nav-item-icon">🛒</div><div class="nav-item-label">상점</div></a>
+  </nav>
+</div>
+
+<script>
+// ════════════════════════════════════
+// BG PARTICLES
+// ════════════════════════════════════
+const bgC = document.getElementById('bgCanvas');
+const bgX = bgC.getContext('2d');
+let W, H;
+function rsz(){W=bgC.width=Math.min(480,window.innerWidth);H=bgC.height=window.innerHeight;}
+rsz(); window.addEventListener('resize',rsz);
+const bgStars = Array.from({length:150},()=>({
+  x:Math.random()*480,y:Math.random()*800,s:Math.random()*1.2+.2,
+  a:Math.random()*.4+.08,ph:Math.random()*Math.PI*2,sp:Math.random()*.012+.003,
+  col:['#f0c040','#c084fc','#38bdf8','#fff'][Math.floor(Math.random()*4)]
+}));
+function bgLoop(){
+  bgX.clearRect(0,0,W,H);
+  bgStars.forEach(s=>{
+    s.ph+=s.sp;
+    bgX.globalAlpha=s.a*(.4+.6*Math.sin(s.ph));
+    bgX.fillStyle=s.col;
+    bgX.beginPath();bgX.arc(s.x%W,s.y%H,s.s,0,Math.PI*2);bgX.fill();
+  });
+  bgX.globalAlpha=1;
+  requestAnimationFrame(bgLoop);
+}
+bgLoop();
+
+// ════════════════════════════════════
+// DATA
+// ════════════════════════════════════
+const FACES = [
+  {id:'f1',emoji:'🟡',name:'둥근형',unlocked:true},
+  {id:'f2',emoji:'🔶',name:'계란형',unlocked:true},
+  {id:'f3',emoji:'🔷',name:'각진형',unlocked:true},
+  {id:'f4',emoji:'⬡',name:'하트형',unlocked:true},
+  {id:'f5',emoji:'🫧',name:'청순형',unlocked:false,req:'Lv.20'},
+  {id:'f6',emoji:'💫',name:'요정형',unlocked:false,req:'상점'},
+  {id:'f7',emoji:'🌙',name:'신비형',unlocked:false,req:'Lv.40'},
+  {id:'f8',emoji:'⚡',name:'강인형',unlocked:false,req:'리그 달성'},
+];
+
+const SKINS = [
+  {id:'s1',color:'#FDBCB4',name:'복숭아'},
+  {id:'s2',color:'#F4A76F',name:'황갈색'},
+  {id:'s3',color:'#C68642',name:'갈색'},
+  {id:'s4',color:'#8D4B2A',name:'다크브라운'},
+  {id:'s5',color:'#FFF0D9',name:'아이보리'},
+  {id:'s6',color:'#E8B4B8',name:'핑크'},
+  {id:'s7',color:'#B8D4E8',name:'파스텔블루'},
+  {id:'s8',color:'#C8E6C9',name:'파스텔그린'},
+];
+
+const HAIRS = [
+  {id:'h1',emoji:'💆',name:'단발',unlocked:true},
+  {id:'h2',emoji:'👱',name:'장발',unlocked:true},
+  {id:'h3',emoji:'🧑',name:'단정한 단발',unlocked:true},
+  {id:'h4',emoji:'👩',name:'웨이브',unlocked:true},
+  {id:'h5',emoji:'🧕',name:'올림머리',unlocked:false,req:'Lv.15'},
+  {id:'h6',emoji:'💇',name:'투블럭',unlocked:false,req:'상점'},
+  {id:'h7',emoji:'🦱',name:'곱슬',unlocked:false,req:'Lv.25'},
+  {id:'h8',emoji:'🌟',name:'빛나는 머리',unlocked:false,req:'노바 리그'},
+  {id:'h9',emoji:'👸',name:'공주 머리',unlocked:false,req:'상점 한정'},
+];
+
+const HAIR_COLORS = [
+  '#1a1a1a','#3d2b1f','#6b3a2a','#c67c3a','#d4a853',
+  '#e8d5a3','#f7f3e9','#ff6b9d','#c084fc','#38bdf8',
+  '#10b981','#f0c040','#ef4444','#818cf8',
+];
+
+const OUTFITS = {
+  top: [
+    {id:'t1',emoji:'👕',name:'기본 티셔츠',rarity:'common',equipped:true,unlocked:true},
+    {id:'t2',emoji:'🧥',name:'후드 집업',rarity:'rare',equipped:false,unlocked:true},
+    {id:'t3',emoji:'👔',name:'셔츠',rarity:'rare',equipped:false,unlocked:true},
+    {id:'t4',emoji:'🎽',name:'아이돌 무대복',rarity:'epic',equipped:false,unlocked:false,req:'상점 구매'},
+    {id:'t5',emoji:'✨',name:'빛의 드레스',rarity:'legendary',equipped:false,unlocked:false,req:'퀘이사 리그'},
+    {id:'t6',emoji:'👘',name:'황금 제복',rarity:'legendary',equipped:false,unlocked:false,req:'상점 한정'},
+  ],
+  bottom: [
+    {id:'b1',emoji:'👖',name:'기본 바지',rarity:'common',equipped:true,unlocked:true},
+    {id:'b2',emoji:'🩳',name:'반바지',rarity:'common',equipped:false,unlocked:true},
+    {id:'b3',emoji:'👗',name:'미니 스커트',rarity:'rare',equipped:false,unlocked:true},
+    {id:'b4',emoji:'🌟',name:'별빛 스커트',rarity:'epic',equipped:false,unlocked:false,req:'상점 구매'},
+    {id:'b5',emoji:'💫',name:'궤도 팬츠',rarity:'legendary',equipped:false,unlocked:false,req:'플래닛 리그'},
+  ],
+  full: [
+    {id:'f1',emoji:'🦺',name:'우주복',rarity:'epic',equipped:false,unlocked:false,req:'상점 구매'},
+    {id:'f2',emoji:'👘',name:'한복',rarity:'rare',equipped:false,unlocked:false,req:'미션 달성'},
+    {id:'f3',emoji:'🌌',name:'은하수 드레스',rarity:'legendary',equipped:false,unlocked:false,req:'노바 리그'},
+    {id:'f4',emoji:'⚡',name:'제국 군복',rarity:'legendary',equipped:false,unlocked:false,req:'퀘이사 리그'},
+  ],
+};
+
+const LEAGUES = [
+  {id:'dust',  name:'더스트', icon:'✨', color:'#94a3b8', rgb:'148,163,184',
+   aura:'먼지의 잔상', desc:'희미한 먼지 입자들이 당신 주변을 맴돕니다.'},
+  {id:'star',  name:'스타',   icon:'🌟', color:'#fbbf24', rgb:'251,191,36',
+   aura:'별빛 오라', desc:'별처럼 스스로 발광하기 시작합니다.'},
+  {id:'planet',name:'플래닛', icon:'🪐', color:'#34d399', rgb:'52,211,153',
+   aura:'행성 오라', desc:'단단한 중력이 느껴지는 궤도 링이 생깁니다.'},
+  {id:'nova',  name:'노바',   icon:'💥', color:'#c084fc', rgb:'192,132,252',
+   aura:'초신성 오라', desc:'폭발하듯 퍼져나가는 에너지가 뿜어져 나옵니다.'},
+  {id:'quasar',name:'퀘이사', icon:'⚡', color:'#f0c040', rgb:'240,192,64',
+   aura:'퀘이사 광채', desc:'우주를 관통하는 황금빛이 당신에게서 뿜어나옵니다.'},
+];
+
+const AURAS = [
+  {id:'a1',emoji:'💨',name:'먼지의 잔상',desc:'잔잔한 먼지 입자',color:'#94a3b8',req:'dust',auto:true},
+  {id:'a2',emoji:'⭐',name:'별빛 오라',desc:'은은하게 발광',color:'#fbbf24',req:'star',auto:true},
+  {id:'a3',emoji:'🪐',name:'행성 오라',desc:'궤도 링 3개',color:'#34d399',req:'planet',auto:true},
+  {id:'a4',emoji:'💫',name:'초신성 오라',desc:'보라빛 폭발',color:'#c084fc',req:'nova',auto:true},
+  {id:'a5',emoji:'⚡',name:'퀘이사 광채',desc:'황금 십자 광선',color:'#f0c040',req:'quasar',auto:true},
+  {id:'a6',emoji:'🌈',name:'무지개 오라',desc:'화려한 무지개 빛',color:'#f97316',req:null,shop:true},
+  {id:'a7',emoji:'🌸',name:'벚꽃 오라',desc:'분홍 꽃잎 흩날림',color:'#f472b6',req:null,shop:true},
+  {id:'a8',emoji:'❄️',name:'빙결 오라',desc:'얼음 결정 회전',color:'#bae6fd',req:null,shop:true},
+];
+
+const ACCESSORIES = {
+  crown: [
+    {id:'c1',emoji:'👑',name:'황금 왕관',unlocked:false,req:'퀘이사'},
+    {id:'c2',emoji:'💎',name:'다이아 왕관',unlocked:false,req:'상점'},
+    {id:'c3',emoji:'🌟',name:'별의 티아라',unlocked:false,req:'스타 리그'},
+    {id:'c4',emoji:'🎓',name:'졸업 모자',unlocked:true},
+    {id:'c5',emoji:'🎩',name:'마법사 모자',unlocked:false,req:'상점'},
+    {id:'c6',emoji:'🪖',name:'제국 헬멧',unlocked:false,req:'노바 리그'},
+    {id:'c7',emoji:'🌺',name:'꽃 화관',unlocked:true},
+    {id:'c8',emoji:'✨',name:'빛의 후광',unlocked:false,req:'Lv.50'},
+  ],
+  wing: [
+    {id:'w1',emoji:'🪽',name:'천사 날개',unlocked:false,req:'상점'},
+    {id:'w2',emoji:'🦋',name:'나비 날개',unlocked:true},
+    {id:'w3',emoji:'🖤',name:'악마 날개',unlocked:false,req:'상점'},
+    {id:'w4',emoji:'💫',name:'빛의 날개',unlocked:false,req:'Lv.80'},
+    {id:'w5',emoji:'🌊',name:'물결 망토',unlocked:false,req:'상점'},
+    {id:'w6',emoji:'🌟',name:'성단 망토',unlocked:false,req:'퀘이사'},
+    {id:'w7',emoji:'🍀',name:'클로버',unlocked:true},
+    {id:'w8',emoji:'🎀',name:'리본',unlocked:true},
+  ],
+  weapon: [
+    {id:'wp1',emoji:'⚡',name:'번개 지팡이',unlocked:false,req:'상점'},
+    {id:'wp2',emoji:'🌟',name:'별빛 봉',unlocked:false,req:'미션'},
+    {id:'wp3',emoji:'🎵',name:'음표 마이크',unlocked:true},
+    {id:'wp4',emoji:'🔮',name:'오라클 구슬',unlocked:false,req:'Lv.51'},
+    {id:'wp5',emoji:'💜',name:'응원봉',unlocked:true},
+    {id:'wp6',emoji:'🗡️',name:'제국 검',unlocked:false,req:'퀘이사'},
+    {id:'wp7',emoji:'📱',name:'팬폰',unlocked:true},
+    {id:'wp8',emoji:'🌸',name:'꽃다발',unlocked:true},
+  ],
+};
+
+const EMOTIONS = [
+  {id:'e1',emoji:'😊',name:'기본 미소',unlocked:true},
+  {id:'e2',emoji:'😄',name:'활짝 웃음',unlocked:true},
+  {id:'e3',emoji:'🥰',name:'사랑스럽게',unlocked:true},
+  {id:'e4',emoji:'😎',name:'쿨하게',unlocked:true},
+  {id:'e5',emoji:'🤩',name:'설레는',unlocked:false,req:'상점'},
+  {id:'e6',emoji:'😤',name:'당당하게',unlocked:false,req:'Lv.30'},
+  {id:'e7',emoji:'🥺',name:'애교있게',unlocked:false,req:'상점'},
+  {id:'e8',emoji:'😇',name:'천사같이',unlocked:false,req:'미션'},
+];
+
+const MOTIONS = [
+  {id:'m1',emoji:'💃',name:'댄스',unlocked:true},
+  {id:'m2',emoji:'🙌',name:'환호',unlocked:true},
+  {id:'m3',emoji:'💜',name:'하트',unlocked:true},
+  {id:'m4',emoji:'👑',name:'왕관 포즈',unlocked:false,req:'상점'},
+  {id:'m5',emoji:'⚡',name:'파워 포즈',unlocked:false,req:'노바 리그'},
+  {id:'m6',emoji:'✨',name:'스파클',unlocked:false,req:'상점 한정'},
+];
+
+const GROWTH_ITEMS = [
+  {icon:'🎵',name:'스트리밍 활동',desc:'음원 누적 100시간',reward:'헤어 자동 해금',done:true},
+  {icon:'🗳️',name:'투표 참여',desc:'투표 50회 완료',reward:'의상 자동 해금',done:true},
+  {icon:'📅',name:'연속 출석 30일',desc:'30일 연속 출석',reward:'아우라 강화',done:false},
+  {icon:'📝',name:'게시글 작성',desc:'게시글 20개 작성',reward:'표정팩 자동 해금',done:false},
+  {icon:'🏆',name:'리그 등급 상승',desc:'스타 리그 달성',reward:'리그 전용 아우라',done:false},
+  {icon:'🎯',name:'특별 미션',desc:'이번 주 미션 모두 완료',reward:'액세서리 자동 해금',done:false},
+];
+
+// ════════════════════════════════════
+// STATE
+// ════════════════════════════════════
+let avatar = {
+  name: '별빛 탐험가',
+  emoji: '🌟',
+  league: 'dust',
+  face: 'f1',
+  skin: '#FDBCB4',
+  hair: 'h1',
+  hairColor: '#1a1a1a',
+  outfit_top: 't1',
+  outfit_bottom: 'b1',
+  outfit_full: null,
+  aura: 'a1',
+  acc_crown: null,
+  acc_wing: null,
+  acc_weapon: null,
+  emotion: 'e1',
+  motion: 'm1',
+};
+let currentOutfitTab = 'top';
+
+// ════════════════════════════════════
+// AVATAR CANVAS
+// ════════════════════════════════════
+const ac = document.getElementById('avatarPreview');
+const ax = ac.getContext('2d');
+let frame = 0;
+
+function drawAvatarPreview() {
+  frame++;
+  ax.clearRect(0,0,180,180);
+  const cx=90, cy=85;
+  const league = LEAGUES.find(l=>l.id===avatar.league)||LEAGUES[0];
+  const aura = AURAS.find(a=>a.id===avatar.aura)||AURAS[0];
+
+  // 아우라 효과
+  const grd = ax.createRadialGradient(cx,cy,10,cx,cy,75);
+  grd.addColorStop(0,`rgba(${league.rgb},.4)`);
+  grd.addColorStop(.5,`rgba(${league.rgb},.15)`);
+  grd.addColorStop(1,'transparent');
+  ax.fillStyle=grd;
+  ax.beginPath();ax.arc(cx,cy,75,0,Math.PI*2);ax.fill();
+
+  // 리그별 아우라 이펙트
+  if(avatar.league==='quasar'){
+    for(let i=0;i<4;i++){
+      ax.save();ax.translate(cx,cy);ax.rotate(i*Math.PI/2+frame*.005);
+      const g=ax.createLinearGradient(0,-65,0,0);
+      g.addColorStop(0,'transparent');g.addColorStop(1,`rgba(240,192,64,.4)`);
+      ax.fillStyle=g;ax.fillRect(-2,-65,4,65);ax.restore();
+    }
+  } else if(avatar.league==='nova'){
+    for(let r=35;r<70;r+=12){
+      ax.beginPath();ax.arc(cx,cy,r+Math.sin(frame*.04)*3,0,Math.PI*2);
+      ax.strokeStyle=`rgba(192,132,252,${.12-(r-35)*.002})`;
+      ax.lineWidth=1.5;ax.stroke();
+    }
+  } else if(avatar.league==='planet'){
+    ax.save();ax.translate(cx,cy);
+    ax.rotate(frame*.008);
+    ax.beginPath();ax.ellipse(0,0,55,22,0,0,Math.PI*2);
+    ax.strokeStyle='rgba(52,211,153,.3)';ax.lineWidth=1.5;ax.stroke();
+    ax.restore();
+  } else if(avatar.league==='star'){
+    for(let i=0;i<8;i++){
+      const a=i*Math.PI/4+frame*.01;
+      ax.beginPath();ax.arc(cx+Math.cos(a)*50,cy+Math.sin(a)*50,2,0,Math.PI*2);
+      ax.fillStyle=`rgba(251,191,36,${.5+Math.sin(frame*.08+i)*.4})`;ax.fill();
+    }
+  }
+
+  // 몸 (부유)
+  const by = cy + Math.sin(frame*.02)*4;
+
+  // 피부색 기반 몸통
+  ax.beginPath();ax.arc(cx,by,38,0,Math.PI*2);
+  const bodyG=ax.createRadialGradient(cx-8,by-8,4,cx,by,38);
+  bodyG.addColorStop(0,avatar.skin+'cc');
+  bodyG.addColorStop(1,'rgba(7,7,15,.9)');
+  ax.fillStyle=bodyG;ax.fill();
+  ax.strokeStyle=`rgba(${league.rgb},.5)`;ax.lineWidth=1.5;ax.stroke();
+
+  // 이모지 (얼굴)
+  ax.font='30px serif';ax.textAlign='center';ax.textBaseline='middle';
+  ax.fillText(avatar.emoji,cx,by);
+
+  // 액세서리 - 왕관
+  if(avatar.acc_crown){
+    const c=ACCESSORIES.crown.find(x=>x.id===avatar.acc_crown);
+    if(c){ax.font='18px serif';ax.fillText(c.emoji,cx,by-44+Math.sin(frame*.03)*2);}
+  }
+  // 날개
+  if(avatar.acc_wing){
+    const w=ACCESSORIES.wing.find(x=>x.id===avatar.acc_wing);
+    if(w){ax.font='18px serif';ax.fillText(w.emoji,cx+38,by);}
+  }
+  // 무기
+  if(avatar.acc_weapon){
+    const wp=ACCESSORIES.weapon.find(x=>x.id===avatar.acc_weapon);
+    if(wp){ax.font='18px serif';ax.fillText(wp.emoji,cx-42,by+5);}
+  }
+
+  requestAnimationFrame(drawAvatarPreview);
+}
+
+// ════════════════════════════════════
+// RENDER TABS
+// ════════════════════════════════════
+function renderFace(){
+  document.getElementById('faceGrid').innerHTML=FACES.map(f=>`
+    <div class="face-item ${avatar.face===f.id?'active':''}" onclick="selectFace('${f.id}')">
+      ${!f.unlocked?`<div style="position:absolute;inset:0;background:rgba(0,0,0,.6);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px">🔒<span style="font-size:8px;color:var(--muted)">${f.req}</span></div>`:''}
+      <div class="face-item-emoji">${f.emoji}</div>
+      <div class="face-item-label">${f.name}</div>
+    </div>
+  `).join('');
+
+  document.getElementById('skinPalette').innerHTML=SKINS.map(s=>`
+    <div class="skin-swatch ${avatar.skin===s.color?'active':''}"
+      style="background:${s.color}" onclick="selectSkin('${s.color}')"
+      title="${s.name}"></div>
+  `).join('');
+}
+
+function renderHair(){
+  document.getElementById('hairGrid').innerHTML=HAIRS.map(h=>`
+    <div class="hair-item ${avatar.hair===h.id?'active':''}" onclick="selectHair('${h.id}')">
+      ${!h.unlocked?`<div class="hair-item-lock">🔒<span style="font-size:8px;color:var(--muted);margin-top:2px">${h.req}</span></div>`:''}
+      <div class="hair-item-img">${h.emoji}</div>
+      <div class="hair-item-name">${h.name}</div>
+    </div>
+  `).join('');
+
+  document.getElementById('hairColors').innerHTML=HAIR_COLORS.map(c=>`
+    <div class="hair-color ${avatar.hairColor===c?'active':''}"
+      style="background:${c};border:1px solid rgba(255,255,255,.1)"
+      onclick="selectHairColor('${c}')"></div>
+  `).join('');
+}
+
+function renderOutfit(type='top'){
+  const items=OUTFITS[type]||[];
+  document.getElementById('outfitGrid').innerHTML=items.map(o=>`
+    <div class="outfit-item ${avatar['outfit_'+type]===o.id?'active':''} ${o.equipped?'equipped':''}"
+      onclick="selectOutfit('${type}','${o.id}')">
+      ${o.equipped?'<div class="outfit-equipped">착용중</div>':''}
+      ${!o.unlocked?`<div class="outfit-lock"><span style="font-size:22px">🔒</span><span class="outfit-lock-txt">${o.req}</span></div>`:''}
+      <div class="outfit-emoji">${o.emoji}</div>
+      <div class="outfit-name">${o.name}</div>
+      <div class="outfit-rarity rarity-${o.rarity}">${o.rarity.toUpperCase()}</div>
+    </div>
+  `).join('');
+}
+
+function renderAura(){
+  const league=LEAGUES.find(l=>l.id===avatar.league)||LEAGUES[0];
+  document.getElementById('aliIcon').textContent=league.icon;
+  document.getElementById('aliTitle').textContent=`${league.name} 리그 — ${league.aura}`;
+  document.getElementById('aliDesc').textContent=league.desc;
+
+  const leagueOrder=['dust','star','planet','nova','quasar'];
+  const myIdx=leagueOrder.indexOf(avatar.league);
+
+  document.getElementById('auraGrid').innerHTML=AURAS.map(a=>{
+    const reqIdx=leagueOrder.indexOf(a.req);
+    const locked=a.req && reqIdx>myIdx;
+    return `
+      <div class="aura-item ${avatar.aura===a.id?'active':''} ${locked?'league-locked':''}"
+        onclick="${locked?`showToast('🔒 ${a.req} 리그 달성 시 해금!')`:`selectAura('${a.id}')`}">
+        ${locked?'<div class="aura-lock">🔒</div>':''}
+        <div class="aura-preview" style="background:radial-gradient(circle,${a.color}30,transparent)">
+          <div class="aura-ring" style="border-top:2px solid ${a.color};border-right:2px solid transparent;border-bottom:2px solid transparent;border-left:2px solid transparent"></div>
+          <span style="font-size:26px">${a.emoji}</span>
+        </div>
+        <div class="aura-name" style="color:${a.color}">${a.name}</div>
+        <div class="aura-desc">${a.desc}</div>
+        <div class="aura-league-req" style="background:${a.color}20;color:${a.color}">
+          ${a.auto?'🔄 자동 성장':a.shop?'🛒 상점 구매':''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderAcc(){
+  ['Crown','Wing','Weapon'].forEach(type=>{
+    const key=type.toLowerCase();
+    const items=ACCESSORIES[key]||[];
+    document.getElementById(`acc${type}`).innerHTML=items.map(a=>`
+      <div class="acc-item ${avatar['acc_'+key]===a.id?'active':''} ${avatar['acc_'+key]===a.id?'equipped':''}"
+        onclick="selectAcc('${key}','${a.id}')">
+        ${!a.unlocked?`<div class="acc-lock">🔒</div>`:''}
+        <div class="acc-emoji">${a.emoji}</div>
+        <div class="acc-name">${a.name}</div>
+      </div>
+    `).join('');
+  });
+}
+
+function renderEmotion(){
+  document.getElementById('emotionGrid').innerHTML=EMOTIONS.map(e=>`
+    <div class="emotion-item ${avatar.emotion===e.id?'active':''}" onclick="selectEmotion('${e.id}')">
+      ${!e.unlocked?`<div style="position:absolute;inset:0;background:rgba(0,0,0,.6);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px">🔒</div>`:''}
+      <div class="emotion-emoji">${e.emoji}</div>
+      <div class="emotion-name">${e.name}</div>
+    </div>
+  `).join('');
+
+  document.getElementById('motionGrid').innerHTML=MOTIONS.map(m=>`
+    <div class="motion-item ${avatar.motion===m.id?'active':''}" onclick="selectMotion('${m.id}')">
+      ${!m.unlocked?`<div class="motion-lock">🔒<span style="font-size:9px;color:var(--muted)">${m.req}</span></div>`:''}
+      <div class="motion-emoji">${m.emoji}</div>
+      <div class="motion-name">${m.name}</div>
+    </div>
+  `).join('');
+}
+
+function renderGrowth(){
+  document.getElementById('growthTimeline').innerHTML=GROWTH_ITEMS.map(g=>`
+    <div class="gt-item">
+      <div class="gt-icon">${g.icon}</div>
+      <div class="gt-info">
+        <div class="gt-name">${g.name}</div>
+        <div class="gt-desc">${g.desc}</div>
+      </div>
+      <div class="gt-reward" style="color:${g.done?'#10b981':'var(--accent)'}">${g.reward}</div>
+      ${g.done?'<div class="gt-done">✓</div>':'<div class="gt-pending"></div>'}
+    </div>
+  `).join('');
+}
+
+// ════════════════════════════════════
+// SELECT HANDLERS
+// ════════════════════════════════════
+function selectFace(id){
+  const f=FACES.find(x=>x.id===id);
+  if(!f||!f.unlocked){showToast(`🔒 ${f.req} 달성 시 해금!`);return;}
+  avatar.face=id; renderFace(); burst(); showToast('얼굴형 변경!');
+}
+function selectSkin(color){
+  avatar.skin=color; renderFace(); burst(); showToast('피부색 변경!');
+}
+function selectHair(id){
+  const h=HAIRS.find(x=>x.id===id);
+  if(!h||!h.unlocked){showToast(`🔒 ${h.req} 달성 시 해금!`);return;}
+  avatar.hair=id; renderHair(); burst(); showToast('헤어스타일 변경!');
+}
+function selectHairColor(color){
+  avatar.hairColor=color; renderHair(); burst(); showToast('헤어 컬러 변경!');
+}
+function selectOutfit(type,id){
+  const o=(OUTFITS[type]||[]).find(x=>x.id===id);
+  if(!o||!o.unlocked){showToast(`🔒 ${o.req} 달성 시 해금!`);return;}
+  // 착용중 업데이트
+  (OUTFITS[type]||[]).forEach(x=>x.equipped=false);
+  o.equipped=true;
+  avatar['outfit_'+type]=id;
+  renderOutfit(type); burst(); showToast(`${o.emoji} ${o.name} 착용!`);
+}
+function selectAura(id){
+  avatar.aura=id; renderAura(); burst();
+  const a=AURAS.find(x=>x.id===id);
+  showToast(`✨ ${a.name} 적용!`);
+  updateLeagueColor();
+}
+function selectAcc(type,id){
+  const items=ACCESSORIES[type]||[];
+  const a=items.find(x=>x.id===id);
+  if(!a||!a.unlocked){showToast(`🔒 ${a.req} 달성 시 해금!`);return;}
+  // 토글 (같은 거 클릭하면 해제)
+  avatar['acc_'+type] = avatar['acc_'+type]===id ? null : id;
+  renderAcc(); burst();
+  showToast(avatar['acc_'+type]?`${a.emoji} ${a.name} 장착!`:`${a.emoji} 해제`);
+}
+function selectEmotion(id){
+  const e=EMOTIONS.find(x=>x.id===id);
+  if(!e||!e.unlocked){showToast(`🔒 ${e.req} 달성 시 해금!`);return;}
+  avatar.emotion=id; renderEmotion(); burst();
+  showToast(`${e.emoji} 표정 변경!`);
+}
+function selectMotion(id){
+  const m=MOTIONS.find(x=>x.id===id);
+  if(!m||!m.unlocked){showToast(`🔒 ${m.req} 달성 시 해금!`);return;}
+  avatar.motion=id; renderEmotion(); burst();
+  showToast(`${m.emoji} 모션 변경!`);
+}
+function switchOutfit(type,btn){
+  currentOutfitTab=type;
+  document.querySelectorAll('.outfit-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderOutfit(type);
+}
+
+// ════════════════════════════════════
+// TAB SWITCH
+// ════════════════════════════════════
+function switchTab(name, btn){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+
+  // 탭별 렌더
+  if(name==='face') renderFace();
+  if(name==='hair') renderHair();
+  if(name==='outfit') renderOutfit(currentOutfitTab);
+  if(name==='aura') renderAura();
+  if(name==='acc') renderAcc();
+  if(name==='emotion') renderEmotion();
+  if(name==='growth') renderGrowth();
+}
+
+// ════════════════════════════════════
+// LEAGUE COLOR UPDATE
+// ════════════════════════════════════
+function updateLeagueColor(){
+  const league=LEAGUES.find(l=>l.id===avatar.league)||LEAGUES[0];
+  document.documentElement.style.setProperty('--league-color',league.color);
+  document.documentElement.style.setProperty('--league-rgb',league.rgb);
+  document.getElementById('previewLeague').textContent=`${league.icon} ${league.name} 리그`;
+  document.getElementById('previewBg').style.background=
+    `radial-gradient(ellipse at 50% 40%, rgba(${league.rgb},.2) 0%, transparent 65%)`;
+}
+
+// 리그 변경 테스트 (키보드 1~5)
+document.addEventListener('keydown',e=>{
+  const l=['dust','star','planet','nova','quasar'];
+  const idx=parseInt(e.key)-1;
+  if(idx>=0&&idx<5){
+    avatar.league=l[idx];
+    avatar.aura='a'+(idx+1);
+    updateLeagueColor();
+    renderAura();
+    showToast(`${LEAGUES[idx].icon} ${LEAGUES[idx].name} 리그로 변경 (테스트)`);
+  }
+});
+
+// ════════════════════════════════════
+// SAVE
+// ════════════════════════════════════
+function saveAvatar(){
+  localStorage.setItem('asteria_avatar', JSON.stringify(avatar));
+  burst(); showToast('✨ 아바타가 저장됐어요!');
+}
+
+// ════════════════════════════════════
+// PARTICLES
+// ════════════════════════════════════
+function burst(){
+  const cx=window.innerWidth/2, cy=220;
+  for(let i=0;i<12;i++){
+    const p=document.createElement('div');
+    const colors=['#f0c040','#c084fc','#38bdf8','#fff'];
+    const color=colors[Math.floor(Math.random()*colors.length)];
+    const size=Math.random()*5+2;
+    const angle=Math.random()*Math.PI*2;
+    const dist=Math.random()*60+20;
+    p.style.cssText=`position:fixed;left:${cx}px;top:${cy}px;width:${size}px;height:${size}px;border-radius:50%;background:${color};box-shadow:0 0 6px ${color};z-index:9999;pointer-events:none;transition:all ${.4+Math.random()*.3}s ease-out;transform:translate(-50%,-50%)`;
+    document.body.appendChild(p);
+    requestAnimationFrame(()=>{
+      p.style.transform=`translate(calc(-50% + ${Math.cos(angle)*dist}px),calc(-50% + ${Math.sin(angle)*dist}px))`;
+      p.style.opacity='0';
+    });
+    setTimeout(()=>p.remove(),800);
+  }
+}
+
+// ════════════════════════════════════
+// TOAST
+// ════════════════════════════════════
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ════════════════════════════════════
+// INIT
+// ════════════════════════════════════
+// 저장된 아바타 불러오기
+const saved=localStorage.getItem('asteria_avatar');
+if(saved) Object.assign(avatar,JSON.parse(saved));
+
+updateLeagueColor();
+renderFace();
+drawAvatarPreview();
+</script>
+</body>
+</html>
