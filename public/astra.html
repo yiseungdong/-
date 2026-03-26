@@ -300,13 +300,13 @@ html, body {
 /* ══════════════════════════════
    BOTTOM NAV (앱 스타일)
 ══════════════════════════════ */
-.bottom-nav {
-  position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+.top-nav {
+  position:sticky; top:0;
   width:100%; max-width:480px;
   background:var(--panel); backdrop-filter:blur(24px);
   border-top:1px solid var(--border);
   display:flex; z-index:200;
-  padding-bottom:env(safe-area-inset-bottom);
+  padding-top:env(safe-area-inset-top);
 }
 .nav-item {
   flex:1; display:flex; flex-direction:column; align-items:center;
@@ -470,7 +470,7 @@ html, body {
   </div>
 
   <!-- Bottom Nav -->
-  <nav class="bottom-nav">
+  <nav class="top-nav">
     <a class="nav-item" href="/"><div class="nav-item-icon">🏠</div><div class="nav-item-label">홈</div></a>
     <a class="nav-item active" href="#"><div class="nav-item-icon">⭐</div><div class="nav-item-label">아스트라</div></a>
     <a class="nav-item" href="/nebula.html"><div class="nav-item-icon">🌌</div><div class="nav-item-label">성궤</div></a>
