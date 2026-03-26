@@ -337,20 +337,11 @@ html,body {
 /* ══════════════════════
    BOTTOM NAV
 ══════════════════════ */
-.top-nav {
-  position:sticky; top:0;
-  width:100%; max-width:480px;
-  background:var(--panel); backdrop-filter:blur(24px);
-  border-bottom:1px solid var(--border);
-  display:flex; z-index:300;
-  padding-top:env(safe-area-inset-top);
-}
-.nav-item { flex:1; display:flex; flex-direction:column; align-items:center;
-  padding:10px 0 8px; cursor:pointer; transition:all .2s;
-  text-decoration:none; color:var(--muted); }
-.nav-item.active { color:var(--accent); }
-.nav-item-icon { font-size:20px; margin-bottom:3px; }
-.nav-item-label { font-size:9px; font-weight:500; }
+
+
+
+
+
 
 /* TOAST */
 .toast { position:fixed; bottom:85px; left:50%; transform:translateX(-50%);
@@ -364,6 +355,27 @@ html,body {
 .particle { position:fixed; pointer-events:none; z-index:9998; border-radius:50%; }
 
 .spacer { height:90px; }
+
+/* ── 상단 네비게이션 ── */
+.top-nav {
+  position:sticky; top:0; z-index:300;
+  display:flex; align-items:center;
+  background:rgba(10,10,22,0.96); backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(180,150,255,0.13);
+  overflow-x:auto; -webkit-overflow-scrolling:touch;
+}
+.top-nav::-webkit-scrollbar { display:none; }
+.top-nav-item, .tni {
+  flex-shrink:0; display:flex; flex-direction:column; align-items:center;
+  padding:10px 14px; cursor:pointer; text-decoration:none;
+  color:rgba(200,190,220,0.5);
+  border-bottom:2px solid transparent; gap:3px; transition:all .2s;
+}
+.top-nav-item.active, .tni.active { color:#c084fc; border-bottom-color:#c084fc; }
+.top-nav-item:hover, .tni:hover { color:#e8e4f0; }
+.top-nav-icon, .tni-icon { font-size:18px; }
+.top-nav-label, .tni-label { font-size:9px; font-weight:500; white-space:nowrap; }
+
 </style>
 </head>
 <body>
@@ -371,6 +383,14 @@ html,body {
 <div id="toast" class="toast"></div>
 
 <div id="app">
+  <nav class="top-nav">
+    <a class="top-nav-item " href="/"><div class="top-nav-icon">🏠</div><div class="top-nav-label">홈</div></a>
+    <a class="top-nav-item " href="/astra.html"><div class="top-nav-icon">⭐</div><div class="top-nav-label">아스트라</div></a>
+    <a class="top-nav-item " href="/room3d.html"><div class="top-nav-icon">🏡</div><div class="top-nav-label">내 방</div></a>
+    <a class="top-nav-item " href="/nebula.html"><div class="top-nav-icon">🌌</div><div class="top-nav-label">성궤</div></a>
+    <a class="top-nav-item active" href="/avatar.html"><div class="top-nav-icon">🎭</div><div class="top-nav-label">아바타</div></a>
+    <a class="top-nav-item " href="/shop.html"><div class="top-nav-icon">🛒</div><div class="top-nav-label">상점</div></a>
+  </nav>
 
   <!-- TOP BAR -->
   <div class="topbar">
@@ -502,13 +522,7 @@ html,body {
   
 
   <!-- BOTTOM NAV -->
-  <nav class="top-nav">
-    <a class="nav-item" href="/"><div class="nav-item-icon">🏠</div><div class="nav-item-label">홈</div></a>
-    <a class="nav-item active" href="#"><div class="nav-item-icon">🎭</div><div class="nav-item-label">아바타</div></a>
-    <a class="nav-item" href="/room.html"><div class="nav-item-icon">🏡</div><div class="nav-item-label">내 방</div></a>
-    <a class="nav-item" href="/astra.html"><div class="nav-item-icon">⭐</div><div class="nav-item-label">아스트라</div></a>
-    <a class="nav-item" href="#"><div class="nav-item-icon">🛒</div><div class="nav-item-label">상점</div></a>
-  </nav>
+  
 </div>
 
 <script>

@@ -24,17 +24,9 @@ html,body {
 #app { max-width:900px; margin:0 auto; min-height:100vh; position:relative; z-index:1; }
 
 /* ── TOP NAV ── */
-.top-nav {
-  position:sticky; top:0; z-index:200;
-  display:flex; background:var(--panel); backdrop-filter:blur(20px);
-  border-bottom:1px solid var(--border); overflow-x:auto;
-}
-.top-nav::-webkit-scrollbar { display:none; }
-.tni {
-  flex-shrink:0; display:flex; flex-direction:column; align-items:center;
-  padding:10px 14px; cursor:pointer; text-decoration:none; color:var(--muted);
-  border-bottom:2px solid transparent; gap:3px; transition:all .2s;
-}
+
+
+
 .tni.active { color:var(--accent); border-bottom-color:var(--accent); }
 .tni-icon { font-size:17px; }
 .tni-label { font-size:9px; font-weight:500; white-space:nowrap; }
@@ -354,6 +346,27 @@ html,body {
 .toast.show { opacity:1; }
 
 .spacer { height:60px; }
+
+/* ── 상단 네비게이션 ── */
+.top-nav {
+  position:sticky; top:0; z-index:300;
+  display:flex; align-items:center;
+  background:rgba(10,10,22,0.96); backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(180,150,255,0.13);
+  overflow-x:auto; -webkit-overflow-scrolling:touch;
+}
+.top-nav::-webkit-scrollbar { display:none; }
+.top-nav-item, .tni {
+  flex-shrink:0; display:flex; flex-direction:column; align-items:center;
+  padding:10px 14px; cursor:pointer; text-decoration:none;
+  color:rgba(200,190,220,0.5);
+  border-bottom:2px solid transparent; gap:3px; transition:all .2s;
+}
+.top-nav-item.active, .tni.active { color:#c084fc; border-bottom-color:#c084fc; }
+.top-nav-item:hover, .tni:hover { color:#e8e4f0; }
+.top-nav-icon, .tni-icon { font-size:18px; }
+.top-nav-label, .tni-label { font-size:9px; font-weight:500; white-space:nowrap; }
+
 </style>
 </head>
 <body>
@@ -372,15 +385,16 @@ html,body {
 </div>
 
 <div id="app">
-  <!-- TOP NAV -->
   <nav class="top-nav">
-    <a class="tni" href="/"><div class="tni-icon">🏠</div><div class="tni-label">홈</div></a>
-    <a class="tni" href="/astra.html"><div class="tni-icon">⭐</div><div class="tni-label">아스트라</div></a>
-    <a class="tni" href="/room3d.html"><div class="tni-icon">🏡</div><div class="tni-label">내 방</div></a>
-    <a class="tni" href="/nebula.html"><div class="tni-icon">🌌</div><div class="tni-label">성궤</div></a>
-    <a class="tni" href="/avatar.html"><div class="tni-icon">🎭</div><div class="tni-label">아바타</div></a>
-    <a class="tni active" href="#"><div class="tni-icon">🛒</div><div class="tni-label">상점</div></a>
+    <a class="top-nav-item " href="/"><div class="top-nav-icon">🏠</div><div class="top-nav-label">홈</div></a>
+    <a class="top-nav-item " href="/astra.html"><div class="top-nav-icon">⭐</div><div class="top-nav-label">아스트라</div></a>
+    <a class="top-nav-item " href="/room3d.html"><div class="top-nav-icon">🏡</div><div class="top-nav-label">내 방</div></a>
+    <a class="top-nav-item " href="/nebula.html"><div class="top-nav-icon">🌌</div><div class="top-nav-label">성궤</div></a>
+    <a class="top-nav-item " href="/avatar.html"><div class="top-nav-icon">🎭</div><div class="top-nav-label">아바타</div></a>
+    <a class="top-nav-item active" href="/shop.html"><div class="top-nav-icon">🛒</div><div class="top-nav-label">상점</div></a>
   </nav>
+  <!-- TOP NAV -->
+  
 
   <!-- TOP BAR -->
   <div class="topbar">
@@ -496,7 +510,7 @@ html,body {
       </div>
     </div>
 
-    <div class="spacer"></div>
+    
   </div><!-- /tab-analyze -->
 
   <!-- ═══ 상점 탭 ═══ -->
@@ -511,7 +525,7 @@ html,body {
       <button class="filter-btn" onclick="filterStore('special',this)">특수</button>
     </div>
     <div class="store-grid" id="storeGrid"></div>
-    <div class="spacer"></div>
+    
   </div>
 
   <!-- ═══ 내 굿즈함 탭 ═══ -->
@@ -523,7 +537,7 @@ html,body {
     </div>
     <div class="sec-title">보유 굿즈</div>
     <div class="inv-grid" id="invGrid"></div>
-    <div class="spacer"></div>
+    
   </div>
 
 </div>

@@ -300,23 +300,12 @@ html, body {
 /* ══════════════════════════════
    BOTTOM NAV (앱 스타일)
 ══════════════════════════════ */
-.top-nav {
-  position:sticky; top:0;
-  width:100%; max-width:480px;
-  background:var(--panel); backdrop-filter:blur(24px);
-  border-top:1px solid var(--border);
-  display:flex; z-index:200;
-  padding-top:env(safe-area-inset-top);
-}
-.nav-item {
-  flex:1; display:flex; flex-direction:column; align-items:center;
-  padding:10px 0 8px; cursor:pointer; transition:all .2s;
-  text-decoration:none; color:var(--muted);
-}
-.nav-item.active { color:var(--quasar); }
-.nav-item:hover { color:var(--text); }
-.nav-item-icon { font-size:20px; margin-bottom:3px; }
-.nav-item-label { font-size:9px; font-weight:500; letter-spacing:.5px; }
+
+
+
+
+
+
 
 /* ══════════════════════════════
    LEVELUP MODAL
@@ -360,6 +349,27 @@ html, body {
 .particle-burst {
   position:fixed; pointer-events:none; z-index:9998;
 }
+
+/* ── 상단 네비게이션 ── */
+.top-nav {
+  position:sticky; top:0; z-index:300;
+  display:flex; align-items:center;
+  background:rgba(10,10,22,0.96); backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(180,150,255,0.13);
+  overflow-x:auto; -webkit-overflow-scrolling:touch;
+}
+.top-nav::-webkit-scrollbar { display:none; }
+.top-nav-item, .tni {
+  flex-shrink:0; display:flex; flex-direction:column; align-items:center;
+  padding:10px 14px; cursor:pointer; text-decoration:none;
+  color:rgba(200,190,220,0.5);
+  border-bottom:2px solid transparent; gap:3px; transition:all .2s;
+}
+.top-nav-item.active, .tni.active { color:#c084fc; border-bottom-color:#c084fc; }
+.top-nav-item:hover, .tni:hover { color:#e8e4f0; }
+.top-nav-icon, .tni-icon { font-size:18px; }
+.top-nav-label, .tni-label { font-size:9px; font-weight:500; white-space:nowrap; }
+
 </style>
 </head>
 <body>
@@ -379,6 +389,14 @@ html, body {
 </div>
 
 <div id="app">
+  <nav class="top-nav">
+    <a class="top-nav-item " href="/"><div class="top-nav-icon">🏠</div><div class="top-nav-label">홈</div></a>
+    <a class="top-nav-item active" href="/astra.html"><div class="top-nav-icon">⭐</div><div class="top-nav-label">아스트라</div></a>
+    <a class="top-nav-item " href="/room3d.html"><div class="top-nav-icon">🏡</div><div class="top-nav-label">내 방</div></a>
+    <a class="top-nav-item " href="/nebula.html"><div class="top-nav-icon">🌌</div><div class="top-nav-label">성궤</div></a>
+    <a class="top-nav-item " href="/avatar.html"><div class="top-nav-icon">🎭</div><div class="top-nav-label">아바타</div></a>
+    <a class="top-nav-item " href="/shop.html"><div class="top-nav-icon">🛒</div><div class="top-nav-label">상점</div></a>
+  </nav>
   <!-- Top bar -->
   <div class="topbar">
     <div class="tb-logo">ASTER1A</div>
@@ -470,13 +488,7 @@ html, body {
   </div>
 
   <!-- Bottom Nav -->
-  <nav class="top-nav">
-    <a class="nav-item" href="/"><div class="nav-item-icon">🏠</div><div class="nav-item-label">홈</div></a>
-    <a class="nav-item active" href="#"><div class="nav-item-icon">⭐</div><div class="nav-item-label">아스트라</div></a>
-    <a class="nav-item" href="/nebula.html"><div class="nav-item-icon">🌌</div><div class="nav-item-label">성궤</div></a>
-    <a class="nav-item" href="/"><div class="nav-item-icon">⚔️</div><div class="nav-item-label">리그전</div></a>
-    <a class="nav-item" href="#"><div class="nav-item-icon">👤</div><div class="nav-item-label">MY</div></a>
-  </nav>
+  
 </div>
 
 <script>

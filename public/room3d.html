@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>아스트라 방 3D — ASTERIA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --void:#030308; --panel:rgba(10,10,22,0.96);
+  --border:rgba(180,150,255,0.13); --gold:#f0c040;
+  --accent:#c084fc; --accent2:#818cf8;
+  --text:#e8e4f0; --muted:rgba(200,190,220,0.5);
+}
+html,body {
+  width:100%; height:100%; background:var(--void); color:var(--text);
+  font-family:'Noto Sans KR',sans-serif;
+  -webkit-tap-highlight-color:transparent; overflow:hidden;
+}
+#app { width:100%; height:100vh; display:flex; flex-direction:column; max-width:900px; margin:0 auto; }
+
+/* ── TOP NAV ── */
+
+
+
+.tni.active { color:var(--accent); border-bottom-color:var(--accent); }
+.tni-icon { font-size:17px; }
+.tni-label { font-size:9px; font-weight:500; white-space:nowrap; }
+
+/* ── TOP BAR ── */
+.topbar {
+  display:flex; align-items:center; gap:10px; padding:10px 16px;
+  background:var(--panel); backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border); flex-shrink:0;
+}
+.tb-back { width:30px; height:30px; border-radius:50%;
+  background:rgba(255,255,255,.06); border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; cursor:pointer; text-decoration:none; color:var(--text); flex-shrink:0; }
+.tb-title { font-size:14px; font-weight:700; flex:1; }
+.tb-actions { display:flex; gap:7px; }
+.tb-btn {
+  padding:6px 12px; border-radius:20px; border:none;
+  font-size:11px; font-weight:700; cursor:pointer;
+  font-family:'Noto Sans KR',sans-serif; transition:all .2s;
+}
+.tb-share { background:rgba(240,192,64,.15); border:1px solid rgba(240,192,64,.4); color:var(--gold); }
+.tb-edit { background:linear-gradient(90deg,var(--accent),var(--accent2)); color:#fff; }
+
+/* ── 메인 2단 레이아웃 ── */
+.main-layout {
+  display:flex; flex:1; overflow:hidden;
+}
+
+/* ── 왼쪽 1/3 패널 ── */
+.left-panel {
+  width:32%; flex-shrink:0;
+  border-right:1px solid var(--border);
+  overflow-y:auto; background:rgba(5,5,15,.8);
+  display:flex; flex-direction:column;
+}
+.left-panel::-webkit-scrollbar { width:3px; }
+.left-panel::-webkit-scrollbar-thumb { background:rgba(192,132,252,.3); border-radius:3px; }
+
+/* ── 오른쪽 2/3 — 3D 방 + 방명록 ── */
+.right-panel {
+  flex:1; display:flex; flex-direction:column; overflow:hidden;
+}
+
+/* 3D 캔버스 */
+#threeCanvas {
+  width:100%; flex:1; display:block; cursor:grab;
+}
+#threeCanvas:active { cursor:grabbing; }
+
+/* 방명록 패널 */
+.guestbook-panel {
+  background:var(--panel); border-top:1px solid var(--border);
+  padding:12px 16px; max-height:220px; overflow-y:auto; flex-shrink:0;
+}
+.guestbook-panel::-webkit-scrollbar { width:3px; }
+.guestbook-panel::-webkit-scrollbar-thumb { background:rgba(192,132,252,.3); border-radius:3px; }
+
+/* ── 왼쪽 패널 내부 ── */
+.lp-section { padding:12px 14px; border-bottom:1px solid var(--border); }
+.lp-title { font-size:9px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; margin-bottom:10px; }
+
+/* 프로필 */
+.profile-row { display:flex; align-items:center; gap:10px; }
+.profile-av {
+  width:48px; height:48px; border-radius:50%; flex-shrink:0;
+  background:linear-gradient(135deg,rgba(192,132,252,.5),rgba(7,7,15,.9));
+  display:flex; align-items:center; justify-content:center; font-size:24px;
+  border:2px solid rgba(240,192,64,.4);
+  animation:avFloat 4s ease-in-out infinite;
+}
+@keyframes avFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+.profile-info { flex:1; min-width:0; }
+.profile-name { font-size:14px; font-weight:900; }
+.profile-grade { font-size:9px; color:#94a3b8; margin-top:2px; }
+.profile-stats { display:flex; gap:10px; margin-top:6px; }
+.ps-item { font-size:10px; color:var(--muted); }
+.ps-item span { color:var(--text); font-weight:700; }
+
+/* 진화 단계 */
+.stage-row { display:flex; align-items:center; gap:8px; }
+.stage-dots { display:flex; gap:4px; }
+.sdot { width:22px; height:5px; border-radius:3px; background:rgba(255,255,255,.1); transition:all .5s; }
+.sdot.on { background:var(--accent); box-shadow:0 0 6px var(--accent); }
+.stage-txt { flex:1; }
+.stage-name { font-size:11px; font-weight:700; }
+.stage-desc { font-size:9px; color:var(--muted); margin-top:1px; }
+.stage-cnt { font-size:10px; color:var(--gold); font-weight:700; }
+
+/* 랭킹 */
+.rank-row { display:flex; align-items:center; gap:10px; }
+.rank-trophy { font-size:22px; }
+.rank-info { flex:1; }
+.rank-title { font-size:11px; font-weight:700; color:var(--gold); }
+.rank-sub { font-size:9px; color:var(--muted); }
+.rank-num { font-family:'Orbitron',monospace; font-size:20px; font-weight:900; color:var(--gold); }
+
+/* 통계 */
+.stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.stat-card {
+  background:rgba(255,255,255,.04); border:1px solid var(--border);
+  border-radius:10px; padding:8px; text-align:center;
+}
+.stat-icon { font-size:14px; }
+.stat-val { font-size:14px; font-weight:900; margin-top:2px; }
+.stat-label { font-size:9px; color:var(--muted); }
+
+/* 아이템 그리드 */
+.item-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+.item-card {
+  background:rgba(255,255,255,.04); border:1px solid var(--border);
+  border-radius:10px; padding:8px 4px; text-align:center;
+  cursor:pointer; transition:all .2s; position:relative;
+}
+.item-card:hover { border-color:var(--accent); background:rgba(192,132,252,.08); }
+.item-card.placed { border-color:rgba(16,185,129,.5); }
+.item-card.locked { opacity:.5; }
+.item-emoji { font-size:20px; margin-bottom:3px; }
+.item-name { font-size:8px; color:var(--muted); line-height:1.2; }
+.item-rarity { font-size:7px; font-weight:700; margin-top:2px; }
+.item-check { position:absolute; top:3px; right:3px; width:12px; height:12px;
+  border-radius:50%; background:#10b981; display:flex; align-items:center;
+  justify-content:center; font-size:7px; }
+.item-lock { position:absolute; inset:0; background:rgba(0,0,0,.6);
+  display:flex; align-items:center; justify-content:center; border-radius:9px; font-size:14px; }
+.rarity-common { color:#94a3b8; }
+.rarity-rare { color:#38bdf8; }
+.rarity-epic { color:#c084fc; }
+.rarity-legendary { color:var(--gold); }
+
+/* 테마 그리드 */
+.theme-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.theme-card {
+  border-radius:10px; overflow:hidden; cursor:pointer;
+  border:2px solid transparent; transition:all .2s; position:relative;
+  aspect-ratio:16/9;
+}
+.theme-card.active { border-color:var(--gold); }
+.theme-card:hover { transform:scale(1.03); }
+.theme-inner { width:100%; height:100%; display:flex; align-items:flex-end; padding:5px 6px; }
+.theme-lbl { font-size:9px; font-weight:700; text-shadow:0 1px 4px rgba(0,0,0,.8); }
+.theme-now { position:absolute; top:3px; right:3px;
+  background:var(--gold); color:var(--void); font-size:7px; font-weight:900;
+  padding:1px 5px; border-radius:3px; }
+
+/* 공유 버튼 */
+.share-btns { display:grid; grid-template-columns:repeat(2,1fr); gap:6px; }
+.share-btn {
+  padding:8px 4px; border-radius:10px; border:1px solid var(--border);
+  background:rgba(255,255,255,.04); cursor:pointer;
+  font-size:10px; color:var(--text); font-family:'Noto Sans KR',sans-serif;
+  transition:all .2s; display:flex; flex-direction:column; align-items:center; gap:3px;
+}
+.share-btn:hover { border-color:var(--accent); background:rgba(192,132,252,.08); }
+.share-btn-icon { font-size:16px; }
+
+/* ── 방명록 ── */
+.gb-title { font-size:10px; color:var(--muted); letter-spacing:2px; text-transform:uppercase;
+  margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+.gb-title::after { content:''; flex:1; height:1px; background:var(--border); }
+.gb-entries { display:flex; flex-direction:column; gap:7px; margin-bottom:10px; }
+.gb-entry {
+  background:rgba(255,255,255,.03); border:1px solid var(--border);
+  border-radius:10px; padding:9px 11px;
+  display:flex; align-items:flex-start; gap:8px;
+}
+.gb-av { width:28px; height:28px; border-radius:50%; flex-shrink:0;
+  background:radial-gradient(circle,rgba(192,132,252,.3),rgba(7,7,15,.9));
+  display:flex; align-items:center; justify-content:center; font-size:14px; }
+.gb-body { flex:1; }
+.gb-name { font-size:11px; font-weight:700; }
+.gb-msg { font-size:10px; color:var(--muted); margin-top:2px; line-height:1.4; }
+.gb-right { display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0; }
+.gb-time { font-size:9px; color:var(--muted); }
+.gb-heart { font-size:12px; cursor:pointer; transition:transform .2s; }
+.gb-heart:hover { transform:scale(1.3); }
+.gb-input-row { display:flex; gap:8px; }
+.gb-input {
+  flex:1; background:rgba(255,255,255,.05); border:1px solid var(--border);
+  border-radius:10px; padding:8px 12px; color:var(--text); font-size:12px;
+  font-family:'Noto Sans KR',sans-serif; outline:none; transition:border-color .2s;
+}
+.gb-input:focus { border-color:rgba(192,132,252,.5); }
+.gb-send {
+  padding:0 14px; border-radius:10px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  border:none; color:#fff; font-size:12px; font-weight:700;
+  cursor:pointer; white-space:nowrap; font-family:'Noto Sans KR',sans-serif;
+}
+
+/* ── 3D 컨트롤 오버레이 ── */
+.room3d-controls {
+  position:absolute; bottom:16px; right:16px;
+  display:flex; flex-direction:column; gap:6px; z-index:50;
+}
+.ctrl-btn {
+  width:36px; height:36px; border-radius:50%;
+  background:rgba(12,12,26,.85); border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; cursor:pointer; color:var(--text); transition:all .2s;
+  backdrop-filter:blur(8px);
+}
+.ctrl-btn:hover { border-color:var(--accent); background:rgba(192,132,252,.15); }
+
+/* ── TOAST ── */
+.toast {
+  position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+  background:rgba(12,12,26,.97); border:1px solid var(--border);
+  border-radius:12px; padding:10px 20px; font-size:13px;
+  z-index:9999; opacity:0; transition:opacity .3s; pointer-events:none;
+  white-space:nowrap; box-shadow:0 8px 32px rgba(0,0,0,.5);
+}
+.toast.show { opacity:1; }
+
+/* ── 아이템 배치 모달 ── */
+.modal-ov {
+  position:fixed; inset:0; z-index:9000;
+  background:rgba(0,0,0,.75); backdrop-filter:blur(12px);
+  display:none; align-items:flex-end; justify-content:center;
+}
+.modal-ov.show { display:flex; }
+.modal-box {
+  width:100%; max-width:480px;
+  background:rgba(12,12,26,.98); border-top:1px solid var(--border);
+  border-radius:24px 24px 0 0; padding:22px 18px 36px;
+  animation:slideUp .3s cubic-bezier(.4,0,.2,1);
+}
+@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.modal-handle { width:36px; height:4px; border-radius:2px;
+  background:rgba(255,255,255,.2); margin:0 auto 16px; }
+.modal-title { font-size:14px; font-weight:700; color:var(--accent); margin-bottom:14px; }
+.modal-item-info {
+  display:flex; align-items:center; gap:12px;
+  background:rgba(255,255,255,.04); border-radius:12px; padding:12px; margin-bottom:14px;
+}
+.modal-slots { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:14px; }
+.slot-btn {
+  aspect-ratio:1; border-radius:10px; border:1.5px dashed rgba(192,132,252,.25);
+  background:rgba(255,255,255,.03); display:flex; flex-direction:column;
+  align-items:center; justify-content:center; cursor:pointer; transition:all .2s;
+  font-size:10px; color:var(--muted); gap:3px;
+}
+.slot-btn:hover { border-color:var(--accent); background:rgba(192,132,252,.08); }
+.slot-btn.occ { border-style:solid; border-color:rgba(192,132,252,.4); }
+.slot-btn-em { font-size:20px; }
+.modal-cancel {
+  width:100%; padding:11px; border-radius:12px;
+  background:transparent; border:1px solid var(--border);
+  color:var(--muted); font-size:13px; cursor:pointer;
+  font-family:'Noto Sans KR',sans-serif; transition:all .2s;
+}
+
+/* ── 상단 네비게이션 ── */
+.top-nav {
+  position:sticky; top:0; z-index:300;
+  display:flex; align-items:center;
+  background:rgba(10,10,22,0.96); backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(180,150,255,0.13);
+  overflow-x:auto; -webkit-overflow-scrolling:touch;
+}
+.top-nav::-webkit-scrollbar { display:none; }
+.top-nav-item, .tni {
+  flex-shrink:0; display:flex; flex-direction:column; align-items:center;
+  padding:10px 14px; cursor:pointer; text-decoration:none;
+  color:rgba(200,190,220,0.5);
+  border-bottom:2px solid transparent; gap:3px; transition:all .2s;
+}
+.top-nav-item.active, .tni.active { color:#c084fc; border-bottom-color:#c084fc; }
+.top-nav-item:hover, .tni:hover { color:#e8e4f0; }
+.top-nav-icon, .tni-icon { font-size:18px; }
+.top-nav-label, .tni-label { font-size:9px; font-weight:500; white-space:nowrap; }
+
+</style>
+</head>
+<body>
+
+<!-- 아이템 배치 모달 -->
+<div class="modal-ov" id="placeModal">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modalTitle">배치할 위치 선택</div>
+    <div class="modal-item-info" id="modalInfo"></div>
+    <div class="modal-slots" id="modalSlots"></div>
+    <button class="modal-cancel" onclick="closeModal()">취소</button>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<div id="app">
+  <nav class="top-nav">
+    <a class="top-nav-item " href="/"><div class="top-nav-icon">🏠</div><div class="top-nav-label">홈</div></a>
+    <a class="top-nav-item " href="/astra.html"><div class="top-nav-icon">⭐</div><div class="top-nav-label">아스트라</div></a>
+    <a class="top-nav-item active" href="/room3d.html"><div class="top-nav-icon">🏡</div><div class="top-nav-label">내 방</div></a>
+    <a class="top-nav-item " href="/nebula.html"><div class="top-nav-icon">🌌</div><div class="top-nav-label">성궤</div></a>
+    <a class="top-nav-item " href="/avatar.html"><div class="top-nav-icon">🎭</div><div class="top-nav-label">아바타</div></a>
+    <a class="top-nav-item " href="/shop.html"><div class="top-nav-icon">🛒</div><div class="top-nav-label">상점</div></a>
+  </nav>
+  <!-- TOP NAV -->
+  
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <a class="tb-back" href="/">←</a>
+    <div class="tb-title">🏡 별빛 탐험가의 방</div>
+    <div class="tb-actions">
+      <button class="tb-btn tb-share" onclick="shareRoom()">공유 📤</button>
+      <button class="tb-btn tb-edit" id="editBtn" onclick="toggleEdit()">꾸미기 ✏️</button>
+    </div>
+  </div>
+
+  <!-- 메인 2단 -->
+  <div class="main-layout">
+
+    <!-- ── 왼쪽 1/3 ── -->
+    <div class="left-panel">
+
+      <!-- 프로필 -->
+      <div class="lp-section">
+        <div class="profile-row">
+          <div class="profile-av">🌟</div>
+          <div class="profile-info">
+            <div class="profile-name">별빛 탐험가</div>
+            <div class="profile-grade">✨ 더스트 리그 · 성진 Lv.23</div>
+            <div class="profile-stats">
+              <div class="ps-item">방문 <span id="visitCnt">127</span></div>
+              <div class="ps-item">하트 <span id="heartCnt">89</span></div>
+              <div class="ps-item">CP <span id="cpCnt">380</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 진화 단계 -->
+      <div class="lp-section">
+        <div class="lp-title">방 성장 단계</div>
+        <div class="stage-row">
+          <div class="stage-dots">
+            <div class="sdot on" id="sd1"></div>
+            <div class="sdot" id="sd2"></div>
+            <div class="sdot" id="sd3"></div>
+          </div>
+          <div class="stage-txt">
+            <div class="stage-name" id="stageName">🌑 Void</div>
+            <div class="stage-desc" id="stageDesc">아이템을 더 배치하세요!</div>
+          </div>
+          <div class="stage-cnt" id="stageCnt">1/4</div>
+        </div>
+      </div>
+
+      <!-- 랭킹 -->
+      <div class="lp-section">
+        <div class="rank-row">
+          <div class="rank-trophy">🏆</div>
+          <div class="rank-info">
+            <div class="rank-title">이번 주 꾸미기 대회</div>
+            <div class="rank-sub">더스트 리그 현재 순위</div>
+          </div>
+          <div>
+            <div class="rank-num">#47</div>
+            <div style="font-size:8px;color:var(--muted);text-align:right">/ 2,841</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 통계 -->
+      <div class="lp-section">
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-icon">👁️</div><div class="stat-val" id="sv">127</div><div class="stat-label">방문</div></div>
+          <div class="stat-card"><div class="stat-icon">💜</div><div class="stat-val" id="sh">89</div><div class="stat-label">하트</div></div>
+          <div class="stat-card" style="grid-column:span 2"><div class="stat-icon">⚡</div><div class="stat-val" id="sc">380</div><div class="stat-label">문화력 CP</div></div>
+        </div>
+      </div>
+
+      <!-- 아이템 -->
+      <div class="lp-section">
+        <div class="lp-title">내 아이템</div>
+        <div class="item-grid" id="itemGrid"></div>
+      </div>
+
+      <!-- 테마 -->
+      <div class="lp-section">
+        <div class="lp-title">방 테마</div>
+        <div class="theme-grid" id="themeGrid"></div>
+      </div>
+
+      <!-- 뽐내기 -->
+      <div class="lp-section">
+        <div class="lp-title">뽐내기</div>
+        <div class="share-btns">
+          <button class="share-btn" onclick="shareToSNS('instagram')"><div class="share-btn-icon">📸</div>인스타</button>
+          <button class="share-btn" onclick="shareToSNS('twitter')"><div class="share-btn-icon">🐦</div>X</button>
+          <button class="share-btn" onclick="shareToSNS('kakao')"><div class="share-btn-icon">💬</div>카카오</button>
+          <button class="share-btn" onclick="shareToSNS('copy')"><div class="share-btn-icon">🔗</div>링크</button>
+        </div>
+      </div>
+
+    </div><!-- /left-panel -->
+
+    <!-- ── 오른쪽 2/3 ── -->
+    <div class="right-panel" style="position:relative">
+
+      <!-- Three.js 캔버스 -->
+      <canvas id="threeCanvas"></canvas>
+
+      <!-- 3D 컨트롤 버튼 -->
+      <div class="room3d-controls">
+        <div class="ctrl-btn" onclick="resetCamera()" title="카메라 리셋">🔄</div>
+        <div class="ctrl-btn" onclick="zoomIn()" title="확대">🔍</div>
+        <div class="ctrl-btn" onclick="zoomOut()" title="축소">🔎</div>
+        <div class="ctrl-btn" onclick="toggleLight()" title="조명 변경">💡</div>
+      </div>
+
+      <!-- 방명록 -->
+      <div class="guestbook-panel">
+        <div class="gb-title">방명록</div>
+        <div class="gb-entries" id="gbEntries"></div>
+        <div class="gb-input-row">
+          <input class="gb-input" id="gbInput" placeholder="방명록을 남겨보세요 ✨" maxlength="100">
+          <button class="gb-send" onclick="sendGuestbook()">남기기</button>
+        </div>
+      </div>
+
+    </div><!-- /right-panel -->
+
+  </div><!-- /main-layout -->
+</div>
+
+<script>
+// ══════════════════════════════════════════
+//  DATA
+// ══════════════════════════════════════════
+const THEMES = [
+  { id:'void',    name:'보이드',  icon:'🌑', wall:0x0d0820, floor:0x07051a, accent:0xc084fc, light:0x8844aa },
+  { id:'nebula',  name:'성운',    icon:'💜', wall:0x120830, floor:0x0a0520, accent:0xa855f7, light:0x7733cc },
+  { id:'nova',    name:'노바',    icon:'🔥', wall:0x1a0808, floor:0x0f0505, accent:0xef4444, light:0xcc2222 },
+  { id:'ocean',   name:'심해',    icon:'🌊', wall:0x020f1a, floor:0x010a12, accent:0x38bdf8, light:0x1188cc },
+  { id:'gold',    name:'제국',    icon:'✨', wall:0x0d0a00, floor:0x080700, accent:0xf0c040, light:0xcc9900 },
+  { id:'crystal', name:'수정',    icon:'❄️', wall:0x020a18, floor:0x010810, accent:0xbae6fd, light:0x88ccee },
+];
+
+const ITEMS = [
+  { id:1,  name:'별빛 조명',   emoji:'💡', rarity:'common',    placed:true,  pos:[0,-0.3,-1.5],  rot:0 },
+  { id:2,  name:'포스터',      emoji:'🖼️', rarity:'common',   placed:true,  pos:[1.8,0.8,-2.4], rot:0 },
+  { id:3,  name:'오라클 테이블',emoji:'🔮', rarity:'rare',     placed:true,  pos:[-0.5,-0.4,0],  rot:0 },
+  { id:4,  name:'응원봉',      emoji:'🎤', rarity:'rare',      placed:false, pos:null },
+  { id:5,  name:'앨범',        emoji:'💿', rarity:'common',    placed:false, pos:null },
+  { id:6,  name:'홀로그램',    emoji:'✨', rarity:'epic',      placed:false, pos:null },
+  { id:7,  name:'포토카드',    emoji:'📸', rarity:'rare',      placed:false, pos:null },
+  { id:8,  name:'소파',        emoji:'🛋️', rarity:'epic',     placed:false, pos:null },
+  { id:9,  name:'책장',        emoji:'📚', rarity:'common',    placed:false, pos:null },
+  { id:10, name:'화환',        emoji:'🌸', rarity:'rare',      placed:false, pos:null },
+  { id:11, name:'황금 시계',   emoji:'⏰', rarity:'legendary', placed:false, pos:null, locked:true, lockMsg:'리그 달성' },
+  { id:12, name:'제네시스 오브',emoji:'🔵', rarity:'genesis',  placed:false, pos:null, locked:true, lockMsg:'개척자 전용' },
+];
+
+const GUESTBOOK = [
+  { name:'NovaFan99', emoji:'💫', msg:'3D 방이 너무 예뻐요! 어떻게 꾸민 거예요? ✨', time:'10분 전', hearts:3 },
+  { name:'StarQueen', emoji:'⭐', msg:'오라클 테이블 포스에 눌렸어요 ㅋㅋ 방 너무 예쁘다!', time:'1시간 전', hearts:7 },
+  { name:'EclipseKing', emoji:'🌙', msg:'리그 1등 같이 노려봐요 화이팅!', time:'3시간 전', hearts:2 },
+];
+
+// ══════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════
+let currentTheme = THEMES[0];
+let isEditMode = false;
+let selectedItem = null;
+let lightMode = 0;
+
+// Three.js 전역
+let scene, camera, renderer, roomGroup;
+let mouseDown = false, lastMouse = {x:0,y:0};
+let camTheta = 0.3, camPhi = 0.5, camRadius = 7;
+let itemMeshes = [];
+let floatTime = 0;
+let accentLight, pointLight1, ambientLight;
+
+// ══════════════════════════════════════════
+//  THREE.JS 초기화
+// ══════════════════════════════════════════
+function initThree() {
+  const canvas = document.getElementById('threeCanvas');
+  const container = canvas.parentElement;
+
+  // Scene
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x030308);
+  scene.fog = new THREE.FogExp2(0x030308, 0.06);
+
+  // Camera
+  const w = container.clientWidth;
+  const h = container.clientHeight - 220; // 방명록 높이 제외
+  camera = new THREE.PerspectiveCamera(55, w / h, 0.1, 100);
+  updateCameraPos();
+
+  // Renderer
+  renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:false });
+  renderer.setSize(w, h);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 0.9;
+
+  // 조명
+  ambientLight = new THREE.AmbientLight(0x221133, 0.4);
+  scene.add(ambientLight);
+
+  accentLight = new THREE.PointLight(0xc084fc, 2.5, 12);
+  accentLight.position.set(0, 2, 0);
+  accentLight.castShadow = true;
+  scene.add(accentLight);
+
+  pointLight1 = new THREE.PointLight(0x4444ff, 1.0, 10);
+  pointLight1.position.set(-2, 1.5, -1);
+  scene.add(pointLight1);
+
+  const rimLight = new THREE.DirectionalLight(0x8866ff, 0.5);
+  rimLight.position.set(3, 3, 2);
+  scene.add(rimLight);
+
+  // 방 생성
+  buildRoom();
+  buildItems();
+  buildParticles();
+
+  // 이벤트
+  canvas.addEventListener('mousedown', onMouseDown);
+  canvas.addEventListener('mousemove', onMouseMove);
+  canvas.addEventListener('mouseup', ()=>mouseDown=false);
+  canvas.addEventListener('wheel', onWheel, {passive:true});
+  canvas.addEventListener('touchstart', onTouchStart, {passive:true});
+  canvas.addEventListener('touchmove', onTouchMove, {passive:false});
+  canvas.addEventListener('touchend', ()=>mouseDown=false);
+
+  window.addEventListener('resize', onResize);
+
+  animate();
+}
+
+// ══════════════════════════════════════════
+//  방 기하학
+// ══════════════════════════════════════════
+function buildRoom() {
+  if(roomGroup) {
+    scene.remove(roomGroup);
+    roomGroup.traverse(o=>{ if(o.geometry) o.geometry.dispose(); if(o.material) o.material.dispose(); });
+  }
+  roomGroup = new THREE.Group();
+  scene.add(roomGroup);
+
+  const t = currentTheme;
+  const W=6, H=4.5, D=5; // 방 크기
+
+  // ── 바닥 ──
+  const floorGeo = new THREE.PlaneGeometry(W, D, 20, 20);
+  const floorMat = new THREE.MeshStandardMaterial({
+    color: t.floor, roughness:0.8, metalness:0.1,
+  });
+  const floor = new THREE.Mesh(floorGeo, floorMat);
+  floor.rotation.x = -Math.PI/2;
+  floor.position.y = -1.5;
+  floor.receiveShadow = true;
+  roomGroup.add(floor);
+
+  // 바닥 격자 무늬
+  const gridHelper = new THREE.GridHelper(6, 12, t.accent, t.accent);
+  gridHelper.position.y = -1.49;
+  gridHelper.material.opacity = 0.08;
+  gridHelper.material.transparent = true;
+  roomGroup.add(gridHelper);
+
+  // ── 뒷벽 ──
+  const backWallGeo = new THREE.PlaneGeometry(W, H);
+  const backWallMat = new THREE.MeshStandardMaterial({
+    color: t.wall, roughness:0.9, metalness:0.05,
+  });
+  const backWall = new THREE.Mesh(backWallGeo, backWallMat);
+  backWall.position.set(0, 0.75, -D/2);
+  backWall.receiveShadow = true;
+  roomGroup.add(backWall);
+
+  // ── 왼쪽 벽 ──
+  const leftWallGeo = new THREE.PlaneGeometry(D, H);
+  const leftWallMat = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(t.wall).multiplyScalar(0.85),
+    roughness:0.9, metalness:0.05,
+  });
+  const leftWall = new THREE.Mesh(leftWallGeo, leftWallMat);
+  leftWall.rotation.y = Math.PI/2;
+  leftWall.position.set(-W/2, 0.75, 0);
+  leftWall.receiveShadow = true;
+  roomGroup.add(leftWall);
+
+  // ── 오른쪽 벽 ──
+  const rightWallGeo = new THREE.PlaneGeometry(D, H);
+  const rightWallMat = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(t.wall).multiplyScalar(0.85),
+    roughness:0.9, metalness:0.05,
+  });
+  const rightWall = new THREE.Mesh(rightWallGeo, rightWallMat);
+  rightWall.rotation.y = -Math.PI/2;
+  rightWall.position.set(W/2, 0.75, 0);
+  rightWall.receiveShadow = true;
+  roomGroup.add(rightWall);
+
+  // ── 천장 ──
+  const ceilGeo = new THREE.PlaneGeometry(W, D);
+  const ceilMat = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(t.wall).multiplyScalar(0.6),
+    roughness:1, metalness:0,
+  });
+  const ceil = new THREE.Mesh(ceilGeo, ceilMat);
+  ceil.rotation.x = Math.PI/2;
+  ceil.position.y = 3;
+  roomGroup.add(ceil);
+
+  // ── 몰딩 (벽/바닥 경계선) ──
+  const moldingColor = t.accent;
+  const moldingGeo = new THREE.BoxGeometry(W+0.1, 0.06, 0.06);
+  const moldingMat = new THREE.MeshStandardMaterial({
+    color: moldingColor, emissive: moldingColor,
+    emissiveIntensity:0.5, roughness:0.3,
+  });
+  const molding1 = new THREE.Mesh(moldingGeo, moldingMat);
+  molding1.position.set(0, -1.47, -D/2+0.03);
+  roomGroup.add(molding1);
+
+  // 측면 몰딩
+  const moldingGeo2 = new THREE.BoxGeometry(0.06, 0.06, D+0.1);
+  const molding2 = new THREE.Mesh(moldingGeo2, moldingMat.clone());
+  molding2.position.set(-W/2+0.03, -1.47, 0);
+  roomGroup.add(molding2);
+  const molding3 = new THREE.Mesh(moldingGeo2, moldingMat.clone());
+  molding3.position.set(W/2-0.03, -1.47, 0);
+  roomGroup.add(molding3);
+
+  // ── 아바타 (방 주인) ──
+  buildAvatar();
+
+  // 조명 색상 업데이트
+  accentLight.color.setHex(t.light);
+  pointLight1.color.setHex(t.accent);
+}
+
+// ── 아바타 3D 표현 ──
+function buildAvatar() {
+  // 몸통
+  const bodyGeo = new THREE.CylinderGeometry(0.25, 0.3, 0.8, 16);
+  const bodyMat = new THREE.MeshStandardMaterial({
+    color:0xc084fc, emissive:0xc084fc, emissiveIntensity:0.2,
+    roughness:0.4, metalness:0.3,
+  });
+  const body = new THREE.Mesh(bodyGeo, bodyMat);
+  body.position.set(0, -0.9, 0.5);
+  body.castShadow = true;
+  body.userData.isAvatar = true;
+  roomGroup.add(body);
+
+  // 머리
+  const headGeo = new THREE.SphereGeometry(0.28, 16, 16);
+  const headMat = new THREE.MeshStandardMaterial({
+    color:0xfdbcb4, emissive:0xc084fc, emissiveIntensity:0.1,
+    roughness:0.6,
+  });
+  const head = new THREE.Mesh(headGeo, headMat);
+  head.position.set(0, -0.2, 0.5);
+  head.castShadow = true;
+  head.userData.isAvatar = true;
+  roomGroup.add(head);
+
+  // 아우라 링
+  const ringGeo = new THREE.TorusGeometry(0.45, 0.025, 8, 40);
+  const ringMat = new THREE.MeshStandardMaterial({
+    color:0xc084fc, emissive:0xc084fc, emissiveIntensity:1.5,
+    transparent:true, opacity:0.8,
+  });
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.position.set(0, -0.55, 0.5);
+  ring.rotation.x = Math.PI/2;
+  ring.userData.isAura = true;
+  roomGroup.add(ring);
+}
+
+// ══════════════════════════════════════════
+//  아이템 3D 배치
+// ══════════════════════════════════════════
+const ITEM_3D_PRESETS = [
+  // 조명 — 천장에 매달린 구
+  { type:'sphere', color:0xffffaa, emissive:0xffee44, emissiveIntensity:1.5,
+    scale:[0.18,0.18,0.18], offset:[0,0,0] },
+  // 포스터 — 벽에 붙은 평면
+  { type:'box', color:0xeeddbb, emissive:0xddaa66, emissiveIntensity:0.3,
+    scale:[0.6,0.8,0.04], offset:[0,0,0] },
+  // 테이블 — 바닥에 놓인 박스
+  { type:'box', color:0x441166, emissive:0x8844cc, emissiveIntensity:0.4,
+    scale:[0.5,0.4,0.5], offset:[0,0.2,0] },
+  // 응원봉 — 가는 실린더
+  { type:'cylinder', color:0xffaaff, emissive:0xff44ff, emissiveIntensity:0.8,
+    scale:[0.06,0.6,0.06], offset:[0,0,0] },
+  // 앨범 — 얇은 박스
+  { type:'box', color:0x334488, emissive:0x4466cc, emissiveIntensity:0.3,
+    scale:[0.35,0.35,0.04], offset:[0,0,0] },
+  // 홀로그램 — 빛나는 구
+  { type:'sphere', color:0xaaffff, emissive:0x44ffff, emissiveIntensity:2,
+    scale:[0.22,0.22,0.22], offset:[0,0,0] },
+  // 포토카드 — 작은 평면
+  { type:'box', color:0xffddee, emissive:0xff88aa, emissiveIntensity:0.2,
+    scale:[0.2,0.28,0.02], offset:[0,0,0] },
+  // 소파 — 넓은 박스
+  { type:'box', color:0x553344, emissive:0x883366, emissiveIntensity:0.2,
+    scale:[0.9,0.35,0.45], offset:[0,0,0] },
+  // 책장 — 세로 박스
+  { type:'box', color:0x443322, emissive:0x664433, emissiveIntensity:0.1,
+    scale:[0.5,1.0,0.25], offset:[0,0.5,0] },
+  // 화환 — 도넛
+  { type:'torus', color:0xff88aa, emissive:0xff4488, emissiveIntensity:0.5,
+    scale:[0.25,0.25,0.25], offset:[0,0,0] },
+];
+
+const SLOT_POSITIONS = [
+  [-1.8, -1.0, -2.0], [0, -1.0, -2.2], [1.8, -1.0, -2.0],
+  [-2.2, -0.8, -0.5], [2.2, -0.8, -0.5],
+  [-1.5, -1.0, 0.8],  [1.5, -1.0, 0.8],
+  [0, -1.0, 0.5],
+];
+
+function buildItems() {
+  // 기존 아이템 메시 제거
+  itemMeshes.forEach(m=>roomGroup.remove(m));
+  itemMeshes = [];
+
+  ITEMS.filter(i=>i.placed && i.pos).forEach((item, idx)=>{
+    const preset = ITEM_3D_PRESETS[(item.id-1) % ITEM_3D_PRESETS.length];
+    let geo;
+    if(preset.type==='sphere') geo = new THREE.SphereGeometry(0.5, 12, 12);
+    else if(preset.type==='cylinder') geo = new THREE.CylinderGeometry(0.5,0.5,1,12);
+    else if(preset.type==='torus') geo = new THREE.TorusGeometry(0.5,0.2,8,20);
+    else geo = new THREE.BoxGeometry(1,1,1);
+
+    const mat = new THREE.MeshStandardMaterial({
+      color: preset.color,
+      emissive: preset.emissive,
+      emissiveIntensity: preset.emissiveIntensity,
+      roughness: 0.4, metalness: 0.3,
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.scale.set(...preset.scale);
+    const p = item.pos;
+    const off = preset.offset;
+    mesh.position.set(p[0]+off[0], p[1]+off[1], p[2]+off[2]);
+    mesh.castShadow = true;
+    mesh.userData.itemId = item.id;
+    mesh.userData.floatOffset = Math.random()*Math.PI*2;
+    roomGroup.add(mesh);
+    itemMeshes.push(mesh);
+
+    // 아이템 주변 빛
+    const iLight = new THREE.PointLight(preset.emissive, 0.6, 1.5);
+    iLight.position.copy(mesh.position);
+    roomGroup.add(iLight);
+    itemMeshes.push(iLight);
+  });
+}
+
+// ══════════════════════════════════════════
+//  파티클 (방 안 먼지)
+// ══════════════════════════════════════════
+let particleSystem;
+function buildParticles() {
+  if(particleSystem) scene.remove(particleSystem);
+  const count = 200;
+  const geo = new THREE.BufferGeometry();
+  const pos = new Float32Array(count*3);
+  for(let i=0;i<count;i++){
+    pos[i*3]   = (Math.random()-0.5)*5;
+    pos[i*3+1] = Math.random()*4-1.5;
+    pos[i*3+2] = (Math.random()-0.5)*4;
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  const mat = new THREE.PointsMaterial({
+    color: currentTheme.accent, size:0.025,
+    transparent:true, opacity:0.6,
+    blending: THREE.AdditiveBlending,
+  });
+  particleSystem = new THREE.Points(geo, mat);
+  scene.add(particleSystem);
+}
+
+// ══════════════════════════════════════════
+//  애니메이션 루프
+// ══════════════════════════════════════════
+function animate() {
+  requestAnimationFrame(animate);
+  floatTime += 0.016;
+
+  // 아바타 부유
+  if(roomGroup) {
+    roomGroup.children.forEach(obj=>{
+      if(obj.userData.isAvatar) {
+        obj.position.y = obj.userData.baseY !== undefined
+          ? obj.userData.baseY + Math.sin(floatTime*0.8)*0.06
+          : (obj.position.y + Math.sin(floatTime*0.8)*0.001);
+      }
+      if(obj.userData.isAura) {
+        obj.rotation.z = floatTime * 0.5;
+      }
+      // 아이템 부유
+      if(obj.userData.itemId !== undefined) {
+        obj.position.y += Math.sin(floatTime + obj.userData.floatOffset)*0.0005;
+        obj.rotation.y += 0.003;
+      }
+    });
+  }
+
+  // 파티클 회전
+  if(particleSystem) particleSystem.rotation.y += 0.0003;
+
+  // 조명 펄스
+  if(accentLight) {
+    accentLight.intensity = 2.0 + Math.sin(floatTime*1.2)*0.5;
+  }
+
+  renderer.render(scene, camera);
+}
+
+// ══════════════════════════════════════════
+//  카메라 컨트롤
+// ══════════════════════════════════════════
+function updateCameraPos() {
+  camera.position.x = camRadius * Math.sin(camTheta) * Math.cos(camPhi);
+  camera.position.y = camRadius * Math.sin(camPhi);
+  camera.position.z = camRadius * Math.cos(camTheta) * Math.cos(camPhi);
+  camera.lookAt(0, 0, 0);
+}
+
+function onMouseDown(e) {
+  mouseDown=true;
+  lastMouse={x:e.clientX, y:e.clientY};
+}
+function onMouseMove(e) {
+  if(!mouseDown) return;
+  const dx = (e.clientX - lastMouse.x) * 0.005;
+  const dy = (e.clientY - lastMouse.y) * 0.003;
+  camTheta -= dx;
+  camPhi = Math.max(-0.1, Math.min(1.0, camPhi - dy));
+  updateCameraPos();
+  lastMouse={x:e.clientX, y:e.clientY};
+}
+function onWheel(e) {
+  camRadius = Math.max(3, Math.min(12, camRadius + e.deltaY*0.01));
+  updateCameraPos();
+}
+
+let touchStart = null;
+function onTouchStart(e) {
+  if(e.touches.length===1) {
+    mouseDown=true;
+    touchStart={x:e.touches[0].clientX, y:e.touches[0].clientY};
+    lastMouse=touchStart;
+  }
+}
+function onTouchMove(e) {
+  if(!mouseDown || e.touches.length!==1) return;
+  e.preventDefault();
+  const dx=(e.touches[0].clientX-lastMouse.x)*0.005;
+  const dy=(e.touches[0].clientY-lastMouse.y)*0.003;
+  camTheta-=dx; camPhi=Math.max(-0.1,Math.min(1.0,camPhi-dy));
+  updateCameraPos();
+  lastMouse={x:e.touches[0].clientX, y:e.touches[0].clientY};
+}
+
+function onResize() {
+  const canvas = document.getElementById('threeCanvas');
+  const container = canvas.parentElement;
+  const w = container.clientWidth;
+  const h = container.clientHeight - 220;
+  camera.aspect = w/h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+}
+
+function resetCamera() { camTheta=0.3; camPhi=0.5; camRadius=7; updateCameraPos(); showToast('📷 카메라 리셋'); }
+function zoomIn() { camRadius=Math.max(3,camRadius-0.8); updateCameraPos(); }
+function zoomOut() { camRadius=Math.min(12,camRadius+0.8); updateCameraPos(); }
+function toggleLight() {
+  lightMode=(lightMode+1)%3;
+  const modes=[[0.4,2.5],[0.8,1.0],[0.1,4.0]];
+  ambientLight.intensity=modes[lightMode][0];
+  accentLight.intensity=modes[lightMode][1];
+  showToast(['🔆 기본 조명','☀️ 밝은 조명','🌙 무드 조명'][lightMode]);
+}
+
+// ══════════════════════════════════════════
+//  테마 변경
+// ══════════════════════════════════════════
+function applyTheme(themeId) {
+  currentTheme = THEMES.find(t=>t.id===themeId) || THEMES[0];
+  buildRoom();
+  buildItems();
+  buildParticles();
+  renderThemes();
+  showToast(`${currentTheme.icon} ${currentTheme.name} 테마 적용!`);
+}
+
+// ══════════════════════════════════════════
+//  편집 모드
+// ══════════════════════════════════════════
+function toggleEdit() {
+  isEditMode=!isEditMode;
+  const btn=document.getElementById('editBtn');
+  btn.textContent=isEditMode?'완료 ✓':'꾸미기 ✏️';
+  btn.style.background=isEditMode
+    ?'linear-gradient(90deg,#10b981,#059669)'
+    :'linear-gradient(90deg,var(--accent),var(--accent2))';
+  showToast(isEditMode?'✏️ 아이템 클릭해서 배치/제거!':'✓ 꾸미기 완료!');
+}
+
+function onItemClick(itemId) {
+  const item = ITEMS.find(i=>i.id===itemId);
+  if(!item) return;
+  if(item.locked) { showToast(`🔒 ${item.lockMsg} 달성 시 해금!`); return; }
+  if(item.placed) { removeItem(itemId); return; }
+  openModal(item);
+}
+
+function openModal(item) {
+  selectedItem=item;
+  document.getElementById('modalTitle').textContent=`"${item.name}" 어디에 놓을까요?`;
+  document.getElementById('modalInfo').innerHTML=`
+    <div style="font-size:32px">${item.emoji}</div>
+    <div>
+      <div style="font-size:14px;font-weight:700">${item.name}</div>
+      <div class="item-rarity rarity-${item.rarity}" style="margin-top:4px">${item.rarity.toUpperCase()}</div>
+    </div>
+  `;
+  const slots=document.getElementById('modalSlots');
+  slots.innerHTML=SLOT_POSITIONS.map((pos,i)=>{
+    const occ=ITEMS.find(x=>x.placed&&JSON.stringify(x.pos)===JSON.stringify(pos));
+    return `<div class="slot-btn ${occ?'occ':''}" onclick="placeItem(${i})">
+      <div class="slot-btn-em">${occ?occ.emoji:'+'}</div>
+      <div style="font-size:9px">위치 ${i+1}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('placeModal').classList.add('show');
+}
+
+function placeItem(slotIdx) {
+  if(!selectedItem) return;
+  ITEMS.forEach(i=>{ if(JSON.stringify(i.pos)===JSON.stringify(SLOT_POSITIONS[slotIdx])) { i.placed=false; i.pos=null; } });
+  selectedItem.placed=true;
+  selectedItem.pos=SLOT_POSITIONS[slotIdx];
+  closeModal();
+  buildItems();
+  renderItems();
+  updateStage();
+  showToast(`${selectedItem.emoji} ${selectedItem.name} 배치 완료!`);
+  burst();
+}
+
+function removeItem(itemId) {
+  const item=ITEMS.find(i=>i.id===itemId);
+  if(!item) return;
+  item.placed=false; item.pos=null;
+  buildItems(); renderItems(); updateStage();
+  showToast(`${item.emoji} 제거됐어요.`);
+}
+
+function closeModal() {
+  document.getElementById('placeModal').classList.remove('show');
+  selectedItem=null;
+}
+
+// ══════════════════════════════════════════
+//  UI 렌더
+// ══════════════════════════════════════════
+function renderItems() {
+  document.getElementById('itemGrid').innerHTML=ITEMS.map(item=>`
+    <div class="item-card ${item.placed?'placed':''} ${item.locked?'locked':''}" onclick="onItemClick(${item.id})">
+      ${item.placed?'<div class="item-check">✓</div>':''}
+      ${item.locked?`<div class="item-lock">🔒</div>`:''}
+      <div class="item-emoji">${item.emoji}</div>
+      <div class="item-name">${item.name}</div>
+      <div class="item-rarity rarity-${item.rarity}">${item.rarity.toUpperCase()}</div>
+    </div>
+  `).join('');
+}
+
+function renderThemes() {
+  document.getElementById('themeGrid').innerHTML=THEMES.map(t=>`
+    <div class="theme-card ${t.id===currentTheme.id?'active':''}" onclick="applyTheme('${t.id}')">
+      <div class="theme-inner" style="background:linear-gradient(135deg,#${t.wall.toString(16).padStart(6,'0')},#${t.floor.toString(16).padStart(6,'0')})">
+        <span style="font-size:14px">${t.icon}</span>
+        <span class="theme-lbl" style="margin-left:4px">${t.name}</span>
+      </div>
+      ${t.id===currentTheme.id?'<div class="theme-now">현재</div>':''}
+    </div>
+  `).join('');
+}
+
+function renderGuestbook() {
+  document.getElementById('gbEntries').innerHTML=GUESTBOOK.map((g,i)=>`
+    <div class="gb-entry">
+      <div class="gb-av">${g.emoji}</div>
+      <div class="gb-body">
+        <div class="gb-name">${g.name}</div>
+        <div class="gb-msg">${g.msg}</div>
+      </div>
+      <div class="gb-right">
+        <div class="gb-time">${g.time}</div>
+        <div class="gb-heart" onclick="heartGB(${i})">❤️ ${g.hearts}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function heartGB(idx) {
+  GUESTBOOK[idx].hearts++;
+  renderGuestbook();
+  showToast('💜 하트를 남겼어요!');
+}
+
+function sendGuestbook() {
+  const inp=document.getElementById('gbInput');
+  const msg=inp.value.trim();
+  if(!msg) return;
+  GUESTBOOK.unshift({name:'나',emoji:'🌟',msg,time:'방금',hearts:0});
+  inp.value='';
+  renderGuestbook();
+  showToast('✨ 방명록 등록!');
+}
+
+function updateStage() {
+  const cnt=ITEMS.filter(i=>i.placed).length;
+  let stage=1, name='🌑 Void', desc, next;
+  if(cnt>=8){stage=3;name='🌟 Supernova';desc='최고 단계!';next='MAX';}
+  else if(cnt>=4){stage=2;name='🔥 Ignition';desc=`${8-cnt}개 더 배치하면 Supernova!`;next=`${cnt}/8`;}
+  else{desc=`${4-cnt}개 더 배치하면 Ignition!`;next=`${cnt}/4`;}
+  for(let i=1;i<=3;i++) document.getElementById(`sd${i}`).classList.toggle('on',i<=stage);
+  document.getElementById('stageName').textContent=name;
+  document.getElementById('stageDesc').textContent=desc;
+  document.getElementById('stageCnt').textContent=next;
+  const cp=cnt*60+200;
+  document.getElementById('sc').textContent=cp;
+  document.getElementById('cpCnt').textContent=cp;
+}
+
+// ══════════════════════════════════════════
+//  공유
+// ══════════════════════════════════════════
+function shareRoom() {
+  navigator.clipboard?.writeText('https://asteria.me.kr/room3d.html').then(()=>showToast('🔗 링크 복사됐어요!'));
+}
+function shareToSNS(p) {
+  const url=encodeURIComponent('https://asteria.me.kr/room3d.html');
+  const txt=encodeURIComponent('별빛 탐험가의 3D 방을 구경하세요! 🌟 #아스테리아');
+  if(p==='copy'){navigator.clipboard?.writeText('https://asteria.me.kr/room3d.html').then(()=>showToast('🔗 복사됐어요!'));return;}
+  if(p==='twitter'){window.open(`https://twitter.com/intent/tweet?text=${txt}&url=${url}`,'_blank');return;}
+  if(p==='kakao'){window.open(`https://story.kakao.com/share?url=${url}`,'_blank');return;}
+  showToast('📤 공유됐어요!');
+}
+
+// ══════════════════════════════════════════
+//  파티클 버스트
+// ══════════════════════════════════════════
+function burst() {
+  const cx=window.innerWidth*.6, cy=window.innerHeight*.4;
+  for(let i=0;i<14;i++){
+    const p=document.createElement('div');
+    const cols=['#f0c040','#c084fc','#38bdf8','#fff'];
+    const col=cols[Math.floor(Math.random()*cols.length)];
+    const sz=Math.random()*5+2;
+    const a=Math.random()*Math.PI*2, d=Math.random()*60+20;
+    p.style.cssText=`position:fixed;left:${cx}px;top:${cy}px;width:${sz}px;height:${sz}px;border-radius:50%;background:${col};box-shadow:0 0 6px ${col};z-index:9999;pointer-events:none;transition:all ${.4+Math.random()*.3}s ease-out;transform:translate(-50%,-50%)`;
+    document.body.appendChild(p);
+    requestAnimationFrame(()=>{p.style.transform=`translate(calc(-50% + ${Math.cos(a)*d}px),calc(-50% + ${Math.sin(a)*d}px))`;p.style.opacity='0';});
+    setTimeout(()=>p.remove(),800);
+  }
+}
+
+// ══════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+window.addEventListener('load', ()=>{
+  initThree();
+  renderItems();
+  renderThemes();
+  renderGuestbook();
+  updateStage();
+  showToast('🖱️ 드래그로 방을 회전해보세요!');
+});
+</script>
+</body>
+</html>
