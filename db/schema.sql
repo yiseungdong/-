@@ -516,4 +516,26 @@ VALUES
   ('사유의 의자', 'furniture', 'common', '🪑', '앉아있으면 지성이 서서히 상승', '{"int": 5}', 200)
 ON CONFLICT DO NOTHING;
 
+-- ── 25. 시즌 ──
+CREATE TABLE IF NOT EXISTS seasons (
+  id              SERIAL PRIMARY KEY,
+  season_number   INTEGER NOT NULL UNIQUE,
+  name            VARCHAR(100) NOT NULL,
+  starts_at       TIMESTAMP NOT NULL,
+  ends_at         TIMESTAMP NOT NULL,
+  rest_starts_at  TIMESTAMP,
+  rest_ends_at    TIMESTAMP,
+  status          VARCHAR(20) NOT NULL DEFAULT 'upcoming',
+  created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ── 26. 시즌 시드 데이터 ──
+INSERT INTO seasons (season_number, name, starts_at, ends_at, rest_starts_at, rest_ends_at, status)
+VALUES
+  (1, '개척의 시대', '2026-01-01', '2026-03-31 23:59:59', '2026-04-01', '2026-04-07', 'active'),
+  (2, '별빛의 항해', '2026-04-08', '2026-06-30 23:59:59', '2026-07-01', '2026-07-07', 'upcoming'),
+  (3, '은하의 울림', '2026-07-08', '2026-09-30 23:59:59', '2026-10-01', '2026-10-07', 'upcoming'),
+  (4, '제국의 서막', '2026-10-08', '2026-12-31 23:59:59', '2027-01-01', '2027-01-07', 'upcoming')
+ON CONFLICT (season_number) DO NOTHING;
+
 COMMIT;

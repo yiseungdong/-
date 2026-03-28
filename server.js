@@ -729,8 +729,34 @@ async function initDB() {
       }
     }
 
+    // ── 27. 시즌 ──
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS seasons (
+        id              SERIAL PRIMARY KEY,
+        season_number   INTEGER NOT NULL UNIQUE,
+        name            VARCHAR(100) NOT NULL,
+        starts_at       TIMESTAMP NOT NULL,
+        ends_at         TIMESTAMP NOT NULL,
+        rest_starts_at  TIMESTAMP,
+        rest_ends_at    TIMESTAMP,
+        status          VARCHAR(20) NOT NULL DEFAULT 'upcoming',
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // ── 28. 시즌 시드 데이터 ──
+    await client.query(`
+      INSERT INTO seasons (season_number, name, starts_at, ends_at, rest_starts_at, rest_ends_at, status)
+      VALUES
+        (1, '개척의 시대', '2026-01-01', '2026-03-31 23:59:59', '2026-04-01', '2026-04-07', 'active'),
+        (2, '별빛의 항해', '2026-04-08', '2026-06-30 23:59:59', '2026-07-01', '2026-07-07', 'upcoming'),
+        (3, '은하의 울림', '2026-07-08', '2026-09-30 23:59:59', '2026-10-01', '2026-10-07', 'upcoming'),
+        (4, '제국의 서막', '2026-10-08', '2026-12-31 23:59:59', '2027-01-01', '2027-01-07', 'upcoming')
+      ON CONFLICT (season_number) DO NOTHING
+    `);
+
     await client.query('COMMIT');
-    console.log('✅ 아스테리아 DB 초기화 완료 — 22개 테이블 생성');
+    console.log('✅ 아스테리아 DB 초기화 완료 — 23개 테이블 생성');
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('❌ DB 초기화 실패:', err.message);
@@ -2283,6 +2309,21 @@ app.post('/api/activity', authMiddleware, async (req, res) => {
   }
 });
 
+// ── 리그 순서 & 승격 상수 ──
+const LEAGUE_ORDER = ['dust', 'star', 'planet', 'nova', 'quasar'];
+const LEAGUE_BOUNDARIES = [
+  { upper: 'star', lower: 'dust' },
+  { upper: 'planet', lower: 'star' },
+  { upper: 'nova', lower: 'planet' },
+  { upper: 'quasar', lower: 'nova' },
+];
+const HARD_GATES = {
+  'dust-star':    { minScore: 800,  minMembers: 100000 },
+  'star-planet':  { minScore: 850,  minMembers: 500000 },
+  'planet-nova':  { minScore: 900,  minMembers: 5000000 },
+  'nova-quasar':  { minScore: 950,  minMembers: 10000000 },
+};
+
 // ══════════════════════════════════════════════
 //  API: Activity 보강 + PoP 엔진 (#33)
 // ══════════════════════════════════════════════
@@ -3178,6 +3219,435 @@ async function recalcCP(userId) {
   await pool.query('UPDATE nebulae SET cultural_power = $1, updated_at = NOW() WHERE user_id = $2', [cp, userId]);
   await pool.query('UPDATE users SET cp = $1 WHERE id = $2', [cp, userId]);
 }
+
+// ══════════════════════════════════════════════
+//  API: 시즌 / 승격 / 강등 (#34)
+// ══════════════════════════════════════════════
+
+// 현재 시즌 조회 헬퍼
+async function getCurrentSeason() {
+  const result = await pool.query(
+    `SELECT * FROM seasons
+     WHERE status = 'active'
+        OR (NOW() BETWEEN starts_at AND ends_at)
+     ORDER BY season_number LIMIT 1`
+  );
+  return result.rows[0] || null;
+}
+
+// 경고 단계 판정 헬퍼
+function getAlertLevel(daysRemaining) {
+  if (daysRemaining <= 3) return { level: 'final', phase: '🔥 최후의 3일' };
+  if (daysRemaining <= 7) return { level: 'critical', phase: 'D-7 카운트다운 모드' };
+  if (daysRemaining <= 14) return { level: 'danger', phase: 'D-14 최종 스퍼트' };
+  if (daysRemaining <= 21) return { level: 'warning', phase: 'D-21 위기의 성좌' };
+  return { level: 'normal', phase: '정상 운영' };
+}
+
+// 격차 상태 판정 헬퍼
+function getGapStatus(gap) {
+  if (gap < 0) return { status: 'overtaken', emoji: '💥' };
+  if (gap < 20) return { status: 'imminent', emoji: '🔴' };
+  if (gap < 50) return { status: 'urgent', emoji: '🟠' };
+  if (gap < 100) return { status: 'caution', emoji: '🟡' };
+  return { status: 'safe', emoji: '🟢' };
+}
+
+// API 1. 현재 시즌 정보
+app.get('/api/season/current', async (req, res) => {
+  try {
+    const season = await getCurrentSeason();
+    if (!season) return res.status(404).json({ message: '활성 시즌이 없습니다.' });
+
+    const now = new Date();
+    const endsAt = new Date(season.ends_at);
+    const startsAt = new Date(season.starts_at);
+    const daysRemaining = Math.max(0, Math.ceil((endsAt - now) / (1000 * 60 * 60 * 24)));
+    const totalDays = Math.ceil((endsAt - startsAt) / (1000 * 60 * 60 * 24));
+    const progressPercent = Math.min(100, Math.round(((totalDays - daysRemaining) / totalDays) * 100));
+    const alert = getAlertLevel(daysRemaining);
+
+    res.json({
+      season: {
+        id: season.id,
+        number: season.season_number,
+        name: season.name,
+        startsAt: season.starts_at,
+        endsAt: season.ends_at,
+        status: season.status
+      },
+      daysRemaining,
+      progressPercent,
+      alertLevel: alert.level,
+      phase: alert.phase
+    });
+  } catch (err) {
+    console.error('현재 시즌 조회 오류:', err);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// API 2. 승격/강등 전선 (전체)
+app.get('/api/season/frontline', async (req, res) => {
+  try {
+    const season = await getCurrentSeason();
+    const daysRemaining = season
+      ? Math.max(0, Math.ceil((new Date(season.ends_at) - new Date()) / (1000 * 60 * 60 * 24)))
+      : null;
+    const alert = daysRemaining !== null ? getAlertLevel(daysRemaining) : { level: 'unknown' };
+
+    const frontlines = [];
+
+    for (const boundary of LEAGUE_BOUNDARIES) {
+      // 상위 리그 꼴등 (score_total 가장 낮은 팀)
+      const upperBottom = await pool.query(
+        `SELECT id, name, emoji, score_total, member_count
+         FROM fanclubs WHERE league = $1
+         ORDER BY score_total ASC LIMIT 1`,
+        [boundary.upper]
+      );
+
+      // 하위 리그 1등 (score_total 가장 높은 팀)
+      const lowerTop = await pool.query(
+        `SELECT id, name, emoji, score_total, member_count
+         FROM fanclubs WHERE league = $1
+         ORDER BY score_total DESC LIMIT 1`,
+        [boundary.lower]
+      );
+
+      if (!upperBottom.rows[0] || !lowerTop.rows[0]) continue;
+
+      const gap = parseFloat(upperBottom.rows[0].score_total) - parseFloat(lowerTop.rows[0].score_total);
+      const gapInfo = getGapStatus(gap);
+
+      frontlines.push({
+        boundary: `${boundary.upper}-${boundary.lower}`,
+        upperLeague: boundary.upper,
+        lowerLeague: boundary.lower,
+        upperBottom: {
+          id: upperBottom.rows[0].id,
+          name: upperBottom.rows[0].name,
+          score: parseFloat(upperBottom.rows[0].score_total)
+        },
+        lowerTop: {
+          id: lowerTop.rows[0].id,
+          name: lowerTop.rows[0].name,
+          score: parseFloat(lowerTop.rows[0].score_total)
+        },
+        gap: Math.round(gap * 10) / 10,
+        status: gapInfo.status,
+        emoji: gapInfo.emoji
+      });
+    }
+
+    res.json({
+      frontlines,
+      seasonDaysRemaining: daysRemaining,
+      alertLevel: alert.level
+    });
+  } catch (err) {
+    console.error('전선 조회 오류:', err);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// API 3. 내 팬클럽 승격/강등 전선
+app.get('/api/season/frontline/:fanclubId', async (req, res) => {
+  try {
+    const fcId = parseInt(req.params.fanclubId);
+    const fc = await pool.query(
+      'SELECT id, name, league, score_total, member_count FROM fanclubs WHERE id = $1',
+      [fcId]
+    );
+    if (!fc.rows[0]) return res.status(404).json({ message: '팬클럽을 찾을 수 없습니다.' });
+
+    const myFc = fc.rows[0];
+    const myLeagueIdx = LEAGUE_ORDER.indexOf(myFc.league);
+    const myScore = parseFloat(myFc.score_total);
+
+    // 승격 전선
+    let promotion = null;
+    if (myLeagueIdx < LEAGUE_ORDER.length - 1) {
+      const upperLeague = LEAGUE_ORDER[myLeagueIdx + 1];
+      const upperBottom = await pool.query(
+        `SELECT id, name, score_total, member_count FROM fanclubs
+         WHERE league = $1 ORDER BY score_total ASC LIMIT 1`,
+        [upperLeague]
+      );
+
+      if (upperBottom.rows[0]) {
+        const targetScore = parseFloat(upperBottom.rows[0].score_total);
+        const gap = targetScore - myScore;
+        const gapInfo = getGapStatus(gap);
+
+        // Hard Gate 확인
+        const gateKey = `${myFc.league}-${upperLeague}`;
+        const gate = HARD_GATES[gateKey];
+        const failReasons = [];
+        if (gate) {
+          if (myScore < gate.minScore) failReasons.push(`점수 미달 (${myScore}/${gate.minScore})`);
+          if (myFc.member_count < gate.minMembers) failReasons.push(`인원 미달 (${myFc.member_count.toLocaleString()}/${gate.minMembers.toLocaleString()})`);
+        }
+
+        promotion = {
+          targetLeague: upperLeague,
+          targetTeam: upperBottom.rows[0].name,
+          targetScore,
+          myScore,
+          gap: Math.round(gap * 10) / 10,
+          status: gapInfo.status,
+          emoji: gapInfo.emoji,
+          hardGate: gate ? {
+            minScore: gate.minScore,
+            minMembers: gate.minMembers,
+            currentMembers: myFc.member_count,
+            passed: failReasons.length === 0,
+            failReasons
+          } : null
+        };
+      }
+    }
+
+    // 강등 전선 (더스트는 강등 없음)
+    let relegation = null;
+    if (myLeagueIdx > 0) {
+      const lowerLeague = LEAGUE_ORDER[myLeagueIdx - 1];
+      const lowerTop = await pool.query(
+        `SELECT id, name, score_total FROM fanclubs
+         WHERE league = $1 ORDER BY score_total DESC LIMIT 1`,
+        [lowerLeague]
+      );
+
+      if (lowerTop.rows[0]) {
+        const chaserScore = parseFloat(lowerTop.rows[0].score_total);
+        const gap = myScore - chaserScore;
+        const gapInfo = getGapStatus(gap);
+
+        relegation = {
+          fromLeague: myFc.league,
+          toLowerLeague: lowerLeague,
+          chaserTeam: lowerTop.rows[0].name,
+          chaserScore,
+          myScore,
+          gap: Math.round(gap * 10) / 10,
+          status: gapInfo.status,
+          emoji: gapInfo.emoji
+        };
+      }
+    }
+
+    res.json({
+      fanclub: { id: myFc.id, name: myFc.name, league: myFc.league, score: myScore },
+      promotion,
+      relegation
+    });
+  } catch (err) {
+    console.error('팬클럽 전선 조회 오류:', err);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// API 4. 승격/강등 시뮬레이션 (관리자용)
+app.post('/api/season/simulate-promotion', authenticateToken, async (req, res) => {
+  try {
+    const changes = [];
+
+    // 각 리그 경계에서 역전 확인
+    for (const boundary of LEAGUE_BOUNDARIES) {
+      // 상위 리그 팬클럽 (점수 오름차순 — 꼴등부터)
+      const upperFcs = await pool.query(
+        `SELECT id, name, score_total, member_count FROM fanclubs
+         WHERE league = $1 ORDER BY score_total ASC`,
+        [boundary.upper]
+      );
+
+      // 하위 리그 팬클럽 (점수 내림차순 — 1등부터)
+      const lowerFcs = await pool.query(
+        `SELECT id, name, score_total, member_count FROM fanclubs
+         WHERE league = $1 ORDER BY score_total DESC`,
+        [boundary.lower]
+      );
+
+      // 역전 쌍 찾기: 하위 1등 > 상위 꼴등이면 교체
+      let ui = 0, li = 0;
+      while (ui < upperFcs.rows.length && li < lowerFcs.rows.length) {
+        const upperFc = upperFcs.rows[ui];
+        const lowerFc = lowerFcs.rows[li];
+        const upperScore = parseFloat(upperFc.score_total);
+        const lowerScore = parseFloat(lowerFc.score_total);
+
+        if (lowerScore <= upperScore) break; // 역전 없음
+
+        // Hard Gate 확인
+        const gateKey = `${boundary.lower}-${boundary.upper}`;
+        const gate = HARD_GATES[gateKey];
+        let hardGatePassed = true;
+        const failReasons = [];
+        if (gate) {
+          if (lowerScore < gate.minScore) { hardGatePassed = false; failReasons.push(`점수 미달 (${lowerScore}/${gate.minScore})`); }
+          if (lowerFc.member_count < gate.minMembers) { hardGatePassed = false; failReasons.push(`인원 미달 (${lowerFc.member_count}/${gate.minMembers})`); }
+        }
+
+        // 승격 대상 (하위 → 상위)
+        changes.push({
+          fanclubId: lowerFc.id,
+          fanclubName: lowerFc.name,
+          from: boundary.lower,
+          to: boundary.upper,
+          type: 'promotion',
+          score: lowerScore,
+          vsScore: upperScore,
+          hardGatePassed,
+          reason: hardGatePassed
+            ? `점수 역전 (${lowerScore} > ${upperFc.name} ${upperScore})`
+            : `점수 역전이나 Hard Gate 미충족: ${failReasons.join(', ')}`
+        });
+
+        // 강등 대상 (상위 → 하위)
+        changes.push({
+          fanclubId: upperFc.id,
+          fanclubName: upperFc.name,
+          from: boundary.upper,
+          to: boundary.lower,
+          type: 'relegation',
+          score: upperScore,
+          vsScore: lowerScore,
+          hardGatePassed: true,
+          reason: `${lowerFc.name}(${lowerScore})에게 역전당함`
+        });
+
+        ui++; li++;
+      }
+    }
+
+    // 리그 건너뛰기 확인 (더스트 1등이 플래닛 꼴등보다 높은 경우 등)
+    // 기본 역전만 처리하고, 건너뛰기는 다중 경계 역전이 동시에 발생하면 자연스럽게 처리됨
+
+    const effectiveChanges = changes.filter(c => c.type === 'promotion' ? c.hardGatePassed : true);
+
+    res.json({
+      simulationDate: new Date().toISOString().split('T')[0],
+      changes,
+      effectiveChanges,
+      noChanges: effectiveChanges.length === 0,
+      message: effectiveChanges.length === 0
+        ? '현재 점수 기준 역전이 없거나 Hard Gate 미충족으로 변동 없습니다.'
+        : `${effectiveChanges.length}건의 승격/강등이 예상됩니다.`
+    });
+  } catch (err) {
+    console.error('승격/강등 시뮬레이션 오류:', err);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// API 5. D-데이 위젯 데이터 (인증 필수)
+app.get('/api/season/d-day-widget', authenticateToken, async (req, res) => {
+  try {
+    const season = await getCurrentSeason();
+    if (!season) return res.json({ seasonName: null, dDay: null, alertLevel: 'off' });
+
+    const dDay = Math.max(0, Math.ceil((new Date(season.ends_at) - new Date()) / (1000 * 60 * 60 * 24)));
+    const alert = getAlertLevel(dDay);
+
+    // 내 팬클럽 정보
+    const user = await pool.query('SELECT fandom_id, league FROM users WHERE id = $1', [req.user.id]);
+    let myFanclub = null, promotionGap = null, relegationGap = null;
+
+    if (user.rows[0]?.fandom_id) {
+      const fc = await pool.query(
+        `SELECT f.id, f.name, f.league, f.score_total,
+                ROW_NUMBER() OVER (PARTITION BY f.league ORDER BY f.score_total DESC) AS rank
+         FROM fanclubs f WHERE f.id = $1`,
+        [user.rows[0].fandom_id]
+      );
+
+      if (fc.rows[0]) {
+        const myScore = parseFloat(fc.rows[0].score_total);
+        const myLeagueIdx = LEAGUE_ORDER.indexOf(fc.rows[0].league);
+        myFanclub = {
+          name: fc.rows[0].name,
+          league: fc.rows[0].league,
+          rank: parseInt(fc.rows[0].rank),
+          score: myScore
+        };
+
+        // 승격 격차
+        if (myLeagueIdx < LEAGUE_ORDER.length - 1) {
+          const upperLeague = LEAGUE_ORDER[myLeagueIdx + 1];
+          const target = await pool.query(
+            `SELECT name, score_total FROM fanclubs WHERE league = $1 ORDER BY score_total ASC LIMIT 1`,
+            [upperLeague]
+          );
+          if (target.rows[0]) {
+            const gap = parseFloat(target.rows[0].score_total) - myScore;
+            const gapInfo = getGapStatus(gap);
+            promotionGap = { target: `${target.rows[0].name} (${upperLeague} 꼴등)`, gap: Math.round(gap * 10) / 10, emoji: gapInfo.emoji };
+          }
+        }
+
+        // 강등 격차 (더스트 제외)
+        if (myLeagueIdx > 0) {
+          const lowerLeague = LEAGUE_ORDER[myLeagueIdx - 1];
+          const chaser = await pool.query(
+            `SELECT name, score_total FROM fanclubs WHERE league = $1 ORDER BY score_total DESC LIMIT 1`,
+            [lowerLeague]
+          );
+          if (chaser.rows[0]) {
+            const gap = myScore - parseFloat(chaser.rows[0].score_total);
+            const gapInfo = getGapStatus(gap);
+            relegationGap = { chaser: `${chaser.rows[0].name} (${lowerLeague} 1등)`, gap: Math.round(gap * 10) / 10, emoji: gapInfo.emoji };
+          }
+        }
+      }
+    }
+
+    res.json({
+      seasonName: season.name,
+      dDay,
+      alertLevel: alert.level,
+      phase: alert.phase,
+      myFanclub,
+      promotionGap,
+      relegationGap
+    });
+  } catch (err) {
+    console.error('D-데이 위젯 오류:', err);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// API 6. 시즌 히스토리
+app.get('/api/season/history', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM seasons ORDER BY season_number');
+    const now = new Date();
+
+    const seasons = result.rows.map(s => {
+      const endsAt = new Date(s.ends_at);
+      const daysRemaining = Math.max(0, Math.ceil((endsAt - now) / (1000 * 60 * 60 * 24)));
+      return {
+        number: s.season_number,
+        name: s.name,
+        status: s.status,
+        startsAt: s.starts_at,
+        endsAt: s.ends_at,
+        restStartsAt: s.rest_starts_at,
+        restEndsAt: s.rest_ends_at,
+        daysRemaining: s.status === 'active' ? daysRemaining : null
+      };
+    });
+
+    const current = seasons.find(s => s.status === 'active');
+
+    res.json({
+      seasons,
+      currentSeason: current ? current.number : null
+    });
+  } catch (err) {
+    console.error('시즌 히스토리 오류:', err);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
 
 // ── SPA fallback ──
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));

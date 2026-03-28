@@ -725,8 +725,8 @@
           },
           {
             "id": 34,
-            "name": "League API (랭킹/시즌/승격)",
-            "status": "todo"
+            "name": "시즌/승격/강등 API (전선+역전시뮬+D-day+히스토리)",
+            "status": "done"
           },
           {
             "id": 35,
