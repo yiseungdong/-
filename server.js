@@ -2284,6 +2284,382 @@ app.post('/api/activity', authMiddleware, async (req, res) => {
 });
 
 // ══════════════════════════════════════════════
+//  API: Activity 보강 + PoP 엔진 (#33)
+// ══════════════════════════════════════════════
+
+// 1. 콤보 미션 — 같은 소모임 유닛원 동시 활동 보너스
+app.post('/api/activity/combo', authenticateToken, async (req, res) => {
+  const { activity_type } = req.body;
+  if (!activity_type) return res.status(400).json({ message: 'activity_type이 필요합니다.' });
+
+  const rule = STAT_RULES[activity_type];
+  if (!rule) return res.status(400).json({ message: `알 수 없는 활동 타입: ${activity_type}` });
+
+  try {
+    // 내 소속 모임 확인
+    const user = await pool.query('SELECT org_id, ap FROM users WHERE id = $1', [req.user.id]);
+    const orgId = user.rows[0]?.org_id;
+    if (!orgId) return res.status(400).json({ message: '소속 모임이 없습니다. 팬클럽에 먼저 가입해 주세요.' });
+
+    // 최근 5분 이내 같은 org_id 소속 유저 활동 수
+    const recentActivity = await pool.query(
+      `SELECT COUNT(DISTINCT al.user_id) AS active_users
+       FROM activity_logs al
+       JOIN users u ON u.id = al.user_id
+       WHERE u.org_id = $1 AND al.created_at > NOW() - INTERVAL '5 minutes'`,
+      [orgId]
+    );
+    const participants = parseInt(recentActivity.rows[0].active_users) + 1; // 본인 포함
+
+    // 콤보 배율 계산
+    let multiplier = 1.0;
+    let isCombo = false;
+    if (participants >= 10) { multiplier = 2.0; isCombo = true; }
+    else if (participants >= 5) { multiplier = 1.5; isCombo = true; }
+    else if (participants >= 3) { multiplier = 1.3; isCombo = true; }
+
+    const baseAp = rule.ap;
+    const bonusAp = isCombo ? Math.floor(baseAp * (multiplier - 1)) : 0;
+    const totalAp = baseAp + bonusAp;
+
+    // 활동 기록 (콤보 정보 포함)
+    await pool.query(
+      `INSERT INTO activity_logs (user_id, area, action, score_type, ap_earned, is_combo, combo_multiplier, meta)
+       VALUES ($1, $2, $3, 'per_action', $4, $5, $6, $7)`,
+      [req.user.id, rule.area, activity_type, totalAp, isCombo, multiplier,
+       JSON.stringify({ combo: isCombo, participants, bonusAp })]
+    );
+
+    // AP 지급
+    await pool.query('UPDATE users SET ap = ap + $1, last_active = NOW() WHERE id = $2', [totalAp, req.user.id]);
+
+    // 레벨업 체크
+    const newAp = user.rows[0].ap + totalAp;
+    const newLevel = calcLevel(newAp);
+    const currentLevel = (await pool.query('SELECT level FROM users WHERE id = $1', [req.user.id])).rows[0].level;
+    if (newLevel > currentLevel) await levelUp(req.user.id, newLevel);
+
+    res.json({
+      combo: isCombo,
+      participants,
+      multiplier,
+      baseAp,
+      bonusAp,
+      totalAp,
+      message: isCombo ? `콤보 발동! ${participants}명 동시 활동 (x${multiplier})` : '콤보 미발동 (3명 미만)'
+    });
+  } catch (err) {
+    console.error('콤보 미션 오류:', err);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// 2. 시너지 연쇄 보너스 — 소모임 미션 달성 → 상위 모임 +10%
+app.post('/api/activity/synergy', authenticateToken, async (req, res) => {
+  try {
+    // 내 소속 모임 확인
+    const user = await pool.query('SELECT org_id FROM users WHERE id = $1', [req.user.id]);
+    const orgId = user.rows[0]?.org_id;
+    if (!orgId) return res.status(400).json({ message: '소속 모임이 없습니다.' });
+
+    // 소모임 정보
+    const org = await pool.query(
+      'SELECT id, parent_id, member_count, contribution_score FROM organizations WHERE id = $1',
+      [orgId]
+    );
+    if (!org.rows[0]) return res.status(404).json({ message: '모임을 찾을 수 없습니다.' });
+
+    // 오늘 이 소모임 소속 유저들의 활동 횟수
+    const todayActivity = await pool.query(
+      `SELECT COUNT(*) AS cnt FROM activity_logs al
+       JOIN users u ON u.id = al.user_id
+       WHERE u.org_id = $1 AND al.created_at > CURRENT_DATE`,
+      [orgId]
+    );
+    const todayCount = parseInt(todayActivity.rows[0].cnt);
+    const target = org.rows[0].member_count * 3;
+    const achieved = todayCount >= target && target > 0;
+
+    // 연쇄 보너스 (최대 3단계)
+    const chain = [];
+    if (achieved) {
+      let currentOrg = org.rows[0];
+      for (let depth = 0; depth < 3; depth++) {
+        if (!currentOrg.parent_id) break;
+
+        const parent = await pool.query(
+          'SELECT id, parent_id, contribution_score FROM organizations WHERE id = $1',
+          [currentOrg.parent_id]
+        );
+        if (!parent.rows[0]) break;
+
+        const bonus = parseFloat(parent.rows[0].contribution_score) * 0.1;
+        await pool.query(
+          'UPDATE organizations SET contribution_score = contribution_score + $1 WHERE id = $2',
+          [bonus, parent.rows[0].id]
+        );
+
+        chain.push({
+          orgId: parent.rows[0].id,
+          depth: depth + 1,
+          bonusAdded: Math.round(bonus * 100) / 100
+        });
+
+        // 상위 모임도 미션 달성 여부 확인
+        const parentActivity = await pool.query(
+          `SELECT COUNT(*) AS cnt FROM activity_logs al
+           JOIN users u ON u.id = al.user_id
+           WHERE u.org_id = $1 AND al.created_at > CURRENT_DATE`,
+          [parent.rows[0].id]
+        );
+        const parentOrg = await pool.query('SELECT member_count FROM organizations WHERE id = $1', [parent.rows[0].id]);
+        const parentTarget = (parentOrg.rows[0]?.member_count || 0) * 3;
+        if (parseInt(parentActivity.rows[0].cnt) < parentTarget) break;
+
+        currentOrg = parent.rows[0];
+      }
+    }
+
+    res.json({
+      orgId,
+      todayActivity: todayCount,
+      target,
+      achieved,
+      chain,
+      message: achieved
+        ? `미션 달성! 연쇄 보너스 ${chain.length}단계 적용`
+        : `미션 미달성 (${todayCount}/${target})`
+    });
+  } catch (err) {
+    console.error('시너지 연쇄 오류:', err);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// 3. PoP 검증 상태 리포트 — 무결성 확인
+app.get('/api/pop/status/:userId', async (req, res) => {
+  try {
+    const targetId = parseInt(req.params.userId);
+
+    // 유저 무결성 점수
+    const userResult = await pool.query(
+      'SELECT integrity_score FROM users WHERE id = $1',
+      [targetId]
+    );
+    if (!userResult.rows[0]) return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+    const integrityScore = userResult.rows[0].integrity_score;
+
+    // 1) 활동 다양성 점수: 오늘 활동한 area 종류 / 14 * 100
+    const diversityResult = await pool.query(
+      `SELECT COUNT(DISTINCT area) AS areas FROM activity_logs
+       WHERE user_id = $1 AND created_at > CURRENT_DATE`,
+      [targetId]
+    );
+    const diversityScore = Math.round((parseInt(diversityResult.rows[0].areas) / 14) * 100);
+
+    // 2) 시간대 분산: 오늘 활동이 몇 시간대에 분산되어 있는지
+    const timeResult = await pool.query(
+      `SELECT COUNT(DISTINCT EXTRACT(HOUR FROM created_at)) AS hours
+       FROM activity_logs WHERE user_id = $1 AND created_at > CURRENT_DATE`,
+      [targetId]
+    );
+    const timeDistribution = parseInt(timeResult.rows[0].hours);
+
+    // 3) 매크로 경고 횟수: 오늘 abuse_patterns 건수
+    const macroResult = await pool.query(
+      `SELECT COUNT(*) AS cnt FROM abuse_patterns
+       WHERE user_id = $1 AND created_at > CURRENT_DATE`,
+      [targetId]
+    );
+    const macroWarnings = parseInt(macroResult.rows[0].cnt);
+
+    // 4) 어뷰징 플래그 비율: 전체 활동 중 is_flagged 비율
+    const flagResult = await pool.query(
+      `SELECT
+         COUNT(*) AS total,
+         COUNT(*) FILTER (WHERE is_flagged = TRUE) AS flagged
+       FROM activity_logs WHERE user_id = $1`,
+      [targetId]
+    );
+    const totalActs = parseInt(flagResult.rows[0].total);
+    const flaggedRatio = totalActs > 0
+      ? Math.round((parseInt(flagResult.rows[0].flagged) / totalActs) * 10000) / 10000
+      : 0;
+
+    // 종합 PoP 점수 계산
+    let popScore = integrityScore;
+    if (diversityScore < 20) popScore -= 10;
+    if (timeDistribution <= 1 && totalActs > 10) popScore -= 15;
+    if (macroWarnings >= 10) popScore -= 20;
+    else if (macroWarnings >= 5) popScore -= 10;
+    if (flaggedRatio > 0.1) popScore -= 20;
+    else if (flaggedRatio > 0.05) popScore -= 10;
+    popScore = Math.max(0, Math.min(100, popScore));
+
+    // 상태 판정 + 추천
+    let status, recommendations = [];
+    if (popScore >= 80) {
+      status = 'clean';
+    } else if (popScore >= 50) {
+      status = 'warning';
+      if (diversityScore < 30) recommendations.push('다양한 활동 영역을 시도해보세요!');
+      if (timeDistribution <= 2) recommendations.push('하루 중 여러 시간대에 걸쳐 활동해보세요.');
+      if (macroWarnings > 0) recommendations.push('활동 간격을 자연스럽게 유지하세요.');
+    } else {
+      status = 'flagged';
+      recommendations.push('활동 패턴에 이상이 감지되었습니다. 자연스러운 활동을 권장합니다.');
+      if (flaggedRatio > 0.05) recommendations.push('반복적인 단일 활동을 줄여주세요.');
+    }
+
+    res.json({
+      userId: targetId,
+      popScore,
+      diversityScore,
+      timeDistribution,
+      macroWarnings,
+      flaggedRatio,
+      integrityScore,
+      status,
+      recommendations
+    });
+  } catch (err) {
+    console.error('PoP 상태 조회 오류:', err);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// 4. 활동 리포트 — 오늘/이번주/이번시즌 종합
+app.get('/api/activity/report', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // ── 오늘 ──
+    const todayResult = await pool.query(
+      `SELECT
+         COUNT(*) AS count,
+         COALESCE(SUM(ap_earned), 0) AS total_ap,
+         COUNT(*) FILTER (WHERE is_combo = TRUE) AS combo_count
+       FROM activity_logs WHERE user_id = $1 AND created_at > CURRENT_DATE`,
+      [userId]
+    );
+    const todayAreas = await pool.query(
+      `SELECT area, COUNT(*) AS count FROM activity_logs
+       WHERE user_id = $1 AND created_at > CURRENT_DATE
+       GROUP BY area ORDER BY count DESC`,
+      [userId]
+    );
+    const todayStatChanges = await pool.query(
+      `SELECT stat_name, SUM(delta) AS total_delta FROM stat_history
+       WHERE user_id = $1 AND created_at > CURRENT_DATE
+       GROUP BY stat_name`,
+      [userId]
+    );
+
+    // ── 이번 주 (월~일) ──
+    const weekResult = await pool.query(
+      `SELECT
+         DATE(created_at) AS day,
+         COUNT(*) AS count,
+         COALESCE(SUM(ap_earned), 0) AS ap
+       FROM activity_logs
+       WHERE user_id = $1 AND created_at > DATE_TRUNC('week', CURRENT_DATE)
+       GROUP BY DATE(created_at) ORDER BY day`,
+      [userId]
+    );
+    const weekTotalAp = weekResult.rows.reduce((s, r) => s + parseInt(r.ap), 0);
+    const weekDays = weekResult.rows.length || 1;
+
+    // ── 이번 시즌 (3개월 단위) ──
+    const currentMonth = new Date().getMonth(); // 0-11
+    const seasonStart = new Date();
+    seasonStart.setMonth(Math.floor(currentMonth / 3) * 3, 1);
+    seasonStart.setHours(0, 0, 0, 0);
+
+    const seasonResult = await pool.query(
+      `SELECT COALESCE(SUM(ap_earned), 0) AS total_ap, COUNT(*) AS total_activities
+       FROM activity_logs WHERE user_id = $1 AND created_at >= $2`,
+      [userId, seasonStart.toISOString()]
+    );
+
+    // 시즌 스탯 성장
+    const seasonStats = await pool.query(
+      `SELECT stat_name, SUM(delta) AS growth FROM stat_history
+       WHERE user_id = $1 AND created_at >= $2
+       GROUP BY stat_name ORDER BY growth DESC`,
+      [userId, seasonStart.toISOString()]
+    );
+
+    // ── 연속 기록 ──
+    const streakResult = await pool.query(
+      `SELECT streak FROM daily_checkin
+       WHERE user_id = $1 ORDER BY checked_date DESC LIMIT 1`,
+      [userId]
+    );
+    const consecutiveDays = await pool.query(
+      `SELECT COUNT(DISTINCT DATE(created_at)) AS days FROM activity_logs
+       WHERE user_id = $1 AND created_at > NOW() - INTERVAL '30 days'`,
+      [userId]
+    );
+
+    // ── 순위 ──
+    const user = await pool.query('SELECT org_id, league FROM users WHERE id = $1', [userId]);
+    let orgRank = null, leagueRank = null;
+
+    if (user.rows[0]?.org_id) {
+      const orgRankResult = await pool.query(
+        `SELECT rank FROM (
+           SELECT id, ROW_NUMBER() OVER (ORDER BY stat_loy+stat_act+stat_soc+stat_eco+stat_cre+stat_int DESC) AS rank
+           FROM users WHERE org_id = $1 AND is_banned = FALSE
+         ) sub WHERE id = $2`,
+        [user.rows[0].org_id, userId]
+      );
+      orgRank = orgRankResult.rows[0] ? parseInt(orgRankResult.rows[0].rank) : null;
+    }
+
+    const leagueRankResult = await pool.query(
+      `SELECT rank FROM (
+         SELECT id, ROW_NUMBER() OVER (ORDER BY stat_loy+stat_act+stat_soc+stat_eco+stat_cre+stat_int DESC) AS rank
+         FROM users WHERE league = $1 AND is_banned = FALSE
+       ) sub WHERE id = $2`,
+      [user.rows[0]?.league || 'dust', userId]
+    );
+    leagueRank = leagueRankResult.rows[0] ? parseInt(leagueRankResult.rows[0].rank) : null;
+
+    res.json({
+      today: {
+        activities: parseInt(todayResult.rows[0].count),
+        totalAp: parseInt(todayResult.rows[0].total_ap),
+        comboCount: parseInt(todayResult.rows[0].combo_count),
+        statChanges: todayStatChanges.rows,
+        areas: todayAreas.rows
+      },
+      week: {
+        dailyBreakdown: weekResult.rows,
+        totalAp: weekTotalAp,
+        avgDailyAp: Math.round(weekTotalAp / weekDays)
+      },
+      season: {
+        totalAp: parseInt(seasonResult.rows[0].total_ap),
+        totalActivities: parseInt(seasonResult.rows[0].total_activities),
+        statGrowth: seasonStats.rows,
+        startDate: seasonStart.toISOString().split('T')[0]
+      },
+      streaks: {
+        checkinStreak: streakResult.rows[0]?.streak || 0,
+        activeDaysLast30: parseInt(consecutiveDays.rows[0].days)
+      },
+      ranking: {
+        orgRank,
+        leagueRank
+      }
+    });
+  } catch (err) {
+    console.error('활동 리포트 오류:', err);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// ══════════════════════════════════════════════
 //  API: 리그 & 팬클럽 & 조직
 // ══════════════════════════════════════════════
 
