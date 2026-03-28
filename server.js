@@ -4,6 +4,7 @@ const path = require('path');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { Pool } = require('pg');
+const cron = require('node-cron');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -755,8 +756,27 @@ async function initDB() {
       ON CONFLICT (season_number) DO NOTHING
     `);
 
+    // ── 29. 거래소 매물 ──
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS trade_listings (
+        id              SERIAL PRIMARY KEY,
+        seller_id       INTEGER NOT NULL REFERENCES users(id),
+        artifact_id     INTEGER NOT NULL REFERENCES artifacts(id) UNIQUE,
+        price           INTEGER NOT NULL,
+        item_name       VARCHAR(100),
+        item_rarity     VARCHAR(20),
+        item_emoji      VARCHAR(10),
+        status          VARCHAR(20) NOT NULL DEFAULT 'active',
+        buyer_id        INTEGER REFERENCES users(id),
+        sold_at         TIMESTAMP,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_trade_status ON trade_listings(status)`);
+
     await client.query('COMMIT');
-    console.log('✅ 아스테리아 DB 초기화 완료 — 23개 테이블 생성');
+    console.log('✅ 아스테리아 DB 초기화 완료 — 24개 테이블 생성');
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('❌ DB 초기화 실패:', err.message);
@@ -2323,6 +2343,392 @@ const HARD_GATES = {
   'planet-nova':  { minScore: 900,  minMembers: 5000000 },
   'nova-quasar':  { minScore: 950,  minMembers: 10000000 },
 };
+
+// ══════════════════════════════════════════════
+//  API: Ark / Artifact / Trade (#36)
+// ══════════════════════════════════════════════
+
+// 1. 상점 아이템 목록
+app.get('/api/shop/items', async (req, res) => {
+  const { category, rarity, sort = 'newest' } = req.query;
+  try {
+    let where = [];
+    let params = [];
+    let idx = 1;
+
+    if (category) { where.push(`type = $${idx}`); params.push(category); idx++; }
+    if (rarity) { where.push(`rarity = $${idx}`); params.push(rarity); idx++; }
+
+    const whereClause = where.length > 0 ? 'WHERE ' + where.join(' AND ') : '';
+
+    let orderBy = 'created_at DESC';
+    if (sort === 'price_asc') orderBy = 'price_stardust ASC';
+    else if (sort === 'price_desc') orderBy = 'price_stardust DESC';
+
+    const result = await pool.query(
+      `SELECT * FROM nebula_items ${whereClause} ORDER BY ${orderBy}`,
+      params
+    );
+
+    const items = result.rows.map(item => ({
+      id: item.id,
+      name: item.name,
+      type: item.type,
+      rarity: item.rarity,
+      emoji: item.emoji,
+      description: item.description,
+      statBonus: item.stat_bonus,
+      priceStardust: item.price_stardust,
+      priceAp: item.price_ap,
+      isSeasonal: item.is_seasonal,
+      maxSupply: item.max_supply,
+      currentSupply: item.current_supply,
+      available: item.max_supply ? item.current_supply < item.max_supply : true
+    }));
+
+    res.json({ items, total: items.length, category: category || 'all' });
+  } catch (err) {
+    console.error('상점 아이템 조회 오류:', err);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// 2. 아이템 구매
+app.post('/api/shop/purchase', authenticateToken, async (req, res) => {
+  const { item_id } = req.body;
+  if (!item_id) return res.status(400).json({ message: 'item_id가 필요합니다.' });
+
+  try {
+    // 아이템 정보 조회
+    const item = await pool.query('SELECT * FROM nebula_items WHERE id = $1', [item_id]);
+    if (!item.rows[0]) return res.status(404).json({ message: '아이템을 찾을 수 없습니다.' });
+    const it = item.rows[0];
+
+    // 미션 보상 전용 (가격 0원)
+    if (it.price_stardust <= 0)
+      return res.status(400).json({ message: '이 아이템은 미션 보상 전용입니다. 상점에서 구매할 수 없습니다.' });
+
+    // 품절 확인
+    if (it.max_supply && it.current_supply >= it.max_supply)
+      return res.status(400).json({ message: '품절된 아이템입니다.' });
+
+    // 잔액 확인
+    const user = await pool.query('SELECT stardust FROM users WHERE id = $1', [req.user.id]);
+    if (user.rows[0].stardust < it.price_stardust)
+      return res.status(400).json({ message: `스타더스트가 부족합니다. (필요: ${it.price_stardust}, 보유: ${user.rows[0].stardust})` });
+
+    // 스타더스트 차감
+    const newBalance = user.rows[0].stardust - it.price_stardust;
+    await pool.query('UPDATE users SET stardust = $1, stat_eco = stat_eco + 1 WHERE id = $2', [newBalance, req.user.id]);
+
+    // 원장 기록
+    await pool.query(
+      `INSERT INTO stardust_ledger (user_id, amount, balance_after, type, description)
+       VALUES ($1, $2, $3, 'shop_purchase', $4)`,
+      [req.user.id, -it.price_stardust, newBalance, `상점 구매: ${it.name}`]
+    );
+
+    // serial_code 생성
+    const serialCode = `ART-${req.user.id}-${Date.now().toString(36)}`;
+
+    // 아티팩트 생성
+    const artifact = await pool.query(
+      `INSERT INTO artifacts (user_id, item_id, serial_code, artifact_type)
+       VALUES ($1, $2, $3, $4) RETURNING id`,
+      [req.user.id, item_id, serialCode, it.rarity]
+    );
+
+    // 판매 수량 증가
+    await pool.query('UPDATE nebula_items SET current_supply = current_supply + 1 WHERE id = $1', [item_id]);
+
+    res.status(201).json({
+      message: '구매 완료!',
+      artifact: { id: artifact.rows[0].id, serialCode, name: it.name, rarity: it.rarity, emoji: it.emoji },
+      remainingStardust: newBalance
+    });
+  } catch (err) {
+    console.error('아이템 구매 오류:', err);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// 3. 내 인벤토리
+app.get('/api/inventory', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT a.id AS artifact_id, a.serial_code, a.is_displayed, a.nebula_slot, a.artifact_type,
+              a.power_bonus, a.resonance_bonus, a.acquired_at,
+              i.name, i.type, i.rarity, i.emoji, i.description, i.stat_bonus, i.visual_effect
+       FROM artifacts a
+       LEFT JOIN nebula_items i ON i.id = a.item_id
+       WHERE a.user_id = $1 AND a.is_frozen = FALSE
+       ORDER BY a.acquired_at DESC`,
+      [req.user.id]
+    );
+
+    const displayed = [];
+    const stored = [];
+    for (const row of result.rows) {
+      const item = {
+        artifactId: row.artifact_id,
+        serialCode: row.serial_code,
+        slot: row.nebula_slot,
+        name: row.name,
+        type: row.type,
+        rarity: row.rarity,
+        emoji: row.emoji,
+        statBonus: row.stat_bonus,
+        acquiredAt: row.acquired_at
+      };
+      if (row.is_displayed) displayed.push(item);
+      else stored.push(item);
+    }
+
+    res.json({
+      displayed,
+      stored,
+      totalCount: result.rows.length,
+      displayedCount: displayed.length,
+      storedCount: stored.length
+    });
+  } catch (err) {
+    console.error('인벤토리 조회 오류:', err);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// 4. 아이템 배치 해제
+app.post('/api/nebula/unplace', authenticateToken, async (req, res) => {
+  const { artifact_id } = req.body;
+  if (!artifact_id) return res.status(400).json({ message: 'artifact_id가 필요합니다.' });
+
+  try {
+    // 소유 + 배치 상태 확인
+    const art = await pool.query(
+      'SELECT * FROM artifacts WHERE id = $1 AND user_id = $2',
+      [artifact_id, req.user.id]
+    );
+    if (!art.rows[0]) return res.status(404).json({ message: '소유하지 않은 아이템입니다.' });
+    if (!art.rows[0].is_displayed)
+      return res.status(400).json({ message: '이미 보관 중인 아이템입니다.' });
+
+    // 배치 해제
+    await pool.query(
+      'UPDATE artifacts SET is_displayed = FALSE, nebula_slot = NULL WHERE id = $1',
+      [artifact_id]
+    );
+
+    // CP 재계산
+    await recalcCP(req.user.id);
+
+    res.json({ message: '아이템이 보관함으로 이동되었습니다.' });
+  } catch (err) {
+    console.error('배치 해제 오류:', err);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// 5. 거래소 매물 목록
+app.get('/api/trade/listings', async (req, res) => {
+  const { rarity, type, sort = 'newest', page = '1' } = req.query;
+  const pageNum = Math.max(1, parseInt(page));
+  const limit = 10;
+  const offset = (pageNum - 1) * limit;
+
+  try {
+    let where = ["t.status = 'active'"];
+    let params = [];
+    let idx = 1;
+
+    if (rarity) { where.push(`t.item_rarity = $${idx}`); params.push(rarity); idx++; }
+    if (type) { where.push(`i.type = $${idx}`); params.push(type); idx++; }
+    // genesis 등급 거래 불가
+    where.push("t.item_rarity != 'genesis'");
+
+    const whereClause = 'WHERE ' + where.join(' AND ');
+
+    let orderBy = 't.created_at DESC';
+    if (sort === 'price_asc') orderBy = 't.price ASC';
+    else if (sort === 'price_desc') orderBy = 't.price DESC';
+
+    // 전체 수
+    const countResult = await pool.query(
+      `SELECT COUNT(*) FROM trade_listings t
+       LEFT JOIN nebula_items i ON i.id = (SELECT item_id FROM artifacts WHERE id = t.artifact_id)
+       ${whereClause}`,
+      params
+    );
+    const total = parseInt(countResult.rows[0].count);
+
+    // 매물 조회
+    const result = await pool.query(
+      `SELECT t.id, t.seller_id, t.artifact_id, t.price, t.item_name, t.item_rarity, t.item_emoji, t.created_at,
+              u.nickname AS seller_name
+       FROM trade_listings t
+       JOIN users u ON u.id = t.seller_id
+       LEFT JOIN nebula_items i ON i.id = (SELECT item_id FROM artifacts WHERE id = t.artifact_id)
+       ${whereClause}
+       ORDER BY ${orderBy}
+       LIMIT ${limit} OFFSET ${offset}`,
+      params
+    );
+
+    // 인증 유저의 매물 표시
+    let myId = null;
+    const authHeader = req.headers['authorization'];
+    if (authHeader) {
+      try { myId = jwt.verify(authHeader.split(' ')[1], JWT_SECRET).id; } catch {}
+    }
+
+    const listings = result.rows.map(r => ({
+      id: r.id,
+      sellerId: r.seller_id,
+      sellerName: r.seller_name,
+      artifactId: r.artifact_id,
+      name: r.item_name,
+      rarity: r.item_rarity,
+      emoji: r.item_emoji,
+      price: r.price,
+      isMine: myId === r.seller_id,
+      createdAt: r.created_at
+    }));
+
+    res.json({ listings, total, page: pageNum, totalPages: Math.ceil(total / limit) });
+  } catch (err) {
+    console.error('거래소 매물 조회 오류:', err);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// 6. 거래소에 아이템 등록
+app.post('/api/trade/sell', authenticateToken, async (req, res) => {
+  const { artifact_id, price } = req.body;
+  if (!artifact_id || !price || price <= 0)
+    return res.status(400).json({ message: 'artifact_id와 양수 price가 필요합니다.' });
+
+  try {
+    // 소유 확인
+    const art = await pool.query(
+      `SELECT a.*, i.name, i.rarity, i.emoji FROM artifacts a
+       LEFT JOIN nebula_items i ON i.id = a.item_id
+       WHERE a.id = $1 AND a.user_id = $2`,
+      [artifact_id, req.user.id]
+    );
+    if (!art.rows[0]) return res.status(404).json({ message: '소유하지 않은 아이템입니다.' });
+
+    // genesis 등급 거래 불가
+    if (art.rows[0].rarity === 'genesis' || art.rows[0].artifact_type === 'genesis')
+      return res.status(400).json({ message: 'Genesis 등급 아이템은 거래할 수 없습니다.' });
+
+    // 이미 등록된 아이템 확인
+    const existing = await pool.query(
+      "SELECT id FROM trade_listings WHERE artifact_id = $1 AND status = 'active'",
+      [artifact_id]
+    );
+    if (existing.rows.length > 0)
+      return res.status(409).json({ message: '이미 거래소에 등록된 아이템입니다.' });
+
+    // 배치 중이면 자동 해제
+    if (art.rows[0].is_displayed) {
+      await pool.query('UPDATE artifacts SET is_displayed = FALSE, nebula_slot = NULL WHERE id = $1', [artifact_id]);
+      await recalcCP(req.user.id);
+    }
+
+    // 거래소 등록
+    await pool.query(
+      `INSERT INTO trade_listings (seller_id, artifact_id, price, item_name, item_rarity, item_emoji)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [req.user.id, artifact_id, price, art.rows[0].name, art.rows[0].rarity, art.rows[0].emoji]
+    );
+
+    res.status(201).json({
+      message: '거래소에 등록되었습니다.',
+      item: { name: art.rows[0].name, rarity: art.rows[0].rarity },
+      price
+    });
+  } catch (err) {
+    console.error('거래소 등록 오류:', err);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// 7. 거래소에서 아이템 구매
+app.post('/api/trade/buy', authenticateToken, async (req, res) => {
+  const { listing_id } = req.body;
+  if (!listing_id) return res.status(400).json({ message: 'listing_id가 필요합니다.' });
+
+  try {
+    // 매물 확인
+    const listing = await pool.query(
+      "SELECT * FROM trade_listings WHERE id = $1 AND status = 'active'",
+      [listing_id]
+    );
+    if (!listing.rows[0]) return res.status(404).json({ message: '매물을 찾을 수 없거나 이미 판매됨.' });
+    const trade = listing.rows[0];
+
+    // 본인 매물 확인
+    if (trade.seller_id === req.user.id)
+      return res.status(400).json({ message: '본인의 매물은 구매할 수 없습니다.' });
+
+    // 가격 + 수수료 계산
+    const fee = Math.ceil(trade.price * 0.05);
+    const totalCost = trade.price + fee;
+    const sellerReceive = trade.price - fee;
+
+    // 구매자 잔액 확인
+    const buyer = await pool.query('SELECT stardust FROM users WHERE id = $1', [req.user.id]);
+    if (buyer.rows[0].stardust < totalCost)
+      return res.status(400).json({ message: `스타더스트 부족 (필요: ${totalCost}, 보유: ${buyer.rows[0].stardust})` });
+
+    // 구매자 차감
+    const buyerBalance = buyer.rows[0].stardust - totalCost;
+    await pool.query('UPDATE users SET stardust = $1, stat_eco = stat_eco + 2 WHERE id = $2', [buyerBalance, req.user.id]);
+    await pool.query(
+      `INSERT INTO stardust_ledger (user_id, amount, balance_after, type, description)
+       VALUES ($1, $2, $3, 'trade_buy', $4)`,
+      [req.user.id, -totalCost, buyerBalance, `거래소 구매: ${trade.item_name}`]
+    );
+
+    // 판매자 지급
+    const seller = await pool.query('SELECT stardust FROM users WHERE id = $1', [trade.seller_id]);
+    const sellerBalance = seller.rows[0].stardust + sellerReceive;
+    await pool.query('UPDATE users SET stardust = $1, stat_eco = stat_eco + 2 WHERE id = $2', [sellerBalance, trade.seller_id]);
+    await pool.query(
+      `INSERT INTO stardust_ledger (user_id, amount, balance_after, type, description)
+       VALUES ($1, $2, $3, 'trade_sell', $4)`,
+      [trade.seller_id, sellerReceive, sellerBalance, `거래소 판매: ${trade.item_name}`]
+    );
+
+    // 아티팩트 소유권 이전
+    await pool.query('UPDATE artifacts SET user_id = $1 WHERE id = $2', [req.user.id, trade.artifact_id]);
+
+    // 거래 이력 추가
+    await pool.query(
+      `UPDATE artifacts SET trade_history = trade_history || $1::jsonb WHERE id = $2`,
+      [JSON.stringify([{
+        from: trade.seller_id, to: req.user.id,
+        price: trade.price, fee, at: new Date().toISOString()
+      }]), trade.artifact_id]
+    );
+
+    // 매물 상태 변경
+    await pool.query(
+      "UPDATE trade_listings SET status = 'sold', buyer_id = $1, sold_at = NOW() WHERE id = $2",
+      [req.user.id, listing_id]
+    );
+
+    res.json({
+      message: '구매 완료!',
+      item: { name: trade.item_name, rarity: trade.item_rarity },
+      pricePaid: totalCost,
+      fee,
+      remainingStardust: buyerBalance
+    });
+  } catch (err) {
+    console.error('거래소 구매 오류:', err);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
 
 // ══════════════════════════════════════════════
 //  API: Activity 보강 + PoP 엔진 (#33)
@@ -4011,7 +4417,731 @@ app.get('/api/season/history', async (req, res) => {
   }
 });
 
+// ══════════════════════════════════════════════
+//  API: Economy (#37)
+// ══════════════════════════════════════════════
+
+const LEAGUE_REWARD_MULTIPLIER = { dust: 1.0, star: 1.2, planet: 1.5, nova: 2.0, quasar: 3.0 };
+const GACHA_RATES = [
+  { rarity: 'common', rate: 0.60 },
+  { rarity: 'rare', rate: 0.25 },
+  { rarity: 'epic', rate: 0.10 },
+  { rarity: 'legendary', rate: 0.04 },
+  { rarity: 'genesis', rate: 0.01 },
+];
+
+// 1. 내 지갑 정보
+app.get('/api/economy/wallet', authenticateToken, async (req, res) => {
+  try {
+    const user = await pool.query('SELECT stardust, ap, cp FROM users WHERE id = $1', [req.user.id]);
+    if (!user.rows[0]) return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+
+    // 최근 20건
+    const recent = await pool.query(
+      `SELECT id, amount, balance_after, type, description, created_at
+       FROM stardust_ledger WHERE user_id = $1
+       ORDER BY created_at DESC LIMIT 20`,
+      [req.user.id]
+    );
+
+    // 오늘 획득/사용
+    const todayStats = await pool.query(
+      `SELECT
+         COALESCE(SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END), 0) AS earned,
+         COALESCE(SUM(CASE WHEN amount < 0 THEN ABS(amount) ELSE 0 END), 0) AS spent
+       FROM stardust_ledger WHERE user_id = $1 AND created_at > CURRENT_DATE`,
+      [req.user.id]
+    );
+
+    // 이번 주 획득
+    const weekEarned = await pool.query(
+      `SELECT COALESCE(SUM(amount), 0) AS total
+       FROM stardust_ledger WHERE user_id = $1 AND amount > 0
+         AND created_at > DATE_TRUNC('week', CURRENT_DATE)`,
+      [req.user.id]
+    );
+
+    res.json({
+      stardust: user.rows[0].stardust,
+      ap: user.rows[0].ap,
+      cp: user.rows[0].cp,
+      recentTransactions: recent.rows.map(r => ({
+        id: r.id, amount: r.amount, balanceAfter: r.balance_after,
+        type: r.type, description: r.description, createdAt: r.created_at
+      })),
+      todayEarned: parseInt(todayStats.rows[0].earned),
+      todaySpent: parseInt(todayStats.rows[0].spent),
+      thisWeekEarned: parseInt(weekEarned.rows[0].total)
+    });
+  } catch (err) {
+    console.error('지갑 조회 오류:', err);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// 2. 스타더스트 선물
+app.post('/api/economy/transfer', authenticateToken, async (req, res) => {
+  const { to_user_id, amount } = req.body;
+  if (!to_user_id || !amount) return res.status(400).json({ message: 'to_user_id와 amount가 필요합니다.' });
+  if (to_user_id === req.user.id) return res.status(400).json({ message: '본인에게 선물할 수 없습니다.' });
+  if (amount < 10) return res.status(400).json({ message: '최소 10 스타더스트부터 선물할 수 있습니다.' });
+
+  try {
+    // 받는 사람 확인
+    const receiver = await pool.query('SELECT id, nickname, stardust FROM users WHERE id = $1', [to_user_id]);
+    if (!receiver.rows[0]) return res.status(404).json({ message: '받는 사람을 찾을 수 없습니다.' });
+
+    // 잔액 확인
+    const sender = await pool.query('SELECT stardust FROM users WHERE id = $1', [req.user.id]);
+    if (sender.rows[0].stardust < amount)
+      return res.status(400).json({ message: `스타더스트 부족 (보유: ${sender.rows[0].stardust})` });
+
+    // 보내는 사람 차감
+    const senderBalance = sender.rows[0].stardust - amount;
+    await pool.query('UPDATE users SET stardust = $1, stat_soc = stat_soc + 2, stat_eco = stat_eco + 1 WHERE id = $2', [senderBalance, req.user.id]);
+    await pool.query(
+      `INSERT INTO stardust_ledger (user_id, amount, balance_after, type, description)
+       VALUES ($1, $2, $3, 'transfer_out', $4)`,
+      [req.user.id, -amount, senderBalance, `${receiver.rows[0].nickname}에게 선물`]
+    );
+
+    // 받는 사람 지급
+    const receiverBalance = receiver.rows[0].stardust + amount;
+    await pool.query('UPDATE users SET stardust = $1 WHERE id = $2', [receiverBalance, to_user_id]);
+    await pool.query(
+      `INSERT INTO stardust_ledger (user_id, amount, balance_after, type, description)
+       VALUES ($1, $2, $3, 'transfer_in', $4)`,
+      [to_user_id, amount, receiverBalance, `${req.user.nickname || '유저'}로부터 선물`]
+    );
+
+    // 알림
+    await pool.query(
+      `INSERT INTO notifications (user_id, type, title, body, meta)
+       VALUES ($1, 'transfer', '선물 도착!', $2, $3)`,
+      [to_user_id, `${amount} 스타더스트를 선물 받았습니다!`, JSON.stringify({ from: req.user.id, amount })]
+    );
+
+    res.json({
+      message: `${receiver.rows[0].nickname}님에게 ${amount} 스타더스트를 선물했습니다!`,
+      remainingStardust: senderBalance
+    });
+  } catch (err) {
+    console.error('스타더스트 선물 오류:', err);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// 3. 스타더스트 원장 조회
+app.get('/api/economy/ledger', authenticateToken, async (req, res) => {
+  const { page = '1', limit: lim = '20', type } = req.query;
+  const pageNum = Math.max(1, parseInt(page));
+  const limitNum = Math.min(50, Math.max(1, parseInt(lim)));
+  const offset = (pageNum - 1) * limitNum;
+
+  try {
+    let where = 'WHERE user_id = $1';
+    let params = [req.user.id];
+    if (type) { where += ' AND type = $2'; params.push(type); }
+
+    const countResult = await pool.query(
+      `SELECT COUNT(*) FROM stardust_ledger ${where}`, params
+    );
+    const total = parseInt(countResult.rows[0].count);
+
+    const result = await pool.query(
+      `SELECT id, amount, balance_after, type, description, created_at
+       FROM stardust_ledger ${where}
+       ORDER BY created_at DESC LIMIT ${limitNum} OFFSET ${offset}`,
+      params
+    );
+
+    // 총 수입/지출 합산
+    const summary = await pool.query(
+      `SELECT
+         COALESCE(SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END), 0) AS total_earned,
+         COALESCE(SUM(CASE WHEN amount < 0 THEN ABS(amount) ELSE 0 END), 0) AS total_spent
+       FROM stardust_ledger WHERE user_id = $1`,
+      [req.user.id]
+    );
+
+    res.json({
+      transactions: result.rows,
+      total,
+      page: pageNum,
+      totalPages: Math.ceil(total / limitNum),
+      summary: {
+        totalEarned: parseInt(summary.rows[0].total_earned),
+        totalSpent: parseInt(summary.rows[0].total_spent),
+        netBalance: parseInt(summary.rows[0].total_earned) - parseInt(summary.rows[0].total_spent)
+      }
+    });
+  } catch (err) {
+    console.error('원장 조회 오류:', err);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// 4. 플랫폼 경제 통계 (공개)
+app.get('/api/economy/stats', async (req, res) => {
+  try {
+    const circulation = await pool.query('SELECT COALESCE(SUM(stardust), 0) AS total, ROUND(AVG(stardust)) AS avg FROM users');
+    const todayVolume = await pool.query(
+      `SELECT COALESCE(SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END), 0) AS vol
+       FROM stardust_ledger WHERE created_at > CURRENT_DATE`
+    );
+    const activeListings = await pool.query("SELECT COUNT(*) FROM trade_listings WHERE status = 'active'");
+    const todayTrades = await pool.query("SELECT COUNT(*) FROM trade_listings WHERE sold_at > CURRENT_DATE");
+    const richList = await pool.query(
+      `SELECT nickname, emoji, stardust FROM users
+       WHERE is_banned = FALSE ORDER BY stardust DESC LIMIT 5`
+    );
+
+    res.json({
+      totalCirculation: parseInt(circulation.rows[0].total),
+      todayVolume: parseInt(todayVolume.rows[0].vol),
+      activeListings: parseInt(activeListings.rows[0].count),
+      todayTrades: parseInt(todayTrades.rows[0].count),
+      avgBalance: parseInt(circulation.rows[0].avg || 0),
+      richList: richList.rows
+    });
+  } catch (err) {
+    console.error('경제 통계 오류:', err);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// 5. 일일 보상 수령
+app.post('/api/economy/daily-reward', authenticateToken, async (req, res) => {
+  try {
+    // 오늘 이미 수령했는지 확인
+    const alreadyClaimed = await pool.query(
+      `SELECT id FROM stardust_ledger
+       WHERE user_id = $1 AND type = 'daily_reward' AND created_at > CURRENT_DATE`,
+      [req.user.id]
+    );
+    if (alreadyClaimed.rows.length > 0)
+      return res.status(409).json({ message: '오늘 이미 일일 보상을 수령했습니다.' });
+
+    // 유저 정보 + 연속 출석
+    const user = await pool.query('SELECT stardust, league FROM users WHERE id = $1', [req.user.id]);
+    const streakResult = await pool.query(
+      `SELECT streak FROM daily_checkin WHERE user_id = $1 ORDER BY checked_date DESC LIMIT 1`,
+      [req.user.id]
+    );
+    const streak = streakResult.rows[0]?.streak || 0;
+    const league = user.rows[0].league || 'dust';
+
+    // 보상 계산
+    const baseReward = 50;
+    let streakBonus = 0;
+    if (streak >= 30) streakBonus = 100;
+    else if (streak >= 7) streakBonus = 50;
+
+    const leagueMultiplier = LEAGUE_REWARD_MULTIPLIER[league] || 1.0;
+    const totalReward = Math.floor((baseReward + streakBonus) * leagueMultiplier);
+
+    // 지급
+    const newBalance = user.rows[0].stardust + totalReward;
+    await pool.query('UPDATE users SET stardust = $1 WHERE id = $2', [newBalance, req.user.id]);
+    await pool.query(
+      `INSERT INTO stardust_ledger (user_id, amount, balance_after, type, description)
+       VALUES ($1, $2, $3, 'daily_reward', $4)`,
+      [req.user.id, totalReward, newBalance,
+       `일일 보상 (기본${baseReward}+연속${streakBonus})x${leagueMultiplier}`]
+    );
+
+    const parts = [`기본 ${baseReward}`];
+    if (streakBonus > 0) parts.push(`연속 ${streak}일 보너스 +${streakBonus}`);
+    if (leagueMultiplier > 1) parts.push(`${league} 리그 ${leagueMultiplier}배`);
+
+    res.json({
+      baseReward,
+      streakBonus,
+      leagueMultiplier,
+      totalReward,
+      streak,
+      message: `일일 보상 ${totalReward} 스타더스트 수령! (${parts.join(' + ')})`
+    });
+  } catch (err) {
+    console.error('일일 보상 오류:', err);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// 6. 뽑기 (가챠)
+app.post('/api/economy/gacha', authenticateToken, async (req, res) => {
+  const { type = 'single' } = req.body;
+  const pulls = type === 'multi' ? 10 : 1;
+  const cost = type === 'multi' ? 900 : 100;
+
+  try {
+    // 잔액 확인
+    const user = await pool.query('SELECT stardust FROM users WHERE id = $1', [req.user.id]);
+    if (user.rows[0].stardust < cost)
+      return res.status(400).json({ message: `스타더스트 부족 (필요: ${cost}, 보유: ${user.rows[0].stardust})` });
+
+    // 각 등급별 아이템 미리 조회
+    const itemsByRarity = {};
+    for (const g of GACHA_RATES) {
+      const items = await pool.query('SELECT id, name, rarity, emoji FROM nebula_items WHERE rarity = $1', [g.rarity]);
+      itemsByRarity[g.rarity] = items.rows;
+    }
+
+    // 뽑기 실행
+    const results = [];
+    for (let i = 0; i < pulls; i++) {
+      // 확률 판정
+      const rand = Math.random();
+      let cumulative = 0;
+      let selectedRarity = 'common';
+      for (const g of GACHA_RATES) {
+        cumulative += g.rate;
+        if (rand <= cumulative) { selectedRarity = g.rarity; break; }
+      }
+
+      // 해당 등급에서 랜덤 아이템 선택
+      const pool_items = itemsByRarity[selectedRarity];
+      if (!pool_items || pool_items.length === 0) {
+        // 해당 등급 아이템이 없으면 common으로 대체
+        const fallback = itemsByRarity['common'];
+        if (!fallback || fallback.length === 0) continue;
+        const item = fallback[Math.floor(Math.random() * fallback.length)];
+        selectedRarity = 'common';
+        const serialCode = `ART-${req.user.id}-${Date.now().toString(36)}${i}`;
+        const artifact = await pool.query(
+          `INSERT INTO artifacts (user_id, item_id, serial_code, artifact_type) VALUES ($1, $2, $3, $4) RETURNING id`,
+          [req.user.id, item.id, serialCode, selectedRarity]
+        );
+        results.push({ artifactId: artifact.rows[0].id, name: item.name, rarity: selectedRarity, emoji: item.emoji });
+        continue;
+      }
+
+      const item = pool_items[Math.floor(Math.random() * pool_items.length)];
+      const serialCode = `ART-${req.user.id}-${Date.now().toString(36)}${i}`;
+      const artifact = await pool.query(
+        `INSERT INTO artifacts (user_id, item_id, serial_code, artifact_type) VALUES ($1, $2, $3, $4) RETURNING id`,
+        [req.user.id, item.id, serialCode, selectedRarity]
+      );
+      results.push({ artifactId: artifact.rows[0].id, name: item.name, rarity: selectedRarity, emoji: item.emoji });
+
+      // LEGENDARY 이상이면 알림
+      if (selectedRarity === 'legendary' || selectedRarity === 'genesis') {
+        await pool.query(
+          `INSERT INTO notifications (user_id, type, title, body, meta)
+           VALUES ($1, 'gacha_rare', '희귀 아이템 획득!', $2, $3)`,
+          [req.user.id, `${selectedRarity.toUpperCase()} 등급 "${item.name}" 획득!`,
+           JSON.stringify({ itemId: item.id, rarity: selectedRarity })]
+        );
+      }
+    }
+
+    // 스타더스트 차감 + ECO 스탯
+    const ecoBonus = type === 'multi' ? 5 : 1;
+    const newBalance = user.rows[0].stardust - cost;
+    await pool.query('UPDATE users SET stardust = $1, stat_eco = stat_eco + $2 WHERE id = $3', [newBalance, ecoBonus, req.user.id]);
+    await pool.query(
+      `INSERT INTO stardust_ledger (user_id, amount, balance_after, type, description)
+       VALUES ($1, $2, $3, 'gacha', $4)`,
+      [req.user.id, -cost, newBalance, `뽑기 ${type === 'multi' ? '10연차' : '1회'}`]
+    );
+
+    // 최고 등급 메시지
+    const rarityOrder = ['common', 'rare', 'epic', 'legendary', 'genesis'];
+    const bestRarity = results.reduce((best, r) => {
+      return rarityOrder.indexOf(r.rarity) > rarityOrder.indexOf(best) ? r.rarity : best;
+    }, 'common');
+
+    res.json({
+      type,
+      cost,
+      results,
+      remainingStardust: newBalance,
+      message: `${bestRarity.toUpperCase()} 등급 아이템 획득!`
+    });
+  } catch (err) {
+    console.error('뽑기 오류:', err);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// ══════════════════════════════════════════════
+//  에너지 파이프라인 (#38)
+// ══════════════════════════════════════════════
+
+const LEAGUE_EXPECTED_AP = {
+  dust: 1000, star: 5000, planet: 20000, nova: 100000, quasar: 500000
+};
+
+let lastPipelineRun = null;
+
+// 소모임 기여도 계산
+async function calcOrgContribution(orgId) {
+  const org = await pool.query('SELECT member_count FROM organizations WHERE id = $1', [orgId]);
+  if (!org.rows[0] || org.rows[0].member_count === 0) {
+    await pool.query(
+      'UPDATE organizations SET contribution_score = 0, activity_density = 0, mission_completion = 0 WHERE id = $1',
+      [orgId]
+    );
+    return { contributionScore: 0, activityDensity: 0, missionCompletion: 0 };
+  }
+  const memberCount = org.rows[0].member_count;
+
+  // 최근 7일 활동 데이터
+  const activity = await pool.query(
+    `SELECT COALESCE(SUM(al.ap_earned), 0) AS total_ap,
+            COUNT(DISTINCT al.user_id) AS active_users
+     FROM activity_logs al JOIN users u ON u.id = al.user_id
+     WHERE u.org_id = $1 AND al.created_at > NOW() - INTERVAL '7 days'`,
+    [orgId]
+  );
+
+  const totalAp = parseInt(activity.rows[0].total_ap);
+  const activeUsers = parseInt(activity.rows[0].active_users);
+  const activityDensity = Math.round((activeUsers / memberCount) * 100 * 10) / 10;
+  const missionCompletion = Math.min(100, activityDensity);
+
+  // AP 정규화 (최대 기대치 = 멤버수 * 500)
+  const maxExpectedAp = memberCount * 500;
+  const normalizedAp = maxExpectedAp > 0 ? Math.min(100, (totalAp / maxExpectedAp) * 100) : 0;
+  const contributionScore = Math.round((normalizedAp * 0.6 + activityDensity * 0.4) * 10) / 10;
+
+  await pool.query(
+    'UPDATE organizations SET contribution_score = $1, activity_density = $2, mission_completion = $3 WHERE id = $4',
+    [contributionScore, activityDensity, missionCompletion, orgId]
+  );
+
+  return { contributionScore, activityDensity, missionCompletion };
+}
+
+// 팬클럽 IAI/GSI/PII/S 계산
+async function calcFanclubScores(fanclubId) {
+  const fc = await pool.query('SELECT id, league, member_count FROM fanclubs WHERE id = $1', [fanclubId]);
+  if (!fc.rows[0]) return null;
+  const league = fc.rows[0].league;
+  const memberCount = fc.rows[0].member_count || 1;
+
+  // ── IAI (개인 성실도) ──
+  const avgApResult = await pool.query(
+    'SELECT COALESCE(AVG(ap), 0) AS avg_ap FROM users WHERE fandom_id = $1 AND is_banned = FALSE',
+    [fanclubId]
+  );
+  const avgAp = parseFloat(avgApResult.rows[0].avg_ap);
+  const maxAp = LEAGUE_EXPECTED_AP[league] || 1000;
+  const iai = Math.min(100, Math.round((avgAp / maxAp) * 100 * 10) / 10);
+
+  // ── GSI (조직 시너지) ──
+  // 활동 밀도
+  const activeResult = await pool.query(
+    `SELECT COUNT(DISTINCT al.user_id) AS active_users
+     FROM activity_logs al JOIN users u ON u.id = al.user_id
+     WHERE u.fandom_id = $1 AND al.created_at > NOW() - INTERVAL '7 days'`,
+    [fanclubId]
+  );
+  const activityDensity = Math.min(100, Math.round((parseInt(activeResult.rows[0].active_users) / memberCount) * 100 * 10) / 10);
+
+  // 조직 동기화 (하위 조직 contribution_score 평균)
+  const orgSync = await pool.query(
+    'SELECT COALESCE(AVG(contribution_score), 0) AS avg_score FROM organizations WHERE fanclub_id = $1',
+    [fanclubId]
+  );
+  const orgSyncScore = Math.min(100, parseFloat(orgSync.rows[0].avg_score));
+  const gsi = Math.round((activityDensity * 0.6 + orgSyncScore * 0.4) * 10) / 10;
+
+  // ── PII (대외 영향력) ──
+  // 외부 유입 (추천 가입)
+  const referralResult = await pool.query(
+    `SELECT COUNT(*) AS cnt FROM referrals r
+     JOIN users u ON u.id = r.referrer_id
+     WHERE u.fandom_id = $1 AND r.created_at > NOW() - INTERVAL '30 days'`,
+    [fanclubId]
+  );
+  const referrals = parseInt(referralResult.rows[0].cnt);
+  const referralNorm = Math.min(100, (referrals / Math.max(1, memberCount * 0.01)) * 100);
+
+  // 투표 참여
+  const voteResult = await pool.query(
+    `SELECT COUNT(*) AS cnt FROM vote_records vr
+     JOIN users u ON u.id = vr.user_id
+     WHERE u.fandom_id = $1 AND vr.voted_at > NOW() - INTERVAL '30 days'`,
+    [fanclubId]
+  );
+  const voteParticipation = parseInt(voteResult.rows[0].cnt);
+  const voteNorm = Math.min(100, (voteParticipation / Math.max(1, memberCount * 0.1)) * 100);
+  const pii = Math.round((referralNorm * 0.5 + voteNorm * 0.5) * 10) / 10;
+
+  // ── S (최종 점수) — league_config 가중치 사용 ──
+  const configResult = await pool.query(
+    'SELECT iai_weight, gsi_weight, pii_weight FROM league_config WHERE league = $1',
+    [league]
+  );
+  let iaiW = 0.4, gsiW = 0.4, piiW = 0.2;
+  if (configResult.rows[0]) {
+    iaiW = configResult.rows[0].iai_weight;
+    gsiW = configResult.rows[0].gsi_weight;
+    piiW = configResult.rows[0].pii_weight;
+  }
+  const total = Math.round((iai * iaiW + gsi * gsiW + pii * piiW) * 10) / 10;
+
+  // DB 업데이트
+  await pool.query(
+    'UPDATE fanclubs SET score_iai = $1, score_gsi = $2, score_pii = $3, score_total = $4 WHERE id = $5',
+    [iai, gsi, pii, total, fanclubId]
+  );
+
+  return {
+    iai: { value: iai, components: { avgAp: Math.round(avgAp), maxAp, normalized: iai } },
+    gsi: { value: gsi, components: { activityDensity, orgSync: orgSyncScore } },
+    pii: { value: pii, components: { referrals, voteParticipation } },
+    total,
+    weights: { iai: iaiW, gsi: gsiW, pii: piiW }
+  };
+}
+
+// 전체 파이프라인 실행
+async function runFullPipeline() {
+  const startTime = Date.now();
+  console.log('🔄 에너지 파이프라인 실행 시작...');
+
+  // 1단계: 모든 조직 기여도 재계산
+  const allOrgs = await pool.query('SELECT id FROM organizations');
+  let orgsUpdated = 0;
+  for (const org of allOrgs.rows) {
+    await calcOrgContribution(org.id);
+    orgsUpdated++;
+  }
+  console.log(`   📊 조직 기여도 ${orgsUpdated}개 업데이트`);
+
+  // 2단계: 모든 팬클럽 점수 재계산
+  const allFanclubs = await pool.query('SELECT id FROM fanclubs');
+  let fanclubsUpdated = 0;
+  for (const fc of allFanclubs.rows) {
+    await calcFanclubScores(fc.id);
+    fanclubsUpdated++;
+  }
+  console.log(`   🏆 팬클럽 점수 ${fanclubsUpdated}개 업데이트`);
+
+  // 3단계: 리그별 순위 업데이트
+  for (const league of LEAGUE_ORDER) {
+    await pool.query(
+      `UPDATE fanclubs f SET rank = sub.rank
+       FROM (SELECT id, ROW_NUMBER() OVER (ORDER BY score_total DESC) AS rank
+             FROM fanclubs WHERE league = $1) sub
+       WHERE f.id = sub.id`,
+      [league]
+    );
+  }
+  console.log('   🎖️ 리그별 순위 업데이트 완료');
+
+  const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+  lastPipelineRun = new Date().toISOString();
+  console.log(`✅ 에너지 파이프라인 완료 (${duration}초)`);
+
+  return { orgsUpdated, fanclubsUpdated, duration, timestamp: lastPipelineRun };
+}
+
+// API 1. 파이프라인 수동 실행
+app.post('/api/pipeline/run', authenticateToken, async (req, res) => {
+  try {
+    const result = await runFullPipeline();
+    res.json({
+      message: '에너지 파이프라인 실행 완료',
+      orgsUpdated: result.orgsUpdated,
+      fanclubsUpdated: result.fanclubsUpdated,
+      duration: `${result.duration}초`,
+      timestamp: result.timestamp
+    });
+  } catch (err) {
+    console.error('파이프라인 실행 오류:', err);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// API 2. 파이프라인 상태 조회
+app.get('/api/pipeline/status', authenticateToken, async (req, res) => {
+  res.json({
+    lastRun: lastPipelineRun,
+    nextScheduled: '매일 00:00 자동 실행 (예정)',
+    status: lastPipelineRun ? 'idle' : 'never_run'
+  });
+});
+
+// API 3. 특정 팬클럽 점수 상세
+app.get('/api/pipeline/fanclub/:id', async (req, res) => {
+  try {
+    const fcId = parseInt(req.params.id);
+    const fc = await pool.query(
+      `SELECT f.*, ROW_NUMBER() OVER (PARTITION BY f.league ORDER BY f.score_total DESC) AS rank_in_league
+       FROM fanclubs f WHERE f.id = $1`,
+      [fcId]
+    );
+    if (!fc.rows[0]) return res.status(404).json({ message: '팬클럽을 찾을 수 없습니다.' });
+
+    const data = fc.rows[0];
+    const scores = await calcFanclubScores(fcId);
+
+    // league_config에서 가중치 조회
+    const config = await pool.query('SELECT iai_weight, gsi_weight, pii_weight FROM league_config WHERE league = $1', [data.league]);
+    const w = config.rows[0] || { iai_weight: 0.4, gsi_weight: 0.4, pii_weight: 0.2 };
+
+    res.json({
+      fanclubId: data.id,
+      fanclubName: data.name,
+      league: data.league,
+      weights: { iai: w.iai_weight, gsi: w.gsi_weight, pii: w.pii_weight },
+      scores: {
+        iai: scores.iai,
+        gsi: scores.gsi,
+        pii: scores.pii,
+        total: scores.total
+      },
+      formula: `S = IAI*${w.iai_weight} + GSI*${w.gsi_weight} + PII*${w.pii_weight} = ${scores.total}`,
+      rank: parseInt(data.rank_in_league),
+      lastUpdated: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error('팬클럽 점수 상세 오류:', err);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
 // ── SPA fallback ──
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
-app.listen(PORT, () => console.log(`🌟 ASTERIA 실행 중: http://localhost:${PORT}`));
+// ══════════════════════════════════════════════
+//  배치 스케줄러 (#39)
+// ══════════════════════════════════════════════
+
+// Cron 1. 매일 자정 — 에너지 파이프라인 자동 실행
+cron.schedule('0 0 * * *', async () => {
+  console.log('⏰ [CRON] 자정 파이프라인 실행 시작...');
+  try {
+    const result = await runFullPipeline();
+    console.log('✅ [CRON] 자정 파이프라인 완료:', result);
+  } catch (err) {
+    console.error('❌ [CRON] 자정 파이프라인 오류:', err.message);
+  }
+});
+
+// Cron 2. 매주 월요일 01:00 — 주간 소모임 평가
+cron.schedule('0 1 * * 1', async () => {
+  console.log('⏰ [CRON] 주간 소모임 평가 시작...');
+  try {
+    const fanclubs = await pool.query('SELECT id FROM fanclubs');
+    let totalOrgs = 0, crisisCount = 0;
+
+    for (const fc of fanclubs.rows) {
+      const orgs = await pool.query(
+        'SELECT id, name, member_count FROM organizations WHERE fanclub_id = $1',
+        [fc.id]
+      );
+
+      for (const org of orgs.rows) {
+        // 최근 7일 활동 유저 수
+        const activeResult = await pool.query(
+          `SELECT COUNT(DISTINCT al.user_id) AS active_users
+           FROM activity_logs al JOIN users u ON u.id = al.user_id
+           WHERE u.org_id = $1 AND al.created_at > NOW() - INTERVAL '7 days'`,
+          [org.id]
+        );
+        const activeUsers = parseInt(activeResult.rows[0].active_users);
+        const density = org.member_count > 0 ? Math.round((activeUsers / org.member_count) * 100) : 0;
+        const missionRate = density;
+
+        await pool.query(
+          'UPDATE organizations SET activity_density = $1, mission_completion = $2 WHERE id = $3',
+          [density, missionRate, org.id]
+        );
+
+        // 위기 모임 알림
+        if (density < 30 && org.member_count > 0) {
+          crisisCount++;
+          const members = await pool.query(
+            'SELECT id FROM users WHERE org_id = $1 LIMIT 50', [org.id]
+          );
+          for (const member of members.rows) {
+            await pool.query(
+              `INSERT INTO notifications (user_id, type, title, body, meta)
+               VALUES ($1, 'crisis_warning', '🚨 주간 평가 경고', $2, $3)`,
+              [member.id, `소속 모임의 활동 밀도가 ${density}%입니다. 함께 활동해주세요!`,
+               JSON.stringify({ orgId: org.id, density })]
+            );
+          }
+        }
+        totalOrgs++;
+      }
+    }
+    console.log(`✅ [CRON] 주간 평가 완료: ${totalOrgs}개 모임, ${crisisCount}개 위기`);
+  } catch (err) {
+    console.error('❌ [CRON] 주간 평가 오류:', err.message);
+  }
+});
+
+// Cron 3. 매일 06:00 — 만료 토큰/데이터 정리
+cron.schedule('0 6 * * *', async () => {
+  console.log('⏰ [CRON] 데이터 정리 시작...');
+  try {
+    const tokens = await pool.query("DELETE FROM refresh_tokens WHERE expires_at < NOW() OR is_revoked = TRUE");
+    const notifs = await pool.query("DELETE FROM notifications WHERE is_read = TRUE AND created_at < NOW() - INTERVAL '30 days'");
+    const abuse = await pool.query("DELETE FROM abuse_patterns WHERE is_resolved = TRUE AND created_at < NOW() - INTERVAL '90 days'");
+
+    console.log(`✅ [CRON] 정리 완료: 토큰 ${tokens.rowCount}건, 알림 ${notifs.rowCount}건, 어뷰징 ${abuse.rowCount}건 삭제`);
+  } catch (err) {
+    console.error('❌ [CRON] 데이터 정리 오류:', err.message);
+  }
+});
+
+// Cron 4. 매 시간 정각 — 시즌 상태 자동 업데이트
+cron.schedule('0 * * * *', async () => {
+  try {
+    // final_days 체크 (종료 3일 전)
+    await pool.query(`
+      UPDATE seasons SET status = 'final_days'
+      WHERE status = 'active' AND ends_at - INTERVAL '3 days' <= NOW() AND ends_at >= NOW()
+    `);
+
+    // active 체크
+    await pool.query(`
+      UPDATE seasons SET status = 'active'
+      WHERE status = 'upcoming' AND starts_at <= NOW() AND ends_at >= NOW()
+    `);
+
+    // rest 체크
+    await pool.query(`
+      UPDATE seasons SET status = 'rest'
+      WHERE status IN ('active', 'final_days') AND ends_at < NOW() AND rest_ends_at >= NOW()
+    `);
+
+    // ended 체크
+    await pool.query(`
+      UPDATE seasons SET status = 'ended'
+      WHERE status = 'rest' AND rest_ends_at < NOW()
+    `);
+  } catch (err) {
+    console.error('❌ [CRON] 시즌 상태 업데이트 오류:', err.message);
+  }
+});
+
+console.log('📅 스케줄러 등록 완료:');
+console.log('  - 매일 00:00 에너지 파이프라인');
+console.log('  - 매주 월 01:00 주간 소모임 평가');
+console.log('  - 매일 06:00 만료 데이터 정리');
+console.log('  - 매시간 시즌 상태 자동 업데이트');
+
+// 스케줄러 상태 API (공개)
+app.get('/api/system/cron-status', (req, res) => {
+  res.json({
+    schedulers: [
+      { name: '에너지 파이프라인', schedule: '매일 00:00', lastRun: lastPipelineRun },
+      { name: '주간 소모임 평가', schedule: '매주 월요일 01:00' },
+      { name: '만료 데이터 정리', schedule: '매일 06:00' },
+      { name: '시즌 상태 업데이트', schedule: '매시간 정각' }
+    ],
+    serverUptime: Math.floor(process.uptime()) + '초'
+  });
+});
+
+app.listen(PORT, () => {
+  console.log(`🌟 ASTERIA 실행 중: http://localhost:${PORT}`);
+  // 서버 시작 5초 후 파이프라인 1회 실행 (DB 초기화 대기)
+  setTimeout(() => runFullPipeline().catch(err => console.error('파이프라인 초기 실행 오류:', err)), 5000);
+});

@@ -538,4 +538,21 @@ VALUES
   (4, '제국의 서막', '2026-10-08', '2026-12-31 23:59:59', '2027-01-01', '2027-01-07', 'upcoming')
 ON CONFLICT (season_number) DO NOTHING;
 
+-- ── 27. 거래소 매물 ──
+CREATE TABLE IF NOT EXISTS trade_listings (
+  id              SERIAL PRIMARY KEY,
+  seller_id       INTEGER NOT NULL REFERENCES users(id),
+  artifact_id     INTEGER NOT NULL REFERENCES artifacts(id) UNIQUE,
+  price           INTEGER NOT NULL,
+  item_name       VARCHAR(100),
+  item_rarity     VARCHAR(20),
+  item_emoji      VARCHAR(10),
+  status          VARCHAR(20) NOT NULL DEFAULT 'active',
+  buyer_id        INTEGER REFERENCES users(id),
+  sold_at         TIMESTAMP,
+  created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_trade_status ON trade_listings(status);
+
 COMMIT;

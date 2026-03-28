@@ -735,23 +735,23 @@
           },
           {
             "id": 36,
-            "name": "Ark/Artifact API",
-            "status": "todo"
+            "name": "Ark/Artifact API (상점+인벤토리+거래소CRUD)",
+            "status": "done"
           },
           {
             "id": 37,
-            "name": "Economy API (결제/구독/거래)",
-            "status": "todo"
+            "name": "Economy API (지갑+선물+원장+경제통계+일일보상+뽑기)",
+            "status": "done"
           },
           {
             "id": 38,
-            "name": "에너지 파이프라인 서비스 (4단계)",
-            "status": "todo"
+            "name": "에너지 파이프라인 (IAI/GSI/PII+팬클럽점수+조직기여도)",
+            "status": "done"
           },
           {
             "id": 39,
-            "name": "배치 스케줄러 (4종 cron job)",
-            "status": "todo"
+            "name": "배치 스케줄러 (자정파이프라인+주간평가+시즌상태+토큰정리)",
+            "status": "done"
           },
           {
             "id": 40,
