@@ -1,0 +1,343 @@
+{
+  "version": "1.0.0",
+  "description": "아스테리아 6대 헥사곤 스탯 & 17개 활동 영역 설정",
+
+  "hexagonStats": [
+    {
+      "id": "LOY",
+      "name": "성실",
+      "fullName": "Loyalty",
+      "color": "#f0c040",
+      "icon": "📅",
+      "description": "꾸준한 소비와 자기관리로 보여주는 팬덤 충성도",
+      "activities": ["consumption", "wellness"]
+    },
+    {
+      "id": "ACT",
+      "name": "행동",
+      "fullName": "Action",
+      "color": "#ef4444",
+      "icon": "🔥",
+      "description": "투표·스밍·오프라인 등 직접 행동으로 보여주는 화력",
+      "activities": ["firepower", "offline", "governance", "defense"]
+    },
+    {
+      "id": "SOC",
+      "name": "사회",
+      "fullName": "Social",
+      "color": "#38bdf8",
+      "icon": "🤝",
+      "description": "커뮤니티 소통과 시스템 유지, 신규 팬 영입",
+      "activities": ["communication", "systemMaintain", "recruit"]
+    },
+    {
+      "id": "ECO",
+      "name": "경제",
+      "fullName": "Economy",
+      "color": "#34d399",
+      "icon": "💎",
+      "description": "플랫폼 경제 기여와 굿즈 수집 활동",
+      "activities": ["economicContrib", "collection"]
+    },
+    {
+      "id": "CRE",
+      "name": "창의",
+      "fullName": "Creative",
+      "color": "#c084fc",
+      "icon": "🎨",
+      "description": "팬아트·영상 등 창작 활동과 공간 꾸미기",
+      "activities": ["creation", "spaceDecor"]
+    },
+    {
+      "id": "INT",
+      "name": "지성",
+      "fullName": "Intelligence",
+      "color": "#818cf8",
+      "icon": "🧠",
+      "description": "교육·분석·기록·리더십으로 보여주는 팬덤 지성",
+      "activities": ["education", "prediction", "history", "leadership"]
+    }
+  ],
+
+  "activities": [
+    {
+      "id": "consumption",
+      "number": 1,
+      "name": "소비",
+      "stat": "LOY",
+      "icon": "🎵",
+      "calcType": "time",
+      "calcLabel": "시간제",
+      "description": "스트리밍, MV 감상, 라이브 시청 등 콘텐츠 소비 시간",
+      "apRange": { "min": 10, "max": 50 },
+      "unit": "분",
+      "examples": ["음원 스트리밍 15분 = 15AP", "MV 시청 10분 = 10AP", "라이브 방송 시청 30분 = 30AP"]
+    },
+    {
+      "id": "creation",
+      "number": 2,
+      "name": "창작",
+      "stat": "CRE",
+      "icon": "🎨",
+      "calcType": "achievement",
+      "calcLabel": "성과제",
+      "description": "팬아트, 팬영상, 커버 등 창작 콘텐츠 제작·게시",
+      "apRange": { "min": 50, "max": 300 },
+      "unit": "건",
+      "examples": ["팬아트 게시 = 100AP", "커버 영상 = 200AP", "밈/짤 제작 = 50AP"]
+    },
+    {
+      "id": "communication",
+      "number": 3,
+      "name": "소통",
+      "stat": "SOC",
+      "icon": "💬",
+      "calcType": "count",
+      "calcLabel": "횟수제",
+      "description": "커뮤니티 게시글, 댓글, 방명록 등 소통 활동",
+      "apRange": { "min": 2, "max": 10 },
+      "unit": "건",
+      "dailyCap": 20,
+      "examples": ["게시글 작성 = 10AP", "댓글 달기 = 2AP", "방명록 작성 = 5AP"]
+    },
+    {
+      "id": "firepower",
+      "number": 4,
+      "name": "화력",
+      "stat": "ACT",
+      "icon": "🗳️",
+      "calcType": "count",
+      "calcLabel": "횟수제",
+      "description": "음방 투표, 총공 참여, 해시태그 운동 등 화력 활동",
+      "apRange": { "min": 100, "max": 500 },
+      "unit": "회",
+      "examples": ["음방 투표 1회 = 100AP", "스밍 총공 참여 = 300AP", "해시태그 운동 = 200AP"]
+    },
+    {
+      "id": "offline",
+      "number": 5,
+      "name": "오프라인",
+      "stat": "ACT",
+      "icon": "🎪",
+      "calcType": "achievement",
+      "calcLabel": "성과제",
+      "description": "콘서트, 팬미팅, 카페이벤트 등 오프라인 참여",
+      "apRange": { "min": 500, "max": 1000 },
+      "unit": "건",
+      "examples": ["콘서트 참석 = 1000AP", "팬미팅 참석 = 800AP", "카페 이벤트 = 500AP"]
+    },
+    {
+      "id": "governance",
+      "number": 6,
+      "name": "거버넌스",
+      "stat": "ACT",
+      "icon": "🏛️",
+      "calcType": "achievement",
+      "calcLabel": "성과제",
+      "description": "팬덤 의결, 안건 제안, 거버넌스 투표 참여",
+      "apRange": { "min": 100, "max": 200 },
+      "unit": "건",
+      "examples": ["거버넌스 투표 참여 = 100AP", "안건 제안 = 200AP", "정책 토론 참여 = 150AP"]
+    },
+    {
+      "id": "collection",
+      "number": 7,
+      "name": "수집",
+      "stat": "ECO",
+      "icon": "📦",
+      "calcType": "achievement",
+      "calcLabel": "성과제",
+      "description": "굿즈 구매, 포토카드 수집, 컬렉션 완성",
+      "apRange": { "min": 30, "max": 150 },
+      "unit": "건",
+      "examples": ["굿즈 구매 = 50AP", "포토카드 획득 = 30AP", "컬렉션 세트 완성 = 150AP"]
+    },
+    {
+      "id": "economicContrib",
+      "number": 8,
+      "name": "경제기여",
+      "stat": "ECO",
+      "icon": "💰",
+      "calcType": "value",
+      "calcLabel": "가치비례제",
+      "description": "앨범 구매, 서포트, 광고 펀딩 등 경제적 기여",
+      "apRange": { "min": 500, "max": 5000 },
+      "unit": "스타더스트",
+      "examples": ["앨범 구매 = 1000AP", "서포트 참여 = 2000AP", "광고 펀딩 = 5000AP"]
+    },
+    {
+      "id": "systemMaintain",
+      "number": 9,
+      "name": "시스템유지",
+      "stat": "SOC",
+      "icon": "🛡️",
+      "calcType": "achievement",
+      "calcLabel": "성과제",
+      "description": "커뮤니티 관리, 신고, 질서 유지 활동",
+      "apRange": { "min": 50, "max": 500 },
+      "unit": "건",
+      "examples": ["악플 신고 = 50AP", "분쟁 중재 = 200AP", "가이드 작성 = 500AP"]
+    },
+    {
+      "id": "spaceDecor",
+      "number": 10,
+      "name": "공간꾸미기",
+      "stat": "CRE",
+      "icon": "🏡",
+      "calcType": "value",
+      "calcLabel": "가치비례제",
+      "description": "내 방 꾸미기, 굿즈 배치, 인테리어 활동",
+      "apRange": { "min": 20, "max": 100 },
+      "unit": "스타더스트",
+      "examples": ["굿즈 배치 = 20AP", "방 테마 변경 = 50AP", "풀 인테리어 = 100AP"]
+    },
+    {
+      "id": "education",
+      "number": 11,
+      "name": "교육",
+      "stat": "INT",
+      "icon": "📚",
+      "calcType": "achievement",
+      "calcLabel": "성과제",
+      "description": "팬덤 가이드 작성, 뉴비 교육, 정보 공유",
+      "apRange": { "min": 30, "max": 100 },
+      "unit": "건",
+      "examples": ["입문 가이드 작성 = 100AP", "정보글 작성 = 50AP", "뉴비 멘토링 = 30AP"]
+    },
+    {
+      "id": "prediction",
+      "number": 12,
+      "name": "예측",
+      "stat": "INT",
+      "icon": "🔮",
+      "calcType": "achievement",
+      "calcLabel": "성과제",
+      "description": "음방 성적 예측, 트렌드 분석, 데이터 리포트",
+      "apRange": { "min": 50, "max": 300 },
+      "unit": "건",
+      "examples": ["음방 예측 적중 = 100AP", "데이터 분석 리포트 = 300AP", "트렌드 분석글 = 200AP"]
+    },
+    {
+      "id": "history",
+      "number": 13,
+      "name": "역사기록",
+      "stat": "INT",
+      "icon": "📜",
+      "calcType": "achievement",
+      "calcLabel": "성과제",
+      "description": "팬덤 연대기, 기록 보관, 아카이빙 활동",
+      "apRange": { "min": 20, "max": 200 },
+      "unit": "건",
+      "examples": ["활동 연대기 작성 = 200AP", "기념일 기록 = 50AP", "사진 아카이빙 = 20AP"]
+    },
+    {
+      "id": "wellness",
+      "number": 14,
+      "name": "웰니스",
+      "stat": "LOY",
+      "icon": "🧘",
+      "calcType": "time",
+      "calcLabel": "시간제",
+      "description": "출석 체크, 일일 루틴, 셀프 케어 활동",
+      "apRange": { "min": 10, "max": 30 },
+      "unit": "분",
+      "examples": ["출석 체크 = 10AP", "일일 루틴 완료 = 20AP", "연속 출석 7일 = 30AP"]
+    },
+    {
+      "id": "recruit",
+      "number": 15,
+      "name": "추천/스카우트",
+      "stat": "SOC",
+      "icon": "📢",
+      "calcType": "achievement",
+      "calcLabel": "성과제",
+      "description": "신규 팬 추천, SNS 홍보, 팬덤 영입 활동",
+      "apRange": { "min": 100, "max": 500 },
+      "unit": "명",
+      "examples": ["신규 팬 추천 = 200AP", "SNS 바이럴 = 300AP", "입덕 가이드 배포 = 500AP"]
+    },
+    {
+      "id": "defense",
+      "number": 16,
+      "name": "방어/정화",
+      "stat": "ACT",
+      "icon": "⚔️",
+      "calcType": "achievement",
+      "calcLabel": "성과제",
+      "description": "악플 대응, 루머 반박, 팬덤 정화 활동",
+      "apRange": { "min": 50, "max": 300 },
+      "unit": "건",
+      "examples": ["악플 신고 10건 = 100AP", "루머 반박글 = 200AP", "정화 캠페인 참여 = 300AP"]
+    },
+    {
+      "id": "leadership",
+      "number": 17,
+      "name": "리더십/운영",
+      "stat": "INT",
+      "icon": "👑",
+      "calcType": "achievement",
+      "calcLabel": "성과제",
+      "description": "유닛 운영, 이벤트 기획, 리더십 활동",
+      "apRange": { "min": 100, "max": 500 },
+      "unit": "건",
+      "examples": ["유닛 100명 결성 = 500AP", "이벤트 기획·진행 = 300AP", "팬클럽 운영 = 100AP"]
+    }
+  ],
+
+  "bonusMultipliers": [
+    {
+      "id": "streakCombo",
+      "name": "7일 연속 콤보",
+      "multiplier": 1.5,
+      "icon": "🔥",
+      "description": "7일 연속 활동 시 해당 주 전체 AP에 1.5배 보너스",
+      "condition": "7일 연속 1개 이상 활동 기록",
+      "appliesTo": "weekly",
+      "stackable": false
+    },
+    {
+      "id": "unitSync",
+      "name": "유닛 동기화",
+      "multiplier": 2.0,
+      "icon": "⚡",
+      "description": "유닛원 5명 이상이 같은 활동을 동시 수행하면 2배",
+      "condition": "유닛 내 5명 이상 동일 활동 동시 수행",
+      "appliesTo": "activity",
+      "stackable": false
+    },
+    {
+      "id": "orgSynergy",
+      "name": "조직 시너지",
+      "multiplier": 1.3,
+      "icon": "🤝",
+      "description": "소속 유닛 전체 평균 활동량이 기준치 이상이면 1.3배",
+      "condition": "유닛 전체 주간 평균 AP ≥ 500",
+      "appliesTo": "weekly",
+      "stackable": true,
+      "maxStack": 2
+    }
+  ],
+
+  "calcTypes": {
+    "time": {
+      "label": "시간제",
+      "description": "활동 시간(분)에 비례하여 AP 부여",
+      "formula": "AP = clamp(활동시간, min, max)"
+    },
+    "count": {
+      "label": "횟수제",
+      "description": "활동 횟수에 비례하여 AP 부여 (일일 캡 적용 가능)",
+      "formula": "AP = clamp(횟수 × 단가, min, max)"
+    },
+    "achievement": {
+      "label": "성과제",
+      "description": "활동 완료 시 성과 등급에 따라 AP 부여",
+      "formula": "AP = 등급별 고정값 (min ~ max)"
+    },
+    "value": {
+      "label": "가치비례제",
+      "description": "투입된 가치(스타더스트)에 비례하여 AP 부여",
+      "formula": "AP = clamp(가치 × 환산비, min, max)"
+    }
+  }
+}

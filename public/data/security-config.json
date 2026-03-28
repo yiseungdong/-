@@ -1,0 +1,584 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "description": "아스테리아 보안 인프라 설정",
+    "principle": "모든 활동은 증명되어야 하고, 모든 기록은 변조될 수 없다."
+  },
+  "proofOfParticipation": {
+    "name": "PoP 엔진 (Proof of Participation)",
+    "nameEn": "PoP Engine",
+    "description": "활동 증명 엔진. 모든 AP 획득은 5단계 검증을 거쳐 영구 기록된다.",
+    "pipeline": [
+      {
+        "step": 1,
+        "name": "활동 감지",
+        "nameEn": "Activity Detection",
+        "description": "클라이언트에서 활동 이벤트 발생 (퀘스트 완료, 거래, 창작물 등)",
+        "location": "client",
+        "output": "ActivityEvent { userId, domainId, actionType, timestamp, clientHash }",
+        "validation": "클라이언트 타임스탬프와 서버 타임스탬프 차이 5초 이내 허용"
+      },
+      {
+        "step": 2,
+        "name": "서버 검증",
+        "nameEn": "Server Verification",
+        "description": "서버에서 활동의 유효성을 다중 검증",
+        "location": "server",
+        "checks": [
+          {
+            "id": "auth_check",
+            "name": "인증 확인",
+            "description": "유효한 JWT 토큰 + 세션 일치"
+          },
+          {
+            "id": "rate_check",
+            "name": "속도 검증",
+            "description": "활동 간 최소 간격 충족 여부 (오라클 감시자 연동)"
+          },
+          {
+            "id": "context_check",
+            "name": "맥락 검증",
+            "description": "해당 활동이 현재 상태에서 가능한지 (레벨, 위치, 쿨다운)"
+          },
+          {
+            "id": "integrity_check",
+            "name": "무결성 검증",
+            "description": "clientHash와 서버 재계산 해시 일치 여부"
+          },
+          {
+            "id": "duplicate_check",
+            "name": "중복 검증",
+            "description": "동일 활동 이벤트 재전송 방지 (idempotency key)"
+          }
+        ],
+        "failAction": "검증 실패 시 AP 미지급 + 오라클 감시자 플래그"
+      },
+      {
+        "step": 3,
+        "name": "AP 산출",
+        "nameEn": "AP Calculation",
+        "description": "검증 통과 후 배율을 적용하여 최종 AP 계산",
+        "location": "server",
+        "formula": "finalAP = baseAP × comboMultiplier × syncMultiplier × difficultyModifier × catchUpBonus",
+        "appliedModifiers": [
+          "콤보 배율 (7일 연속 = 1.5x)",
+          "동기화 배율 (3명+ 동시활동 = 2.0x)",
+          "난이도 배율 (섹터별 0.5x~2.5x)",
+          "캐치업 보너스 (평균 이하 유저 +100~200%)",
+          "다영역 보너스 (5개+ 영역 = 1.1x)"
+        ]
+      },
+      {
+        "step": 4,
+        "name": "영구 기록",
+        "nameEn": "Permanent Record",
+        "description": "activity_log 테이블에 append-only로 기록. UPDATE/DELETE 절대 불가.",
+        "location": "database",
+        "storage": {
+          "table": "activity_log",
+          "mode": "append-only",
+          "immutable": true,
+          "enforcement": [
+            "DB 레벨 트리거: UPDATE/DELETE 시도 시 자동 거부 + 알림",
+            "애플리케이션 레벨: ORM에서 update/delete 메서드 비활성화",
+            "DB 권한: 애플리케이션 계정에 INSERT만 허용, UPDATE/DELETE 권한 미부여",
+            "감사 로그: 모든 INSERT 시도를 별도 audit_trail 테이블에 기록"
+          ],
+          "partitioning": "월별 파티셔닝 (성능 + 아카이빙)",
+          "retention": "영구 보존. 삭제 불가. 법적 요청 시에만 마스킹(원본 보존, 표시만 비식별화)"
+        }
+      },
+      {
+        "step": 5,
+        "name": "상위 전파",
+        "nameEn": "Upward Propagation",
+        "description": "기록된 AP가 에너지 파이프라인을 통해 유닛→베이스→테리토리→팬클럽으로 합산",
+        "location": "server (비동기)",
+        "propagationDelay": {
+          "unit": "실시간 (즉시)",
+          "base": "최대 1시간",
+          "territory": "매일 자정",
+          "fanclub": "매일 자정"
+        }
+      }
+    ],
+    "dbTriggerSQL": "CREATE OR REPLACE FUNCTION prevent_activity_log_mutation() RETURNS TRIGGER AS $$ BEGIN RAISE EXCEPTION 'activity_log is append-only. UPDATE/DELETE is forbidden.'; RETURN NULL; END; $$ LANGUAGE plpgsql; CREATE TRIGGER trg_activity_log_immutable BEFORE UPDATE OR DELETE ON activity_log FOR EACH ROW EXECUTE FUNCTION prevent_activity_log_mutation();"
+  },
+  "oracleWatcher": {
+    "name": "오라클 감시자",
+    "nameEn": "Oracle Watcher",
+    "description": "실시간 부정행위 탐지 시스템. 5가지 감시 모듈로 구성.",
+    "modules": [
+      {
+        "id": "heartbeat_check",
+        "name": "하트비트 체크",
+        "nameEn": "Heartbeat Check",
+        "description": "클라이언트에 주기적 응답 요청을 보내 자동화 프로그램을 탐지",
+        "config": {
+          "intervalMin": 30,
+          "intervalMax": 120,
+          "intervalUnit": "초",
+          "intervalMode": "랜덤 (예측 불가능하게)",
+          "responseTimeout": 10,
+          "responseTimeoutUnit": "초",
+          "maxConsecutiveFailures": 3,
+          "failureAction": "3회 연속 실패 시 세션 강제 종료 + 오라클 플래그",
+          "challengeTypes": [
+            {
+              "type": "timestamp_echo",
+              "description": "서버 타임스탬프 에코 요청",
+              "difficulty": "low"
+            },
+            {
+              "type": "hash_verify",
+              "description": "클라이언트 상태 해시 검증",
+              "difficulty": "medium"
+            },
+            {
+              "type": "behavioral_prompt",
+              "description": "미세 행동 패턴 확인 (마우스/터치 엔트로피)",
+              "difficulty": "high"
+            }
+          ]
+        }
+      },
+      {
+        "id": "action_speed_analysis",
+        "name": "행동 속도 분석",
+        "nameEn": "Action Speed Analysis",
+        "description": "인간이 불가능한 속도의 행동을 탐지",
+        "config": {
+          "rules": [
+            {
+              "action": "댓글 작성",
+              "minInterval": 5,
+              "unit": "초",
+              "description": "댓글 작성 간격 5초 미만 시 플래그",
+              "flagLevel": "warning"
+            },
+            {
+              "action": "거래 체결",
+              "minInterval": 3,
+              "unit": "초",
+              "description": "거래 체결 간격 3초 미만 시 플래그",
+              "flagLevel": "warning"
+            },
+            {
+              "action": "퀘스트 완료",
+              "minInterval": 10,
+              "unit": "초",
+              "description": "퀘스트 완료 간격 10초 미만 시 플래그 (최소 수행 시간 기반)",
+              "flagLevel": "alert"
+            },
+            {
+              "action": "연속 클릭",
+              "maxFrequency": 20,
+              "unit": "회/초",
+              "description": "초당 20회 이상 클릭 시 즉시 플래그",
+              "flagLevel": "critical"
+            }
+          ],
+          "escalation": "warning 5회 누적 → alert 승격, alert 3회 누적 → critical 승격, critical → 즉시 조사"
+        }
+      },
+      {
+        "id": "abnormal_growth_detection",
+        "name": "비정상 성장 감지",
+        "nameEn": "Abnormal Growth Detection",
+        "description": "통계적으로 비정상적인 성장 속도를 감지하여 동결",
+        "config": {
+          "threshold": 500,
+          "thresholdUnit": "% (동일 레벨 구간 평균 대비)",
+          "comparisonBase": "같은 레벨 구간 유저들의 24시간 XP 획득 평균",
+          "action": "500% 초과 시 해당 계정 XP/AP 획득 즉시 동결",
+          "freezeDuration": "수동 검증 완료까지 (최대 72시간)",
+          "autoRelease": "72시간 내 검증 미완료 시 자동 해제 + 모니터링 강화",
+          "statisticalMethod": {
+            "algorithm": "Modified Z-Score (MAD 기반)",
+            "windowSize": "24시간 롤링",
+            "minSampleSize": 50,
+            "description": "중앙값 절대편차(MAD) 기반으로 이상치 탐지. 극단값에 강건."
+          }
+        }
+      },
+      {
+        "id": "collective_behavior_analysis",
+        "name": "집단 행동 분석",
+        "nameEn": "Collective Behavior Analysis",
+        "description": "다수 계정의 동시/동일 행동 패턴을 탐지하여 봇넷/매크로팜 식별",
+        "config": {
+          "detectionRule": {
+            "minAccounts": 100,
+            "timeTolerance": 0.5,
+            "timeToleranceUnit": "초",
+            "actionSimilarity": 0.95,
+            "description": "100명 이상이 ±0.5초 이내에 95% 이상 동일한 행동 수행 시 검역"
+          },
+          "quarantineAction": {
+            "step1": "관련 계정 전체 활동 일시 정지 (최대 24시간)",
+            "step2": "개별 계정 행동 패턴 분석 (클러스터링)",
+            "step3": "봇 확정 계정 분리 → T1 처벌 절차",
+            "step4": "오탐 계정 해제 + 보상 (동결 기간 AP 복구)"
+          },
+          "clusteringAlgorithm": "DBSCAN (시간-행동 공간에서 밀도 기반 클러스터링)"
+        }
+      },
+      {
+        "id": "ip_device_duplicate",
+        "name": "IP/기기 중복 탐지",
+        "nameEn": "IP/Device Duplicate Detection",
+        "description": "동일 IP 또는 기기에서 다수 계정 운용을 탐지",
+        "config": {
+          "maxAccountsPerDevice": 2,
+          "maxAccountsPerIP": 3,
+          "flagThreshold": 3,
+          "flagDescription": "동일 기기 3계정 이상 시 자동 플래그",
+          "actions": {
+            "threeAccounts": "플래그 + 모니터링 강화",
+            "fiveAccounts": "전체 계정 활동 제한 + 수동 검증 요청",
+            "tenOrMore": "즉시 전체 동결 + T1 의심 보고"
+          },
+          "exceptions": [
+            "PC방/공용 환경은 IP 예외 등록 가능 (관리자 승인 필요)",
+            "가족 계정은 기기 예외 등록 가능 (본인 인증 필요, 최대 3계정)"
+          ],
+          "deviceFingerprint": {
+            "components": [
+              "CPU ID",
+              "GPU ID",
+              "MAC Address",
+              "Disk Serial",
+              "OS Install ID"
+            ],
+            "hashAlgorithm": "SHA-512",
+            "note": "제로티켓 실명제와 동일한 HW 해시 사용"
+          }
+        }
+      }
+    ],
+    "botPenalty": {
+      "name": "봇 적발 시 처벌",
+      "description": "봇으로 확정된 계정에 대한 즉각 제재",
+      "apDeduction": {
+        "description": "부정 획득 AP의 3~10배 감산",
+        "multiplierMin": 3,
+        "multiplierMax": 10,
+        "formula": "deduction = fraudulentAP × deductionMultiplier",
+        "multiplierDetermination": [
+          {
+            "severity": "경미 (단순 매크로 의심)",
+            "multiplier": 3,
+            "description": "첫 적발, 소규모 부정"
+          },
+          {
+            "severity": "중간 (확인된 봇)",
+            "multiplier": 5,
+            "description": "봇 사용 확정, 중규모"
+          },
+          {
+            "severity": "심각 (봇넷/매크로팜)",
+            "multiplier": 7,
+            "description": "조직적 봇 운용"
+          },
+          {
+            "severity": "치명 (반복 적발)",
+            "multiplier": 10,
+            "description": "2회 이상 적발, 최대 감산"
+          }
+        ],
+        "negativeAPHandling": "감산 후 AP가 음수가 되면 0으로 고정 + 초과분은 다음 획득에서 차감"
+      },
+      "autoT1Punishment": {
+        "description": "2회 이상 봇 적발 시 자동 T1 처벌 절차 개시",
+        "triggerCount": 2,
+        "process": [
+          "1차 적발: AP 감산 + 경고 + 72시간 모니터링 강화",
+          "2차 적발: 자동 T1(데이터 무결성 훼손) 처벌 절차 개시",
+          "운영진 즉결 처리: 심연유폐(1개월) 또는 영구추방"
+        ]
+      }
+    }
+  },
+  "encryption": {
+    "name": "암호화 체계",
+    "nameEn": "Encryption System",
+    "description": "계층별 암호화 적용. 데이터 유형에 따라 적절한 알고리즘 사용.",
+    "layers": [
+      {
+        "target": "비밀번호",
+        "algorithm": "bcrypt",
+        "config": {
+          "rounds": 12,
+          "description": "bcrypt cost factor 12 (약 250ms/hash)",
+          "upgradePolicy": "로그인 시 기존 해시가 현재 rounds보다 낮으면 자동 재해싱"
+        }
+      },
+      {
+        "target": "이메일 / 결제 정보",
+        "algorithm": "AES-256-GCM",
+        "config": {
+          "keySize": 256,
+          "mode": "GCM (Galois/Counter Mode)",
+          "ivSize": 96,
+          "ivUnit": "bits",
+          "tagSize": 128,
+          "tagUnit": "bits",
+          "keyManagement": "AWS KMS 또는 자체 HSM으로 마스터 키 관리",
+          "keyRotation": "90일마다 자동 키 로테이션",
+          "description": "인증 암호화(Authenticated Encryption) — 기밀성 + 무결성 동시 보장"
+        }
+      },
+      {
+        "target": "기기 ID (제로티켓)",
+        "algorithm": "SHA-512",
+        "config": {
+          "salt": "서버 고유 시크릿 + 유저별 랜덤 솔트",
+          "iterations": 1,
+          "description": "단방향 해시. 원본 복원 불가. 비교 검증만 가능.",
+          "components": "CPU ID + GPU ID + MAC Address + Disk Serial + OS Install ID"
+        }
+      },
+      {
+        "target": "통신 전송",
+        "algorithm": "TLS 1.3",
+        "config": {
+          "protocol": "HTTPS 필수 (HTTP 요청은 자동 리다이렉트)",
+          "hsts": true,
+          "hstsMaxAge": 31536000,
+          "cipherSuites": [
+            "TLS_AES_256_GCM_SHA384",
+            "TLS_CHACHA20_POLY1305_SHA256"
+          ],
+          "certificatePinning": "모바일 앱에서 인증서 피닝 적용",
+          "description": "모든 클라이언트-서버 통신은 TLS 1.3으로 암호화"
+        }
+      },
+      {
+        "target": "인증 토큰",
+        "algorithm": "JWT (RS256)",
+        "config": {
+          "accessToken": {
+            "expiry": "24시간",
+            "expirySeconds": 86400,
+            "algorithm": "RS256 (RSA + SHA-256)"
+          },
+          "refreshToken": {
+            "expiry": "30일",
+            "expirySeconds": 2592000,
+            "storage": "httpOnly secure cookie + DB 저장 (revocation 지원)",
+            "rotation": "사용 시 새 리프레시 토큰 발급 (Refresh Token Rotation)"
+          },
+          "blacklist": "로그아웃/비밀번호변경 시 기존 토큰 즉시 블랙리스트 등록",
+          "jti": "모든 토큰에 고유 jti 부여 (replay attack 방지)"
+        }
+      }
+    ],
+    "dataClassification": [
+      {
+        "level": "Public",
+        "examples": "닉네임, 레벨, 아키타입, 프로필 공개정보",
+        "protection": "없음"
+      },
+      {
+        "level": "Internal",
+        "examples": "스탯, AP, 활동 로그, 조직 정보",
+        "protection": "접근 제어 (인증 필수)"
+      },
+      {
+        "level": "Confidential",
+        "examples": "이메일, 결제 정보, IP 주소",
+        "protection": "AES-256 암호화 + 접근 로깅"
+      },
+      {
+        "level": "Restricted",
+        "examples": "비밀번호, HW 해시, 마스터 키",
+        "protection": "단방향 해시 또는 HSM 보관"
+      }
+    ]
+  },
+  "difficultyScaling": {
+    "name": "섹터별 난이도 시스템",
+    "nameEn": "Sector Difficulty Scaling",
+    "description": "아티스트(섹터)별 성장 단계에 따라 XP/AP 획득 난이도가 동적으로 변화",
+    "unit": "섹터 = 아티스트 1명 단위 팬덤 영역",
+    "phases": [
+      {
+        "id": "pioneer",
+        "name": "개척기",
+        "nameEn": "Pioneer Phase",
+        "condition": "팬클럽 인원 0~999명",
+        "xpMultiplier": 0.5,
+        "apMultiplier": 3,
+        "description": "XP는 쉽게(0.5배), AP는 풍부하게(3배). 초기 개척자를 강력히 보상.",
+        "rationale": "초기 인프라 구축과 커뮤니티 형성에 기여하는 개척자에게 최대 보상",
+        "color": "#22c55e"
+      },
+      {
+        "id": "expansion",
+        "name": "확장기",
+        "nameEn": "Expansion Phase",
+        "condition": "팬클럽 인원 1,000~9,999명",
+        "xpMultiplier": 1,
+        "apMultiplier": 1.5,
+        "description": "XP 보통(1.0배), AP 약간 풍부(1.5배). 성장하는 커뮤니티에 적절한 보상.",
+        "rationale": "성장 동력 유지하면서 인플레이션 억제",
+        "color": "#3b82f6"
+      },
+      {
+        "id": "maturity",
+        "name": "성숙기",
+        "nameEn": "Maturity Phase",
+        "condition": "팬클럽 인원 10,000~99,999명",
+        "xpMultiplier": 1.5,
+        "apMultiplier": 1,
+        "description": "XP 약간 어렵게(1.5배), AP 표준(1.0배). 성숙한 커뮤니티의 안정적 운영.",
+        "rationale": "대규모 커뮤니티에서의 경쟁 심화와 차별화 유도",
+        "color": "#f59e0b"
+      },
+      {
+        "id": "empire",
+        "name": "제국기",
+        "nameEn": "Empire Phase",
+        "condition": "팬클럽 인원 100,000명 이상",
+        "xpMultiplier": 2.5,
+        "apMultiplier": 0.8,
+        "description": "XP 매우 어렵게(2.5배), AP 약간 적게(0.8배). 거대 팬덤의 희소성 유지.",
+        "rationale": "인플레이션 방지 + 상위 레벨의 가치 보존 + 신규 유저 캐치업 공간 확보",
+        "color": "#ef4444"
+      }
+    ],
+    "transitionRule": {
+      "description": "단계 전환 규칙",
+      "hysteresis": "상향 전환은 즉시, 하향 전환은 30일 유예 (일시적 인원 감소에 의한 급변 방지)",
+      "notification": "단계 전환 7일 전부터 전체 멤버에게 사전 공지",
+      "gradualShift": "전환 시 7일에 걸쳐 점진적으로 배율 변경 (급격한 변화 방지)"
+    }
+  },
+  "catchUpSystem": {
+    "name": "캐치업 시스템",
+    "nameEn": "Catch-Up System",
+    "description": "후발 주자에게 XP 추가 보너스를 제공하여 선두와의 격차를 완화",
+    "config": {
+      "targetCondition": "서버 평균 레벨 이하인 유저",
+      "maxApplicableLevel": 50,
+      "maxApplicableLevelNote": "Lv.50까지만 캐치업 적용. 이후는 실력으로 성장.",
+      "bonusRange": {
+        "min": 100,
+        "max": 200,
+        "unit": "%",
+        "description": "XP 획득량 +100% ~ +200% 보너스"
+      },
+      "bonusCalculation": {
+        "formula": "catchUpBonus = 1.0 + min(2.0, (serverAvgLevel - userLevel) / serverAvgLevel × 3.0)",
+        "description": "서버 평균과의 격차가 클수록 보너스 증가, 최대 +200%",
+        "examples": [
+          {
+            "serverAvg": 40,
+            "userLevel": 10,
+            "bonus": "+200% (최대)",
+            "totalMultiplier": 3
+          },
+          {
+            "serverAvg": 40,
+            "userLevel": 20,
+            "bonus": "+150%",
+            "totalMultiplier": 2.5
+          },
+          {
+            "serverAvg": 40,
+            "userLevel": 30,
+            "bonus": "+75%",
+            "totalMultiplier": 1.75
+          },
+          {
+            "serverAvg": 40,
+            "userLevel": 39,
+            "bonus": "+7.5%",
+            "totalMultiplier": 1.075
+          },
+          {
+            "serverAvg": 40,
+            "userLevel": 40,
+            "bonus": "+0% (해제)",
+            "totalMultiplier": 1
+          }
+        ]
+      },
+      "displayUI": "캐치업 보너스 활성 시 XP 바에 '캐치업 부스트 활성' 표시",
+      "restrictions": [
+        "Lv.50 초과 유저에게는 절대 적용되지 않음",
+        "캐치업 보너스는 XP에만 적용 (AP에는 미적용)",
+        "봇/매크로 의심 계정에는 캐치업 보너스 비적용"
+      ]
+    }
+  },
+  "pioneerProtection": {
+    "name": "개척자 보호 프로그램",
+    "nameEn": "Pioneer Protection Program",
+    "description": "각 섹터(아티스트)의 최초 1,000명에게 영구적 특권을 부여하여 초기 기여를 보상",
+    "eligibility": {
+      "condition": "해당 아티스트 팬클럽의 최초 가입 1,000명",
+      "verifiedBy": "가입 순서 (users.created_at 기준, 해당 fanclub_id 필터)",
+      "irrevocable": true,
+      "description": "한번 부여된 개척자 지위는 탈퇴/강등/처벌과 무관하게 영구 유지 (영구추방 제외)"
+    },
+    "rewards": [
+      {
+        "id": "pioneer_serial",
+        "name": "성궤 번호",
+        "nameEn": "Orbit Serial Number",
+        "description": "개척자 고유 번호 (예: #0001 ~ #1000). 프로필에 영구 표시.",
+        "type": "cosmetic",
+        "tradeable": false,
+        "display": "닉네임 옆 금색 뱃지 '#0042' 형태"
+      },
+      {
+        "id": "pioneer_title",
+        "name": "한정 칭호: 성좌의 개척자",
+        "nameEn": "Limited Title: Constellation Pioneer",
+        "description": "최초 1,000명만 보유하는 한정 칭호. 아키타입 칭호와 별도로 동시 표시 가능.",
+        "type": "title",
+        "tradeable": false,
+        "aura": {
+          "name": "오리진 스타",
+          "nameEn": "Origin Star",
+          "color": "#f0c040",
+          "effect": "금빛 별 파티클이 캐릭터 발밑에서 천천히 상승",
+          "exclusive": true
+        }
+      },
+      {
+        "id": "pioneer_stat_boost",
+        "name": "영구 스탯 보너스",
+        "nameEn": "Permanent Stat Boost",
+        "description": "전체 스탯 영구 +10%. 모든 성장 계산에 곱연산 적용.",
+        "type": "stat",
+        "value": 10,
+        "unit": "percent",
+        "permanent": true,
+        "stacksWithOther": true,
+        "formula": "effectiveStat = baseStat × 1.10"
+      },
+      {
+        "id": "first_sovereign_eligibility",
+        "name": "퍼스트 소버린 자격",
+        "nameEn": "First Sovereign Eligibility",
+        "description": "퀘이사 리그 앱솔루트 소버린 최초 선출 시 우선 도전 자격. 서버 최초의 소버린이 될 기회.",
+        "type": "privilege",
+        "condition": "개척자 중 퀘이사 Tier 7(차원균열) 1등 도달 시",
+        "onlyOnce": true,
+        "description2": "서버 역사상 최초의 소버린 챌린지는 개척자에게만 자격이 주어진다"
+      }
+    ],
+    "displayConfig": {
+      "profileBadge": {
+        "shape": "hexagonal",
+        "color": "#f0c040",
+        "border": "#ffffff",
+        "glowEffect": true
+      },
+      "chatPrefix": "[개척자 #0042]",
+      "snsCard": "개척자 전용 금색 테두리 + 가입 순번 표시"
+    }
+  }
+}

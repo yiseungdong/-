@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>관리자 패널 — ASTERIA ADMIN</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --void:#020a18;--panel:rgba(5,12,30,.96);--panel2:rgba(10,16,36,.94);
+  --border:rgba(200,175,80,.13);--gold:#f0c040;
+  --accent:#4a90d9;--text:#e8ecf4;--muted:rgba(160,180,210,.5);
+  --dust:#94a3b8;--star:#fbbf24;--planet:#34d399;--nova:#c084fc;--quasar:#f0c040;
+  --red:#ef4444;--green:#10b981;--yellow:#f59e0b;--blue:#38bdf8;
+  --safe:#10b981;--warn:#f59e0b;--danger:#ef4444;
+  --iai:#38bdf8;--gsi:#a78bfa;--pii:#f0c040;
+}
+html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-family:'Noto Sans KR',sans-serif;overflow:hidden}
+#starCanvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+.admin-wrap{display:flex;height:100vh;position:relative;z-index:1}
+.sidebar{width:220px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
+.sb-logo{padding:18px 16px;text-align:center;border-bottom:1px solid var(--border)}
+.sb-logo-text{font-family:'Orbitron',monospace;font-size:11px;font-weight:900;color:var(--gold);letter-spacing:2px}
+.sb-logo-sub{font-size:8px;color:var(--muted);margin-top:2px}
+.sb-nav{flex:1;padding:8px 0}
+.sb-item{display:flex;align-items:center;gap:10px;padding:11px 16px;cursor:pointer;color:var(--muted);font-size:12px;font-weight:600;border-left:3px solid transparent;transition:all .2s}
+.sb-item:hover{color:var(--text);background:rgba(255,255,255,.03)}
+.sb-item.active{color:var(--gold);border-left-color:var(--gold);background:rgba(240,192,64,.06)}
+.sb-item-icon{font-size:16px;width:20px;text-align:center}
+.sb-footer{padding:14px 16px;border-top:1px solid var(--border);font-size:10px;color:var(--muted)}
+.sb-footer-name{color:var(--text);font-weight:700}
+.main-area{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
+.main-area::-webkit-scrollbar{width:4px}
+.main-area::-webkit-scrollbar-thumb{background:rgba(240,192,64,.3);border-radius:4px}
+.page-title{font-family:'Orbitron',monospace;font-size:16px;font-weight:900;color:var(--gold);letter-spacing:2px}
+.page-sub{font-size:10px;color:var(--muted)}
+.card-row{display:grid;gap:12px}.card-row.c4{grid-template-columns:repeat(4,1fr)}.card-row.c2{grid-template-columns:repeat(2,1fr)}
+.kpi-card{background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:14px}
+.kpi-card:hover{border-color:var(--gold)}
+.kpi-label{font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:4px}
+.kpi-val{font-family:'Orbitron',monospace;font-size:20px;font-weight:900}
+.kpi-change{font-size:10px;margin-top:3px}.kpi-change.up{color:var(--green)}.kpi-change.down{color:var(--red)}
+.chart-section{background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:16px}
+.chart-title{font-size:11px;color:var(--muted);letter-spacing:1px;margin-bottom:10px}
+.bar-chart{display:flex;align-items:flex-end;gap:2px;height:80px}
+.bar{background:linear-gradient(180deg,var(--gold),rgba(240,192,64,.3));border-radius:2px 2px 0 0;flex:1;transition:height .5s;position:relative;min-width:4px}
+.bar:hover::after{content:attr(data-val);position:absolute;bottom:100%;left:50%;transform:translateX(-50%);font-size:7px;color:var(--gold);white-space:nowrap}
+.pie-chart{width:120px;height:120px;border-radius:50%;margin:0 auto}
+.pie-legend{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-top:8px}
+.pie-legend-item{display:flex;align-items:center;gap:3px;font-size:8px}
+.pie-dot{width:7px;height:7px;border-radius:50%}
+.data-table{width:100%;border-collapse:collapse;font-size:11px}
+.data-table th{text-align:left;padding:6px 8px;color:var(--muted);font-size:9px;letter-spacing:1px;border-bottom:1px solid var(--border)}
+.data-table td{padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.03)}
+.data-table tr:hover td{background:rgba(255,255,255,.02)}
+.badge{display:inline-block;padding:2px 8px;border-radius:8px;font-size:9px;font-weight:700}
+.badge-green{background:rgba(16,185,129,.15);color:var(--green)}.badge-yellow{background:rgba(245,158,11,.15);color:var(--yellow)}.badge-red{background:rgba(239,68,68,.15);color:var(--red)}.badge-blue{background:rgba(56,189,248,.15);color:var(--blue)}.badge-purple{background:rgba(192,132,252,.15);color:var(--nova)}
+.btn{padding:5px 12px;border-radius:8px;border:none;font-size:10px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .2s}
+.btn-gold{background:rgba(240,192,64,.15);border:1px solid rgba(240,192,64,.4);color:var(--gold)}
+.btn-red{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:var(--red)}
+.btn-blue{background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.4);color:var(--blue)}
+.btn-green{background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.4);color:var(--green)}
+.btn:hover{transform:translateY(-1px)}
+.search-input{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:10px;padding:9px 14px;color:var(--text);font-size:12px;outline:none;font-family:'Noto Sans KR',sans-serif;margin-bottom:12px}
+.search-input:focus{border-color:var(--gold)}
+.vote-bar{display:flex;height:20px;border-radius:5px;overflow:hidden}
+.vote-yes{background:var(--green);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff}
+.vote-no{background:var(--red);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff}
+.gauge-row{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.gauge-label{width:34px;font-family:'Orbitron',monospace;font-size:9px;font-weight:700}
+.gauge-track{flex:1;height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden}
+.gauge-fill{height:100%;border-radius:4px;transition:width .6s}
+.gauge-val{width:36px;text-align:right;font-family:'Orbitron',monospace;font-size:9px;font-weight:700}
+.form-group{margin-bottom:10px}.form-label{font-size:10px;color:var(--muted);margin-bottom:3px}
+.form-input{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:10px;padding:8px 12px;color:var(--text);font-size:12px;outline:none;font-family:'Noto Sans KR',sans-serif}
+textarea.form-input{resize:vertical;min-height:50px}
+.form-input:focus{border-color:var(--gold)}
+.tab-content{animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+/* 리그 필터 */
+.league-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.filter-btn{padding:6px 12px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:10px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .2s}
+.filter-btn:hover{color:var(--text);border-color:rgba(255,255,255,.3)}
+.filter-btn.active{font-weight:900}
+.filter-btn[data-league="all"].active{background:rgba(255,255,255,.1);color:var(--text);border-color:rgba(255,255,255,.3)}
+.filter-btn[data-league="dust"].active{background:rgba(148,163,184,.15);color:var(--dust);border-color:var(--dust)}
+.filter-btn[data-league="star"].active{background:rgba(251,191,36,.12);color:var(--star);border-color:var(--star)}
+.filter-btn[data-league="planet"].active{background:rgba(52,211,153,.12);color:var(--planet);border-color:var(--planet)}
+.filter-btn[data-league="nova"].active{background:rgba(192,132,252,.12);color:var(--nova);border-color:var(--nova)}
+.filter-btn[data-league="quasar"].active{background:rgba(240,192,64,.12);color:var(--quasar);border-color:var(--quasar)}
+.seg-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.seg-card{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center}
+.seg-icon{font-size:20px}.seg-pct{font-family:'Orbitron',monospace;font-size:14px;font-weight:900}.seg-label{font-size:8px;color:var(--muted)}
+.rival-card{display:flex;align-items:center;gap:10px;padding:12px;background:var(--panel2);border:1px solid var(--border);border-radius:12px;margin-bottom:8px}
+.rival-vs{font-family:'Orbitron',monospace;font-size:11px;color:var(--muted)}.rival-team{flex:1;text-align:center}
+.rival-team-name{font-size:12px;font-weight:900}.rival-team-score{font-family:'Orbitron',monospace;font-size:18px;font-weight:900}
+.rival-gap{text-align:center;min-width:70px}.rival-gap-val{font-family:'Orbitron',monospace;font-size:13px;font-weight:900}
+@media(max-width:768px){.sidebar{width:60px}.sb-logo-text,.sb-logo-sub,.sb-item span,.sb-footer-name,.sb-footer>span{display:none}.sb-item{padding:11px 0;justify-content:center}.sb-item-icon{width:auto}.card-row.c4{grid-template-columns:repeat(2,1fr)}.seg-row{grid-template-columns:repeat(2,1fr)}}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(12,12,26,.97);border:1px solid var(--border);border-radius:12px;padding:10px 20px;font-size:12px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none}.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<canvas id="starCanvas"></canvas>
+<div id="toast" class="toast"></div>
+<div class="admin-wrap">
+  <div class="sidebar">
+    <div class="sb-logo"><div class="sb-logo-text">ASTERIA<br>ADMIN</div><div class="sb-logo-sub">관리자 패널 — Admin Panel</div></div>
+    <div class="sb-nav" id="sbNav"></div>
+    <div class="sb-footer"><div class="sb-footer-name">🛡️ Admin_001</div><span>최고 관리자 — Super Admin</span></div>
+  </div>
+  <div class="main-area" id="mainArea"></div>
+</div>
+<script>
+// ══════════════════════════════════
+// 별빛 배경
+// ══════════════════════════════════
+(function(){const cv=document.getElementById('starCanvas'),ctx=cv.getContext('2d');let W,H;function r(){W=cv.width=innerWidth;H=cv.height=innerHeight}r();addEventListener('resize',r);const S=Array.from({length:100},()=>({x:Math.random()*2e3,y:Math.random()*2e3,r:Math.random()*.6+.3,b:Math.random()*.4+.2,p:Math.random()*6.28,s:Math.random()*.006+.002,c:Math.random()<.1?'#f0c040':'#fff'}));(function l(){ctx.clearRect(0,0,W,H);S.forEach(s=>{s.p+=s.s;ctx.globalAlpha=s.b*(.5+.5*Math.sin(s.p));ctx.fillStyle=s.c;ctx.beginPath();ctx.arc(s.x%W,s.y%H,s.r,0,6.28);ctx.fill()});ctx.globalAlpha=1;requestAnimationFrame(l)})()})();
+
+// ══════════════════════════════════
+// 전역 상태
+// ══════════════════════════════════
+const TABS=[
+  {id:'dashboard',icon:'📊',name:'대시보드',en:'Dashboard'},
+  {id:'users',icon:'👥',name:'유저 분석',en:'Users'},
+  {id:'fandom',icon:'🏛️',name:'팬덤 관리',en:'Fandom'},
+  {id:'report',icon:'🛡️',name:'신고 처리',en:'Guard'},
+  {id:'economy',icon:'💎',name:'경제 감시',en:'Economy'},
+  {id:'settings',icon:'⚙️',name:'설정',en:'Settings'},
+  {id:'court',icon:'⚖️',name:'재판소',en:'Court'},
+];
+let currentTab='dashboard';
+let currentLeague='all'; // 리그 필터
+
+// ══════════════════════════════════
+// 리그별 목업 데이터
+// ══════════════════════════════════
+const LD={
+  all:{users:847293,newToday:1247,dau:124891,avgTime:'23m 41s',reports:5,bots:4,urgent:3,
+    eco:{issued:'+2.4M',spent:'-1.8M',net:'+0.6M',volume:'847K'},
+    seg:{whale:1.1,active:31.7,sleeper:50.2,atrisk:17.0},
+    retention:{d1:'78%',d7:'54%',d30:'38%',d90:'24%'},
+    acq:{direct:38,referral:31,sns:22,ext:9}},
+  dust:{users:482958,newToday:620,dau:48200,avgTime:'12m 08s',reports:2,bots:2,urgent:1,
+    eco:{issued:'+0.8M',spent:'-0.5M',net:'+0.3M',volume:'180K'},
+    seg:{whale:0.3,active:18.4,sleeper:58.1,atrisk:23.2},
+    retention:{d1:'62%',d7:'38%',d30:'22%',d90:'12%'},
+    acq:{direct:45,referral:25,sns:20,ext:10}},
+  star:{users:211823,newToday:380,dau:38400,avgTime:'19m 22s',reports:1,bots:1,urgent:1,
+    eco:{issued:'+0.6M',spent:'-0.5M',net:'+0.1M',volume:'210K'},
+    seg:{whale:0.7,active:28.5,sleeper:52.3,atrisk:18.5},
+    retention:{d1:'72%',d7:'48%',d30:'32%',d90:'19%'},
+    acq:{direct:38,referral:30,sns:22,ext:10}},
+  planet:{users:97438,newToday:150,dau:21800,avgTime:'28m 15s',reports:1,bots:1,urgent:1,
+    eco:{issued:'+0.5M',spent:'-0.4M',net:'+0.1M',volume:'220K'},
+    seg:{whale:1.4,active:38.2,sleeper:45.1,atrisk:15.3},
+    retention:{d1:'81%',d7:'62%',d30:'45%',d90:'30%'},
+    acq:{direct:35,referral:33,sns:22,ext:10}},
+  nova:{users:44061,newToday:72,dau:12400,avgTime:'35m 50s',reports:1,bots:0,urgent:0,
+    eco:{issued:'+0.3M',spent:'-0.25M',net:'+0.05M',volume:'150K'},
+    seg:{whale:2.8,active:48.6,sleeper:38.4,atrisk:10.2},
+    retention:{d1:'88%',d7:'72%',d30:'58%',d90:'42%'},
+    acq:{direct:30,referral:35,sns:25,ext:10}},
+  quasar:{users:11013,newToday:25,dau:5800,avgTime:'52m 33s',reports:0,bots:0,urgent:0,
+    eco:{issued:'+0.2M',spent:'-0.15M',net:'+0.05M',volume:'87K'},
+    seg:{whale:5.2,active:62.1,sleeper:26.4,atrisk:6.3},
+    retention:{d1:'94%',d7:'85%',d30:'72%',d90:'61%'},
+    acq:{direct:22,referral:40,sns:28,ext:10}},
+};
+
+const FANDOMS={
+  quasar:[{name:'ASTRANOVA',score:248000,health:'🟢',voteRate:'87%',reportRate:'0.3%'},{name:'CELESTIA',score:231000,health:'🟢',voteRate:'82%',reportRate:'0.2%'}],
+  nova:[{name:'STELLARIS',score:158000,health:'🟢',voteRate:'72%',reportRate:'0.8%'},{name:'INFINITEA',score:142000,health:'🟢',voteRate:'68%',reportRate:'0.6%'},{name:'DREAMWAVE',score:134000,health:'🟡',voteRate:'55%',reportRate:'1.0%'}],
+  planet:[{name:'LUMINOUS',score:97000,health:'🟡',voteRate:'58%',reportRate:'1.2%'},{name:'STARDUST',score:85700,health:'🟢',voteRate:'63%',reportRate:'0.7%'}],
+  star:[{name:'POLARIS',score:82400,health:'🟢',voteRate:'65%',reportRate:'0.5%'},{name:'AURORA',score:79100,health:'🟢',voteRate:'61%',reportRate:'0.4%'},{name:'SPARKLE',score:72000,health:'🟡',voteRate:'48%',reportRate:'0.9%'}],
+  dust:[{name:'NEBULA KIDS',score:28000,health:'🔴',voteRate:'34%',reportRate:'2.1%'},{name:'FIRST LIGHT',score:22000,health:'🟡',voteRate:'41%',reportRate:'1.5%'}],
+};
+
+const LEAGUE_ICONS={dust:'🌑',star:'⭐',planet:'🪐',nova:'💜',quasar:'👑'};
+const LEAGUE_NAMES={dust:'더스트',star:'스타',planet:'플래닛',nova:'노바',quasar:'퀘이사'};
+const PROMO_FORMULA={
+  dust:'D→S: S=(IAI×0.7)+(GSI×0.3)-Penalty',
+  star:'S→P: S=(IAI×0.4)+(GSI×0.4)+(PII×0.2)-Penalty',
+  planet:'P→N: S=(IAI×0.3)+(GSI×0.4)+(PII×0.3)-Penalty',
+  nova:'N→Q: S=(IAI×0.2)+(GSI×0.3)+(PII×0.5)-Penalty',
+  quasar:'MAX LEAGUE',
+};
+
+// ══════════════════════════════════
+// 공통 함수
+// ══════════════════════════════════
+function filterHTML(){
+  const leagues=[{id:'all',label:'🌌 전체 ALL'},{id:'dust',label:'더스트 DUST'},{id:'star',label:'스타 STAR'},{id:'planet',label:'플래닛 PLANET'},{id:'nova',label:'노바 NOVA'},{id:'quasar',label:'퀘이사 QUASAR'}];
+  return `<div class="league-filter">${leagues.map(l=>`<button class="filter-btn ${l.id===currentLeague?'active':''}" data-league="${l.id}" onclick="setLeague('${l.id}')">${l.label}</button>`).join('')}</div>`;
+}
+function setLeague(id){currentLeague=id;renderTab()}
+function d(){return LD[currentLeague]||LD.all}
+function randomBars(n,min,max){return Array.from({length:n},()=>Math.floor(Math.random()*(max-min)+min))}
+function barChart(data,color){const mx=Math.max(...data);return `<div class="bar-chart">${data.map(v=>`<div class="bar" style="height:${v/mx*100}%;background:linear-gradient(180deg,${color||'var(--gold)'},rgba(240,192,64,.2))" data-val="${v}"></div>`).join('')}</div>`}
+function getFandoms(){
+  if(currentLeague==='all'){const all=[];Object.entries(FANDOMS).forEach(([lg,fs])=>fs.forEach(f=>all.push({...f,league:lg})));return all}
+  return (FANDOMS[currentLeague]||[]).map(f=>({...f,league:currentLeague}));
+}
+
+// ══════════════════════════════════
+// 사이드바
+// ══════════════════════════════════
+function renderSidebar(){document.getElementById('sbNav').innerHTML=TABS.map(t=>`<div class="sb-item ${t.id===currentTab?'active':''}" onclick="switchTab('${t.id}')"><div class="sb-item-icon">${t.icon}</div><span>${t.name}</span></div>`).join('')}
+function switchTab(id){currentTab=id;renderSidebar();renderTab()}
+function renderTab(){const el=document.getElementById('mainArea');const fn={dashboard:tabDashboard,users:tabUsers,fandom:tabFandom,report:tabReport,economy:tabEconomy,settings:tabSettings,court:tabCourt};el.innerHTML='<div class="tab-content">'+(fn[currentTab]?fn[currentTab]():'')+'</div>';el.scrollTop=0}
+
+// ══════════════════════════════════
+// 탭 1: 대시보드
+// ══════════════════════════════════
+function tabDashboard(){
+  const dd=d();const hours=randomBars(24,20,100);
+  const isAll=currentLeague==='all';
+  const pieSection=isAll?`
+    <div class="chart-section"><div class="chart-title">리그별 유저 분포 — LEAGUE DIST.</div>
+    <div class="pie-chart" style="background:conic-gradient(var(--dust) 0% 57%,var(--star) 57% 82%,var(--planet) 82% 93.5%,var(--nova) 93.5% 98.3%,var(--quasar) 98.3% 100%)"></div>
+    <div class="pie-legend">${[['dust','57%'],['star','25%'],['planet','11.5%'],['nova','4.8%'],['quasar','1.3%']].map(([l,p])=>`<div class="pie-legend-item"><div class="pie-dot" style="background:var(--${l})"></div>${LEAGUE_NAMES[l]} ${p}</div>`).join('')}</div></div>`
+  :`<div class="chart-section"><div class="chart-title">${LEAGUE_ICONS[currentLeague]} ${LEAGUE_NAMES[currentLeague]} 팬클럽별 분포</div>
+    ${(FANDOMS[currentLeague]||[]).map(f=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="flex:1;font-size:11px">${f.name}</span><div style="flex:2;height:8px;background:rgba(255,255,255,.06);border-radius:4px"><div style="height:100%;width:${Math.floor(f.score/2500)}%;background:var(--${currentLeague});border-radius:4px"></div></div><span style="font-size:9px;color:var(--muted)">${f.score.toLocaleString()}</span></div>`).join('')}
+  </div>`;
+  return `<div class="page-title">📊 DASHBOARD</div><div class="page-sub">실시간 운영 현황 — Overview${!isAll?' · '+LEAGUE_NAMES[currentLeague]+' 리그':''}</div>
+  ${filterHTML()}
+  <div class="card-row c4">
+    <div class="kpi-card"><div class="kpi-label">유저수 — USERS</div><div class="kpi-val" style="color:var(--blue)">${dd.users.toLocaleString()}</div><div class="kpi-change up">▲ ${dd.newToday.toLocaleString()}</div></div>
+    <div class="kpi-card"><div class="kpi-label">오늘 신규 — NEW</div><div class="kpi-val" style="color:var(--green)">${dd.newToday.toLocaleString()}</div></div>
+    <div class="kpi-card"><div class="kpi-label">DAU</div><div class="kpi-val" style="color:var(--gold)">${dd.dau.toLocaleString()}</div></div>
+    <div class="kpi-card"><div class="kpi-label">평균 체류 — AVG</div><div class="kpi-val" style="color:var(--nova)">${dd.avgTime}</div></div>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <div class="kpi-card" style="flex:1;cursor:pointer" onclick="switchTab('report')"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:20px">🚨</span><div><div style="font-family:'Orbitron',monospace;font-size:16px;font-weight:900;color:var(--red)">${dd.reports}</div><div style="font-size:8px;color:var(--muted)">미처리 신고</div></div></div></div>
+    <div class="kpi-card" style="flex:1;cursor:pointer" onclick="switchTab('report')"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:20px">🤖</span><div><div style="font-family:'Orbitron',monospace;font-size:16px;font-weight:900;color:var(--yellow)">${dd.bots}</div><div style="font-size:8px;color:var(--muted)">봇 의심</div></div></div></div>
+    <div class="kpi-card" style="flex:1;cursor:pointer" onclick="switchTab('fandom')"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:20px">📋</span><div><div style="font-family:'Orbitron',monospace;font-size:16px;font-weight:900;color:var(--blue)">${dd.urgent}</div><div style="font-size:8px;color:var(--muted)">긴급 안건</div></div></div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px">
+    <div class="chart-section"><div class="chart-title">시간대별 활동량 — HOURLY</div>${barChart(hours)}</div>
+    ${pieSection}
+  </div>
+  <div class="chart-section"><div class="chart-title">경제 흐름 — ECONOMY</div>
+    <div class="card-row c4">${[['발행 Issued',dd.eco.issued,'var(--green)'],['소모 Spent',dd.eco.spent,'var(--red)'],['순유통 Net',dd.eco.net,'var(--gold)'],['거래량 Vol',dd.eco.volume,'var(--blue)']].map(([l,v,c])=>`<div style="text-align:center"><div style="font-family:'Orbitron',monospace;font-size:13px;font-weight:900;color:${c}">${v}</div><div style="font-size:8px;color:var(--muted)">${l}</div></div>`).join('')}</div>
+  </div>`;
+}
+
+// ══════════════════════════════════
+// 탭 2: 유저 분석
+// ══════════════════════════════════
+function tabUsers(){
+  const dd=d();const days=randomBars(14,300,1500);
+  return `<div class="page-title">👥 USER ANALYTICS</div><div class="page-sub">유저 분석</div>
+  ${filterHTML()}
+  <input class="search-input" placeholder="닉네임/성궤번호 검색 — Search" onkeydown="if(event.key==='Enter')showToast('🔍 백엔드 연동 후 활성화')">
+  <div class="card-row c4">
+    <div class="kpi-card"><div class="kpi-label">총 유저 USERS</div><div class="kpi-val" style="color:var(--blue)">${dd.users.toLocaleString()}</div></div>
+    <div class="kpi-card"><div class="kpi-label">DAU</div><div class="kpi-val" style="color:var(--gold)">${dd.dau.toLocaleString()}</div></div>
+    <div class="kpi-card"><div class="kpi-label">체류시간 AVG</div><div class="kpi-val" style="color:var(--nova)">${dd.avgTime}</div></div>
+    <div class="kpi-card"><div class="kpi-label">신규 NEW</div><div class="kpi-val" style="color:var(--green)">${dd.newToday.toLocaleString()}</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div class="chart-section"><div class="chart-title">유입유형 — ACQUISITION</div>
+      <div class="pie-chart" style="width:100px;height:100px;background:conic-gradient(var(--blue) 0% ${dd.acq.direct}%,var(--green) ${dd.acq.direct}% ${dd.acq.direct+dd.acq.referral}%,var(--nova) ${dd.acq.direct+dd.acq.referral}% ${dd.acq.direct+dd.acq.referral+dd.acq.sns}%,var(--muted) ${100-dd.acq.ext}% 100%)"></div>
+      <div class="pie-legend"><div class="pie-legend-item"><div class="pie-dot" style="background:var(--blue)"></div>직접 ${dd.acq.direct}%</div><div class="pie-legend-item"><div class="pie-dot" style="background:var(--green)"></div>추천 ${dd.acq.referral}%</div><div class="pie-legend-item"><div class="pie-dot" style="background:var(--nova)"></div>SNS ${dd.acq.sns}%</div></div>
+    </div>
+    <div class="chart-section"><div class="chart-title">14일 가입 추이 — NEW USERS</div>${barChart(days,'var(--green)')}</div>
+  </div>
+  <div class="chart-section"><div class="chart-title">리텐션 — RETENTION</div>
+    <div class="card-row c4">${[['D+1',dd.retention.d1],['D+7',dd.retention.d7],['D+30',dd.retention.d30],['D+90',dd.retention.d90]].map(([l,v])=>`<div style="text-align:center"><div style="font-family:'Orbitron',monospace;font-size:16px;font-weight:900;color:var(--gold)">${v}</div><div style="font-size:9px;color:var(--muted)">${l}</div></div>`).join('')}</div>
+  </div>
+  <div class="seg-row">
+    <div class="seg-card"><div class="seg-icon">🐋</div><div class="seg-pct" style="color:var(--gold)">${dd.seg.whale}%</div><div class="seg-label">고래</div></div>
+    <div class="seg-card"><div class="seg-icon">🔥</div><div class="seg-pct" style="color:var(--red)">${dd.seg.active}%</div><div class="seg-label">열혈</div></div>
+    <div class="seg-card"><div class="seg-icon">😴</div><div class="seg-pct" style="color:var(--blue)">${dd.seg.sleeper}%</div><div class="seg-label">슬리퍼</div></div>
+    <div class="seg-card"><div class="seg-icon">⚠️</div><div class="seg-pct" style="color:var(--yellow)">${dd.seg.atrisk}%</div><div class="seg-label">이탈위험</div></div>
+  </div>`;
+}
+
+// ══════════════════════════════════
+// 탭 3: 팬덤 관리
+// ══════════════════════════════════
+function tabFandom(){
+  const fcs=getFandoms();
+  const isAll=currentLeague==='all';
+  let fcTable='';
+  if(isAll){
+    Object.entries(FANDOMS).forEach(([lg,fs])=>{
+      fcTable+=`<tr><td colspan="6" style="background:rgba(255,255,255,.02);font-weight:700;color:var(--${lg})">${LEAGUE_ICONS[lg]} ${LEAGUE_NAMES[lg]}</td></tr>`;
+      fs.forEach(f=>{fcTable+=`<tr><td>${f.name}</td><td>${f.score.toLocaleString()}</td><td>${f.health}</td><td>${f.voteRate}</td><td>${f.reportRate}</td><td><button class="btn btn-gold" onclick="showToast('📋 ${f.name} 상세')">상세</button></td></tr>`});
+    });
+  } else {
+    (FANDOMS[currentLeague]||[]).forEach(f=>{fcTable+=`<tr><td>${f.name}</td><td>${f.score.toLocaleString()}</td><td>${f.health}</td><td>${f.voteRate}</td><td>${f.reportRate}</td><td><button class="btn btn-gold" onclick="showToast('📋 ${f.name} 상세')">상세</button></td></tr>`});
+  }
+  // 화력 대전 데이터
+  const fireFcs=fcs.sort((a,b)=>b.score-a.score);
+  return `<div class="page-title">🏛️ FANDOM MANAGEMENT</div><div class="page-sub">팬덤 관리${!isAll?' · '+LEAGUE_NAMES[currentLeague]:''}</div>
+  ${filterHTML()}
+  <div class="chart-section"><div class="chart-title">팬클럽 현황 — FANCLUB STATUS</div>
+    <table class="data-table"><tr><th>팬클럽</th><th>점수</th><th>건강도</th><th>투표참여</th><th>신고율</th><th>관리</th></tr>${fcTable}</table>
+  </div>
+  ${!isAll&&fcs.length>=2?`<div class="chart-section"><div class="chart-title">⚔️ 라이벌 비교 — RIVAL</div>
+    <div class="rival-card">
+      <div class="rival-team"><div class="rival-team-name" style="color:var(--gold)">${fcs[0].name} #1</div><div class="rival-team-score" style="color:var(--gold)">${fcs[0].score.toLocaleString()}</div></div>
+      <div class="rival-vs">VS</div>
+      <div class="rival-team"><div class="rival-team-name">${fcs[1].name} #2</div><div class="rival-team-score" style="color:var(--blue)">${fcs[1].score.toLocaleString()}</div></div>
+      <div class="rival-gap"><div class="rival-gap-val" style="color:${(fcs[0].score-fcs[1].score)<10000?'var(--danger)':'var(--safe)'}">${(fcs[0].score-fcs[1].score).toLocaleString()}</div><div style="font-size:8px;color:var(--muted)">${(fcs[0].score-fcs[1].score)<10000?'🔴 접전':'🟢 안전'}</div></div>
+    </div>
+    <button class="btn btn-gold" onclick="showToast('🏆 라이벌 이벤트 발행!')">🏆 라이벌 이벤트 — Rival Event</button>
+  </div>`:``}
+  <div class="chart-section"><div class="chart-title">🔥 화력 랭킹 — AP RANKING</div>
+    <table class="data-table"><tr><th>#</th><th>팬클럽</th><th>점수</th><th>리그</th></tr>
+    ${fireFcs.map((f,i)=>`<tr${i===0?' style="background:rgba(240,192,64,.06)"':''}><td style="font-family:'Orbitron',monospace;color:${i===0?'var(--gold)':'var(--text)'}">${i===0?'👑':i+1}</td><td style="${i===0?'color:var(--gold);font-weight:900':''}">${f.name}</td><td style="font-family:'Orbitron',monospace;color:var(--gold)">${f.score.toLocaleString()}</td><td>${LEAGUE_ICONS[f.league]}</td></tr>`).join('')}
+    </table>
+  </div>
+  <div style="display:flex;gap:8px"><button class="btn btn-gold" onclick="showToast('📢 전체 공지 발송')">전체 공지</button><button class="btn btn-blue" onclick="showToast('⏱️ 투표 기간 조정')">기간 조정</button></div>`;
+}
+
+// ══════════════════════════════════
+// 탭 4: 신고 처리
+// ══════════════════════════════════
+function tabReport(){
+  const dd=d();
+  const allReports=[
+    {date:'03.29',reporter:'별빛수호자',target:'dark_user_42',type:'데이터 조작',urgency:'긴급',status:'미처리',league:'star'},
+    {date:'03.29',reporter:'우주소녀',target:'toxic_fan',type:'커뮤니티 파괴',urgency:'보통',status:'미처리',league:'dust'},
+    {date:'03.28',reporter:'달빛전사',target:'scammer_01',type:'경제 교란',urgency:'긴급',status:'처리중',league:'planet'},
+    {date:'03.28',reporter:'성운기사',target:'spam_bot',type:'데이터 조작',urgency:'보통',status:'완료',league:'nova'},
+    {date:'03.27',reporter:'퀘이사왕',target:'hate_speech',type:'커뮤니티 파괴',urgency:'긴급',status:'완료',league:'quasar'},
+  ];
+  const filtered=currentLeague==='all'?allReports:allReports.filter(r=>r.league===currentLeague);
+  return `<div class="page-title">🛡️ HIGH GUARD</div><div class="page-sub">신고 처리</div>
+  ${filterHTML()}
+  <div class="card-row c4">
+    <div class="kpi-card"><div class="kpi-label">미처리 PENDING</div><div class="kpi-val" style="color:var(--red)">${dd.reports}</div></div>
+    <div class="kpi-card"><div class="kpi-label">봇 의심 BOTS</div><div class="kpi-val" style="color:var(--yellow)">${dd.bots}</div></div>
+    <div class="kpi-card"><div class="kpi-label">오늘 처리 DONE</div><div class="kpi-val" style="color:var(--green)">12</div></div>
+    <div class="kpi-card"><div class="kpi-label">블랙리스트 BL</div><div class="kpi-val" style="color:var(--muted)">37</div></div>
+  </div>
+  <div class="chart-section"><div class="chart-title">신고 목록 — REPORTS</div>
+    <table class="data-table"><tr><th>날짜</th><th>신고자</th><th>대상</th><th>유형</th><th>리그</th><th>상태</th><th>조치</th></tr>
+    ${filtered.map(r=>`<tr><td>${r.date}</td><td>${r.reporter}</td><td>${r.target}</td><td><span class="badge badge-purple">${r.type}</span></td><td>${LEAGUE_ICONS[r.league]}</td><td><span class="badge ${r.status==='미처리'?'badge-red':r.status==='처리중'?'badge-yellow':'badge-green'}">${r.status}</span></td><td>${r.status!=='완료'?`<button class="btn btn-gold" onclick="showToast('✅ 처리')">처리</button>`:'—'}</td></tr>`).join('')}
+    </table>
+  </div>`;
+}
+
+// ══════════════════════════════════
+// 탭 5: 경제 감시
+// ══════════════════════════════════
+function tabEconomy(){
+  const dd=d();const wk=randomBars(7,200,800);
+  return `<div class="page-title">💎 ORACLE AUDITOR</div><div class="page-sub">경제 감시</div>
+  ${filterHTML()}
+  <div class="card-row c4">
+    <div class="kpi-card"><div class="kpi-label">유통량 CIRC.</div><div class="kpi-val" style="color:var(--gold)">${currentLeague==='all'?'1.24B':dd.eco.volume}</div></div>
+    <div class="kpi-card"><div class="kpi-label">발행 ISSUED</div><div class="kpi-val" style="color:var(--green)">${dd.eco.issued}</div></div>
+    <div class="kpi-card"><div class="kpi-label">소모 SPENT</div><div class="kpi-val" style="color:var(--red)">${dd.eco.spent}</div></div>
+    <div class="kpi-card"><div class="kpi-label">거래량 VOL</div><div class="kpi-val" style="color:var(--blue)">${dd.eco.volume}</div></div>
+  </div>
+  <div class="chart-section"><div class="chart-title">주간 거래량 — WEEKLY VOL</div>${barChart(wk,'var(--green)')}</div>`;
+}
+
+// ══════════════════════════════════
+// 탭 6: 시스템 설정
+// ══════════════════════════════════
+function tabSettings(){
+  const isAll=currentLeague==='all';
+  const promoRows=isAll?
+    Object.entries(PROMO_FORMULA).map(([lg,f])=>`<tr><td>${LEAGUE_ICONS[lg]} ${LEAGUE_NAMES[lg]}</td><td style="font-family:'Orbitron',monospace;font-size:10px;color:var(--gold)">${f}</td></tr>`).join('')
+    :`<tr><td>${LEAGUE_ICONS[currentLeague]} ${LEAGUE_NAMES[currentLeague]}</td><td style="font-family:'Orbitron',monospace;font-size:10px;color:var(--gold)">${PROMO_FORMULA[currentLeague]}</td></tr>`;
+  return `<div class="page-title">⚙️ SETTINGS</div><div class="page-sub">시스템 설정</div>
+  ${filterHTML()}
+  <div class="chart-section"><div class="chart-title">시즌 관리 — SEASON</div>
+    <div style="display:flex;align-items:center;gap:12px"><div><div style="font-size:9px;color:var(--muted)">현재 시즌</div><div style="font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--gold)">SEASON 3</div></div><div style="flex:1"><div style="font-size:9px;color:var(--muted)">남은 기간</div><div style="font-family:'Orbitron',monospace;font-size:13px">12일 14시간</div></div><button class="btn btn-gold" onclick="showToast('⚙️ 시즌 설정')">설정</button></div>
+  </div>
+  <div class="chart-section"><div class="chart-title">승격 공식 — PROMOTION FORMULA</div>
+    <table class="data-table"><tr><th>구간</th><th>공식</th></tr>${promoRows}</table>
+  </div>
+  <div class="chart-section"><div class="chart-title">공지 발행 — NOTICE</div>
+    <div class="form-group"><div class="form-label">제목</div><input class="form-input" placeholder="공지 제목..."></div>
+    <div class="form-group"><div class="form-label">내용</div><textarea class="form-input" placeholder="공지 내용..."></textarea></div>
+    <button class="btn btn-gold" onclick="showToast('📢 공지 발행!')">발행 Publish</button>
+  </div>`;
+}
+
+// ══════════════════════════════════
+// 탭 7: 재판소
+// ══════════════════════════════════
+function tabCourt(){
+  const allCases=[
+    {id:'CASE-047',defendant:'dark_user_42',charge:'데이터 무결성 위반 (T1)',status:'심리중',verdict:'—',league:'star'},
+    {id:'CASE-046',defendant:'scammer_01',charge:'경제 질서 교란 (T3)',status:'판결완료',verdict:'주권박탈 30일',league:'planet'},
+    {id:'CASE-045',defendant:'toxic_fan',charge:'커뮤니티 조화 파괴 (T2)',status:'판결완료',verdict:'영혼침체 7일',league:'dust'},
+  ];
+  const filtered=currentLeague==='all'?allCases:allCases.filter(c=>c.league===currentLeague);
+  return `<div class="page-title">⚖️ SOVEREIGN COURT</div><div class="page-sub">재판소</div>
+  ${filterHTML()}
+  <div class="chart-section"><div class="chart-title">재판 안건 — CASES</div>
+    <table class="data-table"><tr><th>안건</th><th>피고</th><th>혐의</th><th>리그</th><th>상태</th><th>판결</th></tr>
+    ${filtered.map(c=>`<tr><td style="font-family:'Orbitron',monospace;color:var(--gold)">${c.id}</td><td>${c.defendant}</td><td><span class="badge badge-red">${c.charge}</span></td><td>${LEAGUE_ICONS[c.league]}</td><td><span class="badge ${c.status==='심리중'?'badge-yellow':'badge-green'}">${c.status}</span></td><td>${c.verdict}</td></tr>`).join('')}
+    </table>
+  </div>
+  <div class="chart-section"><div class="chart-title">관리자 로그 — ADMIN LOG</div>
+    <table class="data-table"><tr><th>시간</th><th>조치</th><th>관리자</th></tr>
+    ${[['03.29 14:23','봇 의심 4건 감시 등록','Admin_001'],['03.29 13:10','CASE-047 심리 개시','Admin_001'],['03.28 18:30','CASE-046 판결','Admin_002']].map(([t,a,admin])=>`<tr><td style="font-family:'Orbitron',monospace;font-size:10px;color:var(--muted)">${t}</td><td>${a}</td><td style="color:var(--gold)">${admin}</td></tr>`).join('')}
+    </table>
+  </div>`;
+}
+
+// ══════════════════════════════════
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500)}
+renderSidebar();renderTab();
+</script>
+</body>
+</html>

@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>아키타입 프로필 — ASTERIA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --void:#030308;--panel:rgba(5,12,30,.96);
+  --border:rgba(200,175,80,.13);--gold:#f0c040;
+  --accent:#4a90d9;--text:#e8ecf4;--muted:rgba(160,180,210,.5);
+}
+html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-family:'Noto Sans KR',sans-serif;overflow-x:hidden}
+#starCanvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+#app{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative;z-index:1}
+
+.top-nav{display:flex;align-items:center;background:var(--panel);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0}
+.top-nav::-webkit-scrollbar{display:none}
+.top-nav-item{flex-shrink:0;display:flex;flex-direction:column;align-items:center;padding:10px 14px;cursor:pointer;text-decoration:none;color:var(--muted);border-bottom:2px solid transparent;gap:3px;transition:all .2s}
+.top-nav-item.active{color:var(--accent);border-bottom-color:var(--accent)}
+.top-nav-icon{font-size:18px}.top-nav-label{font-size:9px;font-weight:500;white-space:nowrap}
+
+.page-title{text-align:center;padding:18px 16px 4px;font-family:'Orbitron',monospace;font-size:14px;font-weight:900;color:var(--gold);letter-spacing:2px}
+.page-sub{text-align:center;font-size:10px;color:var(--muted);margin-bottom:14px}
+
+/* ── 프로필 카드 ── */
+.card-wrap{display:flex;justify-content:center;padding:0 16px;margin-bottom:18px}
+.profile-card{
+  width:360px;max-width:95vw;border-radius:24px;overflow:hidden;
+  position:relative;padding:28px 24px 20px;text-align:center;
+  border:2px solid rgba(240,192,64,.5);
+  box-shadow:0 0 0 4px rgba(240,192,64,.12),0 20px 60px rgba(0,0,0,.5);
+}
+.card-bg{position:absolute;inset:0;z-index:0}
+.card-stars{position:absolute;inset:0;z-index:1;overflow:hidden}
+.card-content{position:relative;z-index:2}
+
+/* 리그 배지 */
+.card-league{
+  display:inline-block;padding:4px 14px;border-radius:12px;
+  font-size:11px;font-weight:700;margin-bottom:14px;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+  font-family:'Orbitron',monospace;letter-spacing:1px;
+}
+/* 아키타입 아이콘 */
+.card-archetype-icon{font-size:72px;margin-bottom:8px;filter:drop-shadow(0 0 16px rgba(240,192,64,.4))}
+/* 아키타입 영문 이름 */
+.card-archetype-en{
+  font-family:'Orbitron',monospace;font-size:30px;font-weight:900;
+  color:var(--gold);letter-spacing:3px;margin-bottom:4px;
+  text-shadow:0 0 20px rgba(240,192,64,.3);
+}
+/* 아키타입 한글 이름 */
+.card-archetype-kr{font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px}
+/* 설명 */
+.card-desc{font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:18px;padding:0 10px}
+/* 미니 헥사곤 */
+.card-hex-wrap{display:flex;justify-content:center;margin-bottom:14px}
+/* 성궤 번호 + 닉네임 */
+.card-orbit{
+  font-family:'Orbitron',monospace;font-size:12px;color:var(--gold);
+  letter-spacing:2px;margin-bottom:4px;opacity:.7;
+}
+.card-nickname{font-size:14px;font-weight:900;color:var(--text)}
+/* 시즌 뱃지 */
+.card-season{margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08)}
+.card-season-title{font-size:9px;color:var(--muted);letter-spacing:1.5px;margin-bottom:8px;font-family:'Orbitron',monospace}
+.card-badges{display:flex;gap:10px;justify-content:center}
+.season-badge{
+  width:44px;display:flex;flex-direction:column;align-items:center;gap:2px;
+}
+.sb-circle{
+  width:38px;height:38px;border-radius:50%;
+  background:rgba(255,255,255,.06);border:1.5px solid rgba(240,192,64,.35);
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+  box-shadow:0 0 8px rgba(240,192,64,.1);
+}
+.sb-label{font-size:7px;color:var(--gold);font-family:'Orbitron',monospace;font-weight:700}
+/* 워터마크 */
+.card-watermark{
+  font-family:'Orbitron',monospace;font-size:8px;color:rgba(255,255,255,.15);
+  letter-spacing:3px;margin-top:14px;
+}
+
+/* ── 공유 버튼 ── */
+.share-row{display:flex;gap:10px;justify-content:center;padding:0 16px 28px;flex-wrap:wrap}
+.share-btn{
+  display:flex;align-items:center;gap:6px;padding:10px 18px;border-radius:14px;
+  border:1px solid var(--border);background:rgba(255,255,255,.04);
+  cursor:pointer;font-size:12px;font-weight:600;font-family:'Noto Sans KR',sans-serif;
+  color:var(--text);transition:all .2s;
+}
+.share-btn:hover{transform:translateY(-2px);border-color:var(--gold)}
+.share-btn .s-icon{font-size:18px}
+.share-btn.insta{border-color:rgba(225,48,108,.4);color:#e1306c}
+.share-btn.twitter{border-color:rgba(29,161,242,.4);color:#1da1f2}
+.share-btn.kakao{border-color:rgba(254,229,0,.4);color:#fee500}
+.share-btn.link{border-color:rgba(240,192,64,.4);color:var(--gold)}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(12,12,26,.97);border:1px solid var(--border);border-radius:12px;padding:10px 20px;font-size:12px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<canvas id="starCanvas"></canvas>
+<div id="toast" class="toast"></div>
+
+<div id="app">
+  <nav class="top-nav">
+    <a class="top-nav-item" href="/"><div class="top-nav-icon">🏠</div><div class="top-nav-label">홈</div></a>
+    <a class="top-nav-item" href="/astra.html"><div class="top-nav-icon">⭐</div><div class="top-nav-label">아스트라</div></a>
+    <a class="top-nav-item" href="/room3d.html"><div class="top-nav-icon">🏡</div><div class="top-nav-label">내 방</div></a>
+    <a class="top-nav-item" href="/league.html"><div class="top-nav-icon">🌌</div><div class="top-nav-label">리그</div></a>
+    <a class="top-nav-item active" href="/archetype.html"><div class="top-nav-icon">🎭</div><div class="top-nav-label">아키타입</div></a>
+    <a class="top-nav-item" href="/shop.html"><div class="top-nav-icon">🛒</div><div class="top-nav-label">상점</div></a>
+  </nav>
+
+  <div class="page-title">ARCHETYPE PROFILE</div>
+  <div class="page-sub">나의 아키타입 프로필 카드 — My Archetype Card</div>
+
+  <div class="card-wrap">
+    <div class="profile-card" id="profileCard">
+      <canvas class="card-bg" id="cardBg"></canvas>
+      <div class="card-content">
+        <div class="card-league" id="cardLeague"></div>
+        <div class="card-archetype-icon" id="cardIcon"></div>
+        <div class="card-archetype-en" id="cardEn"></div>
+        <div class="card-archetype-kr" id="cardKr"></div>
+        <div class="card-desc" id="cardDesc"></div>
+        <div class="card-hex-wrap"><canvas id="miniHex" width="150" height="150"></canvas></div>
+        <div class="card-orbit" id="cardOrbit"></div>
+        <div class="card-nickname" id="cardNick"></div>
+        <div class="card-season">
+          <div class="card-season-title">SEASON HISTORY — 시즌 기록</div>
+          <div class="card-badges">
+            <div class="season-badge"><div class="sb-circle">🛡️</div><div class="sb-label">S1</div></div>
+            <div class="season-badge"><div class="sb-circle">♟️</div><div class="sb-label">S2</div></div>
+            <div class="season-badge"><div class="sb-circle">✨</div><div class="sb-label">S3</div></div>
+          </div>
+        </div>
+        <div class="card-watermark">ASTERIA — ARCHETYPE CARD</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="share-row">
+    <button class="share-btn insta" onclick="shareCard('instagram')"><span class="s-icon">📸</span>인스타</button>
+    <button class="share-btn twitter" onclick="shareCard('twitter')"><span class="s-icon">🐦</span>X</button>
+    <button class="share-btn kakao" onclick="shareCard('kakao')"><span class="s-icon">💬</span>카카오</button>
+    <button class="share-btn link" onclick="shareCard('link')"><span class="s-icon">🔗</span>링크복사</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+//  별빛 배경
+// ══════════════════════════════════════════
+(function(){
+  const cv=document.getElementById('starCanvas'),ctx=cv.getContext('2d');
+  let W,H;function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight}
+  resize();addEventListener('resize',resize);
+  const S=Array.from({length:160},()=>({x:Math.random()*2000,y:Math.random()*2000,r:Math.random()<.8?Math.random()*.6+.3:Math.random()*1.2+.8,b:Math.random()*.5+.3,p:Math.random()*6.28,s:Math.random()*.008+.002,c:Math.random()<.08?'#f0c040':Math.random()<.06?'#c084fc':'#fff'}));
+  (function loop(){ctx.clearRect(0,0,W,H);S.forEach(s=>{s.p+=s.s;const a=s.b*(.5+.5*Math.sin(s.p));ctx.globalAlpha=a;ctx.fillStyle=s.c;ctx.beginPath();ctx.arc(s.x%W,s.y%H,s.r,0,6.28);ctx.fill()});ctx.globalAlpha=1;requestAnimationFrame(loop)})();
+})();
+
+// ══════════════════════════════════════════
+//  데이터
+// ══════════════════════════════════════════
+const STATS_DEF=[
+  {key:'LOY',name:'성실',en:'Loyalty',color:'#f0c040'},
+  {key:'ACT',name:'행동',en:'Action',color:'#ef4444'},
+  {key:'SOC',name:'사회',en:'Social',color:'#38bdf8'},
+  {key:'ECO',name:'경제',en:'Economy',color:'#10b981'},
+  {key:'CRE',name:'창의',en:'Creative',color:'#a78bfa'},
+  {key:'INT',name:'지성',en:'Intelligence',color:'#fbbf24'},
+];
+const DEFAULT_STATS={LOY:145,ACT:89,SOC:67,ECO:34,CRE:112,INT:78};
+const stored=JSON.parse(localStorage.getItem('asteria_stats')||'null');
+const myStats={};
+STATS_DEF.forEach(s=>{myStats[s.key]=stored?.[s.key]??DEFAULT_STATS[s.key]});
+
+const savedChars=JSON.parse(localStorage.getItem('asteria_chars')||'null');
+const NICKNAME=savedChars?.my?.name||'별빛 탐험가';
+const ORBIT_NUM='#00,000,001';
+const LEAGUE='⭐ 스타 리그 · Lv.23 — Star League';
+
+// ══════════════════════════════════════════
+//  15종 아키타입 매핑
+// ══════════════════════════════════════════
+const ARCHETYPES={
+  'LOY+ACT':{en:'GUARDIAN',kr:'수호자형',icon:'🛡️',desc:'팬덤의 방패, 묵묵히 지키는 수호자 / The silent shield of the fandom'},
+  'LOY+SOC':{en:'HEALER',kr:'힐러형',icon:'💚',desc:'따뜻한 위로로 팬덤을 치유하는 존재 / A warm presence that heals the fandom'},
+  'LOY+INT':{en:'SAGE',kr:'현자형',icon:'📜',desc:'깊은 지혜로 팬덤을 이끄는 현인 / A wise guide leading the fandom'},
+  'LOY+CRE':{en:'DREAMER',kr:'몽상가형',icon:'🌙',desc:'별빛 속 꿈을 그리는 몽상가 / A dreamer painting dreams among stars'},
+  'LOY+ECO':{en:'PIONEER',kr:'개척자형',icon:'🚀',desc:'새로운 길을 여는 팬덤의 개척자 / A pioneer carving new paths'},
+  'ACT+SOC':{en:'CHEERLEADER',kr:'응원단장형',icon:'📣',desc:'열정적인 에너지로 팬덤을 이끄는 단장 / Leading the fandom with passionate energy'},
+  'ACT+CRE':{en:'EXPLORER',kr:'모험가형',icon:'🗺️',desc:'끝없는 도전과 탐험의 모험가 / An adventurer of endless challenges'},
+  'ACT+ECO':{en:'WARRIOR',kr:'전사형',icon:'⚔️',desc:'팬덤을 위해 싸우는 전사 / A warrior fighting for the fandom'},
+  'ACT+INT':{en:'STRATEGIST',kr:'전략가형',icon:'♟️',desc:'정확한 분석으로 승리를 이끄는 전략가 / A strategist leading through analysis'},
+  'SOC+CRE':{en:'DIPLOMAT',kr:'외교관형',icon:'🤝',desc:'사람을 연결하고 조화를 이끄는 외교관 / A diplomat creating harmony'},
+  'SOC+INT':{en:'ANALYST',kr:'분석가형',icon:'🔍',desc:'데이터로 팬덤을 읽는 분석가 / An analyst reading the fandom through data'},
+  'SOC+ECO':{en:'COLLECTOR',kr:'수집가형',icon:'💎',desc:'희귀한 것들을 모으는 열정적 수집가 / A passionate collector of rare treasures'},
+  'CRE+INT':{en:'CREATOR',kr:'창작자형',icon:'✨',desc:'새로운 콘텐츠를 만드는 창작자 / A creator crafting new content'},
+  'CRE+ECO':{en:'ARTIST',kr:'예술가형',icon:'🎨',desc:'아름다움을 창조하는 예술가 / An artist creating beauty'},
+  'INT+ECO':{en:'COMMANDER',kr:'지휘관형',icon:'👑',desc:'전체를 지휘하는 팬덤의 지휘관 / A commander directing the fandom'},
+};
+
+function getArchetype(){
+  const keys=Object.keys(myStats);
+  const sorted=keys.sort((a,b)=>myStats[b]-myStats[a]);
+  const top2=[sorted[0],sorted[1]].sort().join('+');
+  return ARCHETYPES[top2]||ARCHETYPES[sorted[0]+'+'+sorted[1]]||ARCHETYPES['LOY+ACT'];
+}
+
+// ══════════════════════════════════════════
+//  카드 배경 (Canvas 그라디언트 + 별)
+// ══════════════════════════════════════════
+function drawCardBg(){
+  const cv=document.getElementById('cardBg');
+  const card=cv.parentElement;
+  cv.width=card.clientWidth;
+  cv.height=card.clientHeight;
+  const ctx=cv.getContext('2d');
+
+  // 그라디언트
+  const grd=ctx.createLinearGradient(0,0,cv.width,cv.height);
+  grd.addColorStop(0,'#0a0a2e');
+  grd.addColorStop(0.5,'#120830');
+  grd.addColorStop(1,'#0d0820');
+  ctx.fillStyle=grd;
+  ctx.fillRect(0,0,cv.width,cv.height);
+
+  // 별 패턴
+  for(let i=0;i<60;i++){
+    const x=Math.random()*cv.width,y=Math.random()*cv.height;
+    const r=Math.random()*1.2+.3;
+    const a=Math.random()*.4+.1;
+    ctx.globalAlpha=a;
+    ctx.fillStyle=Math.random()<.2?'#f0c040':'#fff';
+    ctx.beginPath();ctx.arc(x,y,r,0,6.28);ctx.fill();
+  }
+  ctx.globalAlpha=1;
+
+  // 아래쪽 은은한 빛
+  const glow=ctx.createRadialGradient(cv.width/2,cv.height*0.4,0,cv.width/2,cv.height*0.4,cv.width*0.6);
+  glow.addColorStop(0,'rgba(240,192,64,.06)');
+  glow.addColorStop(1,'transparent');
+  ctx.fillStyle=glow;
+  ctx.fillRect(0,0,cv.width,cv.height);
+}
+
+// ══════════════════════════════════════════
+//  미니 헥사곤
+// ══════════════════════════════════════════
+function drawMiniHex(){
+  const cv=document.getElementById('miniHex');
+  const ctx=cv.getContext('2d');
+  const cx=75,cy=75,R=55,maxVal=200,axes=6;
+
+  // 격자
+  for(let g=1;g<=3;g++){
+    const r=R*(g/3);
+    ctx.beginPath();
+    for(let i=0;i<=axes;i++){
+      const a=(i%axes)*(Math.PI*2/axes)-Math.PI/2;
+      const px=cx+Math.cos(a)*r,py=cy+Math.sin(a)*r;
+      if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    }
+    ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;ctx.stroke();
+  }
+
+  // 내 스탯
+  ctx.beginPath();
+  STATS_DEF.forEach((s,i)=>{
+    const a=i*(Math.PI*2/axes)-Math.PI/2;
+    const v=Math.min(1,myStats[s.key]/maxVal);
+    const px=cx+Math.cos(a)*R*v,py=cy+Math.sin(a)*R*v;
+    if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+  });
+  ctx.closePath();
+  ctx.fillStyle='rgba(240,192,64,.25)';ctx.fill();
+  ctx.strokeStyle='rgba(240,192,64,.8)';ctx.lineWidth=1.5;ctx.stroke();
+
+  // 점 + 라벨
+  STATS_DEF.forEach((s,i)=>{
+    const a=i*(Math.PI*2/axes)-Math.PI/2;
+    const v=Math.min(1,myStats[s.key]/maxVal);
+    const px=cx+Math.cos(a)*R*v,py=cy+Math.sin(a)*R*v;
+    ctx.beginPath();ctx.arc(px,py,2.5,0,6.28);ctx.fillStyle=s.color;ctx.fill();
+    const lx=cx+Math.cos(a)*(R+14),ly=cy+Math.sin(a)*(R+14);
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.font='bold 8px Orbitron,monospace';ctx.fillStyle='rgba(255,255,255,.6)';
+    ctx.fillText(s.key,lx,ly);
+  });
+}
+
+// ══════════════════════════════════════════
+//  카드 렌더
+// ══════════════════════════════════════════
+function renderCard(){
+  const arch=getArchetype();
+  document.getElementById('cardLeague').textContent=LEAGUE;
+  document.getElementById('cardIcon').textContent=arch.icon;
+  document.getElementById('cardEn').textContent=arch.en;
+  document.getElementById('cardKr').textContent=arch.kr;
+  document.getElementById('cardDesc').textContent=arch.desc;
+  document.getElementById('cardOrbit').textContent=ORBIT_NUM;
+  document.getElementById('cardNick').textContent=NICKNAME;
+
+  setTimeout(()=>{
+    drawCardBg();
+    drawMiniHex();
+  },100);
+}
+
+// ══════════════════════════════════════════
+//  SNS 공유
+// ══════════════════════════════════════════
+async function shareCard(platform){
+  const card=document.getElementById('profileCard');
+  try{
+    const canvas=await html2canvas(card,{
+      backgroundColor:null,scale:2,useCORS:true,
+    });
+    const dataUrl=canvas.toDataURL('image/png');
+
+    if(platform==='link'){
+      await navigator.clipboard?.writeText(location.href);
+      showToast('🔗 링크가 복사되었습니다! — Link copied!');
+      return;
+    }
+
+    // 이미지 다운로드 (모바일에서 저장 후 공유)
+    const link=document.createElement('a');
+    link.download=`asteria_archetype_${getArchetype().en.toLowerCase()}.png`;
+    link.href=dataUrl;
+    link.click();
+
+    const urls={
+      instagram:'https://www.instagram.com/',
+      twitter:`https://twitter.com/intent/tweet?text=${encodeURIComponent('나의 아스테리아 아키타입은 '+getArchetype().en+'! #ASTERIA #아스테리아')}`,
+      kakao:`https://story.kakao.com/share?url=${encodeURIComponent(location.href)}`,
+    };
+    if(urls[platform]) setTimeout(()=>window.open(urls[platform],'_blank'),500);
+    showToast('📸 카드 이미지가 저장되었습니다! — Card saved!');
+  }catch(e){
+    console.error(e);
+    showToast('공유 중 오류가 발생했습니다');
+  }
+}
+
+// ══════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+renderCard();
+</script>
+</body>
+</html>

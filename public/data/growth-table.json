@@ -1,0 +1,1777 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "maxLevel": 100,
+    "description": "아스테리아 100단계 성장 테이블",
+    "xpFormula": "floor(80 * level^1.4 * curveMultiplier)",
+    "sovereigntyFormula": "1.0 + (level-1) * 9.0/99"
+  },
+  "starRanks": [
+    {
+      "name": "성진",
+      "levelRange": [
+        1,
+        10
+      ],
+      "description": "성진 등급 (1~10레벨)"
+    },
+    {
+      "name": "성아",
+      "levelRange": [
+        11,
+        20
+      ],
+      "description": "성아 등급 (11~20레벨)"
+    },
+    {
+      "name": "성령",
+      "levelRange": [
+        21,
+        30
+      ],
+      "description": "성령 등급 (21~30레벨)"
+    },
+    {
+      "name": "성민",
+      "levelRange": [
+        31,
+        40
+      ],
+      "description": "성민 등급 (31~40레벨)"
+    },
+    {
+      "name": "성기사",
+      "levelRange": [
+        41,
+        50
+      ],
+      "description": "성기사 등급 (41~50레벨)"
+    },
+    {
+      "name": "성주",
+      "levelRange": [
+        51,
+        60
+      ],
+      "description": "성주 등급 (51~60레벨)"
+    },
+    {
+      "name": "성령주",
+      "levelRange": [
+        61,
+        70
+      ],
+      "description": "성령주 등급 (61~70레벨)"
+    },
+    {
+      "name": "성현",
+      "levelRange": [
+        71,
+        80
+      ],
+      "description": "성현 등급 (71~80레벨)"
+    },
+    {
+      "name": "성존",
+      "levelRange": [
+        81,
+        90
+      ],
+      "description": "성존 등급 (81~90레벨)"
+    },
+    {
+      "name": "성신",
+      "levelRange": [
+        91,
+        100
+      ],
+      "description": "성신 등급 (91~100레벨)"
+    }
+  ],
+  "specialSkills": [
+    {
+      "id": "resonance_shield",
+      "name": "레조넌스쉴드",
+      "description": "아군 전체에 피해감소 실드 생성",
+      "unlockLevel": 40
+    },
+    {
+      "id": "oracle_burst",
+      "name": "오라클버스트",
+      "description": "예지력 기반 범위 폭발 공격",
+      "unlockLevel": 50
+    },
+    {
+      "id": "data_diving",
+      "name": "데이터다이빙",
+      "description": "적 데이터 해석으로 약점 노출",
+      "unlockLevel": 60
+    },
+    {
+      "id": "constellation_march",
+      "name": "성좌의진군",
+      "description": "성좌 동맹 전체 버프 발동",
+      "unlockLevel": 70
+    },
+    {
+      "id": "warden_of_zero",
+      "name": "워든오브제로",
+      "description": "절대방어 상태로 모든 피해 무효화",
+      "unlockLevel": 80
+    },
+    {
+      "id": "absolute_sovereign",
+      "name": "앱솔루트소버린",
+      "description": "궁극의 주권 발동, 전장 지배",
+      "unlockLevel": 100
+    }
+  ],
+  "populationDifficulty": [
+    {
+      "threshold": 100,
+      "multiplier": 0.5,
+      "label": "신생 서버"
+    },
+    {
+      "threshold": 1000,
+      "multiplier": 1,
+      "label": "성장 서버"
+    },
+    {
+      "threshold": 10000,
+      "multiplier": 1.5,
+      "label": "활성 서버"
+    },
+    {
+      "threshold": "Infinity",
+      "multiplier": 2.5,
+      "label": "대규모 서버"
+    }
+  ],
+  "levels": [
+    {
+      "level": 1,
+      "starRank": "성진",
+      "totalXp": 0,
+      "xpToNext": 40,
+      "xpCurveMultiplier": 0.5,
+      "sovereigntyMultiplier": 1,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 1,
+      "unlockSkill": null
+    },
+    {
+      "level": 2,
+      "starRank": "성진",
+      "totalXp": 40,
+      "xpToNext": 105,
+      "xpCurveMultiplier": 0.5,
+      "sovereigntyMultiplier": 1.09,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 1,
+      "unlockSkill": null
+    },
+    {
+      "level": 3,
+      "starRank": "성진",
+      "totalXp": 145,
+      "xpToNext": 186,
+      "xpCurveMultiplier": 0.5,
+      "sovereigntyMultiplier": 1.18,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 1,
+      "unlockSkill": null
+    },
+    {
+      "level": 4,
+      "starRank": "성진",
+      "totalXp": 331,
+      "xpToNext": 278,
+      "xpCurveMultiplier": 0.5,
+      "sovereigntyMultiplier": 1.27,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 1,
+      "unlockSkill": null
+    },
+    {
+      "level": 5,
+      "starRank": "성진",
+      "totalXp": 609,
+      "xpToNext": 380,
+      "xpCurveMultiplier": 0.5,
+      "sovereigntyMultiplier": 1.36,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 1,
+      "unlockSkill": null
+    },
+    {
+      "level": 6,
+      "starRank": "성진",
+      "totalXp": 989,
+      "xpToNext": 491,
+      "xpCurveMultiplier": 0.5,
+      "sovereigntyMultiplier": 1.45,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 1,
+      "unlockSkill": null
+    },
+    {
+      "level": 7,
+      "starRank": "성진",
+      "totalXp": 1480,
+      "xpToNext": 609,
+      "xpCurveMultiplier": 0.5,
+      "sovereigntyMultiplier": 1.55,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 1,
+      "unlockSkill": null
+    },
+    {
+      "level": 8,
+      "starRank": "성진",
+      "totalXp": 2089,
+      "xpToNext": 735,
+      "xpCurveMultiplier": 0.5,
+      "sovereigntyMultiplier": 1.64,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 1,
+      "unlockSkill": null
+    },
+    {
+      "level": 9,
+      "starRank": "성진",
+      "totalXp": 2824,
+      "xpToNext": 866,
+      "xpCurveMultiplier": 0.5,
+      "sovereigntyMultiplier": 1.73,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 1,
+      "unlockSkill": null
+    },
+    {
+      "level": 10,
+      "starRank": "성진",
+      "totalXp": 3690,
+      "xpToNext": 1004,
+      "xpCurveMultiplier": 0.5,
+      "sovereigntyMultiplier": 1.82,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 1,
+      "unlockSkill": null
+    },
+    {
+      "level": 11,
+      "starRank": "성아",
+      "totalXp": 4694,
+      "xpToNext": 1217,
+      "xpCurveMultiplier": 0.53,
+      "sovereigntyMultiplier": 1.91,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 1,
+      "unlockSkill": null
+    },
+    {
+      "level": 12,
+      "starRank": "성아",
+      "totalXp": 5911,
+      "xpToNext": 1452,
+      "xpCurveMultiplier": 0.56,
+      "sovereigntyMultiplier": 2,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 1,
+      "unlockSkill": null
+    },
+    {
+      "level": 13,
+      "starRank": "성아",
+      "totalXp": 7363,
+      "xpToNext": 1711,
+      "xpCurveMultiplier": 0.59,
+      "sovereigntyMultiplier": 2.09,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 1,
+      "unlockSkill": null
+    },
+    {
+      "level": 14,
+      "starRank": "성아",
+      "totalXp": 9074,
+      "xpToNext": 1995,
+      "xpCurveMultiplier": 0.62,
+      "sovereigntyMultiplier": 2.18,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 1,
+      "unlockSkill": null
+    },
+    {
+      "level": 15,
+      "starRank": "성아",
+      "totalXp": 11069,
+      "xpToNext": 2304,
+      "xpCurveMultiplier": 0.65,
+      "sovereigntyMultiplier": 2.27,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 1,
+      "unlockSkill": null
+    },
+    {
+      "level": 16,
+      "starRank": "성아",
+      "totalXp": 13373,
+      "xpToNext": 2638,
+      "xpCurveMultiplier": 0.68,
+      "sovereigntyMultiplier": 2.36,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 1,
+      "unlockSkill": null
+    },
+    {
+      "level": 17,
+      "starRank": "성아",
+      "totalXp": 16011,
+      "xpToNext": 2999,
+      "xpCurveMultiplier": 0.71,
+      "sovereigntyMultiplier": 2.45,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 1,
+      "unlockSkill": null
+    },
+    {
+      "level": 18,
+      "starRank": "성아",
+      "totalXp": 19010,
+      "xpToNext": 3386,
+      "xpCurveMultiplier": 0.74,
+      "sovereigntyMultiplier": 2.55,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 1,
+      "unlockSkill": null
+    },
+    {
+      "level": 19,
+      "starRank": "성아",
+      "totalXp": 22396,
+      "xpToNext": 3800,
+      "xpCurveMultiplier": 0.77,
+      "sovereigntyMultiplier": 2.64,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 1,
+      "unlockSkill": null
+    },
+    {
+      "level": 20,
+      "starRank": "성아",
+      "totalXp": 26196,
+      "xpToNext": 4242,
+      "xpCurveMultiplier": 0.8,
+      "sovereigntyMultiplier": 2.73,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 1,
+      "unlockSkill": null
+    },
+    {
+      "level": 21,
+      "starRank": "성령",
+      "totalXp": 30438,
+      "xpToNext": 4655,
+      "xpCurveMultiplier": 0.82,
+      "sovereigntyMultiplier": 2.82,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 2,
+      "unlockSkill": null
+    },
+    {
+      "level": 22,
+      "starRank": "성령",
+      "totalXp": 35093,
+      "xpToNext": 5090,
+      "xpCurveMultiplier": 0.84,
+      "sovereigntyMultiplier": 2.91,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 2,
+      "unlockSkill": null
+    },
+    {
+      "level": 23,
+      "starRank": "성령",
+      "totalXp": 40183,
+      "xpToNext": 5546,
+      "xpCurveMultiplier": 0.86,
+      "sovereigntyMultiplier": 3,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 2,
+      "unlockSkill": null
+    },
+    {
+      "level": 24,
+      "starRank": "성령",
+      "totalXp": 45729,
+      "xpToNext": 6023,
+      "xpCurveMultiplier": 0.88,
+      "sovereigntyMultiplier": 3.09,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 2,
+      "unlockSkill": null
+    },
+    {
+      "level": 25,
+      "starRank": "성령",
+      "totalXp": 51752,
+      "xpToNext": 6523,
+      "xpCurveMultiplier": 0.9,
+      "sovereigntyMultiplier": 3.18,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 2,
+      "unlockSkill": null
+    },
+    {
+      "level": 26,
+      "starRank": "성령",
+      "totalXp": 58275,
+      "xpToNext": 7044,
+      "xpCurveMultiplier": 0.92,
+      "sovereigntyMultiplier": 3.27,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 2,
+      "unlockSkill": null
+    },
+    {
+      "level": 27,
+      "starRank": "성령",
+      "totalXp": 65319,
+      "xpToNext": 7587,
+      "xpCurveMultiplier": 0.94,
+      "sovereigntyMultiplier": 3.36,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 2,
+      "unlockSkill": null
+    },
+    {
+      "level": 28,
+      "starRank": "성령",
+      "totalXp": 72906,
+      "xpToNext": 8154,
+      "xpCurveMultiplier": 0.96,
+      "sovereigntyMultiplier": 3.45,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 2,
+      "unlockSkill": null
+    },
+    {
+      "level": 29,
+      "starRank": "성령",
+      "totalXp": 81060,
+      "xpToNext": 8743,
+      "xpCurveMultiplier": 0.98,
+      "sovereigntyMultiplier": 3.55,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 2,
+      "unlockSkill": null
+    },
+    {
+      "level": 30,
+      "starRank": "성령",
+      "totalXp": 89803,
+      "xpToNext": 9355,
+      "xpCurveMultiplier": 1,
+      "sovereigntyMultiplier": 3.64,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 2,
+      "unlockSkill": null
+    },
+    {
+      "level": 31,
+      "starRank": "성민",
+      "totalXp": 99158,
+      "xpToNext": 10186,
+      "xpCurveMultiplier": 1.04,
+      "sovereigntyMultiplier": 3.73,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 2,
+      "unlockSkill": null
+    },
+    {
+      "level": 32,
+      "starRank": "성민",
+      "totalXp": 109344,
+      "xpToNext": 11059,
+      "xpCurveMultiplier": 1.08,
+      "sovereigntyMultiplier": 3.82,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 2,
+      "unlockSkill": null
+    },
+    {
+      "level": 33,
+      "starRank": "성민",
+      "totalXp": 120403,
+      "xpToNext": 11973,
+      "xpCurveMultiplier": 1.12,
+      "sovereigntyMultiplier": 3.91,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 2,
+      "unlockSkill": null
+    },
+    {
+      "level": 34,
+      "starRank": "성민",
+      "totalXp": 132376,
+      "xpToNext": 12930,
+      "xpCurveMultiplier": 1.16,
+      "sovereigntyMultiplier": 4,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 2,
+      "unlockSkill": null
+    },
+    {
+      "level": 35,
+      "starRank": "성민",
+      "totalXp": 145306,
+      "xpToNext": 13930,
+      "xpCurveMultiplier": 1.2,
+      "sovereigntyMultiplier": 4.09,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 2,
+      "unlockSkill": null
+    },
+    {
+      "level": 36,
+      "starRank": "성민",
+      "totalXp": 159236,
+      "xpToNext": 14973,
+      "xpCurveMultiplier": 1.24,
+      "sovereigntyMultiplier": 4.18,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 2,
+      "unlockSkill": null
+    },
+    {
+      "level": 37,
+      "starRank": "성민",
+      "totalXp": 174209,
+      "xpToNext": 16061,
+      "xpCurveMultiplier": 1.28,
+      "sovereigntyMultiplier": 4.27,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 2,
+      "unlockSkill": null
+    },
+    {
+      "level": 38,
+      "starRank": "성민",
+      "totalXp": 190270,
+      "xpToNext": 17193,
+      "xpCurveMultiplier": 1.32,
+      "sovereigntyMultiplier": 4.36,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 2,
+      "unlockSkill": null
+    },
+    {
+      "level": 39,
+      "starRank": "성민",
+      "totalXp": 207463,
+      "xpToNext": 18370,
+      "xpCurveMultiplier": 1.36,
+      "sovereigntyMultiplier": 4.45,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 2,
+      "unlockSkill": null
+    },
+    {
+      "level": 40,
+      "starRank": "성민",
+      "totalXp": 225833,
+      "xpToNext": 19593,
+      "xpCurveMultiplier": 1.4,
+      "sovereigntyMultiplier": 4.55,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 2,
+      "unlockSkill": {
+        "id": "resonance_shield",
+        "name": "레조넌스쉴드",
+        "description": "아군 전체에 피해감소 실드 생성"
+      }
+    },
+    {
+      "level": 41,
+      "starRank": "성기사",
+      "totalXp": 245426,
+      "xpToNext": 20571,
+      "xpCurveMultiplier": 1.42,
+      "sovereigntyMultiplier": 4.64,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 4,
+      "unlockSkill": null
+    },
+    {
+      "level": 42,
+      "starRank": "성기사",
+      "totalXp": 265997,
+      "xpToNext": 21577,
+      "xpCurveMultiplier": 1.44,
+      "sovereigntyMultiplier": 4.73,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 4,
+      "unlockSkill": null
+    },
+    {
+      "level": 43,
+      "starRank": "성기사",
+      "totalXp": 287574,
+      "xpToNext": 22609,
+      "xpCurveMultiplier": 1.46,
+      "sovereigntyMultiplier": 4.82,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 4,
+      "unlockSkill": null
+    },
+    {
+      "level": 44,
+      "starRank": "성기사",
+      "totalXp": 310183,
+      "xpToNext": 23669,
+      "xpCurveMultiplier": 1.48,
+      "sovereigntyMultiplier": 4.91,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 4,
+      "unlockSkill": null
+    },
+    {
+      "level": 45,
+      "starRank": "성기사",
+      "totalXp": 333852,
+      "xpToNext": 24755,
+      "xpCurveMultiplier": 1.5,
+      "sovereigntyMultiplier": 5,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 4,
+      "unlockSkill": null
+    },
+    {
+      "level": 46,
+      "starRank": "성기사",
+      "totalXp": 358607,
+      "xpToNext": 25869,
+      "xpCurveMultiplier": 1.52,
+      "sovereigntyMultiplier": 5.09,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 4,
+      "unlockSkill": null
+    },
+    {
+      "level": 47,
+      "starRank": "성기사",
+      "totalXp": 384476,
+      "xpToNext": 27011,
+      "xpCurveMultiplier": 1.54,
+      "sovereigntyMultiplier": 5.18,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 4,
+      "unlockSkill": null
+    },
+    {
+      "level": 48,
+      "starRank": "성기사",
+      "totalXp": 411487,
+      "xpToNext": 28180,
+      "xpCurveMultiplier": 1.56,
+      "sovereigntyMultiplier": 5.27,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 4,
+      "unlockSkill": null
+    },
+    {
+      "level": 49,
+      "starRank": "성기사",
+      "totalXp": 439667,
+      "xpToNext": 29377,
+      "xpCurveMultiplier": 1.58,
+      "sovereigntyMultiplier": 5.36,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 4,
+      "unlockSkill": null
+    },
+    {
+      "level": 50,
+      "starRank": "성기사",
+      "totalXp": 469044,
+      "xpToNext": 30603,
+      "xpCurveMultiplier": 1.6,
+      "sovereigntyMultiplier": 5.45,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 4,
+      "unlockSkill": {
+        "id": "oracle_burst",
+        "name": "오라클버스트",
+        "description": "예지력 기반 범위 폭발 공격"
+      }
+    },
+    {
+      "level": 51,
+      "starRank": "성주",
+      "totalXp": 499647,
+      "xpToNext": 32250,
+      "xpCurveMultiplier": 1.64,
+      "sovereigntyMultiplier": 5.55,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 4,
+      "unlockSkill": null
+    },
+    {
+      "level": 52,
+      "starRank": "성주",
+      "totalXp": 531897,
+      "xpToNext": 33947,
+      "xpCurveMultiplier": 1.68,
+      "sovereigntyMultiplier": 5.64,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 4,
+      "unlockSkill": null
+    },
+    {
+      "level": 53,
+      "starRank": "성주",
+      "totalXp": 565844,
+      "xpToNext": 35694,
+      "xpCurveMultiplier": 1.72,
+      "sovereigntyMultiplier": 5.73,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 4,
+      "unlockSkill": null
+    },
+    {
+      "level": 54,
+      "starRank": "성주",
+      "totalXp": 601538,
+      "xpToNext": 37493,
+      "xpCurveMultiplier": 1.76,
+      "sovereigntyMultiplier": 5.82,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 4,
+      "unlockSkill": null
+    },
+    {
+      "level": 55,
+      "starRank": "성주",
+      "totalXp": 639031,
+      "xpToNext": 39343,
+      "xpCurveMultiplier": 1.8,
+      "sovereigntyMultiplier": 5.91,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 4,
+      "unlockSkill": null
+    },
+    {
+      "level": 56,
+      "starRank": "성주",
+      "totalXp": 678374,
+      "xpToNext": 41244,
+      "xpCurveMultiplier": 1.84,
+      "sovereigntyMultiplier": 6,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 4,
+      "unlockSkill": null
+    },
+    {
+      "level": 57,
+      "starRank": "성주",
+      "totalXp": 719618,
+      "xpToNext": 43198,
+      "xpCurveMultiplier": 1.88,
+      "sovereigntyMultiplier": 6.09,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 4,
+      "unlockSkill": null
+    },
+    {
+      "level": 58,
+      "starRank": "성주",
+      "totalXp": 762816,
+      "xpToNext": 45205,
+      "xpCurveMultiplier": 1.92,
+      "sovereigntyMultiplier": 6.18,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 4,
+      "unlockSkill": null
+    },
+    {
+      "level": 59,
+      "starRank": "성주",
+      "totalXp": 808021,
+      "xpToNext": 47264,
+      "xpCurveMultiplier": 1.96,
+      "sovereigntyMultiplier": 6.27,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 4,
+      "unlockSkill": null
+    },
+    {
+      "level": 60,
+      "starRank": "성주",
+      "totalXp": 855285,
+      "xpToNext": 49377,
+      "xpCurveMultiplier": 2,
+      "sovereigntyMultiplier": 6.36,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 4,
+      "unlockSkill": {
+        "id": "data_diving",
+        "name": "데이터다이빙",
+        "description": "적 데이터 해석으로 약점 노출"
+      }
+    },
+    {
+      "level": 61,
+      "starRank": "성령주",
+      "totalXp": 904662,
+      "xpToNext": 51797,
+      "xpCurveMultiplier": 2.05,
+      "sovereigntyMultiplier": 6.45,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 7,
+      "unlockSkill": null
+    },
+    {
+      "level": 62,
+      "starRank": "성령주",
+      "totalXp": 956459,
+      "xpToNext": 54282,
+      "xpCurveMultiplier": 2.1,
+      "sovereigntyMultiplier": 6.55,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 7,
+      "unlockSkill": null
+    },
+    {
+      "level": 63,
+      "starRank": "성령주",
+      "totalXp": 1010741,
+      "xpToNext": 56833,
+      "xpCurveMultiplier": 2.15,
+      "sovereigntyMultiplier": 6.64,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 7,
+      "unlockSkill": null
+    },
+    {
+      "level": 64,
+      "starRank": "성령주",
+      "totalXp": 1067574,
+      "xpToNext": 59451,
+      "xpCurveMultiplier": 2.2,
+      "sovereigntyMultiplier": 6.73,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 7,
+      "unlockSkill": null
+    },
+    {
+      "level": 65,
+      "starRank": "성령주",
+      "totalXp": 1127025,
+      "xpToNext": 62137,
+      "xpCurveMultiplier": 2.25,
+      "sovereigntyMultiplier": 6.82,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 7,
+      "unlockSkill": null
+    },
+    {
+      "level": 66,
+      "starRank": "성령주",
+      "totalXp": 1189162,
+      "xpToNext": 64890,
+      "xpCurveMultiplier": 2.3,
+      "sovereigntyMultiplier": 6.91,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 7,
+      "unlockSkill": null
+    },
+    {
+      "level": 67,
+      "starRank": "성령주",
+      "totalXp": 1254052,
+      "xpToNext": 67711,
+      "xpCurveMultiplier": 2.35,
+      "sovereigntyMultiplier": 7,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 7,
+      "unlockSkill": null
+    },
+    {
+      "level": 68,
+      "starRank": "성령주",
+      "totalXp": 1321763,
+      "xpToNext": 70601,
+      "xpCurveMultiplier": 2.4,
+      "sovereigntyMultiplier": 7.09,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 7,
+      "unlockSkill": null
+    },
+    {
+      "level": 69,
+      "starRank": "성령주",
+      "totalXp": 1392364,
+      "xpToNext": 73560,
+      "xpCurveMultiplier": 2.45,
+      "sovereigntyMultiplier": 7.18,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 7,
+      "unlockSkill": null
+    },
+    {
+      "level": 70,
+      "starRank": "성령주",
+      "totalXp": 1465924,
+      "xpToNext": 76589,
+      "xpCurveMultiplier": 2.5,
+      "sovereigntyMultiplier": 7.27,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 7,
+      "unlockSkill": {
+        "id": "constellation_march",
+        "name": "성좌의진군",
+        "description": "성좌 동맹 전체 버프 발동"
+      }
+    },
+    {
+      "level": 71,
+      "starRank": "성현",
+      "totalXp": 1542513,
+      "xpToNext": 79687,
+      "xpCurveMultiplier": 2.55,
+      "sovereigntyMultiplier": 7.36,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 7,
+      "unlockSkill": null
+    },
+    {
+      "level": 72,
+      "starRank": "성현",
+      "totalXp": 1622200,
+      "xpToNext": 82856,
+      "xpCurveMultiplier": 2.6,
+      "sovereigntyMultiplier": 7.45,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 7,
+      "unlockSkill": null
+    },
+    {
+      "level": 73,
+      "starRank": "성현",
+      "totalXp": 1705056,
+      "xpToNext": 86096,
+      "xpCurveMultiplier": 2.65,
+      "sovereigntyMultiplier": 7.55,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 7,
+      "unlockSkill": null
+    },
+    {
+      "level": 74,
+      "starRank": "성현",
+      "totalXp": 1791152,
+      "xpToNext": 89408,
+      "xpCurveMultiplier": 2.7,
+      "sovereigntyMultiplier": 7.64,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 7,
+      "unlockSkill": null
+    },
+    {
+      "level": 75,
+      "starRank": "성현",
+      "totalXp": 1880560,
+      "xpToNext": 92791,
+      "xpCurveMultiplier": 2.75,
+      "sovereigntyMultiplier": 7.73,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 7,
+      "unlockSkill": null
+    },
+    {
+      "level": 76,
+      "starRank": "성현",
+      "totalXp": 1973351,
+      "xpToNext": 96246,
+      "xpCurveMultiplier": 2.8,
+      "sovereigntyMultiplier": 7.82,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 7,
+      "unlockSkill": null
+    },
+    {
+      "level": 77,
+      "starRank": "성현",
+      "totalXp": 2069597,
+      "xpToNext": 99775,
+      "xpCurveMultiplier": 2.85,
+      "sovereigntyMultiplier": 7.91,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 7,
+      "unlockSkill": null
+    },
+    {
+      "level": 78,
+      "starRank": "성현",
+      "totalXp": 2169372,
+      "xpToNext": 103376,
+      "xpCurveMultiplier": 2.9,
+      "sovereigntyMultiplier": 8,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 7,
+      "unlockSkill": null
+    },
+    {
+      "level": 79,
+      "starRank": "성현",
+      "totalXp": 2272748,
+      "xpToNext": 107050,
+      "xpCurveMultiplier": 2.95,
+      "sovereigntyMultiplier": 8.09,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 7,
+      "unlockSkill": null
+    },
+    {
+      "level": 80,
+      "starRank": "성현",
+      "totalXp": 2379798,
+      "xpToNext": 110799,
+      "xpCurveMultiplier": 3,
+      "sovereigntyMultiplier": 8.18,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 7,
+      "unlockSkill": {
+        "id": "warden_of_zero",
+        "name": "워든오브제로",
+        "description": "절대방어 상태로 모든 피해 무효화"
+      }
+    },
+    {
+      "level": 81,
+      "starRank": "성존",
+      "totalXp": 2490597,
+      "xpToNext": 114622,
+      "xpCurveMultiplier": 3.05,
+      "sovereigntyMultiplier": 8.27,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 10,
+      "unlockSkill": null
+    },
+    {
+      "level": 82,
+      "starRank": "성존",
+      "totalXp": 2605219,
+      "xpToNext": 118519,
+      "xpCurveMultiplier": 3.1,
+      "sovereigntyMultiplier": 8.36,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 10,
+      "unlockSkill": null
+    },
+    {
+      "level": 83,
+      "starRank": "성존",
+      "totalXp": 2723738,
+      "xpToNext": 122492,
+      "xpCurveMultiplier": 3.15,
+      "sovereigntyMultiplier": 8.45,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 10,
+      "unlockSkill": null
+    },
+    {
+      "level": 84,
+      "starRank": "성존",
+      "totalXp": 2846230,
+      "xpToNext": 126540,
+      "xpCurveMultiplier": 3.2,
+      "sovereigntyMultiplier": 8.55,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 10,
+      "unlockSkill": null
+    },
+    {
+      "level": 85,
+      "starRank": "성존",
+      "totalXp": 2972770,
+      "xpToNext": 130665,
+      "xpCurveMultiplier": 3.25,
+      "sovereigntyMultiplier": 8.64,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 10,
+      "unlockSkill": null
+    },
+    {
+      "level": 86,
+      "starRank": "성존",
+      "totalXp": 3103435,
+      "xpToNext": 134865,
+      "xpCurveMultiplier": 3.3,
+      "sovereigntyMultiplier": 8.73,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 10,
+      "unlockSkill": null
+    },
+    {
+      "level": 87,
+      "starRank": "성존",
+      "totalXp": 3238300,
+      "xpToNext": 139143,
+      "xpCurveMultiplier": 3.35,
+      "sovereigntyMultiplier": 8.82,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 10,
+      "unlockSkill": null
+    },
+    {
+      "level": 88,
+      "starRank": "성존",
+      "totalXp": 3377443,
+      "xpToNext": 143497,
+      "xpCurveMultiplier": 3.4,
+      "sovereigntyMultiplier": 8.91,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 10,
+      "unlockSkill": null
+    },
+    {
+      "level": 89,
+      "starRank": "성존",
+      "totalXp": 3520940,
+      "xpToNext": 147929,
+      "xpCurveMultiplier": 3.45,
+      "sovereigntyMultiplier": 9,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 10,
+      "unlockSkill": null
+    },
+    {
+      "level": 90,
+      "starRank": "성존",
+      "totalXp": 3668869,
+      "xpToNext": 152439,
+      "xpCurveMultiplier": 3.5,
+      "sovereigntyMultiplier": 9.09,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 10,
+      "unlockSkill": null
+    },
+    {
+      "level": 91,
+      "starRank": "성신",
+      "totalXp": 3821308,
+      "xpToNext": 157027,
+      "xpCurveMultiplier": 3.55,
+      "sovereigntyMultiplier": 9.18,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 10,
+      "unlockSkill": null
+    },
+    {
+      "level": 92,
+      "starRank": "성신",
+      "totalXp": 3978335,
+      "xpToNext": 161694,
+      "xpCurveMultiplier": 3.6,
+      "sovereigntyMultiplier": 9.27,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 10,
+      "unlockSkill": null
+    },
+    {
+      "level": 93,
+      "starRank": "성신",
+      "totalXp": 4140029,
+      "xpToNext": 166440,
+      "xpCurveMultiplier": 3.65,
+      "sovereigntyMultiplier": 9.36,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 10,
+      "unlockSkill": null
+    },
+    {
+      "level": 94,
+      "starRank": "성신",
+      "totalXp": 4306469,
+      "xpToNext": 171265,
+      "xpCurveMultiplier": 3.7,
+      "sovereigntyMultiplier": 9.45,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 10,
+      "unlockSkill": null
+    },
+    {
+      "level": 95,
+      "starRank": "성신",
+      "totalXp": 4477734,
+      "xpToNext": 176170,
+      "xpCurveMultiplier": 3.75,
+      "sovereigntyMultiplier": 9.55,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 10,
+      "unlockSkill": null
+    },
+    {
+      "level": 96,
+      "starRank": "성신",
+      "totalXp": 4653904,
+      "xpToNext": 181156,
+      "xpCurveMultiplier": 3.8,
+      "sovereigntyMultiplier": 9.64,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 10,
+      "unlockSkill": null
+    },
+    {
+      "level": 97,
+      "starRank": "성신",
+      "totalXp": 4835060,
+      "xpToNext": 186222,
+      "xpCurveMultiplier": 3.85,
+      "sovereigntyMultiplier": 9.73,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 10,
+      "unlockSkill": null
+    },
+    {
+      "level": 98,
+      "starRank": "성신",
+      "totalXp": 5021282,
+      "xpToNext": 191368,
+      "xpCurveMultiplier": 3.9,
+      "sovereigntyMultiplier": 9.82,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 10,
+      "unlockSkill": null
+    },
+    {
+      "level": 99,
+      "starRank": "성신",
+      "totalXp": 5212650,
+      "xpToNext": 196596,
+      "xpCurveMultiplier": 3.95,
+      "sovereigntyMultiplier": 9.91,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 10,
+      "unlockSkill": null
+    },
+    {
+      "level": 100,
+      "starRank": "성신",
+      "totalXp": 5409246,
+      "xpToNext": null,
+      "xpCurveMultiplier": 4,
+      "sovereigntyMultiplier": 10,
+      "rewards": {
+        "statPoints": 3,
+        "orbitSlots": 1,
+        "ap": 50,
+        "sovereigntyBonus": 0.09
+      },
+      "orbitCapacity": 10,
+      "unlockSkill": {
+        "id": "absolute_sovereign",
+        "name": "앱솔루트소버린",
+        "description": "궁극의 주권 발동, 전장 지배"
+      }
+    }
+  ]
+}

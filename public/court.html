@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>주권자 재판소 — ASTERIA COURT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --void:#020a18;--panel:rgba(5,12,30,.96);--panel2:rgba(10,16,36,.94);
+  --border:rgba(200,175,80,.13);--gold:#f0c040;
+  --accent:#4a90d9;--text:#e8ecf4;--muted:rgba(160,180,210,.5);
+  --dust:#94a3b8;--star:#fbbf24;--planet:#34d399;--nova:#c084fc;--quasar:#f0c040;
+  --red:#ef4444;--green:#10b981;--yellow:#f59e0b;--blue:#38bdf8;
+}
+html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-family:'Noto Sans KR',sans-serif;overflow-x:hidden}
+#starCanvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+#app{max-width:720px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative;z-index:1}
+
+/* 네비 */
+.top-nav{display:flex;align-items:center;background:var(--panel);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0}
+.top-nav::-webkit-scrollbar{display:none}
+.top-nav-item{flex-shrink:0;display:flex;flex-direction:column;align-items:center;padding:10px 14px;cursor:pointer;text-decoration:none;color:var(--muted);border-bottom:2px solid transparent;gap:3px;transition:all .2s}
+.top-nav-item.active{color:var(--accent);border-bottom-color:var(--accent)}
+.top-nav-icon{font-size:18px}.top-nav-label{font-size:9px;font-weight:500;white-space:nowrap}
+
+/* 트랙 탭 */
+.track-tabs{display:flex;border-bottom:1px solid var(--border);background:var(--panel);flex-shrink:0}
+.track-tab{flex:1;padding:14px 16px;text-align:center;cursor:pointer;font-size:13px;font-weight:700;color:var(--muted);border-bottom:3px solid transparent;transition:all .2s}
+.track-tab.active{border-bottom-color:var(--gold);color:var(--gold)}
+.track-tab:hover{color:var(--text)}
+
+/* 메인 */
+.court-main{flex:1;overflow-y:auto;padding:18px 16px}
+.court-main::-webkit-scrollbar{width:3px}
+.court-main::-webkit-scrollbar-thumb{background:rgba(240,192,64,.3);border-radius:3px}
+.section{margin-bottom:18px}
+.tab-content{animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* 설명문 */
+.court-desc{text-align:center;padding:16px;font-size:12px;color:var(--muted);line-height:1.7;border-bottom:1px solid var(--border);margin-bottom:16px;font-style:italic}
+
+/* 리그 필터 */
+.league-filter{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px}
+.filter-btn{padding:5px 11px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:10px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .2s}
+.filter-btn.active{font-weight:900}
+.filter-btn[data-league="all"].active{background:rgba(255,255,255,.1);color:var(--text);border-color:rgba(255,255,255,.3)}
+.filter-btn[data-league="dust"].active{background:rgba(148,163,184,.15);color:var(--dust);border-color:var(--dust)}
+.filter-btn[data-league="star"].active{background:rgba(251,191,36,.12);color:var(--star);border-color:var(--star)}
+.filter-btn[data-league="planet"].active{background:rgba(52,211,153,.12);color:var(--planet);border-color:var(--planet)}
+.filter-btn[data-league="nova"].active{background:rgba(192,132,252,.12);color:var(--nova);border-color:var(--nova)}
+.filter-btn[data-league="quasar"].active{background:rgba(240,192,64,.12);color:var(--quasar);border-color:var(--quasar)}
+
+/* 징계 카드 */
+.sanction-card{background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;transition:all .2s}
+.sanction-card:hover{border-color:rgba(239,68,68,.4)}
+.sc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.sc-date{font-family:'Orbitron',monospace;font-size:10px;color:var(--muted)}
+.sc-type{padding:3px 10px;border-radius:8px;font-size:9px;font-weight:900}
+.sc-type.critical{background:rgba(239,68,68,.15);color:var(--red)}
+.sc-type.warn{background:rgba(245,158,11,.15);color:var(--yellow)}
+.sc-target{font-size:13px;font-weight:700;margin-bottom:4px}
+.sc-evidence{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:6px;padding:8px 10px;background:rgba(255,255,255,.02);border-radius:8px;border-left:3px solid var(--red)}
+.sc-punishment{font-size:12px;font-weight:700;color:var(--red);margin-bottom:6px}
+.sc-status{display:flex;align-items:center;gap:8px;font-size:11px}
+.sc-status-badge{padding:3px 10px;border-radius:8px;font-size:9px;font-weight:900}
+.sc-countdown{font-family:'Orbitron',monospace;font-size:11px;color:var(--yellow)}
+
+/* 심의 카드 */
+.trial-card{background:var(--panel2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;transition:all .2s;cursor:pointer}
+.trial-card:hover{border-color:var(--nova)}
+.trial-card.active-trial{animation:trialPulse 2s ease-in-out infinite}
+@keyframes trialPulse{0%,100%{border-color:var(--border)}50%{border-color:rgba(192,132,252,.5)}}
+.tc-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.tc-fandom{font-size:12px;font-weight:900}
+.tc-league{padding:2px 8px;border-radius:6px;font-size:9px;font-weight:700}
+.tc-hot{font-size:12px;margin-left:auto}
+.tc-defendant{font-size:11px;color:var(--muted);margin-bottom:6px}
+.tc-charge{font-size:12px;margin-bottom:10px}
+
+/* 4단계 프로그레스 */
+.stage-bar{display:flex;gap:4px;margin-bottom:10px}
+.stage-step{flex:1;text-align:center;padding:6px 4px;border-radius:8px;font-size:9px;font-weight:600;background:rgba(255,255,255,.03);color:var(--muted);border:1px solid var(--border);transition:all .2s}
+.stage-step.current{background:rgba(240,192,64,.12);color:var(--gold);border-color:var(--gold);font-weight:900}
+.stage-step.done{background:rgba(16,185,129,.1);color:var(--green);border-color:rgba(16,185,129,.3)}
+
+/* 참여 바 */
+.jury-bar{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.jury-track{flex:1;height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden}
+.jury-fill{height:100%;background:var(--nova);border-radius:4px;transition:width .5s}
+.jury-text{font-size:10px;color:var(--muted);min-width:80px;text-align:right}
+
+/* 투표 바 */
+.vote-bar{display:flex;height:24px;border-radius:6px;overflow:hidden;margin:8px 0}
+.vote-yes{background:var(--green);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff}
+.vote-no{background:var(--red);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff}
+
+/* 상세 모달 */
+.court-modal{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;padding:16px}
+.court-modal.show{display:flex}
+.cm-card{background:rgba(8,8,22,.97);border:1px solid var(--border);border-radius:20px;width:500px;max-width:95vw;max-height:85vh;overflow-y:auto;padding:24px}
+.cm-card::-webkit-scrollbar{width:3px}
+.cm-card::-webkit-scrollbar-thumb{background:rgba(240,192,64,.3);border-radius:3px}
+.cm-close{float:right;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer}
+.cm-title{font-size:16px;font-weight:900;margin-bottom:4px}
+.cm-sub{font-size:11px;color:var(--muted);margin-bottom:16px}
+.cm-section{font-size:10px;color:var(--muted);letter-spacing:1px;margin:14px 0 6px;border-bottom:1px solid var(--border);padding-bottom:4px}
+.cm-box{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;font-size:12px;line-height:1.6}
+.cm-penalty-list{display:flex;flex-direction:column;gap:4px}
+.cm-penalty{display:flex;align-items:center;gap:6px;padding:6px 10px;background:rgba(255,255,255,.02);border-radius:8px;font-size:11px}
+
+/* 통계/KPI 카드 */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.kpi{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center}
+.kpi-val{font-family:'Orbitron',monospace;font-size:18px;font-weight:900}
+.kpi-label{font-size:8px;color:var(--muted);margin-top:2px}
+
+/* 테이블 */
+.data-table{width:100%;border-collapse:collapse;font-size:11px}
+.data-table th{text-align:left;padding:6px 8px;color:var(--muted);font-size:9px;letter-spacing:1px;border-bottom:1px solid var(--border)}
+.data-table td{padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.03)}
+
+/* 버튼 */
+.btn{padding:6px 14px;border-radius:10px;border:none;font-size:11px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .2s}
+.btn-gold{background:rgba(240,192,64,.15);border:1px solid rgba(240,192,64,.4);color:var(--gold)}
+.btn-red{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:var(--red)}
+.btn-nova{background:rgba(192,132,252,.15);border:1px solid rgba(192,132,252,.4);color:var(--nova)}
+.btn:hover{transform:translateY(-1px)}
+
+/* 접기/펼치기 */
+.collapsible-header{cursor:pointer;padding:10px 14px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.collapsible-body{display:none;padding:0 4px}
+.collapsible-body.open{display:block}
+
+/* 신고 모달 */
+.report-modal{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;padding:16px}
+.report-modal.show{display:flex}
+.rm-card{background:rgba(8,8,22,.97);border:1px solid var(--border);border-radius:20px;width:420px;max-width:95vw;padding:24px}
+.rm-close{float:right;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer}
+.rm-title{font-size:15px;font-weight:900;margin-bottom:14px}
+.rm-group{margin-bottom:10px}
+.rm-label{font-size:10px;color:var(--muted);margin-bottom:3px}
+.rm-input{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:10px;padding:8px 12px;color:var(--text);font-size:12px;outline:none;font-family:'Noto Sans KR',sans-serif}
+.rm-input:focus{border-color:var(--gold)}
+.rm-select{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:10px;padding:8px 12px;color:var(--text);font-size:12px;outline:none}
+textarea.rm-input{resize:vertical;min-height:60px}
+.rm-submit{width:100%;padding:12px;border-radius:14px;border:none;font-size:13px;font-weight:900;cursor:pointer;font-family:'Noto Sans KR',sans-serif;margin-top:8px}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(12,12,26,.97);border:1px solid var(--border);border-radius:12px;padding:10px 20px;font-size:12px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+
+@media(max-width:520px){.kpi-row{grid-template-columns:repeat(2,1fr)}.stage-bar{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<canvas id="starCanvas"></canvas>
+<div id="toast" class="toast"></div>
+
+<!-- 플랫폼 신고 모달 -->
+<div class="report-modal" id="platformReportModal">
+  <div class="rm-card">
+    <button class="rm-close" onclick="closeModal('platformReportModal')">✕</button>
+    <div class="rm-title">🚨 신고하기 — File Report</div>
+    <div class="rm-group"><div class="rm-label">대상 유저 Target User</div><input class="rm-input" placeholder="닉네임 또는 성궤번호"></div>
+    <div class="rm-group"><div class="rm-label">위반 유형 Violation Type</div><select class="rm-select"><option>데이터 조작 Data Manipulation</option><option>해킹 Hacking</option><option>어뷰징 Abusing</option><option>다중 계정 Multi-Account</option><option>암시장 거래 Black Market</option></select></div>
+    <div class="rm-group"><div class="rm-label">상세 설명 Details</div><textarea class="rm-input" placeholder="구체적인 상황을 설명해주세요..."></textarea></div>
+    <button class="rm-submit" style="background:linear-gradient(90deg,var(--red),#dc2626);color:#fff" onclick="closeModal('platformReportModal');showToast('🚨 신고가 접수되었습니다. 검토 후 처리됩니다.')">제출 Submit</button>
+  </div>
+</div>
+
+<!-- 자치 신고 모달 -->
+<div class="report-modal" id="fandomReportModal">
+  <div class="rm-card">
+    <button class="rm-close" onclick="closeModal('fandomReportModal')">✕</button>
+    <div class="rm-title">🏛️ 자치 신고하기 — File Complaint</div>
+    <div class="rm-group"><div class="rm-label">대상 유저 Target User</div><input class="rm-input" placeholder="닉네임 또는 성궤번호"></div>
+    <div class="rm-group"><div class="rm-label">위반 유형 Violation Type</div><select class="rm-select"><option>비방/욕설 Slander</option><option>허위사실 유포 Misinformation</option><option>분란 조장 Troublemaking</option><option>리더 권한 남용 Leader Abuse</option><option>여론 조작 Opinion Manipulation</option><option>활동 방해 Activity Obstruction</option></select></div>
+    <div class="rm-group"><div class="rm-label">상세 설명 Details</div><textarea class="rm-input" placeholder="구체적인 상황을 설명해주세요..."></textarea></div>
+    <button class="rm-submit" style="background:linear-gradient(90deg,var(--nova),#7c3aed);color:#fff" onclick="closeModal('fandomReportModal');showToast('🏛️ 자치 신고가 접수되었습니다. 심의 위원이 검토합니다.')">제출 Submit</button>
+  </div>
+</div>
+
+<!-- 심의 상세 모달 -->
+<div class="court-modal" id="trialModal">
+  <div class="cm-card" id="trialDetail"></div>
+</div>
+
+<div id="app">
+  <nav class="top-nav">
+    <a class="top-nav-item" href="/"><div class="top-nav-icon">🏠</div><div class="top-nav-label">홈</div></a>
+    <a class="top-nav-item" href="/astra.html"><div class="top-nav-icon">⭐</div><div class="top-nav-label">아스트라</div></a>
+    <a class="top-nav-item" href="/room3d.html"><div class="top-nav-icon">🏡</div><div class="top-nav-label">내 방</div></a>
+    <a class="top-nav-item" href="/league.html"><div class="top-nav-icon">🌌</div><div class="top-nav-label">성궤</div></a>
+    <a class="top-nav-item" href="/avatar.html"><div class="top-nav-icon">🎭</div><div class="top-nav-label">아바타</div></a>
+    <a class="top-nav-item" href="/shop.html"><div class="top-nav-icon">🛒</div><div class="top-nav-label">상점</div></a>
+  </nav>
+
+  <div class="track-tabs">
+    <div class="track-tab active" id="trackPlatform" onclick="switchTrack('platform')">⚡ 플랫폼 징계 공고<br><span style="font-size:9px;font-weight:400">Platform Sanctions</span></div>
+    <div class="track-tab" id="trackFandom" onclick="switchTrack('fandom')">🏛️ 팬클럽 자치 심의<br><span style="font-size:9px;font-weight:400">Fandom Court</span></div>
+  </div>
+
+  <div class="court-main" id="courtMain"></div>
+</div>
+
+<script>
+// 별빛 배경
+(function(){const cv=document.getElementById('starCanvas'),ctx=cv.getContext('2d');let W,H;function r(){W=cv.width=innerWidth;H=cv.height=innerHeight}r();addEventListener('resize',r);const S=Array.from({length:120},()=>({x:Math.random()*2e3,y:Math.random()*2e3,r:Math.random()*.6+.3,b:Math.random()*.4+.2,p:Math.random()*6.28,s:Math.random()*.006+.002,c:Math.random()<.1?'#f0c040':'#fff'}));(function l(){ctx.clearRect(0,0,W,H);S.forEach(s=>{s.p+=s.s;ctx.globalAlpha=s.b*(.5+.5*Math.sin(s.p));ctx.fillStyle=s.c;ctx.beginPath();ctx.arc(s.x%W,s.y%H,s.r,0,6.28);ctx.fill()});ctx.globalAlpha=1;requestAnimationFrame(l)})()})();
+
+// 전역 상태
+let currentTrack='platform';
+let courtLeague='all';
+const LI={dust:'🌑',star:'⭐',planet:'🪐',nova:'💜',quasar:'👑'};
+const LN={dust:'더스트',star:'스타',planet:'플래닛',nova:'노바',quasar:'퀘이사'};
+
+// 트랙 전환
+function switchTrack(t){
+  currentTrack=t;
+  document.getElementById('trackPlatform').classList.toggle('active',t==='platform');
+  document.getElementById('trackFandom').classList.toggle('active',t==='fandom');
+  render();
+}
+function setLeague(id){courtLeague=id;render()}
+function render(){document.getElementById('courtMain').innerHTML='<div class="tab-content">'+(currentTrack==='platform'?renderPlatform():renderFandom())+'</div>'}
+
+// ── 트랙 1: 플랫폼 징계 ──
+const SANCTIONS=[
+  {date:'2026.03.28',type:'매크로 봇',severity:'critical',target:'gh***_macro_77',evidence:'0.3초 간격 반복 클릭 2,847회 감지. 활동 로그 ID: #AX-29471',punishment:'영구 추방 + HW ID 밴 + 자산 몰수 247,000⭐',status:'final'},
+  {date:'2026.03.27',type:'다중 계정',severity:'warn',target:'tw***_clone_A',evidence:'동일 HW ID에서 3개 계정 동시 운영 확인. 기기 ID: #DV-8812',punishment:'부계정 2개 삭제 + 본계정 30일 정지',status:'final'},
+  {date:'2026.03.26',type:'AP 어뷰징',severity:'warn',target:'sp***_bug_99',evidence:'AP 계산 버그 악용, 24시간 내 비정상 AP 38,400 획득. 로그 #AP-55102',punishment:'자산 몰수 38,400⭐ + 14일 정지',status:'appeal',countdown:'48:23:10'},
+  {date:'2026.03.25',type:'아티팩트 복제',severity:'critical',target:'du***_hacker',evidence:'클라이언트 변조로 LEGENDARY 아이템 복제 시도 3회. 보안 로그 #SEC-7701',punishment:'영구 추방',status:'appeal',countdown:'24:11:45'},
+  {date:'2026.03.24',type:'암시장 거래',severity:'critical',target:'ca***_seller',evidence:'외부 사이트에서 스타더스트 현금 거래 게시물 확인. 캡처 #EXT-3320',punishment:'영구 추방 + 자산 전액 몰수 1,240,000⭐',status:'final'},
+];
+
+function renderPlatform(){
+  return `
+    <div class="court-desc">
+      "제국의 법은 데이터로 증명합니다. 모든 징계는 증거와 함께 공개됩니다."<br>
+      <span style="font-size:10px">"The Empire's law is proven by data. All sanctions are disclosed with evidence."</span>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+      <button class="btn btn-red" onclick="openModal('platformReportModal')">🚨 신고하기 Report</button>
+    </div>
+    ${SANCTIONS.map(s=>`
+      <div class="sanction-card">
+        <div class="sc-header">
+          <div class="sc-date">${s.date}</div>
+          <div class="sc-type ${s.severity}">${s.type}</div>
+        </div>
+        <div class="sc-target">대상 — ${s.target}</div>
+        <div class="sc-evidence">📋 ${s.evidence}</div>
+        <div class="sc-punishment">⚖️ ${s.punishment}</div>
+        <div class="sc-status">
+          ${s.status==='final'?'<span class="sc-status-badge" style="background:rgba(16,185,129,.15);color:var(--green)">✅ 최종 확정 Final</span>'
+          :'<span class="sc-status-badge" style="background:rgba(245,158,11,.15);color:var(--yellow)">⏳ 이의신청 기간 Appeal Period</span><span class="sc-countdown">남은 시간: '+s.countdown+'</span>'}
+        </div>
+      </div>
+    `).join('')}
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-val" style="color:var(--red)">47</div><div class="kpi-label">시즌 총 징계 Total</div></div>
+      <div class="kpi"><div class="kpi-val" style="color:var(--red)">12</div><div class="kpi-label">영구 추방 Banned</div></div>
+      <div class="kpi"><div class="kpi-val" style="color:var(--gold)">3.2M⭐</div><div class="kpi-label">자산 몰수 총액</div></div>
+      <div class="kpi"><div class="kpi-val" style="color:var(--green)">2%</div><div class="kpi-label">이의 성공률</div></div>
+    </div>
+    <div class="section" style="text-align:center;padding:12px"><div style="font-size:10px;color:var(--muted)">내 신고 현황: 접수 2건 (처리완료 1 / 검토중 1) · 보상: ACT+3 획득</div></div>
+  `;
+}
+
+// ── 트랙 2: 자치 심의 ──
+const TRIALS=[
+  {id:1,fandom:'ASTRANOVA',league:'quasar',defendant:'여론조작자_01',charge:'여론 조작',desc:'투표 전 허위 공약 유포 및 조직적 댓글 공작',stage:3,juryTotal:13,juryDone:10,yes:72,no:28,viewers:247,hot:true,
+   evidence:'3개 계정에서 동일 문구 72건 반복 게시. 시간대 패턴 일치.',soMyung:'저는 진심으로 의견을 올린 것입니다. 조직적 활동이 아닙니다.',penalties:['🏷️ 낙인 30일','📉 SOC -15','📜 공개 사과','🔇 발언 제한 14일']},
+  {id:2,fandom:'STELLARIS',league:'nova',defendant:'toxic_star_42',charge:'멤버 비방',desc:'특정 유저를 반복적으로 비방하며 팬덤 분위기 저해',stage:2,juryTotal:11,juryDone:0,yes:0,no:0,viewers:89,hot:false,
+   evidence:'채팅 로그 14건에서 인신공격성 발언 확인.',soMyung:'저의 발언에 대해 깊이 반성합니다. 감정 조절에 실패했습니다.',penalties:['🏷️ 낙인 14일','📉 SOC -10','🧹 정화 퀘스트 30회']},
+  {id:3,fandom:'POLARIS',league:'star',defendant:'power_leader_X',charge:'리더 권한 남용',desc:'유닛 리더가 개인적 이유로 멤버 3명을 부당 추방',stage:1,juryTotal:7,juryDone:0,yes:0,no:0,viewers:34,hot:false,
+   evidence:'추방 로그 + 피해 멤버 3인 증언.',soMyung:'소명 대기중 — Awaiting statement',penalties:[]},
+  {id:4,fandom:'LUMINOUS',league:'planet',defendant:'troll_moon',charge:'분란 조장',desc:'팬클럽 내부 갈등을 의도적으로 조장하며 양쪽 선동',stage:4,juryTotal:9,juryDone:9,yes:78,no:22,viewers:156,hot:false,
+   evidence:'DM 캡처 8건. 양측에 상반된 정보 전달 확인.',soMyung:'사실무근입니다.',penalties:['🏷️ 낙인 14일','🧹 정화 퀘스트 30회'],verdict:'유죄 — 낙인 14일 + 정화 퀘스트 30회'},
+];
+const STAGES=['📩 기소 Indictment','📋 소명 Defense','🗳️ 심의투표 Vote','⚖️ 판정 Verdict'];
+const JURY_REQ=[{league:'dust',lv:15,jury:5,severity:'교육 위주'},{league:'star',lv:25,jury:7,severity:'표준'},{league:'planet',lv:40,jury:9,severity:'표준'},{league:'nova',lv:60,jury:11,severity:'엄격'},{league:'quasar',lv:80,jury:13,severity:'가장 엄격'}];
+const JUSTICE_RANK=[{name:'별빛재판관',count:24,points:1200,league:'star'},{name:'우주정의',count:18,points:960,league:'nova'},{name:'공정한별',count:15,points:820,league:'quasar'},{name:'진실수호자',count:12,points:640,league:'planet'},{name:'심판의눈',count:9,points:480,league:'dust'}];
+const ARCHIVE=[
+  {date:'2026.03.15',fandom:'AURORA',charge:'허위사실 유포',verdict:'유죄',punishment:'낙인 7일 + 정화 퀘스트 10회'},
+  {date:'2026.03.08',fandom:'SPARKLE',charge:'활동 방해',verdict:'무죄',punishment:'—'},
+  {date:'2026.02.28',fandom:'DREAMWAVE',charge:'비방/욕설',verdict:'유죄',punishment:'낙인 14일 + SOC -10 + 공개 사과'},
+];
+
+function filterHTML(){
+  return `<div class="league-filter">${[{id:'all',l:'🌌 전체'},{id:'dust',l:'더스트'},{id:'star',l:'스타'},{id:'planet',l:'플래닛'},{id:'nova',l:'노바'},{id:'quasar',l:'퀘이사'}].map(x=>`<button class="filter-btn ${x.id===courtLeague?'active':''}" data-league="${x.id}" onclick="setLeague('${x.id}')">${x.l}</button>`).join('')}</div>`;
+}
+
+function renderFandom(){
+  const filtered=courtLeague==='all'?TRIALS:TRIALS.filter(t=>t.league===courtLeague);
+  const justiceFiltered=courtLeague==='all'?JUSTICE_RANK:JUSTICE_RANK.filter(j=>j.league===courtLeague);
+  return `
+    <div class="court-desc">
+      "제국의 정의는 주권자의 손에 있습니다. 공정한 심의로 건강한 팬덤을 지킵니다."<br>
+      <span style="font-size:10px">"Justice belongs to the sovereign. Fair deliberation keeps the fandom healthy."</span>
+    </div>
+    ${filterHTML()}
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:700">진행중 심의 — Active Trials (${filtered.filter(t=>t.stage<4).length})</div>
+      <button class="btn btn-nova" onclick="openModal('fandomReportModal')">🏛️ 자치 신고 File Complaint</button>
+    </div>
+    ${filtered.map(t=>`
+      <div class="trial-card ${t.stage<4?'active-trial':''}" onclick="showTrialDetail(${t.id})">
+        <div class="tc-header">
+          <span class="tc-league" style="background:rgba(var(--${t.league==='quasar'?'gold':'nova'}),0.15);color:var(--${t.league})">${LI[t.league]} ${LN[t.league]}</span>
+          <span class="tc-fandom">${t.fandom}</span>
+          ${t.hot?'<span class="tc-hot">🔥 화제</span>':''}
+          <span style="margin-left:auto;font-size:10px;color:var(--muted)">👁️ ${t.viewers}</span>
+        </div>
+        <div class="tc-defendant">피고 — ${t.defendant}</div>
+        <div class="tc-charge">혐의: <strong>${t.charge}</strong> — ${t.desc}</div>
+        <div class="stage-bar">${STAGES.map((s,i)=>`<div class="stage-step ${i<t.stage?'done':''} ${i===t.stage-1?'current':''}">${s}</div>`).join('')}</div>
+        ${t.stage===3||t.stage===4?`
+          <div class="jury-bar"><span style="font-size:9px;color:var(--muted)">심의 위원</span><div class="jury-track"><div class="jury-fill" style="width:${t.juryDone/t.juryTotal*100}%"></div></div><div class="jury-text">${t.juryDone}/${t.juryTotal}명</div></div>
+          ${t.yes>0?`<div class="vote-bar"><div class="vote-yes" style="width:${t.yes}%">유죄 ${t.yes}%</div><div class="vote-no" style="width:${t.no}%">무죄 ${t.no}%</div></div>`:''}
+        `:''}
+        ${t.verdict?`<div style="font-size:11px;color:var(--gold);font-weight:700;margin-top:4px">⚖️ 판정: ${t.verdict}</div>`:''}
+      </div>
+    `).join('')}
+
+    <!-- 완료 아카이브 -->
+    <div class="collapsible-header" onclick="toggleCollapse(this)">📚 완료된 심의 아카이브 — Past Cases <span>▼</span></div>
+    <div class="collapsible-body">
+      <div style="font-size:10px;color:var(--muted);margin-bottom:8px;font-style:italic">판례를 통해 배우세요 — Learn from precedents</div>
+      <table class="data-table"><tr><th>날짜</th><th>팬클럽</th><th>혐의</th><th>판정</th><th>처벌</th></tr>
+      ${ARCHIVE.map(a=>`<tr><td>${a.date}</td><td>${a.fandom}</td><td>${a.charge}</td><td><span style="color:${a.verdict==='유죄'?'var(--red)':'var(--green)'}">${a.verdict}</span></td><td style="font-size:10px">${a.punishment}</td></tr>`).join('')}
+      </table>
+    </div>
+
+    <!-- 심의 위원 자격 -->
+    <div class="section chart-section" style="margin-top:14px">
+      <div class="chart-title">📜 심의 위원 자격 — JURY REQUIREMENTS</div>
+      <table class="data-table"><tr><th>리그</th><th>자격 레벨</th><th>위원 수</th><th>처벌 강도</th></tr>
+      ${JURY_REQ.map(j=>`<tr><td>${LI[j.league]} ${LN[j.league]}</td><td>Lv.${j.lv}+</td><td>${j.jury}명</td><td>${j.severity}</td></tr>`).join('')}
+      </table>
+    </div>
+
+    <!-- 정의 포인트 랭킹 -->
+    <div class="section chart-section">
+      <div class="chart-title">⚖️ 정의의 수호자 랭킹 — JUSTICE GUARDIAN</div>
+      <table class="data-table"><tr><th>#</th><th>닉네임</th><th>참여</th><th>포인트</th></tr>
+      ${justiceFiltered.map((j,i)=>`<tr${i===0?' style="background:rgba(240,192,64,.05)"':''}><td style="font-family:'Orbitron',monospace;color:${i===0?'var(--gold)':'var(--text)'}">${i===0?'👑':i+1}</td><td style="${i===0?'color:var(--gold);font-weight:900':''}">${j.name}</td><td>${j.count}회</td><td style="font-family:'Orbitron',monospace;color:var(--gold)">${j.points}</td></tr>`).join('')}
+      </table>
+      <div style="font-size:9px;color:var(--muted);margin-top:8px;text-align:center">시즌 종료시 TOP 3 → "정의의 수호자" 특수 칭호 부여</div>
+    </div>
+
+    <div style="font-size:10px;color:var(--muted);text-align:center;padding:8px">내 심의 현황: 배심 참여 3건 / 신고 접수 1건 · 보상: ACT+15, SOC+9 획득</div>
+  `;
+}
+
+// 심의 상세
+function showTrialDetail(id){
+  const t=TRIALS.find(x=>x.id===id);if(!t)return;
+  document.getElementById('trialDetail').innerHTML=`
+    <button class="cm-close" onclick="closeModal('trialModal')">✕</button>
+    <div class="cm-title">${LI[t.league]} ${t.fandom} — ${t.charge}</div>
+    <div class="cm-sub">피고: ${t.defendant} · 👁️ ${t.viewers}명 관전${t.hot?' · 🔥 화제 재판':''}</div>
+    <div class="stage-bar" style="margin-bottom:14px">${STAGES.map((s,i)=>`<div class="stage-step ${i<t.stage?'done':''} ${i===t.stage-1?'current':''}">${s}</div>`).join('')}</div>
+    <div class="cm-section">📋 혐의 내용 — CHARGE</div>
+    <div class="cm-box">${t.desc}</div>
+    <div class="cm-section">🔍 증거 — EVIDENCE</div>
+    <div class="cm-box" style="border-left:3px solid var(--red)">${t.evidence}</div>
+    <div class="cm-section">📝 피고 소명문 — DEFENSE</div>
+    <div class="cm-box" style="border-left:3px solid var(--nova)">${t.soMyung}</div>
+    ${t.yes>0?`<div class="cm-section">🗳️ 심의 투표 현황 — VOTE</div><div class="vote-bar"><div class="vote-yes" style="width:${t.yes}%">유죄 ${t.yes}%</div><div class="vote-no" style="width:${t.no}%">무죄 ${t.no}%</div></div><div style="font-size:10px;color:var(--muted);margin-bottom:10px">심의 위원 ${t.juryDone}/${t.juryTotal}명 참여</div>`:''}
+    ${t.penalties.length?`<div class="cm-section">⚖️ 처벌 제안 — PENALTIES</div><div class="cm-penalty-list">${t.penalties.map(p=>`<div class="cm-penalty">${p}</div>`).join('')}</div>`:''}
+    ${t.verdict?`<div style="margin-top:14px;padding:12px;background:rgba(240,192,64,.08);border:1px solid rgba(240,192,64,.3);border-radius:10px;text-align:center;font-weight:900;color:var(--gold)">⚖️ 최종 판정: ${t.verdict}</div>`:''}
+  `;
+  document.getElementById('trialModal').classList.add('show');
+}
+
+// 유틸
+function openModal(id){document.getElementById(id).classList.add('show')}
+function closeModal(id){document.getElementById(id).classList.remove('show')}
+function toggleCollapse(el){el.nextElementSibling.classList.toggle('open');el.querySelector('span').textContent=el.nextElementSibling.classList.contains('open')?'▲':'▼'}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500)}
+
+render();
+</script>
+</body>
+</html>

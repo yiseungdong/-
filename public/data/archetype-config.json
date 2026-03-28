@@ -1,0 +1,523 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "description": "아스테리아 팬덤 아키타입 칭호 시스템",
+    "totalArchetypes": 15,
+    "principle": "6대 스탯 상위 2개 조합으로 자동 부여되는 팬덤 정체성 칭호"
+  },
+  "stats": {
+    "description": "6대 기본 스탯",
+    "list": [
+      {
+        "id": "ACT",
+        "name": "활동력",
+        "nameEn": "Activity",
+        "description": "콘텐츠 참여, 출석, 퀘스트 수행 등 전반적 활동량"
+      },
+      {
+        "id": "INT",
+        "name": "지성",
+        "nameEn": "Intelligence",
+        "description": "전략 수립, 분석, 퀴즈, 정보 기여도"
+      },
+      {
+        "id": "ECO",
+        "name": "경제력",
+        "nameEn": "Economy",
+        "description": "자산 관리, 거래, 투자, 경제 기여도"
+      },
+      {
+        "id": "SOC",
+        "name": "사회성",
+        "nameEn": "Social",
+        "description": "커뮤니케이션, 협동, 멘토링, 사회적 영향력"
+      },
+      {
+        "id": "CRE",
+        "name": "창의력",
+        "nameEn": "Creativity",
+        "description": "팬아트, 창작물, 아이디어 제안, 콘텐츠 생성"
+      },
+      {
+        "id": "LOY",
+        "name": "충성도",
+        "nameEn": "Loyalty",
+        "description": "꾸준한 참여, 장기 활동, 팬클럽 기여, 헌신도"
+      }
+    ]
+  },
+  "rarity": {
+    "description": "희귀도 등급 분포",
+    "tiers": [
+      {
+        "id": "common",
+        "name": "Common",
+        "nameKr": "일반",
+        "color": "#9ca3af",
+        "distribution": 0.4,
+        "description": "전체의 40%. 기본 조합 칭호"
+      },
+      {
+        "id": "uncommon",
+        "name": "Uncommon",
+        "nameKr": "희귀",
+        "color": "#60a5fa",
+        "distribution": 0.5,
+        "description": "전체의 50%. 특화된 조합 칭호"
+      },
+      {
+        "id": "rare",
+        "name": "Rare",
+        "nameKr": "전설",
+        "color": "#f59e0b",
+        "distribution": 0.1,
+        "description": "전체의 10%. 특수 조건 충족 칭호"
+      }
+    ]
+  },
+  "rules": {
+    "changeFrequency": {
+      "description": "칭호 변동 규칙",
+      "maxChangesPerDay": 1,
+      "recalculationTime": "매일 00:00 (KST)",
+      "cooldown": "24시간",
+      "method": "6대 스탯 실시간 집계 후 상위 2개 스탯 조합으로 자동 판정"
+    },
+    "history": {
+      "description": "칭호 이력 수집",
+      "keepHistory": true,
+      "maxHistory": 100,
+      "collectible": true,
+      "achievementBadge": "과거 보유했던 칭호는 수집 뱃지로 프로필에 표시 가능",
+      "rarityTracking": "Rare 칭호 보유 기간 누적 기록"
+    },
+    "display": {
+      "description": "칭호 표시 위치",
+      "locations": [
+        {
+          "id": "profile",
+          "name": "프로필",
+          "description": "메인 프로필 카드에 칭호 + 아우라 표시"
+        },
+        {
+          "id": "chat",
+          "name": "채팅",
+          "description": "채팅 닉네임 옆 칭호 뱃지 표시"
+        },
+        {
+          "id": "sns_card",
+          "name": "SNS 카드",
+          "description": "공유용 SNS 카드에 칭호 + 아키타입 일러스트 포함"
+        }
+      ]
+    },
+    "determination": {
+      "description": "칭호 결정 로직",
+      "method": "상위 2개 스탯 조합 매칭",
+      "tieBreaker": "동점 시 최근 7일간 성장률이 높은 스탯 우선",
+      "balancerCondition": "6개 스탯 편차가 5% 이내일 때 밸런서(AT01) 판정",
+      "healerCondition": "LOY+SOC 상위 2개 + 웰니스 지표 20% 이상일 때 치유사(AT14) 판정"
+    }
+  },
+  "archetypes": [
+    {
+      "id": "AT01",
+      "name": "밸런서",
+      "nameEn": "Balancer",
+      "statCombo": "ALL_BALANCED",
+      "statPrimary": null,
+      "statSecondary": null,
+      "specialCondition": "6개 스탯 편차 5% 이내 (전체 균등)",
+      "rarity": "rare",
+      "description": "모든 영역에서 균형 잡힌 완벽한 올라운더. 어디에나 필요하지만 쉽게 도달할 수 없는 경지.",
+      "aura": {
+        "name": "프리즘 하모니",
+        "nameEn": "Prism Harmony",
+        "color": "#ffffff",
+        "effect": "6색 무지개빛이 캐릭터 주위를 부드럽게 순환하며 회전",
+        "particleType": "rainbow_orbit",
+        "intensity": 0.9
+      },
+      "bonuses": {
+        "allStatsBoost": 3,
+        "description": "전체 스탯 +3% 보너스"
+      }
+    },
+    {
+      "id": "AT02",
+      "name": "전략지휘관",
+      "nameEn": "Strategic Commander",
+      "statCombo": "ACT+INT",
+      "statPrimary": "ACT",
+      "statSecondary": "INT",
+      "specialCondition": null,
+      "rarity": "uncommon",
+      "description": "뛰어난 활동력과 전략적 사고로 전장을 지배하는 지휘관.",
+      "aura": {
+        "name": "택티컬 그리드",
+        "nameEn": "Tactical Grid",
+        "color": "#ef4444",
+        "effect": "붉은 전술 격자 홀로그램이 발밑에서 펼쳐짐",
+        "particleType": "grid_hologram",
+        "intensity": 0.7
+      },
+      "bonuses": {
+        "ACT": 5,
+        "INT": 3,
+        "description": "ACT +5%, INT +3% 보너스"
+      }
+    },
+    {
+      "id": "AT03",
+      "name": "보상가",
+      "nameEn": "Rewarder",
+      "statCombo": "ECO+SOC",
+      "statPrimary": "ECO",
+      "statSecondary": "SOC",
+      "specialCondition": null,
+      "rarity": "common",
+      "description": "경제적 감각과 사교술로 모두에게 보상을 나누는 관대한 존재.",
+      "aura": {
+        "name": "골든 서클",
+        "nameEn": "Golden Circle",
+        "color": "#fbbf24",
+        "effect": "금빛 동전 모양 파티클이 주위를 감싸며 부유",
+        "particleType": "golden_coins",
+        "intensity": 0.5
+      },
+      "bonuses": {
+        "ECO": 5,
+        "SOC": 3,
+        "description": "ECO +5%, SOC +3% 보너스"
+      }
+    },
+    {
+      "id": "AT04",
+      "name": "천재 아티스트",
+      "nameEn": "Genius Artist",
+      "statCombo": "CRE+LOY",
+      "statPrimary": "CRE",
+      "statSecondary": "LOY",
+      "specialCondition": null,
+      "rarity": "uncommon",
+      "description": "타고난 창의력과 흔들림 없는 헌신으로 걸작을 만들어내는 예술가.",
+      "aura": {
+        "name": "뮤즈 플레임",
+        "nameEn": "Muse Flame",
+        "color": "#c084fc",
+        "effect": "보라빛 영감의 불꽃이 머리 위에서 피어오름",
+        "particleType": "inspiration_flame",
+        "intensity": 0.8
+      },
+      "bonuses": {
+        "CRE": 5,
+        "LOY": 3,
+        "description": "CRE +5%, LOY +3% 보너스"
+      }
+    },
+    {
+      "id": "AT05",
+      "name": "불꽃전사",
+      "nameEn": "Flame Warrior",
+      "statCombo": "ACT+LOY",
+      "statPrimary": "ACT",
+      "statSecondary": "LOY",
+      "specialCondition": null,
+      "rarity": "common",
+      "description": "끊임없는 활동력과 불타는 충성심으로 최전선을 지키는 전사.",
+      "aura": {
+        "name": "블레이즈 윙",
+        "nameEn": "Blaze Wing",
+        "color": "#f97316",
+        "effect": "주황빛 화염 날개가 등 뒤에서 펄럭임",
+        "particleType": "fire_wings",
+        "intensity": 0.7
+      },
+      "bonuses": {
+        "ACT": 5,
+        "LOY": 3,
+        "description": "ACT +5%, LOY +3% 보너스"
+      }
+    },
+    {
+      "id": "AT06",
+      "name": "현자",
+      "nameEn": "Sage",
+      "statCombo": "INT+CRE",
+      "statPrimary": "INT",
+      "statSecondary": "CRE",
+      "specialCondition": null,
+      "rarity": "uncommon",
+      "description": "깊은 지성과 창의적 통찰로 새로운 길을 제시하는 지혜의 안내자.",
+      "aura": {
+        "name": "위즈덤 링",
+        "nameEn": "Wisdom Ring",
+        "color": "#06b6d4",
+        "effect": "청록색 룬 문자들이 머리 위에서 천천히 회전",
+        "particleType": "rune_circle",
+        "intensity": 0.6
+      },
+      "bonuses": {
+        "INT": 5,
+        "CRE": 3,
+        "description": "INT +5%, CRE +3% 보너스"
+      }
+    },
+    {
+      "id": "AT07",
+      "name": "수호자",
+      "nameEn": "Guardian",
+      "statCombo": "SOC+ACT",
+      "statPrimary": "SOC",
+      "statSecondary": "ACT",
+      "specialCondition": null,
+      "rarity": "common",
+      "description": "뛰어난 사회성과 행동력으로 커뮤니티를 보호하는 방패.",
+      "aura": {
+        "name": "이지스 필드",
+        "nameEn": "Aegis Field",
+        "color": "#22c55e",
+        "effect": "초록빛 보호막 입자가 반투명하게 주위를 감쌈",
+        "particleType": "shield_barrier",
+        "intensity": 0.6
+      },
+      "bonuses": {
+        "SOC": 5,
+        "ACT": 3,
+        "description": "SOC +5%, ACT +3% 보너스"
+      }
+    },
+    {
+      "id": "AT08",
+      "name": "건축가",
+      "nameEn": "Architect",
+      "statCombo": "CRE+ECO",
+      "statPrimary": "CRE",
+      "statSecondary": "ECO",
+      "specialCondition": null,
+      "rarity": "uncommon",
+      "description": "창의적 설계와 경제적 실행력으로 위대한 구조물을 세우는 건설자.",
+      "aura": {
+        "name": "블루프린트",
+        "nameEn": "Blueprint",
+        "color": "#3b82f6",
+        "effect": "파란색 설계도 홀로그램 조각들이 주위에 부유",
+        "particleType": "blueprint_fragments",
+        "intensity": 0.7
+      },
+      "bonuses": {
+        "CRE": 5,
+        "ECO": 3,
+        "description": "CRE +5%, ECO +3% 보너스"
+      }
+    },
+    {
+      "id": "AT09",
+      "name": "전도사",
+      "nameEn": "Evangelist",
+      "statCombo": "SOC+LOY",
+      "statPrimary": "SOC",
+      "statSecondary": "LOY",
+      "specialCondition": null,
+      "rarity": "common",
+      "description": "강한 사회적 영향력과 헌신으로 새로운 멤버를 이끌어오는 전파자.",
+      "aura": {
+        "name": "라이트 비콘",
+        "nameEn": "Light Beacon",
+        "color": "#facc15",
+        "effect": "따뜻한 금빛 빛줄기가 위로 뻗어 올라감",
+        "particleType": "beacon_light",
+        "intensity": 0.5
+      },
+      "bonuses": {
+        "SOC": 5,
+        "LOY": 3,
+        "description": "SOC +5%, LOY +3% 보너스"
+      }
+    },
+    {
+      "id": "AT10",
+      "name": "투자자",
+      "nameEn": "Investor",
+      "statCombo": "ECO+INT",
+      "statPrimary": "ECO",
+      "statSecondary": "INT",
+      "specialCondition": null,
+      "rarity": "uncommon",
+      "description": "날카로운 분석력과 경제 감각으로 자산을 불리는 재정 전문가.",
+      "aura": {
+        "name": "마켓 플로우",
+        "nameEn": "Market Flow",
+        "color": "#10b981",
+        "effect": "녹색 주가 그래프 형태의 빛이 주위를 흐름",
+        "particleType": "stock_flow",
+        "intensity": 0.6
+      },
+      "bonuses": {
+        "ECO": 5,
+        "INT": 3,
+        "description": "ECO +5%, INT +3% 보너스"
+      }
+    },
+    {
+      "id": "AT11",
+      "name": "역사가",
+      "nameEn": "Historian",
+      "statCombo": "INT+LOY",
+      "statPrimary": "INT",
+      "statSecondary": "LOY",
+      "specialCondition": null,
+      "rarity": "common",
+      "description": "깊은 지식과 오랜 헌신으로 커뮤니티의 기억을 기록하는 기록관.",
+      "aura": {
+        "name": "크로니클 스크롤",
+        "nameEn": "Chronicle Scroll",
+        "color": "#a78bfa",
+        "effect": "고대 두루마리 형태의 반투명 텍스트가 주위를 감쌈",
+        "particleType": "scroll_text",
+        "intensity": 0.5
+      },
+      "bonuses": {
+        "INT": 5,
+        "LOY": 3,
+        "description": "INT +5%, LOY +3% 보너스"
+      }
+    },
+    {
+      "id": "AT12",
+      "name": "연결자",
+      "nameEn": "Connector",
+      "statCombo": "SOC+CRE",
+      "statPrimary": "SOC",
+      "statSecondary": "CRE",
+      "specialCondition": null,
+      "rarity": "common",
+      "description": "창의적 소통 능력으로 사람과 사람 사이를 잇는 네트워커.",
+      "aura": {
+        "name": "네트워크 웹",
+        "nameEn": "Network Web",
+        "color": "#ec4899",
+        "effect": "분홍빛 연결선들이 주변 유저 방향으로 뻗어나감",
+        "particleType": "connection_web",
+        "intensity": 0.6
+      },
+      "bonuses": {
+        "SOC": 5,
+        "CRE": 3,
+        "description": "SOC +5%, CRE +3% 보너스"
+      }
+    },
+    {
+      "id": "AT13",
+      "name": "돌격대장",
+      "nameEn": "Vanguard",
+      "statCombo": "ACT+ECO",
+      "statPrimary": "ACT",
+      "statSecondary": "ECO",
+      "specialCondition": null,
+      "rarity": "common",
+      "description": "압도적 행동력과 자원 동원력으로 선봉에 서는 돌파 전문가.",
+      "aura": {
+        "name": "차지 임팩트",
+        "nameEn": "Charge Impact",
+        "color": "#dc2626",
+        "effect": "붉은 충격파가 발걸음마다 바닥에서 퍼져나감",
+        "particleType": "impact_wave",
+        "intensity": 0.7
+      },
+      "bonuses": {
+        "ACT": 5,
+        "ECO": 3,
+        "description": "ACT +5%, ECO +3% 보너스"
+      }
+    },
+    {
+      "id": "AT14",
+      "name": "치유사",
+      "nameEn": "Healer",
+      "statCombo": "LOY+SOC",
+      "statPrimary": "LOY",
+      "statSecondary": "SOC",
+      "specialCondition": "LOY+SOC 상위 2개 + 웰니스 지표 20% 이상 필요",
+      "rarity": "rare",
+      "description": "깊은 충성심과 따뜻한 사회성, 그리고 치유의 마음으로 상처받은 이들을 돌보는 희귀한 존재.",
+      "aura": {
+        "name": "힐링 블룸",
+        "nameEn": "Healing Bloom",
+        "color": "#86efac",
+        "effect": "연두색 치유의 꽃잎이 캐릭터 주위에서 피어나며 주변 유저에게 흩날림",
+        "particleType": "healing_petals",
+        "intensity": 0.9
+      },
+      "bonuses": {
+        "LOY": 5,
+        "SOC": 5,
+        "wellnessAura": true,
+        "description": "LOY +5%, SOC +5% 보너스 + 주변 유저 웰니스 지표 미세 회복"
+      }
+    },
+    {
+      "id": "AT15",
+      "name": "개척자",
+      "nameEn": "Pioneer",
+      "statCombo": "ACT+CRE",
+      "statPrimary": "ACT",
+      "statSecondary": "CRE",
+      "specialCondition": null,
+      "rarity": "uncommon",
+      "description": "넘치는 행동력과 창의력으로 아무도 가지 않은 길을 개척하는 탐험가.",
+      "aura": {
+        "name": "프론티어 트레일",
+        "nameEn": "Frontier Trail",
+        "color": "#f472b6",
+        "effect": "걸어간 자리에 반짝이는 별가루 발자국이 남음",
+        "particleType": "stardust_trail",
+        "intensity": 0.7
+      },
+      "bonuses": {
+        "ACT": 5,
+        "CRE": 3,
+        "description": "ACT +5%, CRE +3% 보너스"
+      }
+    }
+  ],
+  "comboMatrix": {
+    "description": "스탯 조합 → 아키타입 매핑 매트릭스 (Primary+Secondary)",
+    "matrix": {
+      "ACT+INT": "AT02",
+      "ACT+ECO": "AT13",
+      "ACT+SOC": "AT07",
+      "ACT+CRE": "AT15",
+      "ACT+LOY": "AT05",
+      "INT+ACT": "AT02",
+      "INT+ECO": "AT10",
+      "INT+SOC": "AT07",
+      "INT+CRE": "AT06",
+      "INT+LOY": "AT11",
+      "ECO+ACT": "AT13",
+      "ECO+INT": "AT10",
+      "ECO+SOC": "AT03",
+      "ECO+CRE": "AT08",
+      "ECO+LOY": "AT03",
+      "SOC+ACT": "AT07",
+      "SOC+INT": "AT10",
+      "SOC+ECO": "AT03",
+      "SOC+CRE": "AT12",
+      "SOC+LOY": "AT09",
+      "CRE+ACT": "AT15",
+      "CRE+INT": "AT06",
+      "CRE+ECO": "AT08",
+      "CRE+SOC": "AT12",
+      "CRE+LOY": "AT04",
+      "LOY+ACT": "AT05",
+      "LOY+INT": "AT11",
+      "LOY+ECO": "AT03",
+      "LOY+SOC": "AT14",
+      "LOY+CRE": "AT04"
+    },
+    "specialCases": {
+      "ALL_BALANCED": "AT01",
+      "LOY+SOC+WELLNESS": "AT14"
+    }
+  }
+}

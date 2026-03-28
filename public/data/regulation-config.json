@@ -1,0 +1,599 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "description": "아스테리아 3대 금기 및 규제 시스템",
+    "principle": "공정한 세계를 위한 절대 규율. 금기를 범한 자는 별빛을 잃는다."
+  },
+  "threeTaboos": [
+    {
+      "id": "T1",
+      "name": "데이터 무결성 훼손",
+      "nameEn": "Data Integrity Violation",
+      "icon": "🔒",
+      "severity": "critical",
+      "description": "시스템의 근간을 흔드는 기술적 부정행위. 아스테리아 세계의 존재 자체를 위협한다.",
+      "violations": [
+        {
+          "type": "macro",
+          "name": "매크로 사용",
+          "description": "자동화 프로그램을 이용한 반복 행위",
+          "severity": "critical"
+        },
+        {
+          "type": "bot",
+          "name": "봇 운용",
+          "description": "AI/스크립트 기반 자동 플레이",
+          "severity": "critical"
+        },
+        {
+          "type": "packet_manipulation",
+          "name": "패킷 조작",
+          "description": "클라이언트-서버 통신 데이터 변조",
+          "severity": "fatal"
+        },
+        {
+          "type": "hw_bypass",
+          "name": "HW 우회",
+          "description": "하드웨어 식별 우회를 통한 제재 회피",
+          "severity": "fatal"
+        }
+      ],
+      "detection": {
+        "system": "오라클 감시자 (Oracle Watcher)",
+        "methods": [
+          {
+            "id": "heartbeat_check",
+            "name": "하트비트 체크",
+            "description": "주기적 클라이언트 응답 검증. 비정상 응답 패턴 시 자동 플래그",
+            "interval": "30초",
+            "tolerance": 3
+          },
+          {
+            "id": "abnormal_growth_detection",
+            "name": "비정상 성장 감지",
+            "description": "XP 획득 속도가 통계적 상위 0.1% 초과 시 자동 조사 개시",
+            "threshold": "상위 0.1% (z-score > 3.29)",
+            "cooldown": "1시간"
+          },
+          {
+            "id": "collective_behavior_analysis",
+            "name": "집단 행동 분석",
+            "description": "다수 계정의 동시/동일 행동 패턴 감지. 봇넷/매크로팜 식별",
+            "minClusterSize": 3,
+            "similarityThreshold": 0.92
+          }
+        ]
+      },
+      "defaultPenalty": "즉시 영구추방 (패킷조작/HW우회) 또는 심연유폐 + 조사 (매크로/봇)"
+    },
+    {
+      "id": "T2",
+      "name": "커뮤니티 조화 파괴",
+      "nameEn": "Community Harmony Destruction",
+      "icon": "🤐",
+      "severity": "high",
+      "description": "공동체의 신뢰와 안전을 파괴하는 사회적 부정행위.",
+      "violations": [
+        {
+          "type": "defamation",
+          "name": "비방",
+          "description": "타인의 명예를 훼손하는 허위사실 유포 또는 모욕",
+          "severity": "high"
+        },
+        {
+          "type": "sedition",
+          "name": "내란 선동",
+          "description": "리그/유닛 분열을 목적으로 한 조직적 선동",
+          "severity": "critical"
+        },
+        {
+          "type": "hate_speech",
+          "name": "혐오 발언",
+          "description": "성별, 인종, 종교 등에 기반한 차별적 발언",
+          "severity": "critical"
+        },
+        {
+          "type": "impersonation",
+          "name": "사칭",
+          "description": "타인 또는 운영진을 사칭하여 신뢰를 악용",
+          "severity": "high"
+        }
+      ],
+      "detection": {
+        "system": "커뮤니티 감시 + 신고 시스템",
+        "methods": [
+          {
+            "id": "user_report",
+            "name": "유저 신고",
+            "description": "3인 이상 동일 대상 신고 시 자동 조사 개시"
+          },
+          {
+            "id": "keyword_filter",
+            "name": "키워드 필터",
+            "description": "금칙어 및 패턴 기반 자동 탐지"
+          },
+          {
+            "id": "context_ai",
+            "name": "문맥 분석 AI",
+            "description": "단순 키워드를 넘어 문맥과 의도를 분석"
+          }
+        ]
+      },
+      "escalation": [
+        {
+          "step": 1,
+          "name": "침묵 장막",
+          "nameEn": "Silence Veil",
+          "duration": "24~72시간",
+          "description": "모든 채팅/메시지 기능 차단. 게임 플레이는 가능",
+          "effect": "채팅 차단"
+        },
+        {
+          "step": 2,
+          "name": "성궤 폐쇄",
+          "nameEn": "Orbit Lockdown",
+          "duration": "1주",
+          "description": "성궤(인벤토리) 접근 차단 + 리그 활동 정지",
+          "effect": "성궤 잠금 + 리그 정지"
+        },
+        {
+          "step": 3,
+          "name": "회색인",
+          "nameEn": "Greyed One",
+          "duration": "1개월",
+          "description": "캐릭터가 회색으로 변하고 모든 사회적 기능 박탈. 솔로 플레이만 가능",
+          "effect": "사회적 기능 전면 차단 + 시각적 낙인"
+        }
+      ],
+      "defaultPenalty": "단계적 에스컬레이션 (침묵장막 → 성궤폐쇄 → 회색인)"
+    },
+    {
+      "id": "T3",
+      "name": "경제 질서 교란",
+      "nameEn": "Economic Order Disruption",
+      "icon": "💰",
+      "severity": "critical",
+      "description": "아스테리아 경제 시스템의 균형을 파괴하는 경제적 부정행위.",
+      "violations": [
+        {
+          "type": "currency_abuse",
+          "name": "통화 어뷰징",
+          "description": "시스템 허점을 이용한 비정상적 통화 증식",
+          "severity": "critical"
+        },
+        {
+          "type": "asset_duplication",
+          "name": "자산 복제",
+          "description": "버그/익스플로잇을 이용한 아이템/자산 복제",
+          "severity": "fatal"
+        },
+        {
+          "type": "black_market",
+          "name": "암시장 거래",
+          "description": "공식 마켓 외부에서의 비인가 현금 거래(RMT)",
+          "severity": "critical"
+        },
+        {
+          "type": "fraud",
+          "name": "사기",
+          "description": "거래 사기, 투자 사기, 허위 정보를 이용한 경제적 착취",
+          "severity": "high"
+        }
+      ],
+      "detection": {
+        "system": "오라클 회계사 (Oracle Accountant)",
+        "methods": [
+          {
+            "id": "asset_tracking",
+            "name": "자산 추적",
+            "description": "모든 자산 이동 경로를 블록체인 방식으로 기록. 출처 불명 자산 자동 플래그",
+            "trackingDepth": "무제한 (원본까지 추적)"
+          },
+          {
+            "id": "sudden_change_detection",
+            "name": "급변 감지",
+            "description": "자산 보유량이 24시간 내 300% 이상 변동 시 자동 조사",
+            "threshold": "300% 변동",
+            "timeWindow": "24시간"
+          },
+          {
+            "id": "pattern_analysis",
+            "name": "패턴 분석",
+            "description": "계정 간 반복적 소액 이체, 세탁 패턴, 공모 거래 탐지",
+            "minTransactions": 5,
+            "analysisWindow": "7일"
+          }
+        ]
+      },
+      "defaultPenalty": "자산 몰수 + 무결성 점수 대량 삭감 + 심연유폐 또는 영구추방"
+    }
+  ],
+  "generalPenalties": {
+    "description": "4단계 일반 처벌 체계",
+    "stages": [
+      {
+        "stage": 1,
+        "name": "영혼 침체",
+        "nameEn": "Soul Stagnation",
+        "icon": "😶",
+        "description": "모든 스탯이 10% 감소. 성장 속도 저하를 체감하게 한다.",
+        "effects": [
+          {
+            "type": "stat_reduction",
+            "value": -10,
+            "unit": "percent",
+            "description": "전체 스탯 10% 감소"
+          }
+        ],
+        "duration": "위반 내용에 따라 3일~2주",
+        "integrityLoss": 10,
+        "appealable": true
+      },
+      {
+        "stage": 2,
+        "name": "주권 박탈",
+        "nameEn": "Sovereignty Revocation",
+        "icon": "⛓️",
+        "description": "주권 배율이 0배로 떨어진다. 리그 내 모든 권한과 영향력을 상실한다.",
+        "effects": [
+          {
+            "type": "sovereignty_multiplier",
+            "value": 0,
+            "unit": "multiplier",
+            "description": "주권 배율 0x"
+          },
+          {
+            "type": "league_权限",
+            "value": "revoked",
+            "description": "리그 내 모든 권한 정지"
+          }
+        ],
+        "duration": "2주~1개월",
+        "integrityLoss": 25,
+        "appealable": true
+      },
+      {
+        "stage": 3,
+        "name": "심연 유폐",
+        "nameEn": "Abyss Confinement",
+        "icon": "🕳️",
+        "description": "1개월간 격리 공간에 유폐. 다른 유저와의 모든 상호작용 차단.",
+        "effects": [
+          {
+            "type": "isolation",
+            "value": true,
+            "description": "전체 사회적 기능 차단"
+          },
+          {
+            "type": "stat_reduction",
+            "value": -25,
+            "unit": "percent",
+            "description": "전체 스탯 25% 감소"
+          },
+          {
+            "type": "sovereignty_multiplier",
+            "value": 0,
+            "unit": "multiplier",
+            "description": "주권 배율 0x"
+          },
+          {
+            "type": "league_suspension",
+            "value": true,
+            "description": "리그 활동 전면 정지"
+          }
+        ],
+        "duration": "1개월",
+        "integrityLoss": 50,
+        "appealable": true,
+        "appealCondition": "주권자 재판소 통해서만 가능"
+      },
+      {
+        "stage": 4,
+        "name": "영구 추방",
+        "nameEn": "Eternal Exile",
+        "icon": "💀",
+        "description": "HW 밴. 해당 하드웨어에서의 모든 접근이 영구 차단된다. 복귀 불가.",
+        "effects": [
+          {
+            "type": "hw_ban",
+            "value": true,
+            "description": "하드웨어 식별자 기반 영구 차단"
+          },
+          {
+            "type": "account_deletion",
+            "value": true,
+            "description": "계정 및 모든 자산 영구 삭제"
+          },
+          {
+            "type": "zero_ticket_bind",
+            "value": true,
+            "description": "제로티켓 실명제에 의해 부계정도 차단"
+          }
+        ],
+        "duration": "영구",
+        "integrityLoss": 100,
+        "appealable": false,
+        "irreversible": true
+      }
+    ]
+  },
+  "dualJudiciary": {
+    "description": "이원 사법 체계 — 운영진 즉결 + 주권자 재판소",
+    "operations": {
+      "name": "운영진 즉결 처리",
+      "nameEn": "Operations Immediate Action",
+      "description": "기술적 위반에 대한 즉각적 대응. 시스템 보호가 최우선.",
+      "jurisdiction": [
+        "T1-데이터무결성훼손",
+        "긴급 T3 사안 (자산복제 등)"
+      ],
+      "authority": [
+        "즉시 계정 동결 (조사 중)",
+        "패킷조작/HW우회 적발 시 즉시 영구추방",
+        "복제 자산 즉시 압류 및 롤백",
+        "매크로/봇 의심 계정 72시간 임시 정지"
+      ],
+      "responseTime": "감지 후 5분 이내 자동 조치",
+      "appealRoute": "운영진 결정에 불복 시 주권자 재판소에 항소 가능 (영구추방 제외)"
+    },
+    "sovereignCourt": {
+      "name": "주권자 재판소",
+      "nameEn": "Sovereign Court",
+      "description": "유저 자치 사법기관. T2 위반 및 복잡한 분쟁을 유저들이 직접 심판한다.",
+      "jurisdiction": [
+        "T2-커뮤니티조화파괴",
+        "복잡한 T3 사안 (사기, 암시장)",
+        "운영진 결정 항소"
+      ],
+      "judges": {
+        "title": "판관",
+        "requirement": "성신 등급 (Lv.91 이상)",
+        "minLevel": 91,
+        "starRank": "성신",
+        "maxCount": 5,
+        "integrityRequirement": 95,
+        "description": "재판을 주재하고 최종 판결을 내리는 최고 사법관"
+      },
+      "jury": {
+        "title": "배심원",
+        "requirement": "성현 또는 성존 등급 (Lv.71 이상)",
+        "minLevel": 71,
+        "starRanks": [
+          "성현",
+          "성존"
+        ],
+        "count": 12,
+        "integrityRequirement": 85,
+        "description": "사건을 심리하고 유/무죄를 평결하는 배심원단",
+        "verdictRule": "12인 중 9인 이상 동의 시 유죄 평결 (3/4 다수결)"
+      },
+      "trialProcess": [
+        {
+          "phase": 1,
+          "name": "기소",
+          "nameEn": "Indictment",
+          "description": "피해자 또는 운영진이 재판소에 사건을 접수",
+          "duration": "접수 후 24시간 내 기소 결정",
+          "requirements": [
+            "증거 자료 3건 이상 제출",
+            "피해 사실 구체적 기술",
+            "관련 로그 및 스크린샷 첨부"
+          ]
+        },
+        {
+          "phase": 2,
+          "name": "공판",
+          "nameEn": "Trial",
+          "description": "원고/피고 양측의 진술과 증거 심리",
+          "duration": "최대 72시간 (연장 가능)",
+          "process": [
+            "원고 측 진술 및 증거 제시",
+            "피고 측 반론 및 증거 제시",
+            "판관의 추가 질문",
+            "배심원 질의 시간",
+            "최종 변론"
+          ]
+        },
+        {
+          "phase": 3,
+          "name": "판결",
+          "nameEn": "Verdict",
+          "description": "배심원 평결 후 판관이 최종 판결과 처벌을 선고",
+          "duration": "공판 종료 후 24시간 내",
+          "process": [
+            "배심원 비공개 평의",
+            "유/무죄 평결 (9/12 이상)",
+            "유죄 시 판관이 처벌 수위 결정",
+            "판결문 공개 게시"
+          ]
+        }
+      ],
+      "specialRules": [
+        "판관/배심원은 사건 당사자와 같은 유닛/리그 소속일 수 없음 (이해충돌 방지)",
+        "배심원은 매 재판마다 무작위 선발 (상설 배심원 아님)",
+        "판결에 불복 시 1회에 한해 대법관(소버린) 상고 가능",
+        "재판 과정은 전체 서버에 실시간 공개 (투명성 보장)"
+      ]
+    }
+  },
+  "integrityScore": {
+    "description": "무결성 점수 시스템",
+    "maxScore": 100,
+    "startScore": 100,
+    "effects": {
+      "description": "무결성 점수에 따른 주권 배율 삭감",
+      "tiers": [
+        {
+          "range": [
+            90,
+            100
+          ],
+          "label": "청렴",
+          "sovereigntyModifier": 1,
+          "description": "정상 상태"
+        },
+        {
+          "range": [
+            70,
+            89
+          ],
+          "label": "주의",
+          "sovereigntyModifier": 0.85,
+          "description": "주권 배율 15% 삭감"
+        },
+        {
+          "range": [
+            50,
+            69
+          ],
+          "label": "경고",
+          "sovereigntyModifier": 0.6,
+          "description": "주권 배율 40% 삭감"
+        },
+        {
+          "range": [
+            25,
+            49
+          ],
+          "label": "위험",
+          "sovereigntyModifier": 0.3,
+          "description": "주권 배율 70% 삭감"
+        },
+        {
+          "range": [
+            1,
+            24
+          ],
+          "label": "파멸",
+          "sovereigntyModifier": 0.1,
+          "description": "주권 배율 90% 삭감"
+        },
+        {
+          "range": [
+            0,
+            0
+          ],
+          "label": "추방",
+          "sovereigntyModifier": 0,
+          "description": "자동 영구추방 처리"
+        }
+      ]
+    },
+    "recovery": {
+      "name": "참회 게이트",
+      "nameEn": "Repentance Gate",
+      "description": "무결성 점수는 천천히 회복된다. 빠른 지름길은 없다.",
+      "passiveRecovery": {
+        "rate": 1,
+        "unit": "점/주",
+        "condition": "위반 없이 정상 활동 시"
+      },
+      "activeRecovery": {
+        "name": "정화 퀘스트",
+        "description": "참회 게이트에서 제공하는 특수 퀘스트. 무결성 점수를 추가 회복",
+        "bonusPerQuest": 2,
+        "maxPerWeek": 3,
+        "questTypes": [
+          "커뮤니티 봉사 (신규 유저 가이드 10회)",
+          "경제 기여 (공식 마켓에서 공정 거래 50회)",
+          "성실 활동 (7일 연속 접속 + 일일 퀘스트 완료)"
+        ]
+      },
+      "maxRecoveryPerWeek": 7,
+      "fullRecoveryEstimate": "최소 15주 (0점→100점 기준)"
+    },
+    "lossTable": {
+      "description": "위반 유형별 무결성 점수 차감",
+      "entries": [
+        {
+          "violation": "경미한 T2 위반 (비방 등)",
+          "loss": 5
+        },
+        {
+          "violation": "중대한 T2 위반 (혐오/사칭)",
+          "loss": 15
+        },
+        {
+          "violation": "T3 경제 위반 (사기)",
+          "loss": 20
+        },
+        {
+          "violation": "T3 중대 위반 (통화어뷰징/암시장)",
+          "loss": 35
+        },
+        {
+          "violation": "T1 기술 위반 (매크로/봇)",
+          "loss": 50
+        },
+        {
+          "violation": "T1 치명 위반 (패킷조작/HW우회)",
+          "loss": 100
+        }
+      ]
+    }
+  },
+  "rehabilitation": {
+    "description": "갱생 시스템 — 추방 전 단계의 위반자에게 복귀 기회 제공",
+    "process": [
+      {
+        "step": 1,
+        "name": "정화 퀘스트",
+        "nameEn": "Purification Quest",
+        "description": "참회 게이트에서 지정한 봉사/기여 퀘스트를 이수",
+        "duration": "최소 2주",
+        "requirements": [
+          "지정된 정화 퀘스트 전체 완료",
+          "기간 중 추가 위반 없을 것",
+          "무결성 점수 50점 이상 회복"
+        ]
+      },
+      {
+        "step": 2,
+        "name": "공개 사과",
+        "nameEn": "Public Apology",
+        "description": "서버 전체 공개 게시판에 사과문 게시. 커뮤니티의 수용이 필요",
+        "requirements": [
+          "사과문 작성 및 공개 게시",
+          "커뮤니티 수용 투표 (찬성 60% 이상)",
+          "판관 1인의 사과문 승인"
+        ]
+      },
+      {
+        "step": 3,
+        "name": "무결성 회복",
+        "nameEn": "Integrity Restoration",
+        "description": "참회 게이트를 통해 무결성 점수를 70점 이상으로 회복",
+        "requirements": [
+          "무결성 점수 70점 이상 달성",
+          "최소 30일 연속 무위반 기록",
+          "갱생 완료 후 6개월간 보호 관찰 (재범 시 즉시 2단계 상위 처벌)"
+        ]
+      }
+    ],
+    "restrictions": {
+      "permanentExile": "영구추방(4단계) 처벌자는 갱생 불가. 어떤 경우에도 복귀할 수 없다.",
+      "repeatOffender": "동일 위반 3회 이상 시 갱생 자격 박탈",
+      "probationPeriod": "갱생 완료 후 6개월 보호 관찰"
+    }
+  },
+  "zeroTicket": {
+    "name": "제로티켓 실명제",
+    "nameEn": "Zero Ticket Identity System",
+    "description": "처벌이 계정이 아닌 하드웨어(HW)에 귀속되는 신원 확인 시스템. 부계정으로 제재를 회피할 수 없다.",
+    "mechanism": {
+      "binding": "HW 고유 식별자 (CPU ID + GPU ID + MAC + 디스크 시리얼) 해시 기반",
+      "scope": "모든 처벌은 HW 식별자에 기록",
+      "multiAccount": "동일 HW에서 생성된 모든 계정에 처벌이 공유됨",
+      "evasionDetection": "HW 변경 감지 시 오라클 감시자가 자동 플래그 + 수동 검증"
+    },
+    "privacyProtection": {
+      "description": "개인정보 보호 조치",
+      "measures": [
+        "HW 식별자는 단방향 해시로만 저장 (원본 복원 불가)",
+        "해시값은 처벌 시스템에만 사용, 마케팅/분석 등 타 목적 사용 금지",
+        "유저는 자신의 HW 해시 조회 가능 (확인용)",
+        "데이터 보관 기간: 계정 삭제 후 3년, 이후 자동 폐기"
+      ]
+    }
+  }
+}

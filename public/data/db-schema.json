@@ -1,0 +1,2071 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "description": "아스테리아 DB 스키마 설계 문서",
+    "database": "PostgreSQL 15+",
+    "charset": "UTF-8",
+    "totalTables": 16,
+    "naming": "snake_case",
+    "timestamps": "모든 테이블에 created_at, updated_at 포함",
+    "softDelete": "deleted_at 컬럼으로 소프트 삭제 (penalties, trials 제외 — 영구 보존)"
+  },
+  "tables": [
+    {
+      "name": "users",
+      "description": "유저 기본 정보. 아스테리아 세계의 모든 존재의 근본 테이블.",
+      "primaryKey": "id",
+      "indexes": [
+        "idx_users_nickname (nickname, UNIQUE)",
+        "idx_users_fanclub (fanclub_id)",
+        "idx_users_level (level DESC)",
+        "idx_users_zero_ticket (zero_ticket_hw_hash, UNIQUE)",
+        "idx_users_archetype (archetype_id)"
+      ],
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "nullable": false,
+          "default": "gen_random_uuid()",
+          "description": "유저 고유 ID"
+        },
+        {
+          "name": "nickname",
+          "type": "VARCHAR(30)",
+          "nullable": false,
+          "unique": true,
+          "description": "닉네임 (2~30자, 특수문자 제한)"
+        },
+        {
+          "name": "email",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "unique": true,
+          "description": "이메일 (로그인용)"
+        },
+        {
+          "name": "password_hash",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "description": "비밀번호 해시 (bcrypt)"
+        },
+        {
+          "name": "level",
+          "type": "SMALLINT",
+          "nullable": false,
+          "default": 1,
+          "description": "현재 레벨 (1~100)",
+          "check": "level BETWEEN 1 AND 100"
+        },
+        {
+          "name": "xp",
+          "type": "BIGINT",
+          "nullable": false,
+          "default": 0,
+          "description": "현재 누적 경험치",
+          "check": "xp >= 0"
+        },
+        {
+          "name": "xp_to_next",
+          "type": "INT",
+          "nullable": true,
+          "description": "다음 레벨까지 필요 XP (Lv100이면 NULL)"
+        },
+        {
+          "name": "star_rank",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "default": "'성진'",
+          "description": "성계 등급 (성진~성신)"
+        },
+        {
+          "name": "sovereignty_multiplier",
+          "type": "DECIMAL(5,2)",
+          "nullable": false,
+          "default": 1,
+          "description": "주권 배율 (1.0x ~ 10.0x)",
+          "check": "sovereignty_multiplier BETWEEN 0 AND 10"
+        },
+        {
+          "name": "integrity_score",
+          "type": "SMALLINT",
+          "nullable": false,
+          "default": 100,
+          "description": "무결성 점수 (0~100)",
+          "check": "integrity_score BETWEEN 0 AND 100"
+        },
+        {
+          "name": "archetype_id",
+          "type": "VARCHAR(4)",
+          "nullable": true,
+          "description": "현재 아키타입 칭호 ID (AT01~AT15)"
+        },
+        {
+          "name": "archetype_updated_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "description": "아키타입 마지막 변경 시각"
+        },
+        {
+          "name": "orbit_slots",
+          "type": "SMALLINT",
+          "nullable": false,
+          "default": 1,
+          "description": "성궤 슬롯 수",
+          "check": "orbit_slots >= 1"
+        },
+        {
+          "name": "orbit_capacity",
+          "type": "SMALLINT",
+          "nullable": false,
+          "default": 1,
+          "description": "성궤 확장 용량 (레벨 구간별)"
+        },
+        {
+          "name": "zero_ticket_hw_hash",
+          "type": "VARCHAR(128)",
+          "nullable": false,
+          "unique": true,
+          "description": "제로티켓 HW 해시 (SHA-512, 단방향)"
+        },
+        {
+          "name": "fanclub_id",
+          "type": "UUID",
+          "nullable": true,
+          "references": "fanclubs(id)",
+          "description": "소속 팬클럽 ID"
+        },
+        {
+          "name": "stardust",
+          "type": "BIGINT",
+          "nullable": false,
+          "default": 0,
+          "description": "스타더스트 (프리미엄 재화)",
+          "check": "stardust >= 0"
+        },
+        {
+          "name": "ap",
+          "type": "BIGINT",
+          "nullable": false,
+          "default": 0,
+          "description": "활동 포인트 누적",
+          "check": "ap >= 0"
+        },
+        {
+          "name": "last_login_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "description": "마지막 로그인 시각"
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "default": "'active'",
+          "description": "계정 상태 (active, suspended, confined, exiled)",
+          "check": "status IN ('active','suspended','confined','exiled')"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "default": "NOW()",
+          "description": "가입 시각"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "default": "NOW()",
+          "description": "마지막 수정 시각"
+        },
+        {
+          "name": "deleted_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "description": "소프트 삭제 시각"
+        }
+      ]
+    },
+    {
+      "name": "user_stats",
+      "description": "유저 6대 스탯. 아키타입 칭호 산출의 근거.",
+      "primaryKey": "user_id",
+      "indexes": [
+        "idx_userstats_archetype_calc (loy DESC, act DESC, soc DESC, eco DESC, cre DESC, int_stat DESC)"
+      ],
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "UUID",
+          "nullable": false,
+          "references": "users(id) ON DELETE CASCADE",
+          "description": "유저 ID (1:1)"
+        },
+        {
+          "name": "loy",
+          "type": "INT",
+          "nullable": false,
+          "default": 0,
+          "description": "충성도 (Loyalty)",
+          "check": "loy >= 0"
+        },
+        {
+          "name": "act",
+          "type": "INT",
+          "nullable": false,
+          "default": 0,
+          "description": "활동력 (Activity)",
+          "check": "act >= 0"
+        },
+        {
+          "name": "soc",
+          "type": "INT",
+          "nullable": false,
+          "default": 0,
+          "description": "사회성 (Social)",
+          "check": "soc >= 0"
+        },
+        {
+          "name": "eco",
+          "type": "INT",
+          "nullable": false,
+          "default": 0,
+          "description": "경제력 (Economy)",
+          "check": "eco >= 0"
+        },
+        {
+          "name": "cre",
+          "type": "INT",
+          "nullable": false,
+          "default": 0,
+          "description": "창의력 (Creativity)",
+          "check": "cre >= 0"
+        },
+        {
+          "name": "int_stat",
+          "type": "INT",
+          "nullable": false,
+          "default": 0,
+          "description": "지성 (Intelligence) — 예약어 회피용 int_stat",
+          "check": "int_stat >= 0"
+        },
+        {
+          "name": "unspent_points",
+          "type": "INT",
+          "nullable": false,
+          "default": 0,
+          "description": "미투자 스탯 포인트",
+          "check": "unspent_points >= 0"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "default": "NOW()",
+          "description": "마지막 수정 시각"
+        }
+      ]
+    },
+    {
+      "name": "activity_log",
+      "description": "활동 로그. 모든 AP 획득 이력을 영구 보존. 분석·감사·회계 근거.",
+      "primaryKey": "id",
+      "indexes": [
+        "idx_actlog_user_time (user_id, created_at DESC)",
+        "idx_actlog_domain (domain_id)",
+        "idx_actlog_stat (attributed_stat)"
+      ],
+      "retention": "영구 보존 (삭제 불가)",
+      "partitioning": "created_at 기준 월별 파티셔닝 권장",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGSERIAL",
+          "nullable": false,
+          "description": "로그 고유 ID (자동 증가)"
+        },
+        {
+          "name": "user_id",
+          "type": "UUID",
+          "nullable": false,
+          "references": "users(id)",
+          "description": "활동 수행 유저"
+        },
+        {
+          "name": "domain_id",
+          "type": "VARCHAR(30)",
+          "nullable": false,
+          "description": "활동 영역 ID (quest, trade, create, social, pvp, purify, event)",
+          "check": "domain_id IN ('quest','trade','create','social','pvp','purify','event')"
+        },
+        {
+          "name": "attributed_stat",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "description": "귀속 스탯 (ACT, INT, ECO, SOC, CRE, LOY)",
+          "check": "attributed_stat IN ('ACT','INT','ECO','SOC','CRE','LOY')"
+        },
+        {
+          "name": "ap_earned",
+          "type": "INT",
+          "nullable": false,
+          "description": "획득 AP",
+          "check": "ap_earned > 0"
+        },
+        {
+          "name": "combo_multiplier",
+          "type": "DECIMAL(3,2)",
+          "nullable": false,
+          "default": 1,
+          "description": "콤보 배율 (1.0~1.5)",
+          "check": "combo_multiplier BETWEEN 0.5 AND 5.0"
+        },
+        {
+          "name": "sync_multiplier",
+          "type": "DECIMAL(3,2)",
+          "nullable": false,
+          "default": 1,
+          "description": "동기화 배율 (1.0~2.0)",
+          "check": "sync_multiplier BETWEEN 0.5 AND 5.0"
+        },
+        {
+          "name": "final_ap",
+          "type": "INT",
+          "nullable": false,
+          "description": "최종 AP (ap_earned × combo × sync)"
+        },
+        {
+          "name": "org_id",
+          "type": "UUID",
+          "nullable": true,
+          "references": "organizations(id)",
+          "description": "활동 시 소속 조직 (유닛)"
+        },
+        {
+          "name": "description",
+          "type": "VARCHAR(200)",
+          "nullable": true,
+          "description": "활동 설명"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "default": "NOW()",
+          "description": "활동 시각"
+        }
+      ]
+    },
+    {
+      "name": "daily_activity",
+      "description": "일일 활동 집계. 일일 캡 관리와 콤보 계산에 사용.",
+      "primaryKey": [
+        "user_id",
+        "activity_date"
+      ],
+      "indexes": [
+        "idx_daily_combo (user_id, activity_date DESC)"
+      ],
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "UUID",
+          "nullable": false,
+          "references": "users(id) ON DELETE CASCADE",
+          "description": "유저 ID"
+        },
+        {
+          "name": "activity_date",
+          "type": "DATE",
+          "nullable": false,
+          "description": "활동 날짜"
+        },
+        {
+          "name": "total_ap",
+          "type": "INT",
+          "nullable": false,
+          "default": 0,
+          "description": "당일 총 획득 AP"
+        },
+        {
+          "name": "domain_count",
+          "type": "SMALLINT",
+          "nullable": false,
+          "default": 0,
+          "description": "활동한 영역 수 (다영역 보너스 판정용)"
+        },
+        {
+          "name": "combo_day",
+          "type": "SMALLINT",
+          "nullable": false,
+          "default": 1,
+          "description": "연속 활동 일수 (콤보 스트릭)"
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "default": true,
+          "description": "유효 활동 여부 (유령필터 통과)"
+        },
+        {
+          "name": "sessions_count",
+          "type": "SMALLINT",
+          "nullable": false,
+          "default": 0,
+          "description": "접속 세션 수"
+        },
+        {
+          "name": "active_minutes",
+          "type": "INT",
+          "nullable": false,
+          "default": 0,
+          "description": "실제 활동 시간 (분)"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "default": "NOW()",
+          "description": "생성 시각"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "default": "NOW()",
+          "description": "마지막 갱신 시각"
+        }
+      ]
+    },
+    {
+      "name": "leagues",
+      "description": "리그 정보. 시즌별 리그 인스턴스를 관리.",
+      "primaryKey": "id",
+      "indexes": [
+        "idx_leagues_season (league_type, season_number)",
+        "idx_leagues_active (is_active)"
+      ],
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "nullable": false,
+          "default": "gen_random_uuid()",
+          "description": "리그 인스턴스 ID"
+        },
+        {
+          "name": "league_type",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "description": "리그 유형 (dust, star, planet, nova, quasar)",
+          "check": "league_type IN ('dust','star','planet','nova','quasar')"
+        },
+        {
+          "name": "league_name",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "description": "리그 이름 (더스트~퀘이사)"
+        },
+        {
+          "name": "season_number",
+          "type": "INT",
+          "nullable": false,
+          "description": "시즌 번호"
+        },
+        {
+          "name": "starts_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "description": "시즌 시작일"
+        },
+        {
+          "name": "ends_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "description": "시즌 종료일"
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "default": false,
+          "description": "현재 활성 시즌 여부"
+        },
+        {
+          "name": "promotion_processed",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "default": false,
+          "description": "승격/강등 처리 완료 여부"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "default": "NOW()",
+          "description": "생성 시각"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "default": "NOW()",
+          "description": "수정 시각"
+        }
+      ]
+    },
+    {
+      "name": "fanclubs",
+      "description": "팬클럽. 아티스트 단위의 최상위 조직 엔티티.",
+      "primaryKey": "id",
+      "indexes": [
+        "idx_fanclubs_league (league_id)",
+        "idx_fanclubs_rank (energy DESC)",
+        "idx_fanclubs_artist (artist_name)"
+      ],
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "nullable": false,
+          "default": "gen_random_uuid()",
+          "description": "팬클럽 ID"
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(50)",
+          "nullable": false,
+          "unique": true,
+          "description": "팬클럽 이름"
+        },
+        {
+          "name": "artist_name",
+          "type": "VARCHAR(50)",
+          "nullable": false,
+          "description": "아티스트 이름"
+        },
+        {
+          "name": "league_id",
+          "type": "UUID",
+          "nullable": true,
+          "references": "leagues(id)",
+          "description": "현재 소속 리그"
+        },
+        {
+          "name": "league_tier",
+          "type": "SMALLINT",
+          "nullable": true,
+          "description": "리그 내 단계 (Tier)"
+        },
+        {
+          "name": "energy",
+          "type": "BIGINT",
+          "nullable": false,
+          "default": 0,
+          "description": "팬클럽 총 에너지",
+          "check": "energy >= 0"
+        },
+        {
+          "name": "rank",
+          "type": "INT",
+          "nullable": true,
+          "description": "리그 내 순위"
+        },
+        {
+          "name": "cp",
+          "type": "BIGINT",
+          "nullable": false,
+          "default": 0,
+          "description": "공헌 포인트 (CP) 누적",
+          "check": "cp >= 0"
+        },
+        {
+          "name": "reputation_score",
+          "type": "DECIMAL(5,2)",
+          "nullable": false,
+          "default": 50,
+          "description": "평판 점수 (0~100)",
+          "check": "reputation_score BETWEEN 0 AND 100"
+        },
+        {
+          "name": "reputation_coefficient",
+          "type": "DECIMAL(3,2)",
+          "nullable": false,
+          "default": 1,
+          "description": "평판 계수 (0.5~2.0)"
+        },
+        {
+          "name": "member_count",
+          "type": "INT",
+          "nullable": false,
+          "default": 0,
+          "description": "총 멤버 수"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "default": "NOW()",
+          "description": "생성 시각"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "default": "NOW()",
+          "description": "수정 시각"
+        },
+        {
+          "name": "deleted_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "description": "소프트 삭제"
+        }
+      ]
+    },
+    {
+      "name": "organizations",
+      "description": "조직 트리. 팬클럽 하위의 테리토리/베이스/유닛을 트리 구조로 관리.",
+      "primaryKey": "id",
+      "indexes": [
+        "idx_org_fanclub (fanclub_id)",
+        "idx_org_parent (parent_id)",
+        "idx_org_type (org_type)",
+        "idx_org_leader (leader_id)",
+        "idx_org_energy (energy DESC)"
+      ],
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "nullable": false,
+          "default": "gen_random_uuid()",
+          "description": "조직 ID"
+        },
+        {
+          "name": "fanclub_id",
+          "type": "UUID",
+          "nullable": false,
+          "references": "fanclubs(id)",
+          "description": "소속 팬클럽"
+        },
+        {
+          "name": "parent_id",
+          "type": "UUID",
+          "nullable": true,
+          "references": "organizations(id)",
+          "description": "상위 조직 ID (트리 구조). NULL이면 최상위(테리토리)"
+        },
+        {
+          "name": "org_type",
+          "type": "VARCHAR(15)",
+          "nullable": false,
+          "description": "조직 유형",
+          "check": "org_type IN ('territory','base','unit')"
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(50)",
+          "nullable": false,
+          "description": "조직 이름"
+        },
+        {
+          "name": "leader_id",
+          "type": "UUID",
+          "nullable": true,
+          "references": "users(id)",
+          "description": "리더 유저 ID"
+        },
+        {
+          "name": "member_count",
+          "type": "INT",
+          "nullable": false,
+          "default": 0,
+          "description": "현재 인원",
+          "check": "member_count >= 0"
+        },
+        {
+          "name": "max_members",
+          "type": "INT",
+          "nullable": true,
+          "description": "최대 인원 제한"
+        },
+        {
+          "name": "energy",
+          "type": "BIGINT",
+          "nullable": false,
+          "default": 0,
+          "description": "조직 에너지",
+          "check": "energy >= 0"
+        },
+        {
+          "name": "sync_rate",
+          "type": "DECIMAL(3,2)",
+          "nullable": false,
+          "default": 0,
+          "description": "동기화율 (0.0~1.0)",
+          "check": "sync_rate BETWEEN 0 AND 1"
+        },
+        {
+          "name": "participation_rate",
+          "type": "DECIMAL(3,2)",
+          "nullable": false,
+          "default": 0,
+          "description": "참여율 (0.0~1.0)",
+          "check": "participation_rate BETWEEN 0 AND 1"
+        },
+        {
+          "name": "mission_success_rate",
+          "type": "DECIMAL(5,2)",
+          "nullable": true,
+          "description": "미션 성공률 (%) — 베이스 전용"
+        },
+        {
+          "name": "eco_rank_percentile",
+          "type": "DECIMAL(5,2)",
+          "nullable": true,
+          "description": "ECO 순위 백분율 — 테리토리 전용"
+        },
+        {
+          "name": "purification_count",
+          "type": "INT",
+          "nullable": false,
+          "default": 0,
+          "description": "정화 활동 누적 건수"
+        },
+        {
+          "name": "depth",
+          "type": "SMALLINT",
+          "nullable": false,
+          "default": 0,
+          "description": "트리 깊이 (0=territory, 1=base, 2=unit)"
+        },
+        {
+          "name": "path",
+          "type": "VARCHAR(500)",
+          "nullable": false,
+          "description": "Materialized Path (예: /fanclub/territory/base/unit)"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "default": "NOW()",
+          "description": "생성 시각"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "default": "NOW()",
+          "description": "수정 시각"
+        },
+        {
+          "name": "deleted_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "description": "소프트 삭제"
+        }
+      ]
+    },
+    {
+      "name": "org_members",
+      "description": "조직 멤버십. 유저-조직 간 N:M 매핑 + 역할/가입경로.",
+      "primaryKey": "id",
+      "indexes": [
+        "idx_orgmem_user (user_id)",
+        "idx_orgmem_org (org_id)",
+        "idx_orgmem_unique (org_id, user_id, UNIQUE)"
+      ],
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "nullable": false,
+          "default": "gen_random_uuid()",
+          "description": "멤버십 ID"
+        },
+        {
+          "name": "org_id",
+          "type": "UUID",
+          "nullable": false,
+          "references": "organizations(id) ON DELETE CASCADE",
+          "description": "소속 조직"
+        },
+        {
+          "name": "user_id",
+          "type": "UUID",
+          "nullable": false,
+          "references": "users(id) ON DELETE CASCADE",
+          "description": "유저"
+        },
+        {
+          "name": "role",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "default": "'member'",
+          "description": "조직 내 역할",
+          "check": "role IN ('leader','officer','member','recruit')"
+        },
+        {
+          "name": "join_method",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "default": "'apply'",
+          "description": "가입 경로",
+          "check": "join_method IN ('apply','invite','auto','founder')"
+        },
+        {
+          "name": "joined_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "default": "NOW()",
+          "description": "가입 시각"
+        },
+        {
+          "name": "left_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "description": "탈퇴 시각"
+        }
+      ]
+    },
+    {
+      "name": "arks",
+      "description": "방주(Ark). 유저 개인 공간. 종류/양식/레벨/방문자 관리.",
+      "primaryKey": "id",
+      "indexes": [
+        "idx_arks_user (user_id)",
+        "idx_arks_visitors (visitor_count DESC)"
+      ],
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "nullable": false,
+          "default": "gen_random_uuid()",
+          "description": "방주 ID"
+        },
+        {
+          "name": "user_id",
+          "type": "UUID",
+          "nullable": false,
+          "references": "users(id) ON DELETE CASCADE",
+          "description": "소유자"
+        },
+        {
+          "name": "ark_type",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "description": "방주 종류 (personal, guild, showcase)",
+          "check": "ark_type IN ('personal','guild','showcase')"
+        },
+        {
+          "name": "style",
+          "type": "VARCHAR(30)",
+          "nullable": false,
+          "default": "'default'",
+          "description": "양식/테마"
+        },
+        {
+          "name": "level",
+          "type": "SMALLINT",
+          "nullable": false,
+          "default": 1,
+          "description": "방주 레벨",
+          "check": "level BETWEEN 1 AND 50"
+        },
+        {
+          "name": "slot_count",
+          "type": "SMALLINT",
+          "nullable": false,
+          "default": 5,
+          "description": "아티팩트 슬롯 수"
+        },
+        {
+          "name": "cp",
+          "type": "INT",
+          "nullable": false,
+          "default": 0,
+          "description": "방주 꾸미기 CP"
+        },
+        {
+          "name": "visitor_count",
+          "type": "BIGINT",
+          "nullable": false,
+          "default": 0,
+          "description": "누적 방문자 수"
+        },
+        {
+          "name": "is_public",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "default": true,
+          "description": "공개 여부"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "default": "NOW()",
+          "description": "생성 시각"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "default": "NOW()",
+          "description": "수정 시각"
+        }
+      ]
+    },
+    {
+      "name": "artifacts",
+      "description": "아티팩트(성궤 아이템). 유저 소유 아이템, 스탯 보너스, 소울 아티팩트 여부.",
+      "primaryKey": "id",
+      "indexes": [
+        "idx_artifacts_user (user_id)",
+        "idx_artifacts_ark (ark_id)",
+        "idx_artifacts_serial (serial_number, UNIQUE)",
+        "idx_artifacts_rarity (rarity)"
+      ],
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "nullable": false,
+          "default": "gen_random_uuid()",
+          "description": "아티팩트 ID"
+        },
+        {
+          "name": "user_id",
+          "type": "UUID",
+          "nullable": false,
+          "references": "users(id)",
+          "description": "소유자"
+        },
+        {
+          "name": "ark_id",
+          "type": "UUID",
+          "nullable": true,
+          "references": "arks(id)",
+          "description": "장착된 방주 (NULL이면 인벤토리)"
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(50)",
+          "nullable": false,
+          "description": "아티팩트 이름"
+        },
+        {
+          "name": "rarity",
+          "type": "VARCHAR(15)",
+          "nullable": false,
+          "description": "희귀도",
+          "check": "rarity IN ('common','uncommon','rare','epic','legendary','mythic')"
+        },
+        {
+          "name": "stat_bonus",
+          "type": "JSONB",
+          "nullable": false,
+          "default": "'{}'",
+          "description": "스탯 보너스 (예: {\"ACT\": 5, \"INT\": 3})"
+        },
+        {
+          "name": "serial_number",
+          "type": "VARCHAR(32)",
+          "nullable": false,
+          "unique": true,
+          "description": "고유 시리얼 넘버 (위조 방지)"
+        },
+        {
+          "name": "is_soul_artifact",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "default": false,
+          "description": "소울 아티팩트 여부 (거래 불가, 유저 귀속)"
+        },
+        {
+          "name": "equipped",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "default": false,
+          "description": "장착 여부"
+        },
+        {
+          "name": "acquired_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "default": "NOW()",
+          "description": "획득 시각"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "default": "NOW()",
+          "description": "생성 시각"
+        }
+      ]
+    },
+    {
+      "name": "penalties",
+      "description": "처벌 기록. 3대 금기 및 일반 처벌 이력. 영구 보존.",
+      "primaryKey": "id",
+      "indexes": [
+        "idx_penalties_user (user_id)",
+        "idx_penalties_active (user_id, expires_at)",
+        "idx_penalties_taboo (taboo_type)"
+      ],
+      "retention": "영구 보존 (삭제 불가)",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "nullable": false,
+          "default": "gen_random_uuid()",
+          "description": "처벌 ID"
+        },
+        {
+          "name": "user_id",
+          "type": "UUID",
+          "nullable": false,
+          "references": "users(id)",
+          "description": "처벌 대상 유저"
+        },
+        {
+          "name": "taboo_type",
+          "type": "VARCHAR(5)",
+          "nullable": false,
+          "description": "금기 유형 (T1, T2, T3, GENERAL)",
+          "check": "taboo_type IN ('T1','T2','T3','GENERAL')"
+        },
+        {
+          "name": "penalty_stage",
+          "type": "SMALLINT",
+          "nullable": false,
+          "description": "처벌 단계 (1~4)",
+          "check": "penalty_stage BETWEEN 1 AND 4"
+        },
+        {
+          "name": "penalty_name",
+          "type": "VARCHAR(30)",
+          "nullable": false,
+          "description": "처벌명 (영혼침체, 주권박탈, 심연유폐, 영구추방)"
+        },
+        {
+          "name": "reason",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "처벌 사유 상세"
+        },
+        {
+          "name": "evidence",
+          "type": "JSONB",
+          "nullable": true,
+          "description": "증거 자료 (로그ID, 스크린샷 URL 등)"
+        },
+        {
+          "name": "integrity_loss",
+          "type": "SMALLINT",
+          "nullable": false,
+          "default": 0,
+          "description": "무결성 점수 차감량"
+        },
+        {
+          "name": "issued_by",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "description": "발령 주체 (system, operations, court)",
+          "check": "issued_by IN ('system','operations','court')"
+        },
+        {
+          "name": "trial_id",
+          "type": "UUID",
+          "nullable": true,
+          "references": "trials(id)",
+          "description": "관련 재판 ID (재판소 판결인 경우)"
+        },
+        {
+          "name": "starts_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "default": "NOW()",
+          "description": "처벌 시작일"
+        },
+        {
+          "name": "expires_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "description": "처벌 만료일 (NULL이면 영구)"
+        },
+        {
+          "name": "rehabilitation_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "description": "갱생 완료일"
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "default": true,
+          "description": "현재 활성 여부"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "default": "NOW()",
+          "description": "기록 시각"
+        }
+      ]
+    },
+    {
+      "name": "trials",
+      "description": "주권자 재판소 재판 기록. 기소→공판→판결 전 과정 추적.",
+      "primaryKey": "id",
+      "indexes": [
+        "idx_trials_defendant (defendant_id)",
+        "idx_trials_judge (judge_id)",
+        "idx_trials_status (status)"
+      ],
+      "retention": "영구 보존",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "nullable": false,
+          "default": "gen_random_uuid()",
+          "description": "재판 ID"
+        },
+        {
+          "name": "defendant_id",
+          "type": "UUID",
+          "nullable": false,
+          "references": "users(id)",
+          "description": "피고 유저"
+        },
+        {
+          "name": "plaintiff_id",
+          "type": "UUID",
+          "nullable": true,
+          "references": "users(id)",
+          "description": "원고 유저 (운영진 기소 시 NULL)"
+        },
+        {
+          "name": "judge_id",
+          "type": "UUID",
+          "nullable": true,
+          "references": "users(id)",
+          "description": "담당 판관 (Lv.91+)"
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "default": "'filed'",
+          "description": "재판 상태",
+          "check": "status IN ('filed','indicted','in_trial','verdict','closed','appealed')"
+        },
+        {
+          "name": "taboo_type",
+          "type": "VARCHAR(5)",
+          "nullable": false,
+          "description": "관련 금기 유형"
+        },
+        {
+          "name": "charges",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "혐의 내용"
+        },
+        {
+          "name": "evidence",
+          "type": "JSONB",
+          "nullable": false,
+          "default": "'[]'",
+          "description": "증거 자료 배열"
+        },
+        {
+          "name": "defense_statement",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "피고 측 변론"
+        },
+        {
+          "name": "jury_votes",
+          "type": "JSONB",
+          "nullable": true,
+          "description": "배심원 12인 투표 결과 (예: {\"guilty\": 9, \"not_guilty\": 3})"
+        },
+        {
+          "name": "verdict",
+          "type": "VARCHAR(15)",
+          "nullable": true,
+          "description": "판결 결과",
+          "check": "verdict IS NULL OR verdict IN ('guilty','not_guilty','dismissed')"
+        },
+        {
+          "name": "sentence",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "선고 내용 (유죄 시)"
+        },
+        {
+          "name": "penalty_id",
+          "type": "UUID",
+          "nullable": true,
+          "references": "penalties(id)",
+          "description": "연결된 처벌 ID"
+        },
+        {
+          "name": "filed_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "default": "NOW()",
+          "description": "접수 시각"
+        },
+        {
+          "name": "trial_started_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "description": "공판 시작 시각"
+        },
+        {
+          "name": "verdict_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "description": "판결 시각"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "default": "NOW()",
+          "description": "생성 시각"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "default": "NOW()",
+          "description": "수정 시각"
+        }
+      ]
+    },
+    {
+      "name": "reports",
+      "description": "신고 기록. 유저 간 신고 접수 및 처리 추적.",
+      "primaryKey": "id",
+      "indexes": [
+        "idx_reports_target (target_id)",
+        "idx_reports_reporter (reporter_id)",
+        "idx_reports_status (status)"
+      ],
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "nullable": false,
+          "default": "gen_random_uuid()",
+          "description": "신고 ID"
+        },
+        {
+          "name": "reporter_id",
+          "type": "UUID",
+          "nullable": false,
+          "references": "users(id)",
+          "description": "신고자"
+        },
+        {
+          "name": "target_id",
+          "type": "UUID",
+          "nullable": false,
+          "references": "users(id)",
+          "description": "신고 대상"
+        },
+        {
+          "name": "report_type",
+          "type": "VARCHAR(30)",
+          "nullable": false,
+          "description": "신고 유형",
+          "check": "report_type IN ('defamation','hate_speech','impersonation','sedition','fraud','macro','bug_exploit','other')"
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "nullable": false,
+          "description": "신고 내용 상세"
+        },
+        {
+          "name": "evidence_urls",
+          "type": "JSONB",
+          "nullable": true,
+          "description": "증거 URL 배열"
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "default": "'pending'",
+          "description": "처리 상태",
+          "check": "status IN ('pending','investigating','resolved','dismissed','escalated')"
+        },
+        {
+          "name": "resolution",
+          "type": "TEXT",
+          "nullable": true,
+          "description": "처리 결과"
+        },
+        {
+          "name": "trial_id",
+          "type": "UUID",
+          "nullable": true,
+          "references": "trials(id)",
+          "description": "에스컬레이션된 재판 ID"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "default": "NOW()",
+          "description": "신고 시각"
+        },
+        {
+          "name": "resolved_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "description": "처리 완료 시각"
+        }
+      ]
+    },
+    {
+      "name": "payments",
+      "description": "결제 기록. 스타더스트 충전 및 AP 구매 내역.",
+      "primaryKey": "id",
+      "indexes": [
+        "idx_payments_user (user_id)",
+        "idx_payments_type (payment_type)",
+        "idx_payments_date (created_at DESC)"
+      ],
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "nullable": false,
+          "default": "gen_random_uuid()",
+          "description": "결제 ID"
+        },
+        {
+          "name": "user_id",
+          "type": "UUID",
+          "nullable": false,
+          "references": "users(id)",
+          "description": "결제 유저"
+        },
+        {
+          "name": "payment_type",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "description": "결제 유형",
+          "check": "payment_type IN ('stardust_purchase','subscription','ap_boost','gift','refund')"
+        },
+        {
+          "name": "amount",
+          "type": "DECIMAL(12,2)",
+          "nullable": false,
+          "description": "결제 금액 (KRW)"
+        },
+        {
+          "name": "currency",
+          "type": "VARCHAR(3)",
+          "nullable": false,
+          "default": "'KRW'",
+          "description": "통화"
+        },
+        {
+          "name": "stardust_granted",
+          "type": "INT",
+          "nullable": false,
+          "default": 0,
+          "description": "지급된 스타더스트"
+        },
+        {
+          "name": "ap_granted",
+          "type": "INT",
+          "nullable": false,
+          "default": 0,
+          "description": "지급된 AP"
+        },
+        {
+          "name": "payment_method",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "description": "결제 수단 (card, bank, mobile)"
+        },
+        {
+          "name": "transaction_id",
+          "type": "VARCHAR(100)",
+          "nullable": true,
+          "unique": true,
+          "description": "외부 결제 트랜잭션 ID"
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(15)",
+          "nullable": false,
+          "default": "'pending'",
+          "description": "결제 상태",
+          "check": "status IN ('pending','completed','failed','refunded','cancelled')"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "default": "NOW()",
+          "description": "결제 시각"
+        },
+        {
+          "name": "completed_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "description": "완료 시각"
+        }
+      ]
+    },
+    {
+      "name": "subscriptions",
+      "description": "구독 관리. 요금제/상태/만료/자동갱신 추적.",
+      "primaryKey": "id",
+      "indexes": [
+        "idx_subs_user (user_id)",
+        "idx_subs_active (user_id, status)",
+        "idx_subs_expiry (expires_at)"
+      ],
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "nullable": false,
+          "default": "gen_random_uuid()",
+          "description": "구독 ID"
+        },
+        {
+          "name": "user_id",
+          "type": "UUID",
+          "nullable": false,
+          "references": "users(id)",
+          "description": "구독 유저"
+        },
+        {
+          "name": "plan_type",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "description": "요금제",
+          "check": "plan_type IN ('free','basic','premium','ultimate')"
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(15)",
+          "nullable": false,
+          "default": "'active'",
+          "description": "구독 상태",
+          "check": "status IN ('active','paused','cancelled','expired')"
+        },
+        {
+          "name": "starts_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "description": "구독 시작일"
+        },
+        {
+          "name": "expires_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "description": "구독 만료일"
+        },
+        {
+          "name": "auto_renew",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "default": true,
+          "description": "자동 갱신 여부"
+        },
+        {
+          "name": "payment_id",
+          "type": "UUID",
+          "nullable": true,
+          "references": "payments(id)",
+          "description": "최근 결제 ID"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "default": "NOW()",
+          "description": "생성 시각"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "default": "NOW()",
+          "description": "수정 시각"
+        }
+      ]
+    },
+    {
+      "name": "energy_snapshots",
+      "description": "에너지 스냅샷. 조직별 일일 에너지 합산 결과를 기록. 리그 랭킹 산출 근거.",
+      "primaryKey": "id",
+      "indexes": [
+        "idx_esnap_org_date (org_id, snapshot_date DESC)",
+        "idx_esnap_date (snapshot_date)",
+        "idx_esnap_fanclub (fanclub_id, snapshot_date DESC)"
+      ],
+      "partitioning": "snapshot_date 기준 월별 파티셔닝 권장",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGSERIAL",
+          "nullable": false,
+          "description": "스냅샷 ID"
+        },
+        {
+          "name": "org_id",
+          "type": "UUID",
+          "nullable": false,
+          "references": "organizations(id)",
+          "description": "조직 ID"
+        },
+        {
+          "name": "fanclub_id",
+          "type": "UUID",
+          "nullable": false,
+          "references": "fanclubs(id)",
+          "description": "팬클럽 ID (빠른 조회용 비정규화)"
+        },
+        {
+          "name": "org_type",
+          "type": "VARCHAR(15)",
+          "nullable": false,
+          "description": "조직 유형 (territory, base, unit)"
+        },
+        {
+          "name": "snapshot_date",
+          "type": "DATE",
+          "nullable": false,
+          "description": "스냅샷 날짜"
+        },
+        {
+          "name": "member_count",
+          "type": "INT",
+          "nullable": false,
+          "default": 0,
+          "description": "당시 인원 수"
+        },
+        {
+          "name": "participation_rate",
+          "type": "DECIMAL(3,2)",
+          "nullable": false,
+          "default": 0,
+          "description": "참여율"
+        },
+        {
+          "name": "sync_rate",
+          "type": "DECIMAL(3,2)",
+          "nullable": false,
+          "default": 0,
+          "description": "동기화율"
+        },
+        {
+          "name": "mission_bonus",
+          "type": "DECIMAL(3,2)",
+          "nullable": false,
+          "default": 1,
+          "description": "미션 성공 보너스 배율"
+        },
+        {
+          "name": "economic_weight",
+          "type": "DECIMAL(3,2)",
+          "nullable": false,
+          "default": 1,
+          "description": "경제 가중치 배율"
+        },
+        {
+          "name": "defense_bonus",
+          "type": "DECIMAL(3,2)",
+          "nullable": false,
+          "default": 1,
+          "description": "방어 보너스 배율"
+        },
+        {
+          "name": "raw_energy",
+          "type": "BIGINT",
+          "nullable": false,
+          "default": 0,
+          "description": "보정 전 에너지"
+        },
+        {
+          "name": "final_energy",
+          "type": "BIGINT",
+          "nullable": false,
+          "default": 0,
+          "description": "최종 에너지 (모든 배율 적용 후)"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "default": "NOW()",
+          "description": "생성 시각"
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "from": "users",
+      "to": "user_stats",
+      "type": "1:1",
+      "key": "user_id"
+    },
+    {
+      "from": "users",
+      "to": "fanclubs",
+      "type": "N:1",
+      "key": "fanclub_id"
+    },
+    {
+      "from": "users",
+      "to": "activity_log",
+      "type": "1:N",
+      "key": "user_id"
+    },
+    {
+      "from": "users",
+      "to": "daily_activity",
+      "type": "1:N",
+      "key": "user_id"
+    },
+    {
+      "from": "users",
+      "to": "arks",
+      "type": "1:N",
+      "key": "user_id"
+    },
+    {
+      "from": "users",
+      "to": "artifacts",
+      "type": "1:N",
+      "key": "user_id"
+    },
+    {
+      "from": "users",
+      "to": "penalties",
+      "type": "1:N",
+      "key": "user_id"
+    },
+    {
+      "from": "users",
+      "to": "payments",
+      "type": "1:N",
+      "key": "user_id"
+    },
+    {
+      "from": "users",
+      "to": "subscriptions",
+      "type": "1:N",
+      "key": "user_id"
+    },
+    {
+      "from": "users",
+      "to": "org_members",
+      "type": "1:N",
+      "key": "user_id"
+    },
+    {
+      "from": "fanclubs",
+      "to": "leagues",
+      "type": "N:1",
+      "key": "league_id"
+    },
+    {
+      "from": "fanclubs",
+      "to": "organizations",
+      "type": "1:N",
+      "key": "fanclub_id"
+    },
+    {
+      "from": "organizations",
+      "to": "organizations",
+      "type": "자기참조 (parent_id)",
+      "key": "parent_id"
+    },
+    {
+      "from": "organizations",
+      "to": "org_members",
+      "type": "1:N",
+      "key": "org_id"
+    },
+    {
+      "from": "organizations",
+      "to": "energy_snapshots",
+      "type": "1:N",
+      "key": "org_id"
+    },
+    {
+      "from": "arks",
+      "to": "artifacts",
+      "type": "1:N",
+      "key": "ark_id"
+    },
+    {
+      "from": "trials",
+      "to": "penalties",
+      "type": "1:1",
+      "key": "trial_id"
+    },
+    {
+      "from": "reports",
+      "to": "trials",
+      "type": "N:1",
+      "key": "trial_id"
+    },
+    {
+      "from": "payments",
+      "to": "subscriptions",
+      "type": "1:1",
+      "key": "payment_id"
+    }
+  ],
+  "api": {
+    "description": "REST API 엔드포인트",
+    "baseUrl": "/api/v1",
+    "authentication": "Bearer Token (JWT)",
+    "rateLimit": "인증 유저 100req/min, 비인증 20req/min",
+    "groups": [
+      {
+        "name": "Auth",
+        "prefix": "/auth",
+        "endpoints": [
+          {
+            "method": "POST",
+            "path": "/register",
+            "description": "회원가입 (제로티켓 HW 해시 포함)",
+            "body": "{ nickname, email, password, hwHash }"
+          },
+          {
+            "method": "POST",
+            "path": "/login",
+            "description": "로그인",
+            "body": "{ email, password }"
+          },
+          {
+            "method": "POST",
+            "path": "/logout",
+            "description": "로그아웃"
+          },
+          {
+            "method": "POST",
+            "path": "/refresh",
+            "description": "토큰 갱신"
+          },
+          {
+            "method": "POST",
+            "path": "/verify-hw",
+            "description": "HW 해시 검증 (제로티켓)",
+            "body": "{ hwHash }"
+          }
+        ]
+      },
+      {
+        "name": "User",
+        "prefix": "/users",
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/me",
+            "description": "내 프로필 조회"
+          },
+          {
+            "method": "PATCH",
+            "path": "/me",
+            "description": "프로필 수정",
+            "body": "{ nickname, ... }"
+          },
+          {
+            "method": "GET",
+            "path": "/me/stats",
+            "description": "내 6대 스탯 조회"
+          },
+          {
+            "method": "POST",
+            "path": "/me/stats/invest",
+            "description": "스탯 포인트 투자",
+            "body": "{ stat, points }"
+          },
+          {
+            "method": "GET",
+            "path": "/me/archetype",
+            "description": "현재 아키타입 + 이력 조회"
+          },
+          {
+            "method": "GET",
+            "path": "/me/integrity",
+            "description": "무결성 점수 + 참회 게이트 상태"
+          },
+          {
+            "method": "GET",
+            "path": "/me/activity",
+            "description": "활동 로그 조회 (페이징)"
+          },
+          {
+            "method": "GET",
+            "path": "/:userId",
+            "description": "타 유저 프로필 조회 (공개 정보)"
+          },
+          {
+            "method": "GET",
+            "path": "/:userId/sns-card",
+            "description": "SNS 공유용 카드 생성"
+          }
+        ]
+      },
+      {
+        "name": "League",
+        "prefix": "/leagues",
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/",
+            "description": "전체 리그 목록 + 현재 시즌"
+          },
+          {
+            "method": "GET",
+            "path": "/:leagueId",
+            "description": "리그 상세 (팬클럽 랭킹 포함)"
+          },
+          {
+            "method": "GET",
+            "path": "/:leagueId/ranking",
+            "description": "리그 랭킹 조회 (페이징)"
+          },
+          {
+            "method": "GET",
+            "path": "/mirror-ranking",
+            "description": "미러 랭킹 조회 (상위꼴찌 vs 하위1등)"
+          },
+          {
+            "method": "GET",
+            "path": "/season/current",
+            "description": "현재 시즌 정보"
+          },
+          {
+            "method": "GET",
+            "path": "/promotion/preview",
+            "description": "승격/강등 예상 미리보기"
+          }
+        ]
+      },
+      {
+        "name": "Organization",
+        "prefix": "/orgs",
+        "endpoints": [
+          {
+            "method": "POST",
+            "path": "/",
+            "description": "조직 생성 (유닛/베이스/테리토리)",
+            "body": "{ fanclubId, parentId, orgType, name }"
+          },
+          {
+            "method": "GET",
+            "path": "/:orgId",
+            "description": "조직 상세"
+          },
+          {
+            "method": "PATCH",
+            "path": "/:orgId",
+            "description": "조직 정보 수정"
+          },
+          {
+            "method": "DELETE",
+            "path": "/:orgId",
+            "description": "조직 해산 (소프트 삭제)"
+          },
+          {
+            "method": "GET",
+            "path": "/:orgId/tree",
+            "description": "조직 트리 조회 (하위 전체)"
+          },
+          {
+            "method": "GET",
+            "path": "/:orgId/members",
+            "description": "조직 멤버 목록"
+          },
+          {
+            "method": "POST",
+            "path": "/:orgId/members",
+            "description": "멤버 가입/초대",
+            "body": "{ userId, joinMethod }"
+          },
+          {
+            "method": "PATCH",
+            "path": "/:orgId/members/:userId",
+            "description": "멤버 역할 변경",
+            "body": "{ role }"
+          },
+          {
+            "method": "DELETE",
+            "path": "/:orgId/members/:userId",
+            "description": "멤버 탈퇴/추방"
+          },
+          {
+            "method": "GET",
+            "path": "/:orgId/energy",
+            "description": "조직 에너지 현황 + 히스토리"
+          }
+        ]
+      },
+      {
+        "name": "Ark",
+        "prefix": "/arks",
+        "endpoints": [
+          {
+            "method": "POST",
+            "path": "/",
+            "description": "방주 생성",
+            "body": "{ arkType, style }"
+          },
+          {
+            "method": "GET",
+            "path": "/me",
+            "description": "내 방주 목록"
+          },
+          {
+            "method": "GET",
+            "path": "/:arkId",
+            "description": "방주 상세 (방문)"
+          },
+          {
+            "method": "PATCH",
+            "path": "/:arkId",
+            "description": "방주 수정 (양식, 공개여부)",
+            "body": "{ style, isPublic }"
+          },
+          {
+            "method": "GET",
+            "path": "/:arkId/artifacts",
+            "description": "방주 내 아티팩트 목록"
+          },
+          {
+            "method": "POST",
+            "path": "/:arkId/artifacts",
+            "description": "아티팩트 장착",
+            "body": "{ artifactId }"
+          },
+          {
+            "method": "DELETE",
+            "path": "/:arkId/artifacts/:artifactId",
+            "description": "아티팩트 해제"
+          },
+          {
+            "method": "POST",
+            "path": "/:arkId/visit",
+            "description": "방주 방문 기록"
+          }
+        ]
+      },
+      {
+        "name": "Economy",
+        "prefix": "/economy",
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/stardust/balance",
+            "description": "스타더스트 잔액"
+          },
+          {
+            "method": "POST",
+            "path": "/stardust/purchase",
+            "description": "스타더스트 충전",
+            "body": "{ amount, paymentMethod }"
+          },
+          {
+            "method": "GET",
+            "path": "/payments/history",
+            "description": "결제 이력 (페이징)"
+          },
+          {
+            "method": "GET",
+            "path": "/subscriptions/me",
+            "description": "내 구독 정보"
+          },
+          {
+            "method": "POST",
+            "path": "/subscriptions",
+            "description": "구독 시작/변경",
+            "body": "{ planType }"
+          },
+          {
+            "method": "DELETE",
+            "path": "/subscriptions/me",
+            "description": "구독 해지"
+          },
+          {
+            "method": "POST",
+            "path": "/artifacts/trade",
+            "description": "아티팩트 거래",
+            "body": "{ artifactId, buyerId, price }"
+          }
+        ]
+      },
+      {
+        "name": "Regulation",
+        "prefix": "/regulation",
+        "endpoints": [
+          {
+            "method": "POST",
+            "path": "/reports",
+            "description": "신고 접수",
+            "body": "{ targetId, reportType, description, evidence }"
+          },
+          {
+            "method": "GET",
+            "path": "/reports/me",
+            "description": "내 신고 이력"
+          },
+          {
+            "method": "GET",
+            "path": "/trials",
+            "description": "공개 재판 목록"
+          },
+          {
+            "method": "GET",
+            "path": "/trials/:trialId",
+            "description": "재판 상세 (실시간 공개)"
+          },
+          {
+            "method": "POST",
+            "path": "/trials/:trialId/vote",
+            "description": "배심원 투표 (자격 검증 필요)",
+            "body": "{ verdict }"
+          },
+          {
+            "method": "GET",
+            "path": "/penalties/me",
+            "description": "내 처벌 이력"
+          },
+          {
+            "method": "POST",
+            "path": "/rehabilitation/apply",
+            "description": "갱생 신청"
+          }
+        ]
+      }
+    ]
+  }
+}

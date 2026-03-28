@@ -1,0 +1,1043 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "description": "아스테리아 서버 인프라 설정",
+    "runtime": "Node.js 20 LTS",
+    "framework": "Express.js 4.x",
+    "database": "PostgreSQL 15+",
+    "cache": "Redis 7+",
+    "realtime": "Socket.IO 4.x"
+  },
+  "projectStructure": {
+    "description": "서버 디렉토리 구조 (server.js 진입점에서 모듈 분리)",
+    "entryPoint": "server.js",
+    "tree": {
+      "server.js": "진입점. Express 앱 초기화, 미들웨어 로드, 서버 시작",
+      "config/": {
+        "index.js": "환경변수 로드 및 통합 설정 객체 export",
+        "database.js": "PostgreSQL 연결 풀 설정 (pg-pool)",
+        "redis.js": "Redis 클라이언트 설정",
+        "cors.js": "CORS 허용 도메인/메서드 설정",
+        "jwt.js": "JWT 서명/검증 설정 (RS256 키 쌍)",
+        "rateLimit.js": "요청 제한 규칙 (인증/비인증/엔드포인트별)",
+        "scheduler.js": "배치 작업 스케줄러 설정 (node-cron)"
+      },
+      "middleware/": {
+        "cors.js": "CORS 미들웨어",
+        "rateLimiter.js": "요청 속도 제한 미들웨어",
+        "auth.js": "JWT 인증 미들웨어 (토큰 검증, 블랙리스트 체크)",
+        "deviceCheck.js": "기기 검증 미들웨어 (제로티켓 HW 해시 5대 검증)",
+        "popValidator.js": "PoP 엔진 활동 검증 미들웨어",
+        "errorHandler.js": "전역 에러 핸들러 (12종 에러코드 매핑)"
+      },
+      "routes/": {
+        "index.js": "라우터 통합 마운트",
+        "auth.routes.js": "인증 라우트 (/api/v1/auth)",
+        "user.routes.js": "유저 라우트 (/api/v1/users)",
+        "stats.routes.js": "스탯 라우트 (/api/v1/stats)",
+        "activity.routes.js": "활동 라우트 (/api/v1/activity)",
+        "league.routes.js": "리그 라우트 (/api/v1/leagues)",
+        "org.routes.js": "조직 라우트 (/api/v1/orgs)",
+        "ark.routes.js": "방주 라우트 (/api/v1/arks)",
+        "economy.routes.js": "경제 라우트 (/api/v1/economy)",
+        "admin.routes.js": "관리자 라우트 (/api/v1/admin)",
+        "agency.routes.js": "에이전시 라우트 (/api/v1/agency)"
+      },
+      "services/": {
+        "auth.service.js": "인증/토큰 발급/갱신 로직",
+        "user.service.js": "유저 CRUD, 프로필, 아키타입 갱신",
+        "stats.service.js": "스탯 투자/조회/아키타입 산출",
+        "activity.service.js": "활동 기록, AP 산출, PoP 처리",
+        "league.service.js": "리그 랭킹, 시즌 관리, 승격/강등",
+        "org.service.js": "조직 트리 CRUD, 에너지 합산",
+        "ark.service.js": "방주/아티팩트 관리",
+        "economy.service.js": "결제/구독/스타더스트/거래",
+        "energy.service.js": "에너지 파이프라인 4단계 연산",
+        "oracle.service.js": "오라클 감시자 5모듈 실행 엔진",
+        "regulation.service.js": "처벌/재판/신고/갱생 처리",
+        "scheduler.service.js": "배치 작업 실행 로직",
+        "notification.service.js": "알림 발송 (인앱, 푸시, 이메일)",
+        "ai.service.js": "Anthropic API 연동 (문맥분석, 컨텐츠 모더레이션)"
+      },
+      "models/": {
+        "description": "Sequelize 또는 Knex 기반 DB 모델",
+        "files": "16개 테이블 대응 모델 파일"
+      },
+      "utils/": {
+        "crypto.js": "암호화 유틸 (bcrypt, AES-256, SHA-512)",
+        "response.js": "통일 응답 포맷 헬퍼",
+        "validator.js": "입력값 검증 (Joi/Zod)",
+        "logger.js": "로깅 (Winston + 구조화 로그)"
+      }
+    }
+  },
+  "middlewarePipeline": {
+    "description": "미들웨어 실행 순서. 모든 요청은 이 파이프라인을 순서대로 통과한다.",
+    "order": [
+      {
+        "step": 1,
+        "name": "CORS",
+        "file": "middleware/cors.js",
+        "description": "Cross-Origin Resource Sharing 정책 적용",
+        "config": {
+          "allowedOrigins": [
+            "https://asteria.app",
+            "https://admin.asteria.app",
+            "http://localhost:3000"
+          ],
+          "allowedMethods": [
+            "GET",
+            "POST",
+            "PATCH",
+            "DELETE",
+            "OPTIONS"
+          ],
+          "allowedHeaders": [
+            "Content-Type",
+            "Authorization",
+            "X-Device-Hash",
+            "X-Request-ID"
+          ],
+          "credentials": true,
+          "maxAge": 86400
+        }
+      },
+      {
+        "step": 2,
+        "name": "Rate Limiter",
+        "file": "middleware/rateLimiter.js",
+        "description": "요청 속도 제한. DDoS 및 브루트포스 방지.",
+        "config": {
+          "store": "Redis (분산 환경 대응)",
+          "rules": [
+            {
+              "target": "인증 유저",
+              "limit": 100,
+              "window": 60,
+              "unit": "req/min"
+            },
+            {
+              "target": "비인증",
+              "limit": 20,
+              "window": 60,
+              "unit": "req/min"
+            },
+            {
+              "target": "POST /auth/login",
+              "limit": 5,
+              "window": 300,
+              "unit": "5회/5분 (브루트포스 방지)"
+            },
+            {
+              "target": "POST /auth/register",
+              "limit": 3,
+              "window": 3600,
+              "unit": "3회/시간"
+            },
+            {
+              "target": "POST /economy/*",
+              "limit": 10,
+              "window": 60,
+              "unit": "10회/분 (결제 남용 방지)"
+            },
+            {
+              "target": "POST /regulation/reports",
+              "limit": 5,
+              "window": 3600,
+              "unit": "5회/시간 (신고 남용 방지)"
+            }
+          ],
+          "headers": {
+            "remaining": "X-RateLimit-Remaining",
+            "reset": "X-RateLimit-Reset"
+          }
+        }
+      },
+      {
+        "step": 3,
+        "name": "Auth (JWT)",
+        "file": "middleware/auth.js",
+        "description": "JWT 토큰 검증. 유효한 토큰이 없으면 인증 필요 엔드포인트 접근 차단.",
+        "config": {
+          "algorithm": "RS256",
+          "tokenLocation": "Authorization: Bearer <token>",
+          "blacklistCheck": "Redis 기반 토큰 블랙리스트 조회",
+          "publicRoutes": [
+            "POST /auth/login",
+            "POST /auth/register",
+            "POST /auth/refresh",
+            "GET /leagues (공개 랭킹)",
+            "GET /arks/:id (공개 방주 방문)"
+          ],
+          "userInjection": "검증 성공 시 req.user에 { id, level, starRank, integrityScore, status } 주입"
+        }
+      },
+      {
+        "step": 4,
+        "name": "Device Check",
+        "file": "middleware/deviceCheck.js",
+        "description": "제로티켓 기기 검증. 최대 5대 기기까지 허용.",
+        "config": {
+          "maxDevices": 5,
+          "headerName": "X-Device-Hash",
+          "hashAlgorithm": "SHA-512",
+          "checks": [
+            "X-Device-Hash 헤더 존재 여부",
+            "해시 형식 유효성 (128자 hex)",
+            "DB의 zero_ticket_hw_hash와 대조",
+            "동일 HW에서 등록된 계정 수 확인 (3개 이상 시 플래그)",
+            "처벌 상태 확인 (영구추방된 HW인지)"
+          ],
+          "excludedRoutes": [
+            "POST /auth/register (최초 등록 시에는 등록 로직으로 처리)"
+          ],
+          "failAction": "기기 미등록 또는 밴된 기기 → 403 Forbidden + ERR_DEVICE_BANNED"
+        }
+      },
+      {
+        "step": 5,
+        "name": "PoP Validator",
+        "file": "middleware/popValidator.js",
+        "description": "활동 기록 엔드포인트에서 PoP(Proof of Participation) 검증 실행.",
+        "config": {
+          "appliedRoutes": [
+            "POST /activity/*",
+            "POST /stats/invest"
+          ],
+          "checks": [
+            "클라이언트 타임스탬프 ↔ 서버 타임스탬프 차이 5초 이내",
+            "클라이언트 해시 ↔ 서버 재계산 해시 일치",
+            "활동 간 최소 간격 충족 (오라클 행동속도 규칙)",
+            "중복 이벤트 방지 (idempotency key 검증)",
+            "유령 필터 통과 여부"
+          ],
+          "failAction": "검증 실패 → AP 미지급 + 오라클 플래그 + ERR_POP_FAILED"
+        }
+      },
+      {
+        "step": 6,
+        "name": "Route Handler",
+        "file": "routes/*.routes.js",
+        "description": "실제 비즈니스 로직 실행. Service 레이어 호출."
+      },
+      {
+        "step": 7,
+        "name": "Error Handler",
+        "file": "middleware/errorHandler.js",
+        "description": "전역 에러 캐처. 모든 미처리 에러를 통일된 형식으로 응답.",
+        "config": {
+          "format": "{ success: false, error: { code, message, detail }, timestamp }",
+          "logging": "에러 발생 시 Winston으로 구조화 로그 기록",
+          "sensitiveDataStrip": "스택트레이스, DB 쿼리 등 민감 정보는 production에서 제거"
+        }
+      }
+    ]
+  },
+  "realtimeComputation": {
+    "description": "실시간 연산 파이프라인. 활동 발생 시 즉시 처리되는 연쇄 계산.",
+    "triggerEvent": "POST /activity/* 요청 처리 후",
+    "pipeline": [
+      {
+        "step": 1,
+        "name": "AP 산출",
+        "service": "activity.service.js",
+        "description": "기본 AP에 난이도 배율 적용하여 baseAP 결정",
+        "formula": "baseAP = rawAP × difficultyModifier(sectorPhase)"
+      },
+      {
+        "step": 2,
+        "name": "보너스 적용",
+        "service": "activity.service.js",
+        "description": "4종 보너스 배율을 곱연산으로 적용",
+        "multipliers": [
+          {
+            "name": "콤보 스트릭",
+            "maxValue": 1.5,
+            "condition": "7일 연속 활동",
+            "source": "daily_activity.combo_day"
+          },
+          {
+            "name": "동기화 부스트",
+            "maxValue": 2,
+            "condition": "3명+ 동시 활동",
+            "source": "Redis 실시간 세션 카운트"
+          },
+          {
+            "name": "난이도 보정",
+            "range": "0.5x~2.5x",
+            "condition": "섹터 성장 단계",
+            "source": "fanclubs.member_count → phase 매핑"
+          },
+          {
+            "name": "다영역 보너스",
+            "value": 1.1,
+            "condition": "5개+ 영역 활동",
+            "source": "daily_activity.domain_count"
+          }
+        ],
+        "formula": "finalAP = baseAP × combo × sync × difficulty × diversity",
+        "cachePut": "Redis에 유저별 오늘의 AP 누적 캐싱 (TTL: 자정까지)"
+      },
+      {
+        "step": 3,
+        "name": "스탯 분배",
+        "service": "stats.service.js",
+        "description": "활동 영역(domain)에 따라 귀속 스탯에 경험치 반영",
+        "mapping": {
+          "quest": "ACT",
+          "trade": "ECO",
+          "create": "CRE",
+          "social": "SOC",
+          "pvp": "ACT+INT",
+          "purify": "LOY",
+          "event": "랜덤 (가중치 기반)"
+        },
+        "update": "user_stats 테이블 해당 스탯 값 증가"
+      },
+      {
+        "step": 4,
+        "name": "레벨/아키타입 갱신",
+        "service": "user.service.js",
+        "description": "XP 누적 확인 → 레벨업 여부 판정 → 아키타입 재계산",
+        "subSteps": [
+          "XP 누적량이 xp_to_next 이상이면 레벨업 처리",
+          "레벨업 보상 지급 (스탯포인트 3 + 성궤슬롯 1 + AP 50 + 주권 +0.09)",
+          "성계 등급 갱신 (10레벨 구간마다)",
+          "6대 스탯 상위 2개 재계산 → 아키타입 변경 여부 판정 (하루 1회 제한)"
+        ]
+      },
+      {
+        "step": 5,
+        "name": "조직 에너지 전파",
+        "service": "energy.service.js",
+        "description": "개인 AP 변동을 소속 유닛 에너지에 실시간 반영",
+        "propagation": {
+          "unit": "즉시 (Redis 캐시 갱신)",
+          "base": "1시간 배치에서 합산",
+          "territory": "자정 배치에서 합산",
+          "fanclub": "자정 배치에서 합산"
+        },
+        "notification": "레벨업/아키타입 변경/유닛 보너스 발동 시 Socket.IO로 실시간 알림"
+      }
+    ]
+  },
+  "batchJobs": {
+    "description": "배치 작업 스케줄러. node-cron 기반 정기 실행.",
+    "scheduler": "node-cron",
+    "lockMechanism": "Redis 분산 락 (다중 인스턴스 환경에서 중복 실행 방지)",
+    "jobs": [
+      {
+        "id": "hourly_energy_snapshot",
+        "name": "에너지 스냅샷",
+        "cron": "0 * * * *",
+        "schedule": "매시간 정각",
+        "service": "scheduler.service.js → snapshotEnergy()",
+        "description": "유닛→베이스 에너지 합산 및 energy_snapshots 테이블 기록",
+        "steps": [
+          "모든 유닛의 실시간 에너지 캐시(Redis) 수집",
+          "베이스별 소속 유닛 에너지 합산 × syncRate × missionBonus",
+          "energy_snapshots 테이블에 INSERT (유닛/베이스 레벨)",
+          "Redis 캐시 갱신"
+        ],
+        "estimatedDuration": "30초 ~ 2분",
+        "failurePolicy": "실패 시 5분 후 1회 재시도, 재실패 시 관리자 알림"
+      },
+      {
+        "id": "daily_settlement",
+        "name": "일일 정산",
+        "cron": "0 0 * * *",
+        "schedule": "매일 자정 (KST)",
+        "service": "scheduler.service.js → dailySettlement()",
+        "description": "테리토리/팬클럽 에너지 합산, 리그 순위 갱신, 일일 집계 마감",
+        "steps": [
+          "베이스→테리토리 에너지 합산 (경제가중치 × 방어보너스)",
+          "테리토리→팬클럽 에너지 합산 (평판계수 × CP보너스)",
+          "energy_snapshots 테이블에 INSERT (테리토리/팬클럽 레벨)",
+          "리그별 팬클럽 순위 재계산 (fanclubs.rank 갱신)",
+          "미러 랭킹 갱신 (상위 꼴찌 vs 하위 1등)",
+          "daily_activity 마감 (combo_day 리셋 또는 증가)",
+          "유령 필터 실행 (활동 시간 5분 미만 계정 마킹)",
+          "캐치업 보너스 대상자 재계산"
+        ],
+        "estimatedDuration": "2분 ~ 10분",
+        "failurePolicy": "실패 시 00:15에 재시도, 재실패 시 긴급 알림 + 수동 실행 대기"
+      },
+      {
+        "id": "weekly_subgroup",
+        "name": "소모임 평가",
+        "cron": "0 0 * * 1",
+        "schedule": "매주 월요일 자정 (KST)",
+        "service": "scheduler.service.js → evaluateSubgroups()",
+        "description": "유닛 단위 주간 성과 평가. 콤보/참여율/동기화 기반 보상 산정.",
+        "steps": [
+          "유닛별 주간 참여율/동기화율/미션성공률 집계",
+          "우수 유닛 보상 지급 (AP 보너스, 유닛 오라 갱신)",
+          "저참여 유닛 경고 발송 (참여율 30% 미만)",
+          "유닛 간 미러 매칭 갱신"
+        ],
+        "estimatedDuration": "1분 ~ 5분",
+        "failurePolicy": "실패 시 01:00에 재시도"
+      },
+      {
+        "id": "monthly_season",
+        "name": "시즌 정산 / 승격·강등",
+        "cron": "0 0 L * *",
+        "schedule": "매월 말일 자정 (KST)",
+        "service": "scheduler.service.js → processSeasonEnd()",
+        "description": "메인 리그 시즌 종료 처리. 승격/강등 판정, 시즌 보상 지급.",
+        "steps": [
+          "현재 시즌 종료 처리 (leagues.is_active = false)",
+          "승격 공식 적용 (IAI/GSI/PII 가중치 × 리그별 승격률)",
+          "승격 대상자 상위 리그 배치",
+          "강등 대상자 하위 리그 배치 (최하위 10%, 퀘이사는 5%)",
+          "노바→퀘이사 승격은 원로회 승인 대기열에 등록",
+          "시즌 보상 일괄 지급 (AP, 스탯포인트, 성궤슬롯)",
+          "주간 랭크 보상 정산 지급",
+          "새 시즌 생성 (leagues INSERT, is_active = true)",
+          "미러 랭킹 초기화",
+          "시즌 리포트 생성 및 전체 공지"
+        ],
+        "estimatedDuration": "5분 ~ 30분",
+        "failurePolicy": "실패 시 전체 롤백 + 긴급 관리자 알림. 수동 검증 후 재실행.",
+        "critical": true
+      }
+    ]
+  },
+  "apiResponse": {
+    "description": "API 응답 형식 통일 규격",
+    "successFormat": {
+      "structure": {
+        "success": true,
+        "data": "응답 데이터 (object | array | null)",
+        "timestamp": "ISO 8601 형식 (2026-03-28T15:00:00.000Z)",
+        "meta": "선택적 메타 정보 (페이징 등)"
+      },
+      "example": {
+        "success": true,
+        "data": {
+          "id": "uuid",
+          "nickname": "StarDust42",
+          "level": 35
+        },
+        "timestamp": "2026-03-28T15:00:00.000Z"
+      },
+      "paginationExample": {
+        "success": true,
+        "data": [
+          "..."
+        ],
+        "meta": {
+          "page": 1,
+          "limit": 20,
+          "total": 342,
+          "totalPages": 18
+        },
+        "timestamp": "2026-03-28T15:00:00.000Z"
+      }
+    },
+    "errorFormat": {
+      "structure": {
+        "success": false,
+        "error": {
+          "code": "에러 코드 (ERR_XXX)",
+          "message": "한글 에러 메시지",
+          "detail": "선택적 상세 정보 (개발 환경에서만)"
+        },
+        "timestamp": "ISO 8601"
+      },
+      "example": {
+        "success": false,
+        "error": {
+          "code": "ERR_AUTH_EXPIRED",
+          "message": "인증 토큰이 만료되었습니다. 다시 로그인해주세요."
+        },
+        "timestamp": "2026-03-28T15:00:00.000Z"
+      }
+    },
+    "errorCodes": [
+      {
+        "code": "ERR_AUTH_REQUIRED",
+        "status": 401,
+        "message": "인증이 필요합니다. 로그인 후 다시 시도해주세요."
+      },
+      {
+        "code": "ERR_AUTH_EXPIRED",
+        "status": 401,
+        "message": "인증 토큰이 만료되었습니다. 다시 로그인해주세요."
+      },
+      {
+        "code": "ERR_AUTH_INVALID",
+        "status": 401,
+        "message": "유효하지 않은 인증 정보입니다."
+      },
+      {
+        "code": "ERR_FORBIDDEN",
+        "status": 403,
+        "message": "이 작업을 수행할 권한이 없습니다."
+      },
+      {
+        "code": "ERR_DEVICE_BANNED",
+        "status": 403,
+        "message": "이 기기는 접근이 차단되었습니다. (제로티켓)"
+      },
+      {
+        "code": "ERR_NOT_FOUND",
+        "status": 404,
+        "message": "요청한 리소스를 찾을 수 없습니다."
+      },
+      {
+        "code": "ERR_VALIDATION",
+        "status": 400,
+        "message": "입력값이 올바르지 않습니다. 요청을 확인해주세요."
+      },
+      {
+        "code": "ERR_DUPLICATE",
+        "status": 409,
+        "message": "이미 존재하는 데이터입니다. (닉네임, 이메일 등)"
+      },
+      {
+        "code": "ERR_RATE_LIMIT",
+        "status": 429,
+        "message": "요청이 너무 많습니다. 잠시 후 다시 시도해주세요."
+      },
+      {
+        "code": "ERR_POP_FAILED",
+        "status": 422,
+        "message": "활동 검증에 실패했습니다. 비정상적인 활동이 감지되었습니다."
+      },
+      {
+        "code": "ERR_INTEGRITY",
+        "status": 403,
+        "message": "무결성 점수가 부족하여 이 기능을 이용할 수 없습니다."
+      },
+      {
+        "code": "ERR_SERVER",
+        "status": 500,
+        "message": "서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
+      }
+    ]
+  },
+  "endpoints": {
+    "description": "API 엔드포인트 그룹 (10개)",
+    "baseUrl": "/api/v1",
+    "groups": [
+      {
+        "name": "Auth",
+        "prefix": "/auth",
+        "file": "routes/auth.routes.js",
+        "service": "auth.service.js",
+        "authRequired": false,
+        "endpoints": [
+          {
+            "method": "POST",
+            "path": "/register",
+            "description": "회원가입",
+            "rateLimit": "3/시간"
+          },
+          {
+            "method": "POST",
+            "path": "/login",
+            "description": "로그인",
+            "rateLimit": "5/5분"
+          },
+          {
+            "method": "POST",
+            "path": "/logout",
+            "description": "로그아웃 (토큰 블랙리스트)",
+            "auth": true
+          },
+          {
+            "method": "POST",
+            "path": "/refresh",
+            "description": "토큰 갱신"
+          },
+          {
+            "method": "POST",
+            "path": "/verify-hw",
+            "description": "HW 해시 검증",
+            "auth": true
+          }
+        ]
+      },
+      {
+        "name": "User",
+        "prefix": "/users",
+        "file": "routes/user.routes.js",
+        "service": "user.service.js",
+        "authRequired": true,
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/me",
+            "description": "내 프로필"
+          },
+          {
+            "method": "PATCH",
+            "path": "/me",
+            "description": "프로필 수정"
+          },
+          {
+            "method": "GET",
+            "path": "/me/archetype",
+            "description": "아키타입 + 이력"
+          },
+          {
+            "method": "GET",
+            "path": "/me/integrity",
+            "description": "무결성 점수 + 참회 게이트"
+          },
+          {
+            "method": "GET",
+            "path": "/:userId",
+            "description": "타 유저 프로필 (공개)",
+            "auth": false
+          },
+          {
+            "method": "GET",
+            "path": "/:userId/sns-card",
+            "description": "SNS 카드 생성",
+            "auth": false
+          }
+        ]
+      },
+      {
+        "name": "Stats",
+        "prefix": "/stats",
+        "file": "routes/stats.routes.js",
+        "service": "stats.service.js",
+        "authRequired": true,
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/me",
+            "description": "내 6대 스탯"
+          },
+          {
+            "method": "POST",
+            "path": "/invest",
+            "description": "스탯 포인트 투자",
+            "popRequired": true
+          },
+          {
+            "method": "GET",
+            "path": "/ranking",
+            "description": "스탯별 서버 랭킹",
+            "auth": false
+          },
+          {
+            "method": "GET",
+            "path": "/distribution",
+            "description": "전체 스탯 분포 통계",
+            "auth": false
+          }
+        ]
+      },
+      {
+        "name": "Activity",
+        "prefix": "/activity",
+        "file": "routes/activity.routes.js",
+        "service": "activity.service.js",
+        "authRequired": true,
+        "endpoints": [
+          {
+            "method": "POST",
+            "path": "/record",
+            "description": "활동 기록 (PoP 검증)",
+            "popRequired": true
+          },
+          {
+            "method": "GET",
+            "path": "/log",
+            "description": "내 활동 로그 (페이징)"
+          },
+          {
+            "method": "GET",
+            "path": "/daily",
+            "description": "일일 활동 요약"
+          },
+          {
+            "method": "GET",
+            "path": "/combo",
+            "description": "현재 콤보 상태"
+          },
+          {
+            "method": "GET",
+            "path": "/domains",
+            "description": "영역별 활동 통계"
+          }
+        ]
+      },
+      {
+        "name": "League",
+        "prefix": "/leagues",
+        "file": "routes/league.routes.js",
+        "service": "league.service.js",
+        "authRequired": false,
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/",
+            "description": "전체 리그 목록"
+          },
+          {
+            "method": "GET",
+            "path": "/current",
+            "description": "현재 시즌 정보"
+          },
+          {
+            "method": "GET",
+            "path": "/:leagueId",
+            "description": "리그 상세"
+          },
+          {
+            "method": "GET",
+            "path": "/:leagueId/ranking",
+            "description": "리그 랭킹 (페이징)"
+          },
+          {
+            "method": "GET",
+            "path": "/mirror",
+            "description": "미러 랭킹"
+          },
+          {
+            "method": "GET",
+            "path": "/promotion/preview",
+            "description": "승격 예상",
+            "auth": true
+          }
+        ]
+      },
+      {
+        "name": "Organization",
+        "prefix": "/orgs",
+        "file": "routes/org.routes.js",
+        "service": "org.service.js",
+        "authRequired": true,
+        "endpoints": [
+          {
+            "method": "POST",
+            "path": "/",
+            "description": "조직 생성"
+          },
+          {
+            "method": "GET",
+            "path": "/:orgId",
+            "description": "조직 상세",
+            "auth": false
+          },
+          {
+            "method": "PATCH",
+            "path": "/:orgId",
+            "description": "조직 수정 (리더만)"
+          },
+          {
+            "method": "DELETE",
+            "path": "/:orgId",
+            "description": "조직 해산 (리더만)"
+          },
+          {
+            "method": "GET",
+            "path": "/:orgId/tree",
+            "description": "조직 트리",
+            "auth": false
+          },
+          {
+            "method": "GET",
+            "path": "/:orgId/members",
+            "description": "멤버 목록"
+          },
+          {
+            "method": "POST",
+            "path": "/:orgId/join",
+            "description": "가입 신청"
+          },
+          {
+            "method": "POST",
+            "path": "/:orgId/invite",
+            "description": "멤버 초대 (간부+)"
+          },
+          {
+            "method": "PATCH",
+            "path": "/:orgId/members/:userId",
+            "description": "역할 변경"
+          },
+          {
+            "method": "DELETE",
+            "path": "/:orgId/members/:userId",
+            "description": "탈퇴/추방"
+          },
+          {
+            "method": "GET",
+            "path": "/:orgId/energy",
+            "description": "에너지 현황 + 히스토리"
+          }
+        ]
+      },
+      {
+        "name": "Ark",
+        "prefix": "/arks",
+        "file": "routes/ark.routes.js",
+        "service": "ark.service.js",
+        "authRequired": true,
+        "endpoints": [
+          {
+            "method": "POST",
+            "path": "/",
+            "description": "방주 생성"
+          },
+          {
+            "method": "GET",
+            "path": "/me",
+            "description": "내 방주 목록"
+          },
+          {
+            "method": "GET",
+            "path": "/:arkId",
+            "description": "방주 방문",
+            "auth": false
+          },
+          {
+            "method": "PATCH",
+            "path": "/:arkId",
+            "description": "방주 수정"
+          },
+          {
+            "method": "GET",
+            "path": "/:arkId/artifacts",
+            "description": "아티팩트 목록"
+          },
+          {
+            "method": "POST",
+            "path": "/:arkId/artifacts",
+            "description": "아티팩트 장착"
+          },
+          {
+            "method": "DELETE",
+            "path": "/:arkId/artifacts/:artifactId",
+            "description": "아티팩트 해제"
+          },
+          {
+            "method": "POST",
+            "path": "/:arkId/visit",
+            "description": "방문 기록",
+            "auth": false
+          }
+        ]
+      },
+      {
+        "name": "Economy",
+        "prefix": "/economy",
+        "file": "routes/economy.routes.js",
+        "service": "economy.service.js",
+        "authRequired": true,
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/balance",
+            "description": "스타더스트/AP 잔액"
+          },
+          {
+            "method": "POST",
+            "path": "/stardust/purchase",
+            "description": "스타더스트 충전",
+            "rateLimit": "10/분"
+          },
+          {
+            "method": "GET",
+            "path": "/payments",
+            "description": "결제 이력"
+          },
+          {
+            "method": "GET",
+            "path": "/subscriptions/me",
+            "description": "내 구독"
+          },
+          {
+            "method": "POST",
+            "path": "/subscriptions",
+            "description": "구독 시작/변경"
+          },
+          {
+            "method": "DELETE",
+            "path": "/subscriptions/me",
+            "description": "구독 해지"
+          },
+          {
+            "method": "POST",
+            "path": "/trade",
+            "description": "아티팩트 거래"
+          },
+          {
+            "method": "GET",
+            "path": "/market",
+            "description": "마켓 목록",
+            "auth": false
+          }
+        ]
+      },
+      {
+        "name": "Admin",
+        "prefix": "/admin",
+        "file": "routes/admin.routes.js",
+        "service": "multiple",
+        "authRequired": true,
+        "roleRequired": "admin",
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/dashboard",
+            "description": "관리자 대시보드 (서버 통계)"
+          },
+          {
+            "method": "GET",
+            "path": "/oracle/flags",
+            "description": "오라클 플래그 목록"
+          },
+          {
+            "method": "POST",
+            "path": "/oracle/review/:flagId",
+            "description": "플래그 검토 처리"
+          },
+          {
+            "method": "POST",
+            "path": "/penalties",
+            "description": "수동 처벌 부여"
+          },
+          {
+            "method": "GET",
+            "path": "/reports",
+            "description": "신고 목록"
+          },
+          {
+            "method": "PATCH",
+            "path": "/reports/:reportId",
+            "description": "신고 처리"
+          },
+          {
+            "method": "POST",
+            "path": "/announcements",
+            "description": "공지사항 발송"
+          },
+          {
+            "method": "POST",
+            "path": "/season/force-end",
+            "description": "시즌 강제 종료 (긴급)"
+          },
+          {
+            "method": "GET",
+            "path": "/users/:userId/full",
+            "description": "유저 전체 정보 조회 (관리용)"
+          }
+        ]
+      },
+      {
+        "name": "Agency",
+        "prefix": "/agency",
+        "file": "routes/agency.routes.js",
+        "service": "ai.service.js",
+        "authRequired": true,
+        "description": "Anthropic API 연동 에이전시 기능",
+        "endpoints": [
+          {
+            "method": "POST",
+            "path": "/moderate",
+            "description": "콘텐츠 모더레이션 (AI 기반)"
+          },
+          {
+            "method": "POST",
+            "path": "/analyze-behavior",
+            "description": "행동 패턴 분석 요청"
+          },
+          {
+            "method": "GET",
+            "path": "/insights/:userId",
+            "description": "유저 활동 인사이트 (AI 분석)"
+          },
+          {
+            "method": "POST",
+            "path": "/generate-report",
+            "description": "시즌 리포트 AI 생성"
+          }
+        ]
+      }
+    ]
+  },
+  "environment": {
+    "description": "환경변수 (.env)",
+    "variables": [
+      {
+        "name": "NODE_ENV",
+        "required": true,
+        "example": "production",
+        "description": "실행 환경 (development | staging | production)"
+      },
+      {
+        "name": "PORT",
+        "required": false,
+        "default": "3000",
+        "description": "서버 포트"
+      },
+      {
+        "name": "DATABASE_URL",
+        "required": true,
+        "example": "postgresql://user:pass@host:5432/asteria",
+        "description": "PostgreSQL 연결 문자열"
+      },
+      {
+        "name": "REDIS_URL",
+        "required": true,
+        "example": "redis://host:6379",
+        "description": "Redis 연결 문자열"
+      },
+      {
+        "name": "JWT_SECRET",
+        "required": true,
+        "example": "(RSA private key path)",
+        "description": "JWT 서명용 RSA 개인키 경로"
+      },
+      {
+        "name": "JWT_PUBLIC_KEY",
+        "required": true,
+        "example": "(RSA public key path)",
+        "description": "JWT 검증용 RSA 공개키 경로"
+      },
+      {
+        "name": "ENCRYPTION_KEY",
+        "required": true,
+        "example": "(256-bit hex key)",
+        "description": "AES-256-GCM 암호화 마스터 키"
+      },
+      {
+        "name": "ANTHROPIC_API_KEY",
+        "required": true,
+        "example": "sk-ant-...",
+        "description": "Anthropic Claude API 키 (에이전시/모더레이션)"
+      },
+      {
+        "name": "CORS_ORIGINS",
+        "required": false,
+        "default": "https://asteria.app",
+        "description": "CORS 허용 도메인 (쉼표 구분)"
+      },
+      {
+        "name": "LOG_LEVEL",
+        "required": false,
+        "default": "info",
+        "description": "로그 레벨 (debug | info | warn | error)"
+      },
+      {
+        "name": "PAYMENT_WEBHOOK_SECRET",
+        "required": true,
+        "example": "(webhook secret)",
+        "description": "결제 웹훅 시크릿 키"
+      },
+      {
+        "name": "SMTP_URL",
+        "required": false,
+        "example": "smtp://user:pass@host:587",
+        "description": "이메일 발송 SMTP 서버"
+      }
+    ],
+    "envExample": "NODE_ENV=development\nPORT=3000\nDATABASE_URL=postgresql://asteria:password@localhost:5432/asteria_dev\nREDIS_URL=redis://localhost:6379\nJWT_SECRET=./keys/private.pem\nJWT_PUBLIC_KEY=./keys/public.pem\nENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\nANTHROPIC_API_KEY=sk-ant-your-key-here\nCORS_ORIGINS=http://localhost:3000\nLOG_LEVEL=debug\nPAYMENT_WEBHOOK_SECRET=whsec_your_secret\nSMTP_URL=smtp://user:pass@localhost:587"
+  }
+}

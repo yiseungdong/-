@@ -1,0 +1,557 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "description": "아스테리아 에너지 합산 파이프라인",
+    "principle": "개인의 활동이 유닛→베이스→테리토리→팬클럽으로 합산되어 리그 전체의 에너지가 된다",
+    "totalStages": 4
+  },
+  "pipeline": [
+    {
+      "stage": 1,
+      "name": "개인 → 유닛",
+      "nameEn": "Individual → Unit",
+      "id": "individual_to_unit",
+      "formula": "UnitEnergy = Σ(개인AP) × 참여율",
+      "formulaCode": "UnitEnergy = sum(memberAP) * participationRate",
+      "description": "개인 활동 포인트(AP)를 유닛 단위로 집계. 참여율과 팀워크에 따라 보너스/페널티 적용.",
+      "refreshCycle": "실시간",
+      "refreshInterval": null,
+      "inputs": {
+        "memberAP": {
+          "description": "유닛 소속 개인들의 활동 포인트 합계",
+          "source": "개인 AP (활동, 퀘스트, 거래, 창작 등에서 획득)"
+        },
+        "participationRate": {
+          "description": "유닛 전체 인원 대비 활동 인원 비율",
+          "formula": "activeMembersCount / totalMembersCount",
+          "unit": "0.0 ~ 1.0"
+        }
+      },
+      "multipliers": [
+        {
+          "id": "unit_aura",
+          "name": "유닛 오라",
+          "nameEn": "Unit Aura",
+          "condition": "전원 출석 (참여율 100%)",
+          "multiplier": 1.2,
+          "description": "유닛 전원이 해당 주기에 활동했을 때 발동",
+          "stackable": false
+        },
+        {
+          "id": "sync_boost",
+          "name": "동기화 부스트",
+          "nameEn": "Sync Boost",
+          "condition": "3명 이상 동시 활동",
+          "multiplier": 2,
+          "description": "같은 시간대에 3명 이상이 동시에 활동 중일 때 발동",
+          "stackable": false,
+          "detectionWindow": "30분 이내 동시 접속"
+        },
+        {
+          "id": "combo_streak",
+          "name": "콤보 스트릭",
+          "nameEn": "Combo Streak",
+          "condition": "7일 연속 유닛 활동",
+          "multiplier": 1.5,
+          "description": "유닛이 7일 연속으로 최소 1명 이상 활동했을 때 발동",
+          "stackable": false,
+          "resetCondition": "1일이라도 활동 없으면 초기화"
+        }
+      ],
+      "penalties": [
+        {
+          "id": "low_participation",
+          "name": "저참여 페널티",
+          "nameEn": "Low Participation Penalty",
+          "condition": "참여율 30% 미만",
+          "multiplier": 0.5,
+          "description": "유닛 활동 인원이 전체의 30% 미만일 때 에너지 반감"
+        }
+      ],
+      "outputRange": {
+        "min": "Σ(AP) × 0.5 × 0.3 (최악: 저참여 + 낮은 참여율)",
+        "max": "Σ(AP) × 1.0 × 1.2 × 2.0 × 1.5 (최고: 유닛오라 + 동기화 + 콤보)",
+        "theoreticalMaxMultiplier": 3.6,
+        "note": "보너스 배율은 곱연산으로 중첩. 페널티는 보너스와 별도 적용."
+      },
+      "example": {
+        "scenario": "유닛 10명, 전원 출석, 5명 동시활동, 7일 연속, 개인AP 합계 5000",
+        "calculation": "5000 × 1.0(참여율) × 1.2(유닛오라) × 2.0(동기화) × 1.5(콤보) = 18,000",
+        "result": 18000
+      }
+    },
+    {
+      "stage": 2,
+      "name": "유닛 → 베이스",
+      "nameEn": "Unit → Base",
+      "id": "unit_to_base",
+      "formula": "BaseEnergy = Σ(UnitEnergy) × SyncRate × 미션성공보너스",
+      "formulaCode": "BaseEnergy = sum(unitEnergies) * syncRate * missionBonus",
+      "description": "유닛 에너지를 베이스 단위로 합산. 베이스 동기화율과 미션 성공률에 따라 보정.",
+      "refreshCycle": "1시간",
+      "refreshInterval": 3600,
+      "inputs": {
+        "unitEnergies": {
+          "description": "베이스 소속 모든 유닛의 에너지 합계",
+          "source": "Stage 1 출력값"
+        },
+        "syncRate": {
+          "description": "베이스 내 유닛 간 동기화율",
+          "formula": "activatedUnits / totalUnits × interactionScore",
+          "unit": "0.0 ~ 1.0",
+          "note": "유닛 간 교류(합동 미션, 공동 이벤트) 빈도에 비례"
+        }
+      },
+      "multipliers": [
+        {
+          "id": "mission_s_rank",
+          "name": "S등급 미션 성공",
+          "nameEn": "S-Rank Mission Success",
+          "condition": "미션 성공률 90% 이상",
+          "multiplier": 1.5,
+          "description": "베이스 미션의 90% 이상을 성공했을 때"
+        },
+        {
+          "id": "mission_a_rank",
+          "name": "A등급 미션 성공",
+          "nameEn": "A-Rank Mission Success",
+          "condition": "미션 성공률 70% ~ 89%",
+          "multiplier": 1.2,
+          "description": "베이스 미션의 70~89%를 성공했을 때"
+        }
+      ],
+      "penalties": [
+        {
+          "id": "mission_failure",
+          "name": "미션 실패 페널티",
+          "nameEn": "Mission Failure Penalty",
+          "condition": "미션 성공률 50% 미만",
+          "multiplier": 0.8,
+          "description": "베이스 미션 성공률이 절반에 미치지 못할 때 에너지 20% 감소"
+        }
+      ],
+      "missionSuccessTiers": [
+        {
+          "range": [
+            90,
+            100
+          ],
+          "grade": "S",
+          "multiplier": 1.5,
+          "label": "완벽한 작전 수행"
+        },
+        {
+          "range": [
+            70,
+            89
+          ],
+          "grade": "A",
+          "multiplier": 1.2,
+          "label": "우수한 작전 수행"
+        },
+        {
+          "range": [
+            50,
+            69
+          ],
+          "grade": "B",
+          "multiplier": 1,
+          "label": "기본 작전 수행"
+        },
+        {
+          "range": [
+            0,
+            49
+          ],
+          "grade": "C",
+          "multiplier": 0.8,
+          "label": "작전 실패"
+        }
+      ],
+      "example": {
+        "scenario": "베이스 5개 유닛, 유닛에너지 합계 50000, 동기화율 0.85, 미션성공률 92%",
+        "calculation": "50000 × 0.85 × 1.5 = 63,750",
+        "result": 63750
+      }
+    },
+    {
+      "stage": 3,
+      "name": "베이스 → 테리토리",
+      "nameEn": "Base → Territory",
+      "id": "base_to_territory",
+      "formula": "TerritoryEnergy = Σ(BaseEnergy) × 경제가중치 × 방어보너스",
+      "formulaCode": "TerritoryEnergy = sum(baseEnergies) * economicWeight * defenseBonus",
+      "description": "베이스 에너지를 테리토리 단위로 합산. 경제력과 방어(정화) 활동에 따라 보정.",
+      "refreshCycle": "매일 자정 (KST)",
+      "refreshInterval": 86400,
+      "inputs": {
+        "baseEnergies": {
+          "description": "테리토리 소속 모든 베이스의 에너지 합계",
+          "source": "Stage 2 출력값"
+        },
+        "economicWeight": {
+          "description": "테리토리 경제력 가중치",
+          "formula": "테리토리 ECO 스탯 순위 기반 계수",
+          "tiers": [
+            {
+              "condition": "ECO 상위 10%",
+              "multiplier": 1.5,
+              "label": "경제 강국"
+            },
+            {
+              "condition": "ECO 상위 30%",
+              "multiplier": 1.3,
+              "label": "경제 선진"
+            },
+            {
+              "condition": "ECO 상위 60%",
+              "multiplier": 1.1,
+              "label": "경제 안정"
+            },
+            {
+              "condition": "ECO 하위 40%",
+              "multiplier": 1,
+              "label": "경제 기본"
+            }
+          ]
+        },
+        "defenseBonus": {
+          "description": "테리토리 방어(정화) 활동 보너스",
+          "formula": "누적 정화 건수 기반 계수",
+          "tiers": [
+            {
+              "condition": "정화 1,000건 이상",
+              "multiplier": 1.3,
+              "label": "철벽 방어"
+            },
+            {
+              "condition": "정화 500건 이상",
+              "multiplier": 1.2,
+              "label": "견고한 방어"
+            },
+            {
+              "condition": "정화 100건 이상",
+              "multiplier": 1.1,
+              "label": "기본 방어"
+            },
+            {
+              "condition": "정화 100건 미만",
+              "multiplier": 1,
+              "label": "무방비"
+            }
+          ],
+          "note": "정화 = 규정 위반 신고, 스팸 제거, 커뮤니티 정화 활동 누적"
+        }
+      },
+      "multipliers": [
+        {
+          "id": "eco_top10",
+          "name": "경제 강국",
+          "condition": "ECO 상위 10%",
+          "multiplier": 1.5
+        },
+        {
+          "id": "defense_1000",
+          "name": "철벽 방어",
+          "condition": "정화 1,000건 이상",
+          "multiplier": 1.3
+        }
+      ],
+      "example": {
+        "scenario": "테리토리 3개 베이스, 베이스에너지 합계 150000, ECO 상위 10%, 정화 1200건",
+        "calculation": "150000 × 1.5 × 1.3 = 292,500",
+        "result": 292500
+      }
+    },
+    {
+      "stage": 4,
+      "name": "테리토리 → 팬클럽",
+      "nameEn": "Territory → Fanclub",
+      "id": "territory_to_fanclub",
+      "formula": "FanclubEnergy = Σ(TerritoryEnergy) × 평판계수 × CP보너스",
+      "formulaCode": "FanclubEnergy = sum(territoryEnergies) * reputationCoeff * cpBonus",
+      "description": "테리토리 에너지를 팬클럽 전체로 합산. 외부 평판과 내부 CP(공헌 포인트)로 최종 보정.",
+      "refreshCycle": "매일 자정 (KST, 리그 반영) / 30일 (승격·강등)",
+      "refreshInterval": 86400,
+      "inputs": {
+        "territoryEnergies": {
+          "description": "팬클럽 소속 모든 테리토리의 에너지 합계",
+          "source": "Stage 3 출력값"
+        },
+        "reputationCoefficient": {
+          "description": "팬클럽 평판 계수 (5가지 지표의 가중 합산)",
+          "formula": "reputationCoeff = (SNS×0.25 + Inflow×0.20 + Social×0.20 + Purify×0.15 + Content×0.20)",
+          "components": [
+            {
+              "id": "sns_trending",
+              "name": "SNS 트렌딩",
+              "weight": 0.25,
+              "description": "외부 SNS에서의 언급량, 트렌딩 진입 여부",
+              "scoring": {
+                "max": 100,
+                "trendingBonus": 20
+              }
+            },
+            {
+              "id": "inflow_rate",
+              "name": "유입력",
+              "weight": 0.2,
+              "description": "신규 멤버 유입률 및 잔류율",
+              "scoring": {
+                "max": 100,
+                "retentionWeight": 0.6,
+                "newMemberWeight": 0.4
+              }
+            },
+            {
+              "id": "social_contribution",
+              "name": "사회 기여",
+              "weight": 0.2,
+              "description": "멘토링, 가이드, 커뮤니티 봉사 활동",
+              "scoring": {
+                "max": 100
+              }
+            },
+            {
+              "id": "purification",
+              "name": "정화",
+              "weight": 0.15,
+              "description": "커뮤니티 정화 활동 (신고, 스팸 제거, 분쟁 조정)",
+              "scoring": {
+                "max": 100
+              }
+            },
+            {
+              "id": "content_creation",
+              "name": "콘텐츠",
+              "weight": 0.2,
+              "description": "팬아트, 영상, 공략, 창작물 등 콘텐츠 생산량과 품질",
+              "scoring": {
+                "max": 100,
+                "qualityWeight": 0.6,
+                "quantityWeight": 0.4
+              }
+            }
+          ],
+          "outputRange": "0.5 ~ 2.0 (가중합산 점수를 계수로 변환)"
+        },
+        "cpBonus": {
+          "description": "CP(공헌 포인트) 보너스",
+          "formula": "1.0 + (totalCP / cpThreshold) × 0.5",
+          "maxMultiplier": 1.5,
+          "note": "팬클럽 전체 CP 누적량에 비례하여 최대 1.5배"
+        }
+      },
+      "example": {
+        "scenario": "팬클럽 4개 테리토리, 테리토리에너지 합계 800000, 평판계수 1.4, CP보너스 1.3",
+        "calculation": "800000 × 1.4 × 1.3 = 1,456,000",
+        "result": 1456000
+      }
+    }
+  ],
+  "rewardReversion": {
+    "description": "보상 역전 시스템 — 상위 단계 성과가 하위 단계에 보상으로 환원",
+    "rewards": [
+      {
+        "trigger": "팬클럽 리그 승격",
+        "triggerLevel": "fanclub",
+        "rewardTarget": "전체 멤버",
+        "reward": {
+          "type": "한정 아우라",
+          "name": "승격 축하 아우라",
+          "nameEn": "Promotion Celebration Aura",
+          "description": "팬클럽 리그 승격 시 전원에게 한정 아우라 지급",
+          "duration": "1시즌 (30일)",
+          "tradeable": false
+        }
+      },
+      {
+        "trigger": "테리토리 업그레이드",
+        "triggerLevel": "territory",
+        "rewardTarget": "테리토리 소속 전원",
+        "reward": {
+          "type": "AP 증가",
+          "name": "테리토리 번영 보너스",
+          "nameEn": "Territory Prosperity Bonus",
+          "description": "테리토리 등급 업그레이드 시 소속 전원 AP 획득량 10% 증가",
+          "value": 0.1,
+          "duration": "다음 업그레이드까지 유지"
+        }
+      }
+    ]
+  },
+  "refreshCycles": {
+    "description": "갱신 주기 총정리",
+    "cycles": [
+      {
+        "level": "개인 AP",
+        "interval": "실시간",
+        "intervalMs": null,
+        "description": "활동 즉시 반영"
+      },
+      {
+        "level": "유닛 에너지",
+        "interval": "실시간",
+        "intervalMs": null,
+        "description": "개인 AP 변동 시 즉시 재계산"
+      },
+      {
+        "level": "베이스 에너지",
+        "interval": "1시간",
+        "intervalMs": 3600000,
+        "description": "매 정시에 유닛 에너지 합산"
+      },
+      {
+        "level": "테리토리 에너지",
+        "interval": "매일 자정",
+        "intervalMs": 86400000,
+        "description": "자정(KST)에 베이스 에너지 합산"
+      },
+      {
+        "level": "리그 랭킹",
+        "interval": "매일 자정",
+        "intervalMs": 86400000,
+        "description": "자정(KST)에 팬클럽 에너지 기반 랭킹 갱신"
+      },
+      {
+        "level": "승격/강등",
+        "interval": "30일 (시즌)",
+        "intervalMs": 2592000000,
+        "description": "시즌 종료 시 리그 승격/강등 판정"
+      }
+    ]
+  },
+  "abusePrevention": {
+    "description": "악용 방지 시스템",
+    "ghostFilter": {
+      "name": "유령 필터",
+      "nameEn": "Ghost Filter",
+      "description": "실질적 활동 없이 출석만 찍는 유령 계정을 필터링",
+      "criteria": [
+        {
+          "check": "일일 활동 시간 5분 미만",
+          "action": "AP 기여 제외"
+        },
+        {
+          "check": "동일 행동 반복 (클릭 패턴 단일)",
+          "action": "활동으로 불인정"
+        },
+        {
+          "check": "7일 연속 최소 활동만 수행",
+          "action": "참여율 계산에서 제외"
+        }
+      ],
+      "detectionMethod": "행동 다양성 점수 (최소 3종류 이상 활동 필요)"
+    },
+    "botReduction": {
+      "name": "봇 감산",
+      "nameEn": "Bot Reduction",
+      "description": "봇으로 판정된 계정의 에너지 기여를 대폭 감산",
+      "reductionRange": {
+        "min": 3,
+        "max": 10,
+        "unit": "배 감산",
+        "description": "의심 수준에 따라 3~10배 감산 적용"
+      },
+      "suspicionLevels": [
+        {
+          "level": "low",
+          "name": "경미 의심",
+          "reduction": 3,
+          "description": "패턴 이상 감지, 추가 모니터링"
+        },
+        {
+          "level": "medium",
+          "name": "중간 의심",
+          "reduction": 5,
+          "description": "반복 패턴 확인, 에너지 기여 80% 삭감"
+        },
+        {
+          "level": "high",
+          "name": "강한 의심",
+          "reduction": 10,
+          "description": "봇 확정 수준, 에너지 기여 사실상 무효"
+        }
+      ],
+      "linkToRegulation": "T1 데이터 무결성 훼손 (오라클 감시자 연동)"
+    },
+    "diversityBonus": {
+      "name": "다영역 활동 보너스",
+      "nameEn": "Diversity Bonus",
+      "description": "5개 이상 영역에서 활동 시 추가 보너스",
+      "condition": "5개 이상 서로 다른 활동 영역에서 유의미한 활동",
+      "multiplier": 1.1,
+      "activityDomains": [
+        "퀘스트/미션",
+        "거래/경제",
+        "창작/콘텐츠",
+        "소셜/멘토링",
+        "PvP/경쟁",
+        "정화/봉사",
+        "이벤트/축제"
+      ],
+      "minDomainsRequired": 5,
+      "note": "건전한 다방면 활동을 장려하기 위한 보너스"
+    },
+    "suddenChangeFreeze": {
+      "name": "급변 동결 검증",
+      "nameEn": "Sudden Change Freeze",
+      "description": "급격한 인원 변동 시 에너지 계산을 동결하고 검증",
+      "triggers": [
+        {
+          "condition": "24시간 내 유닛 인원 50% 이상 변동",
+          "action": "해당 유닛 에너지 48시간 동결 + 수동 검증",
+          "reason": "인원 펌핑 악용 방지"
+        },
+        {
+          "condition": "신규 가입 후 1시간 내 대량 AP 발생",
+          "action": "해당 계정 AP 기여 24시간 보류",
+          "reason": "부스팅 계정 악용 방지"
+        },
+        {
+          "condition": "베이스 간 대규모 유닛 이동 (3개 이상 동시)",
+          "action": "관련 베이스 에너지 24시간 동결 + 패턴 분석",
+          "reason": "에너지 셔틀 악용 방지"
+        }
+      ],
+      "reviewProcess": "오라클 감시자 자동 분석 → 이상 없으면 자동 해제 → 이상 시 운영진 수동 검토"
+    }
+  },
+  "fullPipelineExample": {
+    "description": "전체 파이프라인 시뮬레이션 예시",
+    "scenario": "팬클럽 '스타라이트' — 2개 테리토리, 4개 베이스, 12개 유닛, 총 180명",
+    "steps": [
+      {
+        "stage": 1,
+        "label": "개인→유닛",
+        "detail": "유닛 평균 15명, 평균 개인AP 300, 참여율 85%",
+        "calculation": "12유닛 × (15명 × 300AP × 0.85) = 45,900",
+        "bonuses": "유닛오라 2개(×1.2), 동기화 5개(×2.0), 콤보 8개(×1.5)",
+        "estimatedOutput": 89000
+      },
+      {
+        "stage": 2,
+        "label": "유닛→베이스",
+        "detail": "4개 베이스, 동기화율 평균 0.78, 미션성공률 82%(A등급)",
+        "calculation": "89000 × 0.78 × 1.2 = 83,304",
+        "estimatedOutput": 83300
+      },
+      {
+        "stage": 3,
+        "label": "베이스→테리토리",
+        "detail": "2개 테리토리, ECO 상위 25%(×1.3), 정화 650건(×1.2)",
+        "calculation": "83300 × 1.3 × 1.2 = 129,948",
+        "estimatedOutput": 129900
+      },
+      {
+        "stage": 4,
+        "label": "테리토리→팬클럽",
+        "detail": "평판계수 1.25, CP보너스 1.15",
+        "calculation": "129900 × 1.25 × 1.15 = 186,731",
+        "estimatedOutput": 186700
+      }
+    ],
+    "finalEnergy": 186700,
+    "note": "180명 팬클럽의 일일 에너지 약 186,700. 리그 랭킹에 이 수치가 반영된다."
+  }
+}

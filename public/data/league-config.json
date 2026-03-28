@@ -1,0 +1,710 @@
+{
+  "meta": {
+    "version": "2.0.0",
+    "totalLeagues": 5,
+    "description": "아스테리아 5대 리그 설정",
+    "season": {
+      "mainLeague": "30일",
+      "subGroup": "7일",
+      "promotionWindow": "시즌 종료 후 48시간"
+    }
+  },
+  "energyAggregation": {
+    "description": "에너지 합산 파이프라인",
+    "pipeline": [
+      {
+        "stage": 1,
+        "source": "아스트라",
+        "type": "individual",
+        "description": "개인 아스트라 에너지 기본값"
+      },
+      {
+        "stage": 2,
+        "source": "유닛",
+        "type": "participation",
+        "description": "유닛 참여율 가중 합산",
+        "weight": "participationRate"
+      },
+      {
+        "stage": 3,
+        "source": "베이스",
+        "type": "sync",
+        "description": "베이스 동기화율 반영",
+        "weight": "syncRate"
+      },
+      {
+        "stage": 4,
+        "source": "테리토리",
+        "type": "economy",
+        "description": "테리토리 경제 가중치 적용",
+        "weight": "economicWeight"
+      },
+      {
+        "stage": 5,
+        "source": "팬클럽",
+        "type": "reputation",
+        "description": "팬클럽 평판 최종 반영",
+        "weight": "reputationScore"
+      }
+    ],
+    "formula": "FinalEnergy = Astra × (1 + UnitParticipation) × SyncRate × EconomicWeight × (1 + Reputation×0.1)"
+  },
+  "mirrorRanking": {
+    "description": "미러랭킹 - 상위리그 꼴찌 vs 하위리그 1등 실시간 비교",
+    "enabled": true,
+    "refreshInterval": "5분",
+    "matchPairs": [
+      {
+        "upper": "star",
+        "lower": "dust",
+        "label": "스타 꼴찌 vs 더스트 1등"
+      },
+      {
+        "upper": "planet",
+        "lower": "star",
+        "label": "플래닛 꼴찌 vs 스타 1등"
+      },
+      {
+        "upper": "nova",
+        "lower": "planet",
+        "label": "노바 꼴찌 vs 플래닛 1등"
+      },
+      {
+        "upper": "quasar",
+        "lower": "nova",
+        "label": "퀘이사 꼴찌 vs 노바 1등"
+      }
+    ],
+    "swapCondition": "하위리그 1등이 3시즌 연속 상위리그 꼴찌 초과 시 자동 교체 제안"
+  },
+  "promotionFormulas": {
+    "description": "S = (IAI×a) + (GSI×b) + (PII×c) - Penalty",
+    "terms": {
+      "IAI": "개인 활동 지수 (Individual Activity Index)",
+      "GSI": "그룹 시너지 지수 (Group Synergy Index)",
+      "PII": "행성간 영향력 지수 (Planetary Influence Index)",
+      "Penalty": "비활동·규정위반 감점"
+    },
+    "byLeague": {
+      "dust_to_star": {
+        "formula": "S = (IAI × 0.7) + (GSI × 0.3) - Penalty",
+        "weights": {
+          "IAI": 0.7,
+          "GSI": 0.3,
+          "PII": 0
+        },
+        "promotionRate": "상위 20%",
+        "promotionPercent": 20
+      },
+      "star_to_planet": {
+        "formula": "S = (IAI × 0.4) + (GSI × 0.4) + (PII × 0.2) - Penalty",
+        "weights": {
+          "IAI": 0.4,
+          "GSI": 0.4,
+          "PII": 0.2
+        },
+        "promotionRate": "상위 15%",
+        "promotionPercent": 15
+      },
+      "planet_to_nova": {
+        "formula": "S = (IAI × 0.3) + (GSI × 0.4) + (PII × 0.3) - Penalty",
+        "weights": {
+          "IAI": 0.3,
+          "GSI": 0.4,
+          "PII": 0.3
+        },
+        "promotionRate": "상위 10%",
+        "promotionPercent": 10
+      },
+      "nova_to_quasar": {
+        "formula": "S = (IAI × 0.2) + (GSI × 0.3) + (PII × 0.5) - Penalty",
+        "weights": {
+          "IAI": 0.2,
+          "GSI": 0.3,
+          "PII": 0.5
+        },
+        "promotionRate": "TOP 5만",
+        "promotionCount": 5
+      }
+    }
+  },
+  "leagues": [
+    {
+      "id": "dust",
+      "name": "더스트",
+      "nameEn": "Dust",
+      "order": 1,
+      "maxMembers": 20000,
+      "tierCount": 4,
+      "color": "#94a3b8",
+      "icon": "🌫️",
+      "slogan": "먼지에서 태어나, 별이 되리라",
+      "description": "우주의 먼지에서 시작하는 신생 리그. 개인 성장과 기본기 습득에 집중한다.",
+      "organization": {
+        "structure": "4단계 조직",
+        "tiers": [
+          {
+            "tier": 1,
+            "name": "먼지구름",
+            "role": "신입",
+            "requiredLevel": 1,
+            "maxMembers": 8000,
+            "sovereigntyBonus": 0,
+            "apBonus": 0
+          },
+          {
+            "tier": 2,
+            "name": "미립자",
+            "role": "견습",
+            "requiredLevel": 5,
+            "maxMembers": 6000,
+            "sovereigntyBonus": 0.05,
+            "apBonus": 10
+          },
+          {
+            "tier": 3,
+            "name": "결정핵",
+            "role": "정규",
+            "requiredLevel": 10,
+            "maxMembers": 4000,
+            "sovereigntyBonus": 0.1,
+            "apBonus": 25
+          },
+          {
+            "tier": 4,
+            "name": "원시성운",
+            "role": "핵심",
+            "requiredLevel": 15,
+            "maxMembers": 2000,
+            "sovereigntyBonus": 0.2,
+            "apBonus": 50
+          }
+        ]
+      },
+      "leadership": {
+        "leaderTitle": "먼지장",
+        "maxLeaders": 3,
+        "rules": [
+          "주 1회 이상 유닛 미팅 개최 필수",
+          "신규 멤버 온보딩 가이드 제공",
+          "비활동 멤버 30일 경과 시 경고 발송"
+        ]
+      },
+      "permissions": {
+        "canCreateUnit": true,
+        "canCreateBase": false,
+        "canTradeTerritory": false,
+        "canDeclarePvP": false,
+        "canAccessMarket": "basic",
+        "maxUnitSize": 10
+      },
+      "promotionSpecial": {
+        "type": "individual_focus",
+        "description": "개인 IAI 비중이 가장 높은 리그. 꾸준한 개인 활동만으로 승격 가능",
+        "bonusCondition": "Lv15 달성 시 IAI 10% 추가 보너스",
+        "penaltyRule": "7일 연속 미접속 시 Penalty +5"
+      },
+      "rewards": {
+        "seasonEnd": {
+          "ap": 500,
+          "statPoints": 5,
+          "orbitSlots": 1
+        },
+        "weeklyRank": {
+          "top10": 100,
+          "top50": 50,
+          "top100": 20
+        }
+      }
+    },
+    {
+      "id": "star",
+      "name": "스타",
+      "nameEn": "Star",
+      "order": 2,
+      "maxMembers": 100000,
+      "tierCount": 6,
+      "color": "#fbbf24",
+      "icon": "⭐",
+      "slogan": "하나의 빛이 은하를 밝힌다",
+      "description": "별이 탄생하는 성장의 리그. 개인 역량과 그룹 시너지의 균형을 배운다.",
+      "organization": {
+        "structure": "6단계 조직",
+        "tiers": [
+          {
+            "tier": 1,
+            "name": "적색왜성",
+            "role": "초급성원",
+            "requiredLevel": 15,
+            "maxMembers": 30000,
+            "sovereigntyBonus": 0.2,
+            "apBonus": 30
+          },
+          {
+            "tier": 2,
+            "name": "황색항성",
+            "role": "중급성원",
+            "requiredLevel": 20,
+            "maxMembers": 25000,
+            "sovereigntyBonus": 0.3,
+            "apBonus": 50
+          },
+          {
+            "tier": 3,
+            "name": "백색거성",
+            "role": "상급성원",
+            "requiredLevel": 25,
+            "maxMembers": 20000,
+            "sovereigntyBonus": 0.4,
+            "apBonus": 75
+          },
+          {
+            "tier": 4,
+            "name": "청색초거성",
+            "role": "엘리트",
+            "requiredLevel": 30,
+            "maxMembers": 13000,
+            "sovereigntyBonus": 0.5,
+            "apBonus": 100
+          },
+          {
+            "tier": 5,
+            "name": "변광성",
+            "role": "간부",
+            "requiredLevel": 35,
+            "maxMembers": 8000,
+            "sovereigntyBonus": 0.7,
+            "apBonus": 150
+          },
+          {
+            "tier": 6,
+            "name": "초신성",
+            "role": "수석",
+            "requiredLevel": 40,
+            "maxMembers": 4000,
+            "sovereigntyBonus": 1,
+            "apBonus": 200
+          }
+        ]
+      },
+      "leadership": {
+        "leaderTitle": "항성주",
+        "maxLeaders": 5,
+        "rules": [
+          "주 2회 이상 그룹 활동 주최",
+          "유닛 간 교류 이벤트 월 1회 필수",
+          "멤버 성장 리포트 격주 제출",
+          "분쟁 조정 24시간 내 처리"
+        ]
+      },
+      "permissions": {
+        "canCreateUnit": true,
+        "canCreateBase": true,
+        "canTradeTerritory": false,
+        "canDeclarePvP": false,
+        "canAccessMarket": "standard",
+        "maxUnitSize": 25
+      },
+      "promotionSpecial": {
+        "type": "balanced_growth",
+        "description": "IAI와 GSI 균형 성장 요구. 개인 실력 + 팀 기여 모두 필요",
+        "bonusCondition": "유닛 참여율 80% 이상 시 GSI 15% 추가 보너스",
+        "penaltyRule": "유닛 미참여 2주 연속 시 Penalty +8"
+      },
+      "rewards": {
+        "seasonEnd": {
+          "ap": 1500,
+          "statPoints": 10,
+          "orbitSlots": 2
+        },
+        "weeklyRank": {
+          "top10": 300,
+          "top50": 150,
+          "top100": 60
+        }
+      }
+    },
+    {
+      "id": "planet",
+      "name": "플래닛",
+      "nameEn": "Planet",
+      "order": 3,
+      "maxMembers": 500000,
+      "tierCount": 5,
+      "color": "#34d399",
+      "icon": "🪐",
+      "slogan": "궤도를 지배하는 자, 세계를 얻는다",
+      "description": "행성계를 지배하는 중견 리그. 그룹 시너지와 행성간 영향력이 본격 요구된다.",
+      "organization": {
+        "structure": "5단계 조직",
+        "tiers": [
+          {
+            "tier": 1,
+            "name": "암석행성",
+            "role": "행성민",
+            "requiredLevel": 40,
+            "maxMembers": 180000,
+            "sovereigntyBonus": 1,
+            "apBonus": 150
+          },
+          {
+            "tier": 2,
+            "name": "가스행성",
+            "role": "행성사",
+            "requiredLevel": 48,
+            "maxMembers": 140000,
+            "sovereigntyBonus": 1.3,
+            "apBonus": 200
+          },
+          {
+            "tier": 3,
+            "name": "거대행성",
+            "role": "행성관",
+            "requiredLevel": 55,
+            "maxMembers": 100000,
+            "sovereigntyBonus": 1.6,
+            "apBonus": 300
+          },
+          {
+            "tier": 4,
+            "name": "환상행성",
+            "role": "행성장",
+            "requiredLevel": 62,
+            "maxMembers": 50000,
+            "sovereigntyBonus": 2,
+            "apBonus": 450
+          },
+          {
+            "tier": 5,
+            "name": "초행성",
+            "role": "행성주",
+            "requiredLevel": 70,
+            "maxMembers": 30000,
+            "sovereigntyBonus": 2.5,
+            "apBonus": 600
+          }
+        ]
+      },
+      "leadership": {
+        "leaderTitle": "행성총독",
+        "maxLeaders": 7,
+        "rules": [
+          "베이스 동기화율 70% 이상 유지 의무",
+          "테리토리 경제지표 주간 보고",
+          "리그 내 분쟁 심판 권한 보유",
+          "하위 리그 멘토링 프로그램 운영",
+          "월간 행성회의 소집 및 주재"
+        ]
+      },
+      "permissions": {
+        "canCreateUnit": true,
+        "canCreateBase": true,
+        "canTradeTerritory": true,
+        "canDeclarePvP": true,
+        "canAccessMarket": "advanced",
+        "maxUnitSize": 50
+      },
+      "promotionSpecial": {
+        "type": "influence_expansion",
+        "description": "PII(행성간 영향력)가 처음 등장. 테리토리 확장과 외교가 핵심",
+        "bonusCondition": "테리토리 3개 이상 보유 시 PII 20% 추가 보너스",
+        "penaltyRule": "테리토리 무단 방치 시 Penalty +12, 경제지표 하락 시 추가 감점"
+      },
+      "rewards": {
+        "seasonEnd": {
+          "ap": 4000,
+          "statPoints": 20,
+          "orbitSlots": 4
+        },
+        "weeklyRank": {
+          "top10": 800,
+          "top50": 400,
+          "top100": 150
+        }
+      }
+    },
+    {
+      "id": "nova",
+      "name": "노바",
+      "nameEn": "Nova",
+      "order": 4,
+      "maxMembers": 5000000,
+      "tierCount": 7,
+      "color": "#c084fc",
+      "icon": "💥",
+      "slogan": "폭발은 끝이 아니라, 새로운 시작이다",
+      "description": "폭발적 에너지의 상위 리그. GSI와 PII 비중이 극대화되며 대규모 연합 전략이 필수.",
+      "organization": {
+        "structure": "7단계 조직",
+        "tiers": [
+          {
+            "tier": 1,
+            "name": "신성폭발",
+            "role": "노바원",
+            "requiredLevel": 70,
+            "maxMembers": 1500000,
+            "sovereigntyBonus": 2.5,
+            "apBonus": 400
+          },
+          {
+            "tier": 2,
+            "name": "충격파면",
+            "role": "노바사",
+            "requiredLevel": 74,
+            "maxMembers": 1200000,
+            "sovereigntyBonus": 2.8,
+            "apBonus": 500
+          },
+          {
+            "tier": 3,
+            "name": "잔해성운",
+            "role": "노바관",
+            "requiredLevel": 78,
+            "maxMembers": 900000,
+            "sovereigntyBonus": 3.2,
+            "apBonus": 650
+          },
+          {
+            "tier": 4,
+            "name": "중성자핵",
+            "role": "노바장",
+            "requiredLevel": 82,
+            "maxMembers": 600000,
+            "sovereigntyBonus": 3.6,
+            "apBonus": 800
+          },
+          {
+            "tier": 5,
+            "name": "펄서",
+            "role": "노바주",
+            "requiredLevel": 86,
+            "maxMembers": 400000,
+            "sovereigntyBonus": 4,
+            "apBonus": 1000
+          },
+          {
+            "tier": 6,
+            "name": "마그네타",
+            "role": "노바경",
+            "requiredLevel": 90,
+            "maxMembers": 250000,
+            "sovereigntyBonus": 4.5,
+            "apBonus": 1300
+          },
+          {
+            "tier": 7,
+            "name": "블랙홀경계",
+            "role": "노바왕",
+            "requiredLevel": 95,
+            "maxMembers": 150000,
+            "sovereigntyBonus": 5,
+            "apBonus": 1700
+          }
+        ]
+      },
+      "leadership": {
+        "leaderTitle": "노바사령관",
+        "maxLeaders": 10,
+        "rules": [
+          "연합 전략회의 주 1회 필수 소집",
+          "대규모 PvP 작전 지휘 자격 보유",
+          "하위 리그 침공 시 방어 의무",
+          "테리토리 연합 경영 감독",
+          "시즌 목표 설정 및 달성률 관리",
+          "에너지 파이프라인 최적화 주도"
+        ]
+      },
+      "permissions": {
+        "canCreateUnit": true,
+        "canCreateBase": true,
+        "canTradeTerritory": true,
+        "canDeclarePvP": true,
+        "canAccessMarket": "premium",
+        "canFormAlliance": true,
+        "canDeclareWar": true,
+        "maxUnitSize": 100
+      },
+      "promotionSpecial": {
+        "type": "supreme_influence",
+        "description": "PII 비중 최대. TOP 5만 승격 가능한 극한의 경쟁",
+        "bonusCondition": "연합 승리 3회 이상 시 전체 점수 10% 추가",
+        "penaltyRule": "연합 배신 시 Penalty +30, 시즌 승격 자격 박탈 가능",
+        "specialRule": "TOP 5 선발은 자동이 아닌 퀘이사 원로회 최종 승인 필요"
+      },
+      "rewards": {
+        "seasonEnd": {
+          "ap": 10000,
+          "statPoints": 40,
+          "orbitSlots": 7
+        },
+        "weeklyRank": {
+          "top10": 2000,
+          "top50": 1000,
+          "top100": 400
+        }
+      }
+    },
+    {
+      "id": "quasar",
+      "name": "퀘이사",
+      "nameEn": "Quasar",
+      "order": 5,
+      "maxMembers": 10000000,
+      "tierCount": 8,
+      "color": "#f0c040",
+      "colorEffect": "백색광채 (white glow overlay)",
+      "icon": "🌌",
+      "slogan": "우주의 끝에서, 모든 것의 시작을 본다",
+      "description": "우주 최강의 절대자 리그. 최종 도달점이며, 내부 8단계가 무한경쟁의 장.",
+      "organization": {
+        "structure": "8단계 조직",
+        "tiers": [
+          {
+            "tier": 1,
+            "name": "활성은하핵",
+            "role": "퀘이사원",
+            "requiredLevel": 95,
+            "maxMembers": 3000000,
+            "sovereigntyBonus": 5,
+            "apBonus": 1500
+          },
+          {
+            "tier": 2,
+            "name": "제트방출",
+            "role": "퀘이사사",
+            "requiredLevel": 96,
+            "maxMembers": 2500000,
+            "sovereigntyBonus": 5.5,
+            "apBonus": 1800
+          },
+          {
+            "tier": 3,
+            "name": "강착원반",
+            "role": "퀘이사관",
+            "requiredLevel": 97,
+            "maxMembers": 1800000,
+            "sovereigntyBonus": 6,
+            "apBonus": 2200
+          },
+          {
+            "tier": 4,
+            "name": "사건의지평",
+            "role": "퀘이사장",
+            "requiredLevel": 98,
+            "maxMembers": 1200000,
+            "sovereigntyBonus": 6.5,
+            "apBonus": 2700
+          },
+          {
+            "tier": 5,
+            "name": "특이점",
+            "role": "퀘이사주",
+            "requiredLevel": 99,
+            "maxMembers": 700000,
+            "sovereigntyBonus": 7,
+            "apBonus": 3300
+          },
+          {
+            "tier": 6,
+            "name": "시공붕괴",
+            "role": "퀘이사경",
+            "requiredLevel": 100,
+            "maxMembers": 400000,
+            "sovereigntyBonus": 7.5,
+            "apBonus": 4000
+          },
+          {
+            "tier": 7,
+            "name": "차원균열",
+            "role": "퀘이사왕",
+            "requiredLevel": 100,
+            "maxMembers": 250000,
+            "sovereigntyBonus": 8.5,
+            "apBonus": 5000
+          },
+          {
+            "tier": 8,
+            "name": "앱솔루트",
+            "role": "소버린",
+            "requiredLevel": 100,
+            "maxMembers": 130000,
+            "sovereigntyBonus": 10,
+            "apBonus": 7000
+          }
+        ]
+      },
+      "leadership": {
+        "leaderTitle": "소버린",
+        "maxLeaders": 1,
+        "councilTitle": "원로회",
+        "maxCouncil": 12,
+        "rules": [
+          "전체 리그 시스템의 최종 감독 권한",
+          "노바→퀘이사 승격 최종 승인권",
+          "서버 전체 이벤트 발의 및 집행",
+          "리그 규칙 개정 발의권 (원로회 2/3 찬성 필요)",
+          "비상시 하위 리그 개입 권한",
+          "시즌 MVP 선정 및 특별 보상 집행",
+          "앱솔루트 소버린은 1명만 존재 가능"
+        ]
+      },
+      "permissions": {
+        "canCreateUnit": true,
+        "canCreateBase": true,
+        "canTradeTerritory": true,
+        "canDeclarePvP": true,
+        "canAccessMarket": "unlimited",
+        "canFormAlliance": true,
+        "canDeclareWar": true,
+        "canModifyRules": true,
+        "canVetoPromotion": true,
+        "maxUnitSize": 500
+      },
+      "promotionSpecial": {
+        "type": "absolute_endgame",
+        "description": "승격 없음. 내부 8단계 무한경쟁. 앱솔루트(Tier 8)는 서버 내 단 1명",
+        "tier8Rule": "앱솔루트 소버린은 현 보유자에게 도전하여 승리해야 획득 (소버린 챌린지)",
+        "sovereignChallenge": {
+          "cooldown": "시즌당 1회",
+          "condition": "Tier 7 차원균열 1등만 도전 가능",
+          "method": "종합 점수 + 1:1 결전 복합 판정",
+          "defenderAdvantage": "방어자 점수 5% 가산"
+        },
+        "penaltyRule": "퀘이사 최하위 5%는 노바로 강등"
+      },
+      "rewards": {
+        "seasonEnd": {
+          "ap": 30000,
+          "statPoints": 80,
+          "orbitSlots": 10
+        },
+        "weeklyRank": {
+          "top10": 6000,
+          "top50": 3000,
+          "top100": 1200
+        },
+        "sovereignBonus": {
+          "ap": 100000,
+          "exclusiveTitle": "앱솔루트 소버린",
+          "exclusiveAura": "백색광채"
+        }
+      }
+    }
+  ],
+  "rules": {
+    "promotion": {
+      "description": "상위 리그 승격 조건",
+      "cooldown": "1시즌 (승격 실패 시)",
+      "demotionRule": "최하위 10% 강등 (퀘이사는 5%)"
+    },
+    "scoring": {
+      "description": "랭킹 점수 산출 기준",
+      "weights": {
+        "xp": 0.4,
+        "sovereignty": 0.3,
+        "activity": 0.2,
+        "pvp": 0.1
+      }
+    }
+  }
+}

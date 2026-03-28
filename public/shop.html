@@ -3,1151 +3,500 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>아스테리아 상점 — ASTERIA</title>
+<title>상점 — ASTERIA</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
-*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-:root {
-  --void:#030308; --panel:rgba(10,10,22,0.96);
-  --border:rgba(180,150,255,0.13); --gold:#f0c040;
-  --accent:#c084fc; --accent2:#818cf8; --accent3:#38bdf8;
-  --text:#e8e4f0; --muted:rgba(200,190,220,0.5);
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --void:#030308;--panel:rgba(5,12,30,.96);
+  --border:rgba(200,175,80,.13);--gold:#f0c040;
+  --accent:#4a90d9;--text:#e8ecf4;--muted:rgba(160,180,210,.5);
+  --common:#94a3b8;--rare:#38bdf8;--epic:#c084fc;--legendary:#f0c040;--genesis:linear-gradient(90deg,#f06,#f90,#0f0,#09f,#c0f);
 }
-html,body {
-  width:100%; min-height:100%;
-  background:var(--void); color:var(--text);
-  font-family:'Noto Sans KR',sans-serif;
-  -webkit-tap-highlight-color:transparent; overflow-x:hidden;
-}
+html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-family:'Noto Sans KR',sans-serif;overflow-x:hidden}
+#starCanvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+#app{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative;z-index:1}
 
-#app { max-width:900px; margin:0 auto; min-height:100vh; position:relative; z-index:1; }
+.top-nav{display:flex;align-items:center;background:var(--panel);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0}
+.top-nav::-webkit-scrollbar{display:none}
+.top-nav-item{flex-shrink:0;display:flex;flex-direction:column;align-items:center;padding:10px 14px;cursor:pointer;text-decoration:none;color:var(--muted);border-bottom:2px solid transparent;gap:3px;transition:all .2s}
+.top-nav-item.active{color:var(--accent);border-bottom-color:var(--accent)}
+.top-nav-icon{font-size:18px}.top-nav-label{font-size:9px;font-weight:500;white-space:nowrap}
 
-/* ── TOP NAV ── */
+/* 잔액 바 */
+.balance-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0}
+.bal-left{display:flex;align-items:center;gap:8px}
+.bal-icon{font-size:20px}
+.bal-amount{font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--gold)}
+.bal-label{font-size:9px;color:var(--muted)}
+.bal-charge{padding:5px 14px;border-radius:14px;background:rgba(240,192,64,.15);border:1px solid rgba(240,192,64,.4);color:var(--gold);font-size:11px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
 
+/* 탭바 */
+.tab-bar{display:flex;overflow-x:auto;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0}
+.tab-bar::-webkit-scrollbar{display:none}
+.tab-btn{flex-shrink:0;padding:10px 14px;font-size:10px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none;font-family:'Noto Sans KR',sans-serif}
+.tab-btn.active{color:var(--gold);border-bottom-color:var(--gold)}
 
+/* 아이템 그리드 */
+.content{flex:1;overflow-y:auto;padding:12px}
+.content::-webkit-scrollbar{width:3px}
+.content::-webkit-scrollbar-thumb{background:rgba(240,192,64,.3);border-radius:3px}
+.item-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.item-card{background:rgba(255,255,255,.03);border:1.5px solid var(--border);border-radius:14px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.item-card:hover{transform:translateY(-3px);border-color:var(--gold)}
+.item-card.locked{opacity:.6}
+.item-card .lock-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:13px;font-size:10px;color:var(--muted);gap:4px}
+.item-card .lock-overlay .lock-icon{font-size:22px}
+.ic-emoji{font-size:32px;margin-bottom:6px}
+.ic-name{font-size:10px;font-weight:600;margin-bottom:2px}
+.ic-en{font-size:8px;color:var(--muted);margin-bottom:6px}
+.ic-price{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:var(--gold)}
+.ic-rarity{font-size:7px;font-weight:900;letter-spacing:1px;margin-top:4px}
+/* 등급 색상 */
+.r-common{color:var(--common);border-color:var(--common)}.r-rare{color:var(--rare);border-color:var(--rare)}.r-epic{color:var(--epic);border-color:var(--epic)}
+.r-legendary{color:var(--legendary);border-color:var(--legendary);box-shadow:0 0 12px rgba(240,192,64,.15)}
+.r-genesis{border-image:var(--genesis) 1;box-shadow:0 0 16px rgba(192,132,252,.2)}
 
-.tni.active { color:var(--accent); border-bottom-color:var(--accent); }
-.tni-icon { font-size:17px; }
-.tni-label { font-size:9px; font-weight:500; white-space:nowrap; }
+/* 거래소 */
+.market-item{display:flex;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;cursor:pointer;transition:all .2s}
+.market-item:hover{border-color:var(--gold)}
+.mi-emoji{font-size:28px;flex-shrink:0}
+.mi-info{flex:1;min-width:0}
+.mi-name{font-size:12px;font-weight:700}
+.mi-seller{font-size:9px;color:var(--muted)}
+.mi-right{text-align:right;flex-shrink:0}
+.mi-price{font-family:'Orbitron',monospace;font-size:14px;font-weight:900;color:var(--gold)}
+.mi-rarity{font-size:8px;font-weight:700}
+.market-search{display:flex;gap:8px;margin-bottom:12px}
+.market-search input{flex:1;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:10px;padding:8px 12px;color:var(--text);font-size:12px;outline:none;font-family:'Noto Sans KR',sans-serif}
+.market-search input:focus{border-color:var(--gold)}
+.market-search select{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:10px;padding:8px;color:var(--text);font-size:11px;outline:none}
 
-/* ── TOP BAR ── */
-.topbar {
-  position:sticky; top:40px; z-index:190;
-  display:flex; align-items:center; gap:10px; padding:12px 18px;
-  background:var(--panel); backdrop-filter:blur(20px);
-  border-bottom:1px solid var(--border);
-}
-.tb-logo { font-family:'Orbitron',monospace; font-size:15px; font-weight:900; letter-spacing:3px;
-  background:linear-gradient(135deg,var(--gold),var(--accent)); -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent; background-clip:text; flex:1; }
-.tb-wallet {
-  display:flex; align-items:center; gap:8px;
-  background:rgba(240,192,64,.1); border:1px solid rgba(240,192,64,.3);
-  border-radius:20px; padding:6px 14px;
-}
-.tw-icon { font-size:14px; }
-.tw-val { font-family:'Orbitron',monospace; font-size:13px; font-weight:700; color:var(--gold); }
-.tw-label { font-size:10px; color:var(--muted); }
-.tb-cart {
-  position:relative; width:36px; height:36px; border-radius:50%;
-  background:rgba(255,255,255,.06); border:1px solid var(--border);
-  display:flex; align-items:center; justify-content:center;
-  font-size:16px; cursor:pointer;
-}
-.cart-badge {
-  position:absolute; top:-4px; right:-4px;
-  width:18px; height:18px; border-radius:50%;
-  background:#ef4444; font-size:10px; font-weight:700; color:#fff;
-  display:flex; align-items:center; justify-content:center;
-}
+/* 뽑기 */
+.gacha-wrap{display:flex;flex-direction:column;align-items:center;padding:20px 0}
+.gacha-orb{width:140px;height:140px;border-radius:50%;background:radial-gradient(circle at 35% 35%,rgba(240,192,64,.3),rgba(192,132,252,.2),rgba(0,0,0,.6));border:3px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:50px;cursor:pointer;margin-bottom:16px;box-shadow:0 0 40px rgba(240,192,64,.2);transition:all .3s}
+.gacha-orb:hover{transform:scale(1.08);box-shadow:0 0 60px rgba(240,192,64,.4)}
+.gacha-orb.spinning{animation:gachaSpin 1s ease-in-out}
+@keyframes gachaSpin{0%{transform:rotate(0) scale(1)}50%{transform:rotate(360deg) scale(1.15)}100%{transform:rotate(720deg) scale(1)}}
+.gacha-btns{display:flex;gap:12px;margin-bottom:20px}
+.gacha-btn{padding:12px 24px;border-radius:16px;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .2s}
+.gacha-btn.single{background:rgba(240,192,64,.15);border:1px solid rgba(240,192,64,.4);color:var(--gold)}
+.gacha-btn.multi{background:linear-gradient(90deg,var(--gold),#e6a800);color:var(--void)}
+.gacha-btn:hover{transform:translateY(-2px)}
+.gacha-result{text-align:center;min-height:80px}
+.gacha-result-card{display:inline-flex;flex-direction:column;align-items:center;gap:6px;padding:16px 24px;border-radius:16px;background:rgba(255,255,255,.04);border:2px solid var(--border);animation:resultPop .4s cubic-bezier(.34,1.56,.64,1)}
+@keyframes resultPop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.gr-emoji{font-size:40px}.gr-name{font-size:13px;font-weight:700}.gr-rarity{font-size:10px;font-weight:900;letter-spacing:1px}
+.gacha-history{margin-top:16px;width:100%}
+.gacha-history-title{font-size:10px;color:var(--muted);margin-bottom:8px;letter-spacing:1px}
+.gh-list{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.gh-item{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(255,255,255,.04);border:1px solid var(--border)}
 
-/* ── 탭 ── */
-.shop-tabs {
-  display:flex; gap:0; border-bottom:1px solid var(--border);
-  background:var(--panel); position:sticky; top:88px; z-index:180;
-}
-.shop-tab {
-  flex:1; padding:12px 8px; text-align:center; cursor:pointer;
-  font-size:12px; font-weight:600; color:var(--muted);
-  border-bottom:2px solid transparent; transition:all .2s;
-}
-.shop-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+/* 상세 모달 */
+.shop-modal{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;padding:16px}
+.shop-modal.show{display:flex}
+.sm-card{background:rgba(8,8,22,.97);border:1px solid var(--border);border-radius:20px;width:340px;max-width:95vw;padding:24px;text-align:center}
+.sm-close{float:right;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer}
+.sm-emoji{font-size:56px;margin:10px 0}
+.sm-name{font-size:18px;font-weight:900;margin-bottom:2px}
+.sm-en{font-size:11px;color:var(--muted);margin-bottom:8px}
+.sm-desc{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:14px}
+.sm-price{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:var(--gold);margin-bottom:14px}
+.sm-buy{width:100%;padding:12px;border-radius:14px;border:none;background:linear-gradient(90deg,var(--gold),#e6a800);color:var(--void);font-size:14px;font-weight:900;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+.sm-buy:disabled{opacity:.5;cursor:not-allowed}
 
-/* ── 탭 컨텐츠 ── */
-.tab-content { display:none; padding:16px 18px; }
-.tab-content.active { display:block; }
+/* NPC 영역 */
+.npc-bar{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0}
+.npc-avatar{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,rgba(240,192,64,.3),rgba(7,7,15,.9));border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;animation:npcFloat 3s ease-in-out infinite}
+@keyframes npcFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.npc-speech{flex:1;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:14px;padding:8px 12px;font-size:11px;line-height:1.5;color:var(--text);position:relative}
+.npc-speech::before{content:'';position:absolute;left:-6px;top:50%;transform:translateY(-50%);border:5px solid transparent;border-right-color:rgba(255,255,255,.04)}
+.npc-chat-btn{padding:6px 14px;border-radius:12px;background:rgba(240,192,64,.12);border:1px solid rgba(240,192,64,.35);color:var(--gold);font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:'Noto Sans KR',sans-serif}
+.npc-chat-btn:hover{background:rgba(240,192,64,.2)}
 
-/* ── 섹션 타이틀 ── */
-.sec-title {
-  font-size:10px; color:var(--muted); letter-spacing:2.5px;
-  text-transform:uppercase; margin-bottom:14px;
-  display:flex; align-items:center; gap:8px;
-}
-.sec-title::after { content:''; flex:1; height:1px; background:var(--border); }
+/* NPC 대화 모달 */
+.npc-modal{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);display:none;align-items:flex-end;justify-content:center;padding:16px}
+.npc-modal.show{display:flex}
+.npc-chat-card{background:rgba(8,8,22,.97);border:1px solid var(--border);border-radius:20px 20px 0 0;width:480px;max-width:100%;max-height:70vh;display:flex;flex-direction:column;overflow:hidden}
+.npc-chat-header{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.npc-chat-av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(240,192,64,.3),rgba(7,7,15,.9));border:1.5px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:18px}
+.npc-chat-name{font-size:13px;font-weight:700;flex:1}
+.npc-chat-close{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer}
+.npc-chat-body{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px}
+.npc-chat-body::-webkit-scrollbar{width:3px}
+.npc-chat-body::-webkit-scrollbar-thumb{background:rgba(240,192,64,.3);border-radius:3px}
+.npc-msg{max-width:80%;padding:8px 12px;border-radius:14px;font-size:12px;line-height:1.5}
+.npc-msg.npc{background:rgba(240,192,64,.1);border:1px solid rgba(240,192,64,.2);border-bottom-left-radius:4px;align-self:flex-start}
+.npc-msg.user{background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.2);border-bottom-right-radius:4px;align-self:flex-end}
+.npc-chat-input{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--border)}
+.npc-chat-input input{flex:1;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:18px;padding:8px 14px;color:var(--text);font-size:12px;outline:none;font-family:'Noto Sans KR',sans-serif}
+.npc-chat-input input:focus{border-color:var(--gold)}
+.npc-chat-input button{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#e6a800);border:none;color:var(--void);font-size:14px;cursor:pointer}
 
-/* ══════════════════════════════
-   사진 분석 탭
-══════════════════════════════ */
-.upload-zone {
-  border:2px dashed rgba(192,132,252,.3); border-radius:20px;
-  padding:40px 20px; text-align:center; cursor:pointer;
-  transition:all .3s; position:relative; overflow:hidden;
-  background:rgba(192,132,252,.03); margin-bottom:20px;
-}
-.upload-zone:hover { border-color:var(--accent); background:rgba(192,132,252,.07); }
-.upload-zone.drag { border-color:var(--gold); background:rgba(240,192,64,.07); }
-.upload-icon { font-size:52px; margin-bottom:12px; }
-.upload-title { font-size:16px; font-weight:700; margin-bottom:6px; }
-.upload-desc { font-size:12px; color:var(--muted); line-height:1.6; }
-.upload-input { position:absolute; inset:0; opacity:0; cursor:pointer; }
-
-/* 업로드된 이미지 프리뷰 */
-.preview-wrap {
-  position:relative; border-radius:16px; overflow:hidden;
-  margin-bottom:16px; display:none;
-}
-.preview-img { width:100%; max-height:280px; object-fit:cover; display:block; }
-.preview-overlay {
-  position:absolute; inset:0;
-  background:linear-gradient(to bottom, transparent 50%, rgba(0,0,0,.8));
-  display:flex; align-items:flex-end; padding:16px;
-}
-.preview-change {
-  padding:7px 16px; border-radius:20px;
-  background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3);
-  color:#fff; font-size:12px; cursor:pointer; font-family:'Noto Sans KR',sans-serif;
-  backdrop-filter:blur(8px);
-}
-
-/* 분석 버튼 */
-.analyze-btn {
-  width:100%; padding:15px; border-radius:16px;
-  background:linear-gradient(90deg,var(--accent),var(--accent2));
-  border:none; color:#fff; font-size:16px; font-weight:700;
-  cursor:pointer; font-family:'Noto Sans KR',sans-serif;
-  transition:all .25s; display:flex; align-items:center; justify-content:center; gap:10px;
-  margin-bottom:20px;
-}
-.analyze-btn:hover { box-shadow:0 0 24px rgba(192,132,252,.5); transform:translateY(-1px); }
-.analyze-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
-
-/* 분석 로딩 */
-.analyzing-wrap {
-  display:none; text-align:center; padding:30px;
-}
-.analyzing-spinner {
-  width:60px; height:60px; border-radius:50%;
-  border:3px solid rgba(192,132,252,.2);
-  border-top-color:var(--accent);
-  animation:spin 1s linear infinite; margin:0 auto 16px;
-}
-@keyframes spin { to{transform:rotate(360deg)} }
-.analyzing-title { font-size:15px; font-weight:700; color:var(--accent); margin-bottom:6px; }
-.analyzing-desc { font-size:12px; color:var(--muted); }
-
-/* 분석 결과 */
-.analysis-result { display:none; }
-.result-header {
-  background:linear-gradient(135deg,rgba(192,132,252,.1),rgba(56,189,248,.1));
-  border:1px solid rgba(192,132,252,.3); border-radius:16px;
-  padding:16px 18px; margin-bottom:16px;
-  display:flex; align-items:center; gap:12px;
-}
-.rh-icon { font-size:28px; }
-.rh-info { flex:1; }
-.rh-title { font-size:14px; font-weight:700; }
-.rh-desc { font-size:11px; color:var(--muted); margin-top:3px; line-height:1.5; }
-.rh-count { font-family:'Orbitron',monospace; font-size:22px; font-weight:900; color:var(--accent); }
-
-/* 굿즈 체크리스트 */
-.goods-list { display:flex; flex-direction:column; gap:10px; margin-bottom:20px; }
-.goods-item {
-  background:rgba(255,255,255,.03); border:1px solid var(--border);
-  border-radius:14px; padding:14px 16px;
-  display:flex; align-items:center; gap:12px;
-  cursor:pointer; transition:all .2s;
-}
-.goods-item:hover { border-color:rgba(192,132,252,.3); }
-.goods-item.selected { border-color:var(--accent); background:rgba(192,132,252,.07); }
-.goods-check {
-  width:22px; height:22px; border-radius:6px;
-  border:2px solid var(--border); flex-shrink:0;
-  display:flex; align-items:center; justify-content:center;
-  transition:all .2s; font-size:12px;
-}
-.goods-item.selected .goods-check { background:var(--accent); border-color:var(--accent); }
-.goods-emoji { font-size:28px; flex-shrink:0; }
-.goods-info { flex:1; }
-.goods-name { font-size:13px; font-weight:700; }
-.goods-detail { font-size:11px; color:var(--muted); margin-top:2px; }
-.goods-rarity { font-size:10px; font-weight:700; margin-top:3px; }
-.goods-price { text-align:right; flex-shrink:0; }
-.price-val { font-family:'Orbitron',monospace; font-size:14px; font-weight:700; color:var(--gold); }
-.price-type { font-size:9px; color:var(--muted); margin-top:2px; }
-
-/* 구매 요약 카드 */
-.purchase-summary {
-  background:rgba(255,255,255,.03); border:1px solid var(--border);
-  border-radius:16px; padding:18px; margin-bottom:16px;
-  position:sticky; bottom:20px;
-}
-.ps-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
-.ps-label { font-size:12px; color:var(--muted); }
-.ps-val { font-size:12px; font-weight:700; }
-.ps-total { border-top:1px solid var(--border); padding-top:12px; margin-top:4px; }
-.ps-total .ps-label { font-size:14px; font-weight:700; color:var(--text); }
-.ps-total .ps-val { font-family:'Orbitron',monospace; font-size:16px; font-weight:900; color:var(--gold); }
-.ps-wallet { font-size:11px; color:var(--muted); text-align:right; margin-top:4px; }
-.ps-wallet.enough { color:#10b981; }
-.ps-wallet.lack { color:#ef4444; }
-
-/* 구매 버튼 */
-.buy-btn {
-  width:100%; padding:15px; border-radius:16px;
-  border:none; color:#fff; font-size:16px; font-weight:700;
-  cursor:pointer; font-family:'Noto Sans KR',sans-serif; transition:all .25s;
-  display:flex; align-items:center; justify-content:center; gap:10px;
-}
-.buy-btn.ready { background:linear-gradient(90deg,var(--gold),#e6a800); color:var(--void); }
-.buy-btn.ready:hover { box-shadow:0 0 24px rgba(240,192,64,.5); transform:translateY(-1px); }
-.buy-btn.disabled { background:rgba(255,255,255,.08); cursor:not-allowed; color:var(--muted); }
-.buy-btn.payment-ready {
-  background:linear-gradient(90deg,#10b981,#059669);
-  animation:payPulse 2s ease-in-out infinite;
-}
-@keyframes payPulse { 0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.4)} 50%{box-shadow:0 0 0 8px rgba(16,185,129,0)} }
-
-/* ══════════════════════════════
-   상점 탭
-══════════════════════════════ */
-.store-filter { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
-.filter-btn {
-  padding:6px 14px; border-radius:20px; font-size:11px; font-weight:600;
-  border:1px solid var(--border); background:transparent; color:var(--muted);
-  cursor:pointer; transition:all .2s; font-family:'Noto Sans KR',sans-serif;
-}
-.filter-btn.active { background:rgba(192,132,252,.15); border-color:var(--accent); color:var(--accent); }
-.store-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
-.store-item {
-  background:rgba(255,255,255,.03); border:1px solid var(--border);
-  border-radius:16px; overflow:hidden; cursor:pointer; transition:all .25s;
-  position:relative;
-}
-.store-item:hover { border-color:rgba(192,132,252,.4); transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,.3); }
-.store-item-img {
-  width:100%; aspect-ratio:1; background:rgba(255,255,255,.04);
-  display:flex; align-items:center; justify-content:center; font-size:52px;
-  position:relative; overflow:hidden;
-}
-.store-item-img::after {
-  content:''; position:absolute; inset:0;
-  background:radial-gradient(circle at 50% 50%, rgba(192,132,252,.1), transparent 70%);
-}
-.store-item-body { padding:12px; }
-.si-name { font-size:13px; font-weight:700; margin-bottom:3px; }
-.si-desc { font-size:10px; color:var(--muted); line-height:1.4; margin-bottom:8px; }
-.si-bottom { display:flex; align-items:center; justify-content:space-between; }
-.si-price { font-family:'Orbitron',monospace; font-size:13px; font-weight:700; color:var(--gold); }
-.si-type { font-size:9px; color:var(--muted); }
-.si-rarity {
-  position:absolute; top:8px; right:8px;
-  font-size:9px; font-weight:700; padding:3px 8px; border-radius:10px;
-}
-.si-rarity.common { background:rgba(148,163,184,.2); color:#94a3b8; }
-.si-rarity.rare { background:rgba(56,189,248,.2); color:#38bdf8; }
-.si-rarity.epic { background:rgba(192,132,252,.2); color:#c084fc; }
-.si-rarity.legendary { background:rgba(240,192,64,.2); color:var(--gold); }
-.si-buy-btn {
-  padding:6px 14px; border-radius:20px; border:none;
-  font-size:11px; font-weight:700; cursor:pointer;
-  font-family:'Noto Sans KR',sans-serif; transition:all .2s;
-  background:linear-gradient(90deg,var(--accent),var(--accent2)); color:#fff;
-}
-.si-buy-btn:hover { box-shadow:0 0 12px rgba(192,132,252,.4); }
-.new-badge {
-  position:absolute; top:8px; left:8px;
-  background:#ef4444; color:#fff; font-size:8px; font-weight:900;
-  padding:2px 6px; border-radius:4px;
-}
-.hot-badge {
-  position:absolute; top:8px; left:8px;
-  background:var(--gold); color:var(--void); font-size:8px; font-weight:900;
-  padding:2px 6px; border-radius:4px;
-}
-
-/* ══════════════════════════════
-   내 굿즈함 탭
-══════════════════════════════ */
-.inventory-wrap { }
-.inv-summary {
-  background:linear-gradient(135deg,rgba(192,132,252,.1),rgba(56,189,248,.08));
-  border:1px solid rgba(192,132,252,.2); border-radius:16px;
-  padding:16px 18px; margin-bottom:16px;
-  display:grid; grid-template-columns:repeat(3,1fr); gap:10px; text-align:center;
-}
-.inv-sum-val { font-family:'Orbitron',monospace; font-size:18px; font-weight:900; color:var(--accent); }
-.inv-sum-label { font-size:10px; color:var(--muted); margin-top:3px; }
-.inv-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
-.inv-item {
-  background:rgba(255,255,255,.03); border:1px solid var(--border);
-  border-radius:14px; padding:12px 8px; text-align:center;
-  position:relative; transition:all .2s; cursor:pointer;
-}
-.inv-item:hover { border-color:var(--accent); }
-.inv-item.in-room { border-color:rgba(16,185,129,.5); background:rgba(16,185,129,.05); }
-.inv-emoji { font-size:28px; margin-bottom:6px; }
-.inv-name { font-size:10px; font-weight:600; }
-.inv-rarity { font-size:8px; font-weight:700; margin-top:3px; }
-.inv-in-room { position:absolute; top:4px; right:4px; font-size:9px;
-  background:#10b981; color:#fff; padding:2px 5px; border-radius:4px; font-weight:700; }
-.inv-place-btn {
-  margin-top:6px; width:100%; padding:5px; border-radius:8px;
-  background:linear-gradient(90deg,var(--accent),var(--accent2));
-  border:none; color:#fff; font-size:9px; font-weight:700;
-  cursor:pointer; font-family:'Noto Sans KR',sans-serif;
-}
-.rarity-common { color:#94a3b8; }
-.rarity-rare { color:#38bdf8; }
-.rarity-epic { color:#c084fc; }
-.rarity-legendary { color:var(--gold); }
-
-/* ══════════════════════════════
-   구매 완료 모달
-══════════════════════════════ */
-.modal-ov {
-  position:fixed; inset:0; z-index:9000;
-  background:rgba(0,0,0,.8); backdrop-filter:blur(15px);
-  display:none; align-items:center; justify-content:center;
-}
-.modal-ov.show { display:flex; }
-.modal-box {
-  width:320px; background:rgba(12,12,26,.98);
-  border:1px solid rgba(240,192,64,.3); border-radius:24px;
-  padding:36px 28px; text-align:center;
-  animation:pop .4s cubic-bezier(.34,1.56,.64,1);
-  box-shadow:0 0 60px rgba(240,192,64,.2);
-}
-@keyframes pop { from{transform:scale(.5);opacity:0} to{transform:scale(1);opacity:1} }
-.modal-icon { font-size:60px; margin-bottom:12px; animation:bounce 1s ease-in-out infinite; }
-@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-.modal-title { font-family:'Orbitron',monospace; font-size:18px; font-weight:900; color:var(--gold); margin-bottom:6px; }
-.modal-sub { font-size:13px; color:var(--muted); margin-bottom:16px; }
-.modal-items { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:20px; }
-.modal-item-chip { font-size:11px; padding:5px 12px; border-radius:20px; background:rgba(192,132,252,.15); border:1px solid rgba(192,132,252,.3); color:var(--accent); }
-.modal-btn { width:100%; padding:13px; border-radius:20px; border:none; background:linear-gradient(90deg,var(--gold),#e6a800); color:var(--void); font-size:15px; font-weight:700; cursor:pointer; font-family:'Noto Sans KR',sans-serif; }
-
-/* TOAST */
-.toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
-  background:rgba(12,12,26,.97); border:1px solid var(--border);
-  border-radius:12px; padding:11px 22px; font-size:13px;
-  z-index:8000; opacity:0; transition:opacity .3s; pointer-events:none;
-  white-space:nowrap; box-shadow:0 8px 32px rgba(0,0,0,.5); }
-.toast.show { opacity:1; }
-
-.spacer { height:60px; }
-
-/* ── 상단 네비게이션 ── */
-.top-nav {
-  position:sticky; top:0; z-index:300;
-  display:flex; align-items:center;
-  background:rgba(10,10,22,0.96); backdrop-filter:blur(20px);
-  border-bottom:1px solid rgba(180,150,255,0.13);
-  overflow-x:auto; -webkit-overflow-scrolling:touch;
-}
-.top-nav::-webkit-scrollbar { display:none; }
-.top-nav-item, .tni {
-  flex-shrink:0; display:flex; flex-direction:column; align-items:center;
-  padding:10px 14px; cursor:pointer; text-decoration:none;
-  color:rgba(200,190,220,0.5);
-  border-bottom:2px solid transparent; gap:3px; transition:all .2s;
-}
-.top-nav-item.active, .tni.active { color:#c084fc; border-bottom-color:#c084fc; }
-.top-nav-item:hover, .tni:hover { color:#e8e4f0; }
-.top-nav-icon, .tni-icon { font-size:18px; }
-.top-nav-label, .tni-label { font-size:9px; font-weight:500; white-space:nowrap; }
-
-
-/* ══════════════════════════
-   우주 별빛 배경
-══════════════════════════ */
-#starCanvas {
-  position:fixed; inset:0; z-index:0; pointer-events:none;
-  width:100%; height:100%;
-}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(12,12,26,.97);border:1px solid var(--border);border-radius:12px;padding:10px 20px;font-size:12px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
 </style>
 </head>
 <body>
 <canvas id="starCanvas"></canvas>
-<canvas id="starCanvas"></canvas>
-
 <div id="toast" class="toast"></div>
+<!-- NPC 대화 모달 -->
+<div class="npc-modal" id="npcModal">
+  <div class="npc-chat-card">
+    <div class="npc-chat-header">
+      <div class="npc-chat-av">🧙</div>
+      <div class="npc-chat-name">별빛 상인 루미 — Shopkeeper Lumi</div>
+      <button class="npc-chat-close" onclick="closeNpcChat()">✕</button>
+    </div>
+    <div class="npc-chat-body" id="npcChatBody">
+      <div class="npc-msg npc">어서오세요! 무엇을 찾으시나요? 추천해드릴까요? 😊<br>Welcome! What are you looking for?</div>
+    </div>
+    <div class="npc-chat-input">
+      <input id="npcInput" placeholder="상인에게 말하기... — Talk to shopkeeper" onkeydown="if(event.key==='Enter')sendNpcMsg()">
+      <button onclick="sendNpcMsg()">➤</button>
+    </div>
+  </div>
+</div>
 
-<!-- 구매 완료 모달 -->
-<div class="modal-ov" id="buyModal">
-  <div class="modal-box">
-    <div class="modal-icon">🎉</div>
-    <div class="modal-title">구매 완료!</div>
-    <div class="modal-sub" id="modalSub">굿즈함에 저장됐어요!</div>
-    <div class="modal-items" id="modalItems"></div>
-    <button class="modal-btn" onclick="closeBuyModal()">굿즈함 확인하기 →</button>
+<div class="shop-modal" id="shopModal">
+  <div class="sm-card">
+    <button class="sm-close" onclick="closeShopModal()">✕</button>
+    <div class="sm-emoji" id="smEmoji"></div>
+    <div class="sm-name" id="smName"></div>
+    <div class="sm-en" id="smEn"></div>
+    <div id="smRarity" class="ic-rarity" style="margin-bottom:8px"></div>
+    <div class="sm-desc" id="smDesc"></div>
+    <div class="sm-price" id="smPrice"></div>
+    <button class="sm-buy" id="smBuy" onclick="buyItem()">구매하기 — Purchase</button>
   </div>
 </div>
 
 <div id="app">
   <nav class="top-nav">
-    <a class="top-nav-item " href="/"><div class="top-nav-icon">🏠</div><div class="top-nav-label">홈</div></a>
-    <a class="top-nav-item " href="/astra.html"><div class="top-nav-icon">⭐</div><div class="top-nav-label">아스트라</div></a>
-    <a class="top-nav-item " href="/room3d.html"><div class="top-nav-icon">🏡</div><div class="top-nav-label">내 방</div></a>
-    <a class="top-nav-item " href="/nebula.html"><div class="top-nav-icon">🌌</div><div class="top-nav-label">성궤</div></a>
-    <a class="top-nav-item " href="/avatar.html"><div class="top-nav-icon">🎭</div><div class="top-nav-label">아바타</div></a>
+    <a class="top-nav-item" href="/"><div class="top-nav-icon">🏠</div><div class="top-nav-label">홈</div></a>
+    <a class="top-nav-item" href="/room3d.html"><div class="top-nav-icon">🏡</div><div class="top-nav-label">내 방</div></a>
+    <a class="top-nav-item" href="/league.html"><div class="top-nav-icon">🌌</div><div class="top-nav-label">리그</div></a>
+    <a class="top-nav-item" href="/stats.html"><div class="top-nav-icon">📊</div><div class="top-nav-label">스탯</div></a>
+    <a class="top-nav-item" href="/archetype.html"><div class="top-nav-icon">🎭</div><div class="top-nav-label">아키타입</div></a>
     <a class="top-nav-item active" href="/shop.html"><div class="top-nav-icon">🛒</div><div class="top-nav-label">상점</div></a>
   </nav>
-  <!-- TOP NAV -->
-  
 
-  <!-- TOP BAR -->
-  <div class="topbar">
-    <div class="tb-logo">ASTER1A SHOP</div>
-    <div class="tb-wallet">
-      <div class="tw-icon">☆</div>
-      <div>
-        <div class="tw-val" id="walletStar">2,150</div>
-        <div class="tw-label">스타더스트</div>
-      </div>
+  <div class="balance-bar">
+    <div class="bal-left">
+      <div class="bal-icon">⭐</div>
+      <div><div class="bal-amount" id="balAmount">2,150</div><div class="bal-label">스타더스트 — Stardust</div></div>
     </div>
-    <div class="tb-cart" onclick="switchTab('inventory')">
-      🛍️
-      <div class="cart-badge" id="cartBadge">0</div>
-    </div>
+    <button class="bal-charge" onclick="showToast('💫 충전 기능은 추후 오픈!')">+ 충전</button>
   </div>
 
-  <!-- 탭 -->
-  <div class="shop-tabs">
-    <div class="shop-tab active" onclick="switchTab('analyze',this)">📸 사진 분석</div>
-    <div class="shop-tab" onclick="switchTab('store',this)">🏪 상점</div>
-    <div class="shop-tab" onclick="switchTab('inventory',this)">📦 내 굿즈함</div>
+  <!-- 상점 주인 NPC -->
+  <div class="npc-bar">
+    <div class="npc-avatar">🧙</div>
+    <div class="npc-speech">어서오세요! 오늘의 추천 아이템이에요! ✨<br><span style="font-size:9px;color:var(--muted)">Welcome! Here are today's picks!</span></div>
+    <button class="npc-chat-btn" onclick="openNpcChat()">💬 대화<br><span style="font-size:8px">Chat</span></button>
   </div>
 
-  <!-- ═══ 사진 분석 탭 ═══ -->
-  <div class="tab-content active" id="tab-analyze">
-
-    <!-- 업로드 존 -->
-    <div class="upload-zone" id="uploadZone">
-      <div class="upload-icon">📸</div>
-      <div class="upload-title">방 사진을 올려주세요!</div>
-      <div class="upload-desc">
-        실제 방 사진이나 꾸미고 싶은 방 사진을 올리면<br>
-        AI가 굿즈를 분석해서 상점에서 찾아드려요 ✨
-      </div>
-      <input type="file" class="upload-input" id="fileInput" accept="image/*" onchange="onFileSelect(event)">
-    </div>
-
-    <!-- 이미지 프리뷰 -->
-    <div class="preview-wrap" id="previewWrap">
-      <img id="previewImg" class="preview-img" src="" alt="업로드된 사진">
-      <div class="preview-overlay">
-        <label>
-          <span class="preview-change">📷 다른 사진 선택</span>
-          <input type="file" style="display:none" accept="image/*" onchange="onFileSelect(event)">
-        </label>
-      </div>
-    </div>
-
-    <!-- 분석 버튼 -->
-    <button class="analyze-btn" id="analyzeBtn" onclick="analyzePhoto()" disabled>
-      <span>🤖</span>
-      <span>AI로 굿즈 분석하기</span>
-    </button>
-
-    <!-- 로딩 -->
-    <div class="analyzing-wrap" id="analyzingWrap">
-      <div class="analyzing-spinner"></div>
-      <div class="analyzing-title">AI가 사진을 분석하고 있어요...</div>
-      <div class="analyzing-desc" id="analyzingStep">사진 속 굿즈를 인식하는 중...</div>
-    </div>
-
-    <!-- 분석 결과 -->
-    <div class="analysis-result" id="analysisResult">
-
-      <!-- 결과 헤더 -->
-      <div class="result-header">
-        <div class="rh-icon">🔍</div>
-        <div class="rh-info">
-          <div class="rh-title" id="rhTitle">분석 완료! 굿즈를 발견했어요</div>
-          <div class="rh-desc" id="rhDesc">사진에서 발견된 굿즈들이에요. 구매할 항목을 선택하세요!</div>
-        </div>
-        <div>
-          <div class="rh-count" id="rhCount">0</div>
-          <div style="font-size:9px;color:var(--muted);text-align:center">발견</div>
-        </div>
-      </div>
-
-      <!-- 전체 선택 -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <span style="font-size:12px;color:var(--muted)">구매할 굿즈를 선택하세요</span>
-        <button onclick="selectAll()" style="padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;cursor:pointer;font-family:'Noto Sans KR',sans-serif">전체 선택</button>
-      </div>
-
-      <!-- 굿즈 체크리스트 -->
-      <div class="goods-list" id="goodsList"></div>
-
-      <!-- 구매 요약 -->
-      <div class="purchase-summary" id="purchaseSummary">
-        <div class="ps-row">
-          <div class="ps-label">선택한 굿즈</div>
-          <div class="ps-val"><span id="selectedCount">0</span>개</div>
-        </div>
-        <div class="ps-row ps-total">
-          <div class="ps-label">총 결제 금액</div>
-          <div class="ps-val">
-            <span id="totalPrice">0</span>
-            <span style="font-size:11px;color:var(--muted);font-family:'Noto Sans KR'"> 스타더스트</span>
-          </div>
-        </div>
-        <div class="ps-wallet" id="walletStatus">보유: 2,150 스타더스트</div>
-      </div>
-
-      <!-- 구매 버튼 -->
-      <button class="buy-btn disabled" id="buyBtn" onclick="purchaseGoods()">
-        구매할 굿즈를 선택하세요
-      </button>
-
-      <div style="margin-top:12px;text-align:center">
-        <span style="font-size:11px;color:var(--muted)">
-          💳 실제 결제 연동 예정 — 현재는 스타더스트로만 구매 가능
-        </span>
-      </div>
-    </div>
-
-    
-  </div><!-- /tab-analyze -->
-
-  <!-- ═══ 상점 탭 ═══ -->
-  <div class="tab-content" id="tab-store">
-    <div class="store-filter" id="storeFilter">
-      <button class="filter-btn active" onclick="filterStore('all',this)">전체</button>
-      <button class="filter-btn" onclick="filterStore('poster',this)">포스터/액자</button>
-      <button class="filter-btn" onclick="filterStore('album',this)">앨범/CD</button>
-      <button class="filter-btn" onclick="filterStore('lightstick',this)">응원봉</button>
-      <button class="filter-btn" onclick="filterStore('photocard',this)">포토카드</button>
-      <button class="filter-btn" onclick="filterStore('furniture',this)">가구</button>
-      <button class="filter-btn" onclick="filterStore('special',this)">특수</button>
-    </div>
-    <div class="store-grid" id="storeGrid"></div>
-    
-  </div>
-
-  <!-- ═══ 내 굿즈함 탭 ═══ -->
-  <div class="tab-content" id="tab-inventory">
-    <div class="inv-summary">
-      <div><div class="inv-sum-val" id="totalItems">0</div><div class="inv-sum-label">보유 굿즈</div></div>
-      <div><div class="inv-sum-val" id="placedItems">0</div><div class="inv-sum-label">배치됨</div></div>
-      <div><div class="inv-sum-val" id="invCP">0</div><div class="inv-sum-label">문화력 CP</div></div>
-    </div>
-    <div class="sec-title">보유 굿즈</div>
-    <div class="inv-grid" id="invGrid"></div>
-    
-  </div>
-
+  <div class="tab-bar" id="tabBar"></div>
+  <div class="content" id="content"></div>
 </div>
 
 <script>
-// ════════════════════════════════════
-// BG
-// ════════════════════════════════════
+// ══════════════════════════════════════════
+//  별빛 배경
+// ══════════════════════════════════════════
+(function(){const cv=document.getElementById('starCanvas'),ctx=cv.getContext('2d');let W,H;function r(){W=cv.width=innerWidth;H=cv.height=innerHeight}r();addEventListener('resize',r);const S=Array.from({length:150},()=>({x:Math.random()*2e3,y:Math.random()*2e3,r:Math.random()<.8?Math.random()*.6+.3:Math.random()*1.2+.8,b:Math.random()*.5+.3,p:Math.random()*6.28,s:Math.random()*.008+.002,c:Math.random()<.08?'#f0c040':Math.random()<.06?'#c084fc':'#fff'}));(function l(){ctx.clearRect(0,0,W,H);S.forEach(s=>{s.p+=s.s;ctx.globalAlpha=s.b*(.5+.5*Math.sin(s.p));ctx.fillStyle=s.c;ctx.beginPath();ctx.arc(s.x%W,s.y%H,s.r,0,6.28);ctx.fill()});ctx.globalAlpha=1;requestAnimationFrame(l)})()})();
 
+// ══════════════════════════════════════════
+//  데이터
+// ══════════════════════════════════════════
+let stardust=2150;
+let currentTab='furniture';
+let selectedItem=null;
+let gachaHistory=[];
 
-// ════════════════════════════════════
-// STATE
-// ════════════════════════════════════
-let wallet = 2150;
-let uploadedImage = null;
-let uploadedFile = null;
-let analyzedGoods = [];
-let myInventory = JSON.parse(localStorage.getItem('asteria_inventory') || '[]');
-let currentStoreFilter = 'all';
-
-// ════════════════════════════════════
-// 상점 상품 데이터
-// ════════════════════════════════════
-const STORE_ITEMS = [
-  // 포스터/액자
-  { id:'s001', name:'멤버 전체 포스터', category:'poster', emoji:'🖼️', rarity:'common', price:300, priceType:'stardust', desc:'A2 사이즈 전체 멤버 포스터', isNew:false, isHot:true },
-  { id:'s002', name:'콘서트 포스터', category:'poster', emoji:'🎨', rarity:'rare', price:800, priceType:'stardust', desc:'월드투어 기념 한정판 포스터', isNew:true, isHot:false },
-  { id:'s003', name:'황금 액자 세트', category:'poster', emoji:'🖼️', rarity:'epic', price:2000, priceType:'stardust', desc:'황금 테두리 포토 액자 3개 세트', isNew:false, isHot:false },
-  // 앨범/CD
-  { id:'s004', name:'미니 앨범 vol.1', category:'album', emoji:'💿', rarity:'common', price:500, priceType:'stardust', desc:'첫 번째 미니앨범 디지털 소장본', isNew:false, isHot:true },
-  { id:'s005', name:'정규 앨범 특별판', category:'album', emoji:'💿', rarity:'rare', price:1200, priceType:'stardust', desc:'스페셜 에디션 정규 앨범', isNew:true, isHot:false },
-  { id:'s006', name:'데뷔 앨범 (레전더리)', category:'album', emoji:'🌟', rarity:'legendary', price:5000, priceType:'stardust', desc:'데뷔 초 한정판 — 개척자만 구매 가능', isNew:false, isHot:false },
-  // 응원봉
-  { id:'s007', name:'공식 응원봉 ver.1', category:'lightstick', emoji:'🎤', rarity:'rare', price:1500, priceType:'stardust', desc:'공식 굿즈 응원봉 디지털 버전', isNew:false, isHot:true },
-  { id:'s008', name:'특별판 응원봉 (빛나는)', category:'lightstick', emoji:'✨', rarity:'epic', price:3000, priceType:'stardust', desc:'빛 이펙트 강화 특별판 응원봉', isNew:true, isHot:false },
-  // 포토카드
-  { id:'s009', name:'랜덤 포토카드 팩', category:'photocard', emoji:'📸', rarity:'common', price:200, priceType:'stardust', desc:'랜덤 멤버 포토카드 3장', isNew:false, isHot:true },
-  { id:'s010', name:'홀로그램 포토카드', category:'photocard', emoji:'💎', rarity:'rare', price:600, priceType:'stardust', desc:'반짝이는 홀로그램 포토카드', isNew:false, isHot:false },
-  { id:'s011', name:'제네시스 포토카드', category:'photocard', emoji:'🔵', rarity:'legendary', price:0, priceType:'mission', desc:'특별 미션 달성 시만 획득 가능', isNew:false, isHot:false },
-  // 가구
-  { id:'s012', name:'팬덤 소파', category:'furniture', emoji:'🛋️', rarity:'rare', price:1800, priceType:'stardust', desc:'팬클럽 컬러 커스텀 소파', isNew:true, isHot:false },
-  { id:'s013', name:'CD 책장', category:'furniture', emoji:'📚', rarity:'common', price:600, priceType:'stardust', desc:'앨범과 굿즈를 진열하는 책장', isNew:false, isHot:false },
-  { id:'s014', name:'오라클 테이블', category:'furniture', emoji:'🔮', rarity:'epic', price:2500, priceType:'stardust', desc:'신비로운 수정구가 올려진 테이블', isNew:false, isHot:true },
-  // 특수
-  { id:'s015', name:'아티스트 홀로그램', category:'special', emoji:'🌟', rarity:'epic', price:4000, priceType:'stardust', desc:'아티스트 3D 홀로그램 전시 아이템', isNew:true, isHot:true },
-  { id:'s016', name:'시간의 모래시계', category:'special', emoji:'⏳', rarity:'legendary', price:0, priceType:'attendance', desc:'365일 연속 출석 달성자 전용', isNew:false, isHot:false },
+const TABS=[
+  {id:'furniture',name:'🛋️ 가구',en:'Furniture'},
+  {id:'wall',name:'🖼️ 벽장식',en:'Wall'},
+  {id:'lighting',name:'💡 조명',en:'Light'},
+  {id:'goods',name:'🎁 굿즈',en:'Goods'},
+  {id:'avatar',name:'👤 아바타',en:'Avatar'},
+  {id:'effect',name:'✨ 이펙트',en:'Effect'},
+  {id:'market',name:'🏪 거래소',en:'Market'},
+  {id:'gacha',name:'🎰 뽑기',en:'Gacha'},
 ];
 
-// ════════════════════════════════════
-// 파일 업로드
-// ════════════════════════════════════
-function onFileSelect(e) {
-  const file = e.target.files[0];
-  if(!file) return;
-  uploadedFile = file;
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    uploadedImage = ev.target.result;
-    document.getElementById('previewImg').src = uploadedImage;
-    document.getElementById('previewWrap').style.display = 'block';
-    document.getElementById('uploadZone').style.display = 'none';
-    document.getElementById('analyzeBtn').disabled = false;
-    document.getElementById('analysisResult').style.display = 'none';
-    document.getElementById('analyzingWrap').style.display = 'none';
-  };
-  reader.readAsDataURL(file);
+const ITEMS={
+  furniture:[
+    {emoji:'🛏️',name:'별빛 침대',en:'Star Bed',rarity:'common',price:200,desc:'은은한 별빛이 나는 침대 / A bed with gentle starlight'},
+    {emoji:'🛋️',name:'우주 소파',en:'Cosmic Sofa',rarity:'rare',price:450,desc:'우주를 닮은 보라빛 소파 / A purple sofa like the cosmos'},
+    {emoji:'📚',name:'오라클 책장',en:'Oracle Shelf',rarity:'common',price:180,desc:'지혜를 담는 책장 / A bookshelf of wisdom'},
+    {emoji:'💄',name:'스타 화장대',en:'Star Vanity',rarity:'epic',price:800,desc:'별처럼 빛나는 화장대 / A vanity that shines like stars'},
+    {emoji:'🪵',name:'성운 러그',en:'Nebula Rug',rarity:'common',price:150,desc:'성운 패턴의 포근한 러그 / A cozy nebula-pattern rug'},
+  ],
+  wall:[
+    {emoji:'🖼️',name:'컴백 포스터',en:'Comeback Poster',rarity:'common',price:120,desc:'아티스트 컴백 포스터 / Artist comeback poster'},
+    {emoji:'🪞',name:'우주 거울',en:'Cosmic Mirror',rarity:'rare',price:380,desc:'우주가 비치는 거울 / A mirror reflecting the cosmos'},
+    {emoji:'⏰',name:'별자리 시계',en:'Star Clock',rarity:'rare',price:350,desc:'별자리가 돌아가는 시계 / A clock with rotating constellations'},
+    {emoji:'💜',name:'네온사인',en:'Neon Sign',rarity:'epic',price:750,desc:'LOVE 네온사인 / LOVE neon sign'},
+    {emoji:'🏅',name:'챔피언 액자',en:'Champion Frame',rarity:'legendary',price:2000,desc:'리그 1위 기념 액자 / League champion frame',locked:true,lockMsg:'노바 리그'},
+  ],
+  lighting:[
+    {emoji:'🕯️',name:'오로라 캔들',en:'Aurora Candle',rarity:'common',price:100,desc:'오로라빛 캔들 / An aurora-glowing candle'},
+    {emoji:'💡',name:'별빛 무드등',en:'Starlight Lamp',rarity:'common',price:160,desc:'은은한 별빛 무드등 / Soft starlight mood lamp'},
+    {emoji:'🌈',name:'레이저 조명',en:'Laser Light',rarity:'epic',price:900,desc:'화려한 레이저 조명 / Spectacular laser lighting'},
+    {emoji:'🔮',name:'수정구 조명',en:'Crystal Orb',rarity:'rare',price:420,desc:'빛나는 수정구 / A glowing crystal orb'},
+    {emoji:'🌟',name:'퀘이사 샹들리에',en:'Quasar Chandelier',rarity:'legendary',price:3000,desc:'퀘이사급 화려한 샹들리에 / A quasar-level chandelier',locked:true,lockMsg:'퀘이사 리그'},
+  ],
+  goods:[
+    {emoji:'📸',name:'포토카드 세트',en:'Photo Card Set',rarity:'common',price:80,desc:'아티스트 포토카드 5장 / 5 artist photo cards'},
+    {emoji:'💿',name:'미니앨범',en:'Mini Album',rarity:'rare',price:300,desc:'한정판 미니앨범 / Limited edition mini album'},
+    {emoji:'🎤',name:'응원봉',en:'Light Stick',rarity:'rare',price:500,desc:'공식 응원봉 / Official light stick'},
+    {emoji:'🧸',name:'미니 인형',en:'Mini Plush',rarity:'epic',price:650,desc:'아티스트 캐릭터 인형 / Artist character plush'},
+    {emoji:'👑',name:'골드 왕관',en:'Gold Crown',rarity:'genesis',price:0,desc:'개척자 전용 황금 왕관 / Pioneer-only gold crown',locked:true,lockMsg:'개척자 전용'},
+  ],
+  avatar:[
+    {emoji:'👕',name:'우주복',en:'Space Suit',rarity:'common',price:200,desc:'기본 우주복 의상 / Basic space suit'},
+    {emoji:'💇',name:'별빛 헤어',en:'Star Hair',rarity:'rare',price:350,desc:'반짝이는 별빛 헤어 / Sparkling star hair'},
+    {emoji:'💍',name:'오라 반지',en:'Aura Ring',rarity:'epic',price:700,desc:'빛나는 오라 반지 / A glowing aura ring'},
+    {emoji:'🎀',name:'리본 악세서리',en:'Ribbon Acc.',rarity:'common',price:120,desc:'귀여운 리본 / Cute ribbon accessory'},
+    {emoji:'🔥',name:'불꽃 날개',en:'Flame Wings',rarity:'legendary',price:2500,desc:'불꽃 이펙트 날개 / Flame effect wings',locked:true,lockMsg:'플래닛 리그'},
+  ],
+  effect:[
+    {emoji:'🌸',name:'벚꽃 파티클',en:'Cherry Blossom',rarity:'rare',price:400,desc:'방에 벚꽃이 흩날림 / Cherry blossoms float in your room'},
+    {emoji:'❄️',name:'눈내림',en:'Snowfall',rarity:'rare',price:400,desc:'방에 눈이 내림 / Snow falls in your room'},
+    {emoji:'🪲',name:'반딧불',en:'Fireflies',rarity:'epic',price:800,desc:'반딧불이 날아다님 / Fireflies dance around'},
+    {emoji:'🌌',name:'오로라',en:'Aurora',rarity:'legendary',price:1800,desc:'천장에 오로라 효과 / Aurora effect on ceiling'},
+    {emoji:'💎',name:'홀로그램',en:'Hologram',rarity:'genesis',price:0,desc:'개척자 전용 홀로그램 / Pioneer-only hologram',locked:true,lockMsg:'개척자 전용'},
+  ],
+};
+
+const MARKET=[
+  {emoji:'🛋️',name:'우주 소파',en:'Cosmic Sofa',rarity:'rare',price:380,seller:'NovaFan99'},
+  {emoji:'💿',name:'미니앨범',en:'Mini Album',rarity:'rare',price:250,seller:'StarQueen'},
+  {emoji:'🌸',name:'벚꽃 파티클',en:'Cherry Blossom',rarity:'rare',price:350,seller:'DreamWalker'},
+  {emoji:'🧸',name:'미니 인형',en:'Mini Plush',rarity:'epic',price:550,seller:'MoonChild'},
+  {emoji:'🌌',name:'오로라',en:'Aurora',rarity:'legendary',price:1500,seller:'EclipseKing'},
+];
+
+const RARITY_LABEL={common:'COMMON',rare:'RARE',epic:'EPIC',legendary:'LEGENDARY',genesis:'GENESIS'};
+const RARITY_COLOR={common:'var(--common)',rare:'var(--rare)',epic:'var(--epic)',legendary:'var(--legendary)',genesis:'#c084fc'};
+
+// ══════════════════════════════════════════
+//  탭 렌더
+// ══════════════════════════════════════════
+function renderTabs(){
+  document.getElementById('tabBar').innerHTML=TABS.map(t=>`
+    <button class="tab-btn ${t.id===currentTab?'active':''}" onclick="switchTab('${t.id}')">${t.name}</button>
+  `).join('');
+}
+function switchTab(id){currentTab=id;renderTabs();renderContent()}
+
+// ══════════════════════════════════════════
+//  콘텐츠 렌더
+// ══════════════════════════════════════════
+function renderContent(){
+  const el=document.getElementById('content');
+  if(currentTab==='market'){renderMarket(el);return}
+  if(currentTab==='gacha'){renderGacha(el);return}
+  const items=ITEMS[currentTab]||[];
+  el.innerHTML=`<div class="item-grid">${items.map((item,i)=>`
+    <div class="item-card r-${item.rarity} ${item.locked?'locked':''}" onclick="${item.locked?'':`openShopModal('${currentTab}',${i})`}">
+      ${item.locked?`<div class="lock-overlay"><div class="lock-icon">🔒</div>${item.lockMsg}</div>`:''}
+      <div class="ic-emoji">${item.emoji}</div>
+      <div class="ic-name">${item.name}</div>
+      <div class="ic-en">${item.en}</div>
+      <div class="ic-price">${item.price>0?'⭐ '+item.price:'—'}</div>
+      <div class="ic-rarity" style="color:${RARITY_COLOR[item.rarity]}">${RARITY_LABEL[item.rarity]}</div>
+    </div>
+  `).join('')}</div>`;
 }
 
-// 드래그 앤 드롭
-const uploadZone = document.getElementById('uploadZone');
-uploadZone.addEventListener('dragover', e=>{ e.preventDefault(); uploadZone.classList.add('drag'); });
-uploadZone.addEventListener('dragleave', ()=>uploadZone.classList.remove('drag'));
-uploadZone.addEventListener('drop', e=>{
-  e.preventDefault(); uploadZone.classList.remove('drag');
-  const file = e.dataTransfer.files[0];
-  if(file && file.type.startsWith('image/')) {
-    const evt = { target: { files: [file] } };
-    onFileSelect(evt);
-  }
-});
+// ══════════════════════════════════════════
+//  거래소
+// ══════════════════════════════════════════
+function renderMarket(el){
+  el.innerHTML=`
+    <div class="market-search">
+      <input placeholder="아이템 검색 — Search items" oninput="filterMarket(this.value)">
+      <select onchange="sortMarket(this.value)">
+        <option value="price-asc">가격↑</option>
+        <option value="price-desc">가격↓</option>
+        <option value="rarity">등급순</option>
+      </select>
+    </div>
+    <div id="marketList">${renderMarketList(MARKET)}</div>
+    <button style="width:100%;padding:12px;border-radius:14px;border:1px solid var(--gold);background:rgba(240,192,64,.1);color:var(--gold);font-size:13px;font-weight:700;cursor:pointer;margin-top:12px;font-family:'Noto Sans KR',sans-serif" onclick="showToast('📦 판매 기능은 추후 오픈!')">내 아이템 판매하기 — Sell My Items</button>
+  `;
+}
+function renderMarketList(items){
+  return items.map(m=>`
+    <div class="market-item" onclick="showToast('⭐ ${m.price} 스타더스트로 구매! — Purchase for ${m.price}⭐')">
+      <div class="mi-emoji">${m.emoji}</div>
+      <div class="mi-info">
+        <div class="mi-name">${m.name} <span style="color:var(--muted);font-size:9px">— ${m.en}</span></div>
+        <div class="mi-seller">판매자 — ${m.seller}</div>
+      </div>
+      <div class="mi-right">
+        <div class="mi-price">⭐ ${m.price}</div>
+        <div class="mi-rarity" style="color:${RARITY_COLOR[m.rarity]}">${RARITY_LABEL[m.rarity]}</div>
+      </div>
+    </div>
+  `).join('');
+}
+function filterMarket(q){
+  const filtered=MARKET.filter(m=>m.name.includes(q)||m.en.toLowerCase().includes(q.toLowerCase()));
+  document.getElementById('marketList').innerHTML=renderMarketList(filtered);
+}
+function sortMarket(by){
+  const sorted=[...MARKET];
+  if(by==='price-asc')sorted.sort((a,b)=>a.price-b.price);
+  else if(by==='price-desc')sorted.sort((a,b)=>b.price-a.price);
+  else sorted.sort((a,b)=>{const o={genesis:0,legendary:1,epic:2,rare:3,common:4};return o[a.rarity]-o[b.rarity]});
+  document.getElementById('marketList').innerHTML=renderMarketList(sorted);
+}
 
-// ════════════════════════════════════
-// Claude API 사진 분석
-// ════════════════════════════════════
-async function analyzePhoto() {
-  if(!uploadedImage) return;
+// ══════════════════════════════════════════
+//  뽑기
+// ══════════════════════════════════════════
+function renderGacha(el){
+  el.innerHTML=`
+    <div class="gacha-wrap">
+      <div class="gacha-orb" id="gachaOrb" onclick="doGacha(1)">🌟</div>
+      <div class="gacha-btns">
+        <button class="gacha-btn single" onclick="doGacha(1)">1회 뽑기 (100⭐)</button>
+        <button class="gacha-btn multi" onclick="doGacha(10)">10연차 (900⭐)</button>
+      </div>
+      <div class="gacha-result" id="gachaResult"></div>
+      <div class="gacha-history">
+        <div class="gacha-history-title">최근 뽑기 — RECENT</div>
+        <div class="gh-list" id="ghList">${gachaHistory.map(g=>`<div class="gh-item r-${g.rarity}" title="${g.name}">${g.emoji}</div>`).join('')||'<span style="font-size:11px;color:var(--muted)">아직 뽑기 기록이 없어요</span>'}</div>
+      </div>
+    </div>
+  `;
+}
+function doGacha(count){
+  const cost=count===1?100:900;
+  if(stardust<cost){showToast('⭐ 스타더스트가 부족해요!');return}
+  stardust-=cost;
+  updateBalance();
 
-  document.getElementById('analyzeBtn').style.display = 'none';
-  document.getElementById('analyzingWrap').style.display = 'block';
-  document.getElementById('analysisResult').style.display = 'none';
+  const orb=document.getElementById('gachaOrb');
+  orb.classList.add('spinning');
 
-  const steps = [
-    '사진 속 굿즈를 인식하는 중...',
-    '포스터와 액자를 찾고 있어요...',
-    '앨범과 응원봉을 확인하는 중...',
-    '상점 아이템과 매칭하는 중...',
-    '구매 목록을 준비하는 중...',
-  ];
-  let stepIdx = 0;
-  const stepInterval = setInterval(()=>{
-    stepIdx = (stepIdx+1) % steps.length;
-    document.getElementById('analyzingStep').textContent = steps[stepIdx];
-  }, 800);
-
-  try {
-    // base64 추출
-    const base64 = uploadedImage.split(',')[1];
-    const mediaType = uploadedImage.split(';')[0].split(':')[1];
-
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:1000,
-        system:`당신은 케이팝 팬덤 플랫폼 아스테리아의 굿즈 분석 AI입니다.
-사용자가 방 사진이나 꾸미고 싶은 방 사진을 올리면, 사진 속에서 발견되는 굿즈나 방 꾸미기 아이템들을 분석해주세요.
-반드시 JSON 배열만 반환하세요. 다른 텍스트나 설명은 절대 포함하지 마세요.
-JSON 형식:
-[
-  {
-    "name": "아이템 이름",
-    "category": "poster|album|lightstick|photocard|furniture|decor|special 중 하나",
-    "emoji": "관련 이모지",
-    "rarity": "common|rare|epic|legendary 중 하나",
-    "price": 숫자(100~5000 사이),
-    "description": "간단한 설명",
-    "detected": "사진에서 발견한 이유 (예: 벽에 붙은 포스터 발견)"
-  }
-]
-없으면 빈 배열 [] 반환. 최대 8개까지만.`,
-        messages:[{
-          role:'user',
-          content:[
-            { type:'image', source:{ type:'base64', media_type:mediaType, data:base64 } },
-            { type:'text', text:'이 사진을 분석해서 발견된 케이팝 굿즈나 방 꾸미기 아이템들을 JSON 형식으로만 알려주세요.' }
-          ]
-        }]
-      })
-    });
-
-    clearInterval(stepInterval);
-    const data = await response.json();
-
-    if(data.error) throw new Error(data.error.message);
-
-    const text = data.content[0].text.trim();
-    let goods = [];
-    try {
-      const clean = text.replace(/```json|```/g,'').trim();
-      goods = JSON.parse(clean);
-    } catch {
-      // 파싱 실패 시 기본 추천
-      goods = getDefaultGoods();
+  setTimeout(()=>{
+    orb.classList.remove('spinning');
+    const results=[];
+    for(let i=0;i<count;i++){
+      const rand=Math.random()*100;
+      let rarity;
+      if(rand<1) rarity='genesis';
+      else if(rand<5) rarity='legendary';
+      else if(rand<15) rarity='epic';
+      else if(rand<40) rarity='rare';
+      else rarity='common';
+      // 해당 등급 랜덤 아이템
+      const allItems=Object.values(ITEMS).flat().filter(it=>it.rarity===rarity&&!it.locked);
+      const item=allItems.length?allItems[Math.floor(Math.random()*allItems.length)]:{emoji:'⭐',name:'별조각',en:'Star Shard',rarity};
+      results.push(item);
+      gachaHistory.unshift(item);
     }
+    if(gachaHistory.length>20) gachaHistory=gachaHistory.slice(0,20);
 
-    analyzedGoods = goods.map((g,i)=>({...g, id:`detected_${i}`, selected:true, storeMatch: matchToStore(g)}));
-    showAnalysisResult(analyzedGoods);
-
-  } catch(err) {
-    clearInterval(stepInterval);
-    console.error('분석 오류:', err);
-    // 오류 시 기본 추천으로 대체
-    analyzedGoods = getDefaultGoods().map((g,i)=>({...g, id:`default_${i}`, selected:true, storeMatch: matchToStore(g)}));
-    showAnalysisResult(analyzedGoods);
-    showToast('⚡ 기본 추천 목록을 보여드려요!');
-  }
-
-  document.getElementById('analyzingWrap').style.display = 'none';
-  document.getElementById('analyzeBtn').style.display = 'flex';
-  document.getElementById('analyzeBtn').textContent = '🔄 다시 분석하기';
-}
-
-function getDefaultGoods() {
-  return [
-    { name:'멤버 전체 포스터', category:'poster', emoji:'🖼️', rarity:'common', price:300, description:'벽에 붙일 수 있는 전체 멤버 포스터', detected:'방 꾸미기에 추천' },
-    { name:'공식 응원봉', category:'lightstick', emoji:'🎤', rarity:'rare', price:1500, description:'공식 굿즈 응원봉', detected:'팬 방 필수 아이템' },
-    { name:'미니 앨범', category:'album', emoji:'💿', rarity:'common', price:500, description:'첫 번째 미니앨범', detected:'진열대에 올려보세요' },
-    { name:'포토카드 팩', category:'photocard', emoji:'📸', rarity:'common', price:200, description:'랜덤 포토카드 3장', detected:'코르크보드에 핀으로 꽂기' },
-  ];
-}
-
-function matchToStore(detectedGood) {
-  return STORE_ITEMS.find(s=>s.category===detectedGood.category) || null;
-}
-
-function showAnalysisResult(goods) {
-  document.getElementById('analysisResult').style.display = 'block';
-  document.getElementById('rhCount').textContent = goods.length;
-  document.getElementById('rhTitle').textContent = goods.length > 0
-    ? `${goods.length}개의 굿즈를 발견했어요!`
-    : '사진에서 굿즈를 찾지 못했어요';
-  document.getElementById('rhDesc').textContent = goods.length > 0
-    ? '구매할 굿즈를 선택하세요. 선택한 굿즈는 내 굿즈함에 저장돼요!'
-    : '다른 사진을 올려보시거나, 상점에서 직접 둘러보세요!';
-
-  const list = document.getElementById('goodsList');
-  list.innerHTML = goods.map((g,i)=>`
-    <div class="goods-item selected" id="goods_${i}" onclick="toggleGoods(${i})">
-      <div class="goods-check">✓</div>
-      <div class="goods-emoji">${g.emoji}</div>
-      <div class="goods-info">
-        <div class="goods-name">${g.name}</div>
-        <div class="goods-detail">${g.detected || g.description}</div>
-        <div class="goods-rarity rarity-${g.rarity}">${g.rarity.toUpperCase()}</div>
+    // 결과 표시
+    const best=results.sort((a,b)=>{const o={genesis:0,legendary:1,epic:2,rare:3,common:4};return o[a.rarity]-o[b.rarity]})[0];
+    document.getElementById('gachaResult').innerHTML=`
+      <div class="gacha-result-card r-${best.rarity}" style="border-color:${RARITY_COLOR[best.rarity]}">
+        <div class="gr-emoji">${best.emoji}</div>
+        <div class="gr-name">${best.name}</div>
+        <div class="gr-rarity" style="color:${RARITY_COLOR[best.rarity]}">${RARITY_LABEL[best.rarity]}${count>1?' 외 '+(count-1)+'개':''}</div>
       </div>
-      <div class="goods-price">
-        <div class="price-val">${g.price.toLocaleString()}</div>
-        <div class="price-type">스타더스트</div>
-      </div>
-    </div>
-  `).join('');
+    `;
+    document.getElementById('ghList').innerHTML=gachaHistory.map(g=>`<div class="gh-item r-${g.rarity}" title="${g.name}">${g.emoji}</div>`).join('');
 
-  updatePurchaseSummary();
-}
-
-function toggleGoods(idx) {
-  analyzedGoods[idx].selected = !analyzedGoods[idx].selected;
-  const el = document.getElementById(`goods_${idx}`);
-  el.classList.toggle('selected', analyzedGoods[idx].selected);
-  updatePurchaseSummary();
-}
-
-function selectAll() {
-  const allSelected = analyzedGoods.every(g=>g.selected);
-  analyzedGoods.forEach((g,i)=>{
-    g.selected = !allSelected;
-    document.getElementById(`goods_${i}`)?.classList.toggle('selected', !allSelected);
-  });
-  updatePurchaseSummary();
-}
-
-function updatePurchaseSummary() {
-  const selected = analyzedGoods.filter(g=>g.selected);
-  const total = selected.reduce((sum,g)=>sum+g.price, 0);
-  document.getElementById('selectedCount').textContent = selected.length;
-  document.getElementById('totalPrice').textContent = total.toLocaleString();
-
-  const ws = document.getElementById('walletStatus');
-  ws.textContent = `보유: ${wallet.toLocaleString()} 스타더스트`;
-  ws.className = 'ps-wallet ' + (wallet >= total ? 'enough' : 'lack');
-
-  const btn = document.getElementById('buyBtn');
-  if(selected.length === 0) {
-    btn.className = 'buy-btn disabled';
-    btn.textContent = '구매할 굿즈를 선택하세요';
-  } else if(wallet < total) {
-    btn.className = 'buy-btn disabled';
-    btn.textContent = `스타더스트가 ${(total-wallet).toLocaleString()} 부족해요`;
-  } else {
-    btn.className = 'buy-btn ready';
-    btn.textContent = `✦ ${selected.length}개 구매하기 (${total.toLocaleString()} ☆)`;
-  }
-}
-
-function purchaseGoods() {
-  const selected = analyzedGoods.filter(g=>g.selected);
-  if(selected.length === 0) return;
-  const total = selected.reduce((sum,g)=>sum+g.price, 0);
-  if(wallet < total) { showToast('스타더스트가 부족해요!'); return; }
-
-  // 결제 처리 (스타더스트 차감)
-  wallet -= total;
-  document.getElementById('walletStar').textContent = wallet.toLocaleString();
-
-  // 굿즈함에 저장
-  selected.forEach(g=>{
-    myInventory.push({
-      id: `inv_${Date.now()}_${Math.random().toString(36).slice(2)}`,
-      name: g.name, emoji: g.emoji, category: g.category,
-      rarity: g.rarity, price: g.price,
-      inRoom: false, purchasedAt: new Date().toISOString()
-    });
-  });
-  localStorage.setItem('asteria_inventory', JSON.stringify(myInventory));
-
-  // 장바구니 배지 업데이트
-  updateCartBadge();
-
-  // 모달 표시
-  document.getElementById('modalSub').textContent = `${selected.length}개 굿즈가 굿즈함에 저장됐어요!`;
-  document.getElementById('modalItems').innerHTML = selected.map(g=>`
-    <div class="modal-item-chip">${g.emoji} ${g.name}</div>
-  `).join('');
-  document.getElementById('buyModal').classList.add('show');
-
-  // 분석 결과 초기화
-  analyzedGoods.forEach(g=>g.selected=false);
-  updatePurchaseSummary();
-}
-
-// ════════════════════════════════════
-// 상점 렌더
-// ════════════════════════════════════
-function renderStore(filter='all') {
-  const items = filter==='all' ? STORE_ITEMS : STORE_ITEMS.filter(i=>i.category===filter);
-  document.getElementById('storeGrid').innerHTML = items.map(item=>`
-    <div class="store-item">
-      ${item.isNew ? '<div class="new-badge">NEW</div>' : ''}
-      ${item.isHot ? '<div class="hot-badge">HOT</div>' : ''}
-      <div class="si-rarity ${item.rarity}">${item.rarity.toUpperCase()}</div>
-      <div class="store-item-img">${item.emoji}</div>
-      <div class="store-item-body">
-        <div class="si-name">${item.name}</div>
-        <div class="si-desc">${item.desc}</div>
-        <div class="si-bottom">
-          <div>
-            <div class="si-price">${item.price > 0 ? item.price.toLocaleString()+' ☆' : '미션 보상'}</div>
-            <div class="si-type">${item.priceType==='stardust'?'스타더스트':item.priceType==='mission'?'미션 달성':'출석 보상'}</div>
-          </div>
-          <button class="si-buy-btn" onclick="buyStoreItem('${item.id}')">구매</button>
-        </div>
-      </div>
-    </div>
-  `).join('');
-}
-
-function filterStore(type, btn) {
-  currentStoreFilter = type;
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  renderStore(type);
-}
-
-function buyStoreItem(itemId) {
-  const item = STORE_ITEMS.find(i=>i.id===itemId);
-  if(!item) return;
-  if(item.priceType !== 'stardust') { showToast(`🎯 ${item.name}은 미션/출석으로만 획득 가능해요!`); return; }
-  if(wallet < item.price) { showToast('⚠️ 스타더스트가 부족해요!'); return; }
-
-  wallet -= item.price;
-  document.getElementById('walletStar').textContent = wallet.toLocaleString();
-
-  myInventory.push({
-    id: `inv_${Date.now()}_${Math.random().toString(36).slice(2)}`,
-    name: item.name, emoji: item.emoji, category: item.category,
-    rarity: item.rarity, price: item.price,
-    inRoom: false, purchasedAt: new Date().toISOString()
-  });
-  localStorage.setItem('asteria_inventory', JSON.stringify(myInventory));
-  updateCartBadge();
-  renderInventory();
-
-  showToast(`${item.emoji} ${item.name} 구매 완료! 굿즈함에 저장됐어요 🎉`);
-  burst(item.emoji);
-}
-
-// ════════════════════════════════════
-// 굿즈함 렌더
-// ════════════════════════════════════
-function renderInventory() {
-  const inv = myInventory;
-  document.getElementById('totalItems').textContent = inv.length;
-  document.getElementById('placedItems').textContent = inv.filter(i=>i.inRoom).length;
-  document.getElementById('invCP').textContent = inv.length * 60 + 200;
-
-  if(inv.length === 0) {
-    document.getElementById('invGrid').innerHTML = `
-      <div style="grid-column:span 3;text-align:center;padding:40px;color:var(--muted)">
-        <div style="font-size:40px;margin-bottom:12px">📦</div>
-        <div style="font-size:13px">아직 굿즈가 없어요!<br>사진을 분석하거나 상점에서 구매해보세요.</div>
-      </div>`;
-    return;
-  }
-
-  document.getElementById('invGrid').innerHTML = inv.map((item,i)=>`
-    <div class="inv-item ${item.inRoom?'in-room':''}">
-      ${item.inRoom?'<div class="inv-in-room">배치됨</div>':''}
-      <div class="inv-emoji">${item.emoji}</div>
-      <div class="inv-name">${item.name}</div>
-      <div class="inv-rarity rarity-${item.rarity}">${item.rarity.toUpperCase()}</div>
-      <button class="inv-place-btn" onclick="toggleRoomPlace(${i})">
-        ${item.inRoom?'방에서 제거':'방에 배치'}
-      </button>
-    </div>
-  `).join('');
-
-  document.getElementById('cartBadge').textContent = inv.length;
-}
-
-function toggleRoomPlace(idx) {
-  myInventory[idx].inRoom = !myInventory[idx].inRoom;
-  localStorage.setItem('asteria_inventory', JSON.stringify(myInventory));
-  renderInventory();
-  showToast(myInventory[idx].inRoom
-    ? `${myInventory[idx].emoji} 방에 배치됐어요!`
-    : `${myInventory[idx].emoji} 방에서 제거됐어요.`);
-}
-
-function updateCartBadge() {
-  document.getElementById('cartBadge').textContent = myInventory.length;
-}
-
-// ════════════════════════════════════
-// 탭 전환
-// ════════════════════════════════════
-function switchTab(name, btn) {
-  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.shop-tab').forEach(b=>b.classList.remove('active'));
-  document.getElementById(`tab-${name}`)?.classList.add('active');
-  if(btn) btn.classList.add('active');
-  if(name==='store') renderStore(currentStoreFilter);
-  if(name==='inventory') renderInventory();
-}
-
-// ════════════════════════════════════
-// 모달
-// ════════════════════════════════════
-function closeBuyModal() {
-  document.getElementById('buyModal').classList.remove('show');
-  switchTab('inventory', document.querySelectorAll('.shop-tab')[2]);
-}
-
-// ════════════════════════════════════
-// 파티클
-// ════════════════════════════════════
-function burst(emoji='✨') {
-  for(let i=0;i<16;i++){
-    const p=document.createElement('div');
-    const cols=['#f0c040','#c084fc','#38bdf8','#fff'];
-    const col=cols[Math.floor(Math.random()*cols.length)];
-    const sz=Math.random()*6+2;
-    const a=Math.random()*Math.PI*2, d=Math.random()*80+30;
-    const cx=window.innerWidth/2, cy=window.innerHeight/2;
-    p.style.cssText=`position:fixed;left:${cx}px;top:${cy}px;width:${sz}px;height:${sz}px;border-radius:50%;background:${col};box-shadow:0 0 6px ${col};z-index:9999;pointer-events:none;transition:all ${.4+Math.random()*.3}s ease-out;transform:translate(-50%,-50%)`;
-    document.body.appendChild(p);
-    requestAnimationFrame(()=>{p.style.transform=`translate(calc(-50% + ${Math.cos(a)*d}px),calc(-50% + ${Math.sin(a)*d}px))`;p.style.opacity='0';});
-    setTimeout(()=>p.remove(),800);
-  }
-}
-
-// ════════════════════════════════════
-// TOAST
-// ════════════════════════════════════
-function showToast(msg) {
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
-  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2600);
-}
-
-// ════════════════════════════════════
-// INIT
-// ════════════════════════════════════
-renderStore();
-renderInventory();
-updateCartBadge();
-</script>
-
-/* ══════════════════════════
-   별빛 배경 스크립트
-══════════════════════════ */
-(function() {
-  const canvas = document.getElementById('starCanvas');
-  if(!canvas) return;
-  const ctx = canvas.getContext('2d');
-  let W, H;
-
-  function resize() {
-    W = canvas.width = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-  }
-  resize();
-  window.addEventListener('resize', resize);
-
-  // 별 생성 — 크기 다양하게
-  const STARS = Array.from({length: 280}, () => {
-    const size = Math.random();
-    return {
-      x: Math.random() * 2000,
-      y: Math.random() * 2000,
-      // 작은 별(70%), 중간 별(20%), 큰 별(10%)
-      r: size < 0.7 ? Math.random() * 0.8 + 0.3
-       : size < 0.9 ? Math.random() * 1.2 + 1.0
-       :               Math.random() * 2.0 + 2.0,
-      // 밝기 & 반짝임 속도
-      brightness: Math.random() * 0.5 + 0.3,
-      phase: Math.random() * Math.PI * 2,
-      speed: Math.random() * 0.008 + 0.002,
-      // 별 색상 — 대부분 흰색, 간혹 색깔 별
-      color: Math.random() < 0.08 ? '#f0c040'   // 황금별
-           : Math.random() < 0.06 ? '#c084fc'   // 보라별
-           : Math.random() < 0.04 ? '#38bdf8'   // 파란별
-           : '#ffffff',
-      // 큰 별은 십자 모양
-      isBig: size >= 0.9,
-      // 유성 여부
-      isShooting: false,
-      shootX: 0, shootY: 0, shootLen: 0, shootOpacity: 0,
-    };
-  });
-
-  // 유성 풀
-  const METEORS = Array.from({length: 3}, () => ({
-    active: false, x: 0, y: 0, vx: 0, vy: 0,
-    len: 0, opacity: 0, timer: Math.random() * 300,
-  }));
-
-  function drawStar(star, alpha) {
-    ctx.save();
-    ctx.globalAlpha = alpha;
-
-    if(star.isBig) {
-      // 큰 별 — 십자 광채
-      const grd = ctx.createRadialGradient(star.x % W, star.y % H, 0, star.x % W, star.y % H, star.r * 3);
-      grd.addColorStop(0, star.color);
-      grd.addColorStop(1, 'transparent');
-      ctx.fillStyle = grd;
-      ctx.beginPath();
-      ctx.arc(star.x % W, star.y % H, star.r * 3, 0, Math.PI * 2);
-      ctx.fill();
-
-      // 십자
-      ctx.strokeStyle = star.color;
-      ctx.lineWidth = 0.5;
-      ctx.globalAlpha = alpha * 0.6;
-      const cx = star.x % W, cy = star.y % H;
-      const len = star.r * 6;
-      ctx.beginPath();
-      ctx.moveTo(cx - len, cy); ctx.lineTo(cx + len, cy);
-      ctx.moveTo(cx, cy - len); ctx.lineTo(cx, cy + len);
-      ctx.stroke();
+    if(best.rarity==='legendary'||best.rarity==='genesis'){
+      showToast('🎉 축하합니다! '+RARITY_LABEL[best.rarity]+' 획득!');
+      flashScreen();
     } else {
-      // 작은/중간 별
-      if(star.r > 1.0) {
-        // 약한 글로우
-        const grd = ctx.createRadialGradient(star.x % W, star.y % H, 0, star.x % W, star.y % H, star.r * 2.5);
-        grd.addColorStop(0, star.color);
-        grd.addColorStop(1, 'transparent');
-        ctx.fillStyle = grd;
-        ctx.beginPath();
-        ctx.arc(star.x % W, star.y % H, star.r * 2.5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = alpha;
-      }
-      ctx.fillStyle = star.color;
-      ctx.beginPath();
-      ctx.arc(star.x % W, star.y % H, star.r, 0, Math.PI * 2);
-      ctx.fill();
+      showToast('✨ '+best.name+' 획득!');
     }
-    ctx.restore();
-  }
+  },1100);
+}
+function flashScreen(){
+  const f=document.createElement('div');
+  f.style.cssText='position:fixed;inset:0;z-index:9998;background:rgba(240,192,64,.3);pointer-events:none;animation:flashFade .8s ease-out forwards';
+  document.body.appendChild(f);
+  setTimeout(()=>f.remove(),800);
+  const style=document.createElement('style');
+  style.textContent='@keyframes flashFade{from{opacity:1}to{opacity:0}}';
+  document.head.appendChild(style);
+}
 
-  function drawMeteor(m) {
-    if(!m.active) return;
-    ctx.save();
-    const grad = ctx.createLinearGradient(m.x, m.y, m.x - m.vx * m.len, m.y - m.vy * m.len);
-    grad.addColorStop(0, `rgba(255,255,255,${m.opacity})`);
-    grad.addColorStop(1, 'transparent');
-    ctx.strokeStyle = grad;
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(m.x, m.y);
-    ctx.lineTo(m.x - m.vx * m.len, m.y - m.vy * m.len);
-    ctx.stroke();
-    ctx.restore();
-  }
+// ══════════════════════════════════════════
+//  상세 모달
+// ══════════════════════════════════════════
+function openShopModal(cat,idx){
+  const item=ITEMS[cat][idx];
+  if(!item||item.locked) return;
+  selectedItem=item;
+  document.getElementById('smEmoji').textContent=item.emoji;
+  document.getElementById('smName').textContent=item.name;
+  document.getElementById('smEn').textContent=item.en;
+  document.getElementById('smRarity').textContent=RARITY_LABEL[item.rarity];
+  document.getElementById('smRarity').style.color=RARITY_COLOR[item.rarity];
+  document.getElementById('smDesc').textContent=item.desc;
+  document.getElementById('smPrice').textContent='⭐ '+item.price;
+  document.getElementById('smBuy').disabled=stardust<item.price;
+  document.getElementById('shopModal').classList.add('show');
+}
+function closeShopModal(){document.getElementById('shopModal').classList.remove('show');selectedItem=null}
+function buyItem(){
+  if(!selectedItem||stardust<selectedItem.price) return;
+  stardust-=selectedItem.price;
+  updateBalance();
+  closeShopModal();
+  showToast(`📦 ${selectedItem.name} 구매 완료! 내 방으로 배달됩니다! — Purchased!`);
+}
+function updateBalance(){document.getElementById('balAmount').textContent=stardust.toLocaleString()}
 
-  let frame = 0;
-  function loop() {
-    frame++;
-    ctx.clearRect(0, 0, W, H);
+// ══════════════════════════════════════════
+//  NPC 대화 (프로토타입: 샘플 응답)
+// ══════════════════════════════════════════
+const NPC_RESPONSES=[
+  '오늘은 별빛 무드등이 인기에요! 분위기 좋게 만들어줄 거예요 💡\nThe Starlight Lamp is popular today!',
+  '포토카드 세트 추천해요! 80 스타더스트밖에 안 해요, 완전 가성비! 📸\nI recommend the Photo Card Set! Only 80 stardust!',
+  '뽑기 한 번 해보실래요? 오늘은 운이 좋을 것 같은데... 🎰\nWant to try the gacha? I have a good feeling today...',
+  '거래소에 레어 아이템 올라왔어요! 빨리 가보세요! 🏪\nRare items just listed in the market! Hurry!',
+  '리그 올라가면 해금되는 아이템들이 있어요. 화이팅! 💪\nSome items unlock with higher leagues. Keep going!',
+  '오로라 이펙트 진짜 예뻐요. 방에 설치하면 우와... ✨\nThe Aurora effect is gorgeous. Your room will be amazing!',
+  '인형 귀엽지 않아요? 저도 하나 갖고 싶어요 ㅎㅎ 🧸\nIsn\'t the plush cute? I want one too hehe!',
+];
+function openNpcChat(){document.getElementById('npcModal').classList.add('show')}
+function closeNpcChat(){document.getElementById('npcModal').classList.remove('show')}
+function sendNpcMsg(){
+  const inp=document.getElementById('npcInput');
+  const msg=inp.value.trim();
+  if(!msg) return;
+  inp.value='';
+  const body=document.getElementById('npcChatBody');
+  body.innerHTML+=`<div class="npc-msg user">${msg}</div>`;
+  body.scrollTop=body.scrollHeight;
+  setTimeout(()=>{
+    const reply=NPC_RESPONSES[Math.floor(Math.random()*NPC_RESPONSES.length)];
+    body.innerHTML+=`<div class="npc-msg npc">${reply.replace(/\n/g,'<br>')}</div>`;
+    body.scrollTop=body.scrollHeight;
+  },600+Math.random()*800);
+}
 
-    // 별 그리기
-    STARS.forEach(star => {
-      star.phase += star.speed;
-      const flicker = star.brightness * (0.5 + 0.5 * Math.sin(star.phase));
-      drawStar(star, flicker);
-    });
+// ══════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500)}
 
-    // 유성
-    METEORS.forEach(m => {
-      if(!m.active) {
-        m.timer--;
-        if(m.timer <= 0) {
-          m.active = true;
-          m.x = Math.random() * W * 1.2;
-          m.y = Math.random() * H * 0.4;
-          const angle = Math.PI / 4 + (Math.random() - 0.5) * 0.3;
-          const speed = 8 + Math.random() * 6;
-          m.vx = Math.cos(angle) * speed;
-          m.vy = Math.sin(angle) * speed;
-          m.len = 12 + Math.random() * 10;
-          m.opacity = 0.9;
-          m.timer = 0;
-        }
-      } else {
-        m.x += m.vx; m.y += m.vy;
-        m.opacity -= 0.015;
-        drawMeteor(m);
-        if(m.opacity <= 0 || m.x > W + 100 || m.y > H + 100) {
-          m.active = false;
-          m.timer = 200 + Math.random() * 400;
-        }
-      }
-    });
-
-    requestAnimationFrame(loop);
-  }
-  loop();
-})();
-
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+renderTabs();renderContent();
+</script>
 </body>
 </html>

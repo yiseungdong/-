@@ -10,10 +10,10 @@
 <style>
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 :root {
-  --void:#030308; --panel:rgba(10,10,22,0.96);
-  --border:rgba(180,150,255,0.13); --gold:#f0c040;
-  --accent:#c084fc; --accent2:#818cf8;
-  --text:#e8e4f0; --muted:rgba(200,190,220,0.5);
+  --void:#020a18; --panel:rgba(5,12,30,0.96);
+  --border:rgba(200,175,80,0.13); --gold:#f0c040;
+  --accent:#4a90d9; --accent2:#2c6fbd;
+  --text:#e8ecf4; --muted:rgba(160,180,210,0.5);
 }
 html,body {
   width:100%; height:100%; background:var(--void); color:var(--text);
@@ -61,6 +61,60 @@ html,body {
   border-right:1px solid var(--border);
   overflow-y:auto; background:rgba(5,5,15,.8);
   display:flex; flex-direction:column;
+  transition:width .35s, opacity .25s, margin .35s;
+}
+
+/* ── 꾸미기 모드 ── */
+.edit-active .left-panel { width:0; opacity:0; overflow:hidden; border:none; margin:0; pointer-events:none; }
+.edit-active .right-panel { flex:1; }
+.edit-active .guestbook-panel { display:none; }
+.edit-active .topbar { display:none; }
+
+/* 꾸미기 도구바 */
+.edit-toolbar {
+  display:none; position:absolute; bottom:0; left:0; right:0; z-index:150;
+  background:rgba(5,8,20,.95); border-top:1px solid var(--border);
+  backdrop-filter:blur(12px); flex-direction:column;
+}
+.edit-active .edit-toolbar { display:flex; }
+.et-tabs {
+  display:flex; border-bottom:1px solid var(--border); overflow-x:auto;
+}
+.et-tabs::-webkit-scrollbar { display:none; }
+.et-tab {
+  flex-shrink:0; padding:8px 14px; font-size:11px; font-weight:600; cursor:pointer;
+  color:var(--muted); border-bottom:2px solid transparent; transition:all .2s;
+  font-family:'Noto Sans KR',sans-serif; white-space:nowrap;
+}
+.et-tab.active { color:var(--gold); border-bottom-color:var(--gold); }
+.et-tab:hover { color:var(--text); }
+.et-items {
+  display:flex; gap:8px; padding:10px 14px; overflow-x:auto;
+}
+.et-items::-webkit-scrollbar { height:3px; }
+.et-items::-webkit-scrollbar-thumb { background:rgba(240,192,64,.3); border-radius:3px; }
+.et-item {
+  flex-shrink:0; width:60px; text-align:center; cursor:pointer;
+  padding:8px 4px; border-radius:10px; border:1px solid var(--border);
+  background:rgba(255,255,255,.03); transition:all .2s;
+}
+.et-item:hover { border-color:var(--gold); background:rgba(240,192,64,.08); }
+.et-item.placed { border-color:rgba(16,185,129,.5); }
+.et-item-em { font-size:22px; }
+.et-item-name { font-size:8px; color:var(--muted); margin-top:3px; line-height:1.2; }
+/* 꾸미기 상단 바 */
+.edit-topbar {
+  display:none; position:absolute; top:0; left:0; right:0; z-index:160;
+  padding:8px 16px; background:rgba(5,8,20,.9); backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  align-items:center; justify-content:space-between;
+}
+.edit-active .edit-topbar { display:flex; }
+.et-title { font-size:13px; font-weight:700; color:var(--gold); font-family:'Orbitron',monospace; }
+.et-done {
+  padding:6px 18px; border-radius:20px; border:none; font-size:12px; font-weight:700;
+  background:linear-gradient(90deg,#10b981,#059669); color:#fff; cursor:pointer;
+  font-family:'Noto Sans KR',sans-serif;
 }
 .left-panel::-webkit-scrollbar { width:3px; }
 .left-panel::-webkit-scrollbar-thumb { background:rgba(192,132,252,.3); border-radius:3px; }
@@ -70,9 +124,14 @@ html,body {
   flex:1; display:flex; flex-direction:column; overflow:hidden;
 }
 
+/* 3D 캔버스 컨테이너 (선물함/컨트롤 position 기준) */
+.canvas-container {
+  position:relative; flex:1; min-height:0; overflow:hidden;
+}
+
 /* 3D 캔버스 */
 #threeCanvas {
-  width:100%; flex:1; display:block; cursor:grab;
+  width:100%; height:100%; display:block; cursor:grab;
 }
 #threeCanvas:active { cursor:grabbing; }
 
@@ -243,7 +302,7 @@ html,body {
 /* ── 아이템 배치 모달 ── */
 .modal-ov {
   position:fixed; inset:0; z-index:9000;
-  background:rgba(0,0,0,.75); backdrop-filter:blur(12px);
+  background:rgba(0,0,0,.7);
   display:none; align-items:flex-end; justify-content:center;
 }
 .modal-ov.show { display:flex; }
@@ -306,10 +365,134 @@ html,body {
   position:fixed; inset:0; z-index:0; pointer-events:none;
   width:100%; height:100%;
 }
+
+/* ═══ Gift Box Overlay ═══ */
+.giftbox-wrap{
+  position:absolute;top:40%;left:10px;z-index:60;
+  transform:translateY(-50%);cursor:pointer;
+}
+.giftbox{
+  position:relative;width:70px;height:70px;
+  border-radius:10px;
+  background:linear-gradient(145deg,#1a1050,#0d0830,#1a0a40);
+  border:1.5px solid rgba(240,192,64,.45);
+  box-shadow:0 4px 20px rgba(0,0,0,.5),0 0 12px rgba(240,192,64,.1);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  overflow:hidden;transition:transform .25s,box-shadow .25s;
+}
+.giftbox-text{
+  position:relative;z-index:2;font-size:12px;font-weight:700;
+  font-family:'Noto Sans KR',sans-serif;color:#f0c040;line-height:1.2;
+  text-shadow:0 0 6px rgba(240,192,64,.4);
+}
+.giftbox:hover{transform:scale(1.08);box-shadow:0 4px 24px rgba(0,0,0,.5),0 0 20px rgba(240,192,64,.2)}
+/* shimmer sweep */
+.giftbox::after{
+  content:'';position:absolute;inset:0;border-radius:inherit;
+  background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.12) 45%,rgba(255,255,255,.2) 50%,rgba(255,255,255,.12) 55%,transparent 70%);
+  background-size:220% 100%;animation:giftShimmer 3.5s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes giftShimmer{0%,100%{background-position:200% 50%}50%{background-position:-60% 50%}}
+/* 골드 별 장식 */
+.giftbox-star{
+  font-size:20px;position:relative;z-index:2;
+  filter:drop-shadow(0 0 6px rgba(240,192,64,.6));
+  animation:giftStarPulse 2.5s ease-in-out infinite;
+}
+@keyframes giftStarPulse{0%,100%{transform:scale(1);filter:drop-shadow(0 0 6px rgba(240,192,64,.6))}50%{transform:scale(1.1);filter:drop-shadow(0 0 12px rgba(240,192,64,.8))}}
+/* 골드 리본 가로선 */
+.giftbox-ribbon-h{
+  position:absolute;top:50%;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,rgba(240,192,64,.2),rgba(240,192,64,.6),rgba(240,192,64,.2));
+  transform:translateY(-50%);z-index:1;
+}
+.giftbox-ribbon-v{
+  position:absolute;left:50%;top:0;bottom:0;width:3px;
+  background:linear-gradient(180deg,rgba(240,192,64,.2),rgba(240,192,64,.6),rgba(240,192,64,.2));
+  transform:translateX(-50%);z-index:1;
+}
+/* 뚜껑 (열기 애니메이션용) */
+.giftbox-lid{
+  position:absolute;top:-2px;left:-2px;right:-2px;height:22px;
+  background:linear-gradient(180deg,#1a1050,#120840);
+  border:1.5px solid rgba(240,192,64,.45);
+  border-radius:10px 10px 0 0;
+  transform-origin:left top;transition:transform .4s cubic-bezier(.4,0,.2,1);
+  z-index:3;
+}
+.giftbox.open .giftbox-lid{transform:rotateX(-110deg) translateY(-4px)}
+/* 뱃지 */
+.giftbox-badge{
+  position:absolute;top:-6px;right:-6px;z-index:10;
+  min-width:20px;height:20px;border-radius:10px;padding:0 5px;
+  background:linear-gradient(135deg,#f0c040,#daa520);
+  color:#0a0a2e;font-size:11px;font-weight:900;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',monospace;
+  box-shadow:0 0 10px rgba(240,192,64,.5);
+  animation:giftBadgePulse 1.8s ease-in-out infinite;
+}
+.giftbox-badge.hidden{display:none}
+@keyframes giftBadgePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+
+/* ═══ Memory Star Modal ═══ */
+.memory-overlay{position:fixed;inset:0;z-index:9600;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;padding:20px}
+.memory-overlay.show{display:flex}
+.memory-card{
+  background:rgba(8,8,22,.97);border-radius:24px;width:400px;max-width:95vw;overflow:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,.6);
+}
+.mc-header{padding:20px 24px 14px;display:flex;align-items:center;justify-content:space-between}
+.mc-date{font-family:'Orbitron',monospace;font-size:13px;color:var(--gold);letter-spacing:1px}
+.mc-close{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px 8px}
+.mc-close:hover{color:#e8e4f0}
+.mc-body{padding:0 24px 20px}
+.mc-text{font-size:16px;line-height:1.7;color:#e8e4f0;font-weight:600;margin-bottom:16px}
+.mc-stats{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-bottom:16px}
+.mc-stat{text-align:center;background:rgba(255,255,255,.04);border-radius:8px;padding:6px 2px}
+.mc-stat-label{font-size:8px;color:var(--muted)}
+.mc-stat-val{font-size:13px;font-weight:900;margin-top:2px}
+.mc-memo{display:flex;gap:8px}
+.mc-memo-input{flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 14px;color:#e8e4f0;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none}
+.mc-memo-input::placeholder{color:rgba(200,190,220,.3)}
+.mc-memo-input:focus{border-color:rgba(240,192,64,.4)}
+.mc-memo-send{background:linear-gradient(135deg,#f0c040,#fbbf24);border:none;border-radius:10px;padding:0 16px;color:#000;font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+.mc-saved{text-align:center;font-size:11px;color:var(--gold);padding:8px;opacity:0;transition:opacity .5s}
+.mc-saved.show{opacity:1}
+
+/* ═══ Diary Modal ═══ */
+.diary-overlay{position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;padding:20px}
+.diary-overlay.show{display:flex}
+.diary-card{background:rgba(8,8,22,.97);border:1px solid rgba(240,192,64,.25);border-radius:24px;width:440px;max-width:95vw;max-height:85vh;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.dc-header{padding:20px 24px 14px;border-bottom:1px solid rgba(240,192,64,.12);display:flex;align-items:center;justify-content:space-between}
+.dc-date{font-family:'Orbitron',monospace;font-size:12px;color:var(--gold);letter-spacing:1px}
+.dc-time{font-size:10px;padding:3px 10px;border-radius:12px;background:rgba(192,132,252,.15);color:#c084fc;font-weight:600;margin-top:4px;display:inline-block}
+.dc-close{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px 8px;transition:color .2s}
+.dc-close:hover{color:#e8e4f0}
+.dc-body{padding:24px;overflow-y:auto;max-height:50vh}
+.dc-text{font-size:15px;line-height:1.9;color:#e8e4f0;white-space:pre-line;word-break:keep-all}
+.dc-reactions{display:flex;gap:8px;padding:16px 24px;border-top:1px solid rgba(255,255,255,.06);flex-wrap:wrap}
+.dc-react{font-size:20px;padding:6px 10px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);cursor:pointer;transition:all .2s;position:relative}
+.dc-react:hover{background:rgba(240,192,64,.1);border-color:rgba(240,192,64,.3);transform:scale(1.15)}
+.dc-react.sel{background:rgba(240,192,64,.15);border-color:var(--gold)}
+.dc-comment{padding:12px 24px 16px;display:flex;gap:8px;border-top:1px solid rgba(255,255,255,.04)}
+.dc-input{flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 14px;color:#e8e4f0;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none}
+.dc-input::placeholder{color:rgba(200,190,220,.3)}
+.dc-input:focus{border-color:rgba(240,192,64,.4)}
+.dc-send{background:linear-gradient(135deg,#f0c040,#fbbf24);border:none;border-radius:12px;padding:0 18px;color:#000;font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+.dc-reward{padding:8px 24px 16px;text-align:center;font-size:11px;color:var(--gold);font-weight:600;opacity:0;transition:opacity .5s}
+.dc-reward.show{opacity:1}
+.dc-nav{display:flex;justify-content:space-between;align-items:center;padding:0 24px 16px}
+.dc-nav-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:6px 14px;color:#c084fc;font-size:12px;cursor:pointer;font-family:'Orbitron',monospace;transition:all .2s}
+.dc-nav-btn:hover{border-color:#c084fc;background:rgba(192,132,252,.1)}
+.dc-nav-btn:disabled{opacity:.3;cursor:default}
+.dc-nav-cnt{font-size:11px;color:var(--muted);font-family:'Orbitron',monospace}
+@keyframes diarySpark{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--sx),var(--sy)) scale(0);opacity:0}}
+.diary-spark{position:fixed;width:6px;height:6px;border-radius:50%;background:var(--gold);pointer-events:none;z-index:9999;animation:diarySpark .7s ease-out forwards}
 </style>
 </head>
 <body>
-<canvas id="starCanvas"></canvas>
 <canvas id="starCanvas"></canvas>
 
 <!-- 아이템 배치 모달 -->
@@ -324,6 +507,54 @@ html,body {
 </div>
 
 <div id="toast" class="toast"></div>
+
+<!-- Memory Star Modal -->
+<div class="memory-overlay" id="memoryOv">
+  <div class="memory-card" id="memoryCard">
+    <div class="mc-header">
+      <div class="mc-date" id="mcDate"></div>
+      <button class="mc-close" onclick="closeMemory()">✕</button>
+    </div>
+    <div class="mc-body">
+      <div class="mc-text" id="mcText"></div>
+      <div class="mc-stats" id="mcStats"></div>
+      <div class="mc-memo">
+        <input class="mc-memo-input" id="mcMemo" placeholder="이날의 기억을 남겨주세요 — Leave a note" maxlength="100">
+        <button class="mc-memo-send" onclick="saveMemoryMemo()">저장</button>
+      </div>
+      <div class="mc-saved" id="mcSaved">✨ 기억이 저장되었습니다 — Memory saved</div>
+    </div>
+  </div>
+</div>
+
+<!-- Diary Modal -->
+<div class="diary-overlay" id="diaryOv">
+  <div class="diary-card">
+    <div class="dc-header">
+      <div><div class="dc-date" id="dcDate">2026.03.28</div><div class="dc-time" id="dcTime">아침 — Morning</div></div>
+      <button class="dc-close" onclick="closeMusicDiary()">✕</button>
+    </div>
+    <div class="dc-body"><div class="dc-text" id="dcText"></div></div>
+    <div class="dc-reactions">
+      <button class="dc-react" onclick="diaryReact(this)">❤️</button>
+      <button class="dc-react" onclick="diaryReact(this)">💪</button>
+      <button class="dc-react" onclick="diaryReact(this)">😢</button>
+      <button class="dc-react" onclick="diaryReact(this)">😂</button>
+      <button class="dc-react" onclick="diaryReact(this)">🔥</button>
+      <button class="dc-react" onclick="diaryReact(this)">💫</button>
+    </div>
+    <div class="dc-comment">
+      <input class="dc-input" id="dcInput" placeholder="한 줄 응원을 남겨주세요 — Leave a message" maxlength="100">
+      <button class="dc-send" onclick="diaryComment()">전송</button>
+    </div>
+    <div class="dc-reward" id="dcReward"></div>
+    <div class="dc-nav">
+      <button class="dc-nav-btn" id="dcPrev" onclick="diaryNav(-1)">◀ PREV</button>
+      <div class="dc-nav-cnt" id="dcCnt">1/1</div>
+      <button class="dc-nav-btn" id="dcNext" onclick="diaryNav(1)">NEXT ▶</button>
+    </div>
+  </div>
+</div>
 
 <div id="app">
   <nav class="top-nav">
@@ -436,18 +667,44 @@ html,body {
     </div><!-- /left-panel -->
 
     <!-- ── 오른쪽 2/3 ── -->
-    <div class="right-panel" style="position:relative">
+    <div class="right-panel">
 
-      <!-- Three.js 캔버스 -->
-      <canvas id="threeCanvas"></canvas>
+      <!-- 3D 캔버스 컨테이너 (선물함/컨트롤의 position 기준) -->
+      <div class="canvas-container" id="canvasContainer">
+        <!-- Three.js 캔버스 -->
+        <canvas id="threeCanvas"></canvas>
 
-      <!-- 3D 컨트롤 버튼 -->
-      <div class="room3d-controls">
-        <div class="ctrl-btn" onclick="resetCamera()" title="카메라 리셋">🔄</div>
-        <div class="ctrl-btn" onclick="zoomIn()" title="확대">🔍</div>
-        <div class="ctrl-btn" onclick="zoomOut()" title="축소">🔎</div>
-        <div class="ctrl-btn" onclick="toggleLight()" title="조명 변경">💡</div>
-      </div>
+        <!-- Gift Box Overlay — 캔버스 오른쪽 벽 중간 -->
+        <div class="giftbox-wrap" id="giftboxWrap" onclick="openGiftBox()">
+          <div class="giftbox" id="giftbox">
+            <div class="giftbox-badge" id="giftboxBadge">1</div>
+            <div class="giftbox-lid"></div>
+            <div class="giftbox-ribbon-h"></div>
+            <div class="giftbox-ribbon-v"></div>
+            <div class="giftbox-text">선물<br>Gift</div>
+            <div class="giftbox-star">⭐</div>
+          </div>
+        </div>
+
+        <!-- 3D 컨트롤 버튼 -->
+        <div class="room3d-controls">
+          <div class="ctrl-btn" onclick="resetCamera()" title="카메라 리셋">🔄</div>
+          <div class="ctrl-btn" onclick="zoomIn()" title="확대">🔍</div>
+          <div class="ctrl-btn" onclick="zoomOut()" title="축소">🔎</div>
+          <div class="ctrl-btn" onclick="toggleLight()" title="조명 변경">💡</div>
+        </div>
+        <!-- 꾸미기 상단 바 -->
+        <div class="edit-topbar">
+          <div class="et-title">✏️ ROOM EDIT</div>
+          <button class="et-done" onclick="toggleEdit()">완료 ✓</button>
+        </div>
+
+        <!-- 꾸미기 도구바 -->
+        <div class="edit-toolbar" id="editToolbar">
+          <div class="et-tabs" id="etTabs"></div>
+          <div class="et-items" id="etItems"></div>
+        </div>
+      </div><!-- /canvas-container -->
 
       <!-- 방명록 -->
       <div class="guestbook-panel">
@@ -478,9 +735,9 @@ const THEMES = [
 ];
 
 const ITEMS = [
-  { id:1,  name:'별빛 조명',   emoji:'💡', rarity:'common',    placed:true,  pos:[0,-0.3,-1.5],  rot:0 },
-  { id:2,  name:'포스터',      emoji:'🖼️', rarity:'common',   placed:true,  pos:[1.8,0.8,-2.4], rot:0 },
-  { id:3,  name:'오라클 테이블',emoji:'🔮', rarity:'rare',     placed:true,  pos:[-0.5,-0.4,0],  rot:0 },
+  { id:1,  name:'별빛 조명',   emoji:'💡', rarity:'common',    placed:false, pos:null },
+  { id:2,  name:'포스터',      emoji:'🖼️', rarity:'common',   placed:false, pos:null },
+  { id:3,  name:'오라클 테이블',emoji:'🔮', rarity:'rare',     placed:false, pos:null },
   { id:4,  name:'응원봉',      emoji:'🎤', rarity:'rare',      placed:false, pos:null },
   { id:5,  name:'앨범',        emoji:'💿', rarity:'common',    placed:false, pos:null },
   { id:6,  name:'홀로그램',    emoji:'✨', rarity:'epic',      placed:false, pos:null },
@@ -506,17 +763,30 @@ let isEditMode = false;
 let selectedItem = null;
 let lightMode = 0;
 
-// ── 내 캐릭터 이동 목적지 ──
-let avatarTargetPos = null;
-let myAvatarMesh = null; // 내 캐릭터 메시 참조
+let myAvatarMesh = null;
+let avatarHead = null;
+let avatarTargetPos = null; // 탭투무브 목적지
 
 // Three.js 전역
 let scene, camera, renderer, roomGroup;
 let mouseDown = false, lastMouse = {x:0,y:0};
-let camTheta = 0.3, camPhi = 0.5, camRadius = 7;
 let itemMeshes = [];
 let floatTime = 0;
-let accentLight, pointLight1, ambientLight;
+let accentLight, pointLight1, pointLight2, pointLight3, ambientLight;
+let ceilingStars = [];
+
+// ── 오빗 카메라 (방 전체 조감) ──
+let camTheta = 0.5;
+let camPhi = 0.55;
+let camRadius = 7.5;
+let dragMoved = false;
+
+// ── 키보드 입력 ──
+const keysPressed = {};
+
+// ── 방 크기 상수 ──
+const RW = 8, RH = 5, RD = 7;
+const ROOM_BOUNDS = { xMin:-(RW/2-0.4), xMax:RW/2-0.4, zMin:-(RD/2-0.4), zMax:RD/2-0.4 };
 
 // ══════════════════════════════════════════
 //  THREE.JS 초기화
@@ -525,66 +795,73 @@ function initThree() {
   const canvas = document.getElementById('threeCanvas');
   const container = canvas.parentElement;
 
-  // Scene
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x030308);
-  scene.fog = new THREE.FogExp2(0x030308, 0.06);
+  scene.background = new THREE.Color(0x030310);
+  scene.fog = new THREE.FogExp2(0x030310, 0.008);
 
-  // Camera
-  const w = container.clientWidth;
-  const h = container.clientHeight - 220; // 방명록 높이 제외
-  camera = new THREE.PerspectiveCamera(55, w / h, 0.1, 100);
+  const w = container.clientWidth || 800;
+  const h = container.clientHeight || 500;
+  camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 100);
   updateCameraPos();
 
-  // Renderer
   renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:false });
   renderer.setSize(w, h);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.9;
+  renderer.toneMappingExposure = 1.2;
 
-  // 조명
-  ambientLight = new THREE.AmbientLight(0x221133, 0.4);
+  // === 따뜻한 실내 조명 (방 안이 환하게) ===
+  ambientLight = new THREE.AmbientLight(0x584030, 0.9);
   scene.add(ambientLight);
 
-  accentLight = new THREE.PointLight(0xc084fc, 2.5, 12);
-  accentLight.position.set(0, 2, 0);
+  // 천장 중앙 메인 조명 (따뜻한 골드)
+  accentLight = new THREE.PointLight(0xffe4a0, 2.0, 16);
+  accentLight.position.set(0, 2.5, -0.5);
   accentLight.castShadow = true;
+  accentLight.shadow.mapSize.set(512, 512);
   scene.add(accentLight);
 
-  pointLight1 = new THREE.PointLight(0x4444ff, 1.0, 10);
-  pointLight1.position.set(-2, 1.5, -1);
+  // 왼쪽 벽 따뜻한 조명
+  pointLight1 = new THREE.PointLight(0xffd080, 1.2, 10);
+  pointLight1.position.set(-2.5, 1.5, -1.0);
   scene.add(pointLight1);
 
-  const rimLight = new THREE.DirectionalLight(0x8866ff, 0.5);
-  rimLight.position.set(3, 3, 2);
-  scene.add(rimLight);
+  // 오른쪽 벽 보라 악센트
+  pointLight2 = new THREE.PointLight(0xc088ff, 0.5, 8);
+  pointLight2.position.set(2.5, 1.5, 0.5);
+  scene.add(pointLight2);
 
-  // 방 생성
+  // 앞쪽 채움 조명
+  pointLight3 = new THREE.PointLight(0xffeedd, 0.6, 12);
+  pointLight3.position.set(0, 0.5, 3);
+  scene.add(pointLight3);
+
   buildRoom();
   buildItems();
   buildParticles();
 
-  // 이벤트
+  // ── 마우스 이벤트 ──
   canvas.addEventListener('mousedown', onMouseDown);
   canvas.addEventListener('mousemove', onMouseMove);
-  canvas.addEventListener('mouseup', (e)=>{ mouseDown=false; });
+  canvas.addEventListener('mouseup', ()=>{ mouseDown=false; });
   canvas.addEventListener('click', onCanvasClick);
   canvas.addEventListener('wheel', onWheel, {passive:true});
+
+  // ── 터치 이벤트 ──
   canvas.addEventListener('touchstart', onTouchStart, {passive:true});
   canvas.addEventListener('touchmove', onTouchMove, {passive:false});
-  canvas.addEventListener('touchend', (e)=>{
-    mouseDown=false;
-    // 터치도 드래그 안 했으면 클릭으로 처리
-    if(!dragMoved && e.changedTouches.length===1) {
-      moveAvatarToClick(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
-    }
+  canvas.addEventListener('touchend', onTouchEnd, {passive:true});
+
+  // ── 키보드 WASD/화살표 ──
+  window.addEventListener('keydown', e=>{
+    keysPressed[e.key.toLowerCase()] = true;
+    if(['arrowup','arrowdown','arrowleft','arrowright'].includes(e.key.toLowerCase())) e.preventDefault();
   });
+  window.addEventListener('keyup', e=>{ keysPressed[e.key.toLowerCase()] = false; });
 
   window.addEventListener('resize', onResize);
-
   animate();
 }
 
@@ -594,169 +871,309 @@ function initThree() {
 function buildRoom() {
   if(roomGroup) {
     scene.remove(roomGroup);
-    roomGroup.traverse(o=>{ if(o.geometry) o.geometry.dispose(); if(o.material) o.material.dispose(); });
+    roomGroup.traverse(o=>{ if(o.geometry) o.geometry.dispose(); if(o.material) {
+      if(Array.isArray(o.material)) o.material.forEach(m=>m.dispose()); else o.material.dispose();
+    }});
   }
   roomGroup = new THREE.Group();
   scene.add(roomGroup);
+  ceilingStars = [];
 
-  const t = currentTheme;
-  const W=6, H=4.5, D=5; // 방 크기
-
-  // ── 바닥 ──
-  const floorGeo = new THREE.PlaneGeometry(W, D, 20, 20);
-  const floorMat = new THREE.MeshStandardMaterial({
-    color: t.floor, roughness:0.8, metalness:0.1,
-  });
-  const floor = new THREE.Mesh(floorGeo, floorMat);
+  // ── 바닥 (따뜻한 월넛 나무, Canvas 텍스처) ──
+  const floorCv = document.createElement('canvas');
+  floorCv.width = 512; floorCv.height = 512;
+  const fCtx = floorCv.getContext('2d');
+  fCtx.fillStyle = '#3d2510';
+  fCtx.fillRect(0, 0, 512, 512);
+  for(let i=0;i<35;i++){
+    const y = Math.random()*512;
+    fCtx.strokeStyle = `rgba(80,45,15,${0.08+Math.random()*0.12})`;
+    fCtx.lineWidth = 1+Math.random()*3;
+    fCtx.beginPath(); fCtx.moveTo(0,y); fCtx.lineTo(512,y+Math.random()*20-10); fCtx.stroke();
+  }
+  for(let i=1;i<6;i++){
+    fCtx.strokeStyle = 'rgba(30,15,5,0.25)';
+    fCtx.lineWidth = 2;
+    fCtx.beginPath(); fCtx.moveTo(0, i*85); fCtx.lineTo(512, i*85); fCtx.stroke();
+  }
+  const floorTex = new THREE.CanvasTexture(floorCv);
+  floorTex.wrapS = THREE.RepeatWrapping; floorTex.wrapT = THREE.RepeatWrapping;
+  floorTex.repeat.set(2, 2);
+  const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(RW, RD),
+    new THREE.MeshStandardMaterial({ map:floorTex, color:0x6b4020, roughness:0.55, metalness:0.05 })
+  );
   floor.rotation.x = -Math.PI/2;
   floor.position.y = -1.5;
   floor.receiveShadow = true;
+  floor.userData.isFloor = true;
   roomGroup.add(floor);
 
-  // 바닥 격자 무늬
-  const gridHelper = new THREE.GridHelper(6, 12, t.accent, t.accent);
-  gridHelper.position.y = -1.49;
-  gridHelper.material.opacity = 0.08;
-  gridHelper.material.transparent = true;
-  roomGroup.add(gridHelper);
-
-  // ── 뒷벽 ──
-  const backWallGeo = new THREE.PlaneGeometry(W, H);
-  const backWallMat = new THREE.MeshStandardMaterial({
-    color: t.wall, roughness:0.9, metalness:0.05,
+  // ── 바닥 중앙 골드빛 원형 조명 ──
+  const spotGeo = new THREE.CircleGeometry(1.8, 32);
+  const spotMat = new THREE.MeshBasicMaterial({
+    color:0xf0c040, transparent:true, opacity:0.06, blending:THREE.AdditiveBlending,
   });
-  const backWall = new THREE.Mesh(backWallGeo, backWallMat);
-  backWall.position.set(0, 0.75, -D/2);
+  const spot = new THREE.Mesh(spotGeo, spotMat);
+  spot.rotation.x = -Math.PI/2;
+  spot.position.y = -1.48;
+  roomGroup.add(spot);
+  // 더 넓은 외곽 glow
+  const spotOuter = new THREE.Mesh(
+    new THREE.CircleGeometry(2.8, 32),
+    new THREE.MeshBasicMaterial({ color:0xf0c040, transparent:true, opacity:0.025, blending:THREE.AdditiveBlending })
+  );
+  spotOuter.rotation.x = -Math.PI/2;
+  spotOuter.position.y = -1.485;
+  roomGroup.add(spotOuter);
+
+  // ── 뒷벽 #1a1535 ──
+  const backWall = new THREE.Mesh(
+    new THREE.PlaneGeometry(RW, RH),
+    new THREE.MeshStandardMaterial({ color:0x1a1535, roughness:0.8, metalness:0.05, emissive:0x0d0a1a, emissiveIntensity:0.2 })
+  );
+  backWall.position.set(0, RH/2-1.5, -RD/2);
   backWall.receiveShadow = true;
   roomGroup.add(backWall);
 
-  // ── 왼쪽 벽 ──
-  const leftWallGeo = new THREE.PlaneGeometry(D, H);
-  const leftWallMat = new THREE.MeshStandardMaterial({
-    color: new THREE.Color(t.wall).multiplyScalar(0.85),
-    roughness:0.9, metalness:0.05,
-  });
-  const leftWall = new THREE.Mesh(leftWallGeo, leftWallMat);
+  // ── 왼쪽벽 #1a1535 ──
+  const leftWall = new THREE.Mesh(
+    new THREE.PlaneGeometry(RD, RH),
+    new THREE.MeshStandardMaterial({ color:0x1a1535, roughness:0.8, metalness:0.05, emissive:0x0d0a1a, emissiveIntensity:0.18 })
+  );
   leftWall.rotation.y = Math.PI/2;
-  leftWall.position.set(-W/2, 0.75, 0);
+  leftWall.position.set(-RW/2, RH/2-1.5, 0);
   leftWall.receiveShadow = true;
   roomGroup.add(leftWall);
 
-  // ── 오른쪽 벽 ──
-  const rightWallGeo = new THREE.PlaneGeometry(D, H);
-  const rightWallMat = new THREE.MeshStandardMaterial({
-    color: new THREE.Color(t.wall).multiplyScalar(0.85),
-    roughness:0.9, metalness:0.05,
-  });
-  const rightWall = new THREE.Mesh(rightWallGeo, rightWallMat);
+  // ── 오른쪽벽 #211845 ──
+  const rightWall = new THREE.Mesh(
+    new THREE.PlaneGeometry(RD, RH),
+    new THREE.MeshStandardMaterial({ color:0x211845, roughness:0.8, metalness:0.05, emissive:0x100d22, emissiveIntensity:0.18 })
+  );
   rightWall.rotation.y = -Math.PI/2;
-  rightWall.position.set(W/2, 0.75, 0);
+  rightWall.position.set(RW/2, RH/2-1.5, 0);
   rightWall.receiveShadow = true;
   roomGroup.add(rightWall);
 
-  // ── 천장 ──
-  const ceilGeo = new THREE.PlaneGeometry(W, D);
-  const ceilMat = new THREE.MeshStandardMaterial({
-    color: new THREE.Color(t.wall).multiplyScalar(0.6),
-    roughness:1, metalness:0,
-  });
-  const ceil = new THREE.Mesh(ceilGeo, ceilMat);
+  // ── 앞벽 반투명 (opacity 0.2) ──
+  const frontWall = new THREE.Mesh(
+    new THREE.PlaneGeometry(RW, RH),
+    new THREE.MeshStandardMaterial({ color:0x1a1535, roughness:0.8, metalness:0.05, transparent:true, opacity:0.2, side:THREE.DoubleSide })
+  );
+  frontWall.rotation.y = Math.PI;
+  frontWall.position.set(0, RH/2-1.5, RD/2);
+  roomGroup.add(frontWall);
+
+  // ── 천장 #0d0b20 ──
+  const ceil = new THREE.Mesh(
+    new THREE.PlaneGeometry(RW, RD),
+    new THREE.MeshStandardMaterial({ color:0x0d0b20, roughness:0.9, metalness:0.02, emissive:0x080618, emissiveIntensity:0.1 })
+  );
   ceil.rotation.x = Math.PI/2;
-  ceil.position.y = 3;
+  ceil.position.y = RH-1.5;
   roomGroup.add(ceil);
 
-  // ── 몰딩 (벽/바닥 경계선) ──
-  const moldingColor = t.accent;
-  const moldingGeo = new THREE.BoxGeometry(W+0.1, 0.06, 0.06);
-  const moldingMat = new THREE.MeshStandardMaterial({
-    color: moldingColor, emissive: moldingColor,
-    emissiveIntensity:0.5, roughness:0.3,
+  // ── 천장 장식 별 ──
+  for(let i=0;i<30;i++){
+    const star = new THREE.Mesh(
+      new THREE.SphereGeometry(0.015+Math.random()*0.015, 4, 4),
+      new THREE.MeshBasicMaterial({ color:0xffffff, transparent:true, opacity:0.6 })
+    );
+    star.position.set((Math.random()-0.5)*RW*0.85, RH-1.52, (Math.random()-0.5)*RD*0.85);
+    star.userData.ceilStar = true;
+    star.userData.phase = Math.random()*Math.PI*2;
+    star.userData.speed = Math.random()*1.5+0.5;
+    roomGroup.add(star);
+    ceilingStars.push(star);
+  }
+
+  // ── 골드 몰딩 (바닥-벽 경계 4면) ──
+  const moldMat = new THREE.MeshStandardMaterial({
+    color:0xf0c040, emissive:0xf0c040, emissiveIntensity:0.3, roughness:0.3, metalness:0.5,
   });
-  const molding1 = new THREE.Mesh(moldingGeo, moldingMat);
-  molding1.position.set(0, -1.47, -D/2+0.03);
-  roomGroup.add(molding1);
+  // 바닥 몰딩
+  const addMold = (w,h,d,x,y,z) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), moldMat.clone());
+    m.position.set(x,y,z); roomGroup.add(m);
+  };
+  addMold(RW+0.1, 0.04, 0.04, 0, -1.48, -RD/2+0.02); // 뒷
+  addMold(RW+0.1, 0.04, 0.04, 0, -1.48,  RD/2-0.02); // 앞
+  addMold(0.04, 0.04, RD+0.1, -RW/2+0.02, -1.48, 0);  // 좌
+  addMold(0.04, 0.04, RD+0.1,  RW/2-0.02, -1.48, 0);  // 우
 
-  // 측면 몰딩
-  const moldingGeo2 = new THREE.BoxGeometry(0.06, 0.06, D+0.1);
-  const molding2 = new THREE.Mesh(moldingGeo2, moldingMat.clone());
-  molding2.position.set(-W/2+0.03, -1.47, 0);
-  roomGroup.add(molding2);
-  const molding3 = new THREE.Mesh(moldingGeo2, moldingMat.clone());
-  molding3.position.set(W/2-0.03, -1.47, 0);
-  roomGroup.add(molding3);
-
-  // ── 아바타 (방 주인) ──
   buildAvatar();
-
-  // 조명 색상 업데이트
-  accentLight.color.setHex(t.light);
-  pointLight1.color.setHex(t.accent);
 }
 
-// ── 아바타 3D 표현 ──
+// ── SD 아바타 (2등신 귀여운 캐릭터) ──
 function buildAvatar() {
-  // 기존 아바타 제거
-  if(myAvatarMesh) { roomGroup.remove(myAvatarMesh); myAvatarMesh=null; }
-
-  const charData = JSON.parse(localStorage.getItem('asteria_chars')||'null');
-  const myEmoji = charData?.my?.emoji || '🌟';
+  if(myAvatarMesh) { roomGroup.remove(myAvatarMesh); myAvatarMesh=null; avatarHead=null; }
   const group = new THREE.Group();
 
-  // 몸통
-  const bodyGeo = new THREE.CylinderGeometry(0.25, 0.3, 0.8, 16);
-  const bodyMat = new THREE.MeshStandardMaterial({
-    color:0xc084fc, emissive:0xc084fc, emissiveIntensity:0.2,
-    roughness:0.4, metalness:0.3,
+  const skinColor = 0xfce4d6;
+  const bodyColor = 0xc084fc;
+  const hairColor = 0x7c3aed;
+  const skinMat = new THREE.MeshStandardMaterial({color:skinColor, roughness:0.6, metalness:0.02});
+  const bodyMat = new THREE.MeshStandardMaterial({color:bodyColor, emissive:bodyColor, emissiveIntensity:0.1, roughness:0.4, metalness:0.15});
+  const hairMat = new THREE.MeshStandardMaterial({color:hairColor, emissive:hairColor, emissiveIntensity:0.08, roughness:0.5, metalness:0.1});
+
+  // ── Head group (for tilt animation) ──
+  const headGroup = new THREE.Group();
+  headGroup.position.y = 0.72;
+
+  // head sphere (big, SD proportions)
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.38, 24, 20), skinMat);
+  head.castShadow = true;
+  headGroup.add(head);
+
+  // hair (hemisphere on top + side volumes)
+  const hairTop = new THREE.Mesh(new THREE.SphereGeometry(0.40, 24, 16, 0, Math.PI*2, 0, Math.PI*0.55), hairMat);
+  hairTop.position.y = 0.04;
+  headGroup.add(hairTop);
+
+  // hair back volume
+  const hairBack = new THREE.Mesh(new THREE.SphereGeometry(0.36, 16, 12, 0, Math.PI*2, 0.3, Math.PI*0.5), hairMat.clone());
+  hairBack.position.set(0, -0.02, -0.08);
+  hairBack.scale.set(1, 1, 1.15);
+  headGroup.add(hairBack);
+
+  // fringe (small box bangs)
+  const fringeMat = hairMat.clone();
+  const fringe = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.08, 0.15), fringeMat);
+  fringe.position.set(0, 0.2, 0.28);
+  fringe.rotation.x = 0.15;
+  headGroup.add(fringe);
+
+  // ── Eyes (big cute SD eyes) ──
+  [[-0.12, 0],[0.12, 0]].forEach(([ox])=>{
+    // eye white
+    const ewGeo = new THREE.SphereGeometry(0.065, 12, 12);
+    const ewMat = new THREE.MeshBasicMaterial({color:0xffffff});
+    const ew = new THREE.Mesh(ewGeo, ewMat);
+    ew.position.set(ox, 0.02, 0.32);
+    ew.scale.set(1, 1.1, 0.6);
+    headGroup.add(ew);
+
+    // iris
+    const irisMat = new THREE.MeshBasicMaterial({color:0x1a1030});
+    const iris = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 10), irisMat);
+    iris.position.set(ox, 0.02, 0.35);
+    iris.scale.set(1, 1.1, 0.5);
+    headGroup.add(iris);
+
+    // highlight sparkle (top-right of each eye)
+    const hlMat = new THREE.MeshBasicMaterial({color:0xffffff});
+    const hl = new THREE.Mesh(new THREE.SphereGeometry(0.018, 6, 6), hlMat);
+    hl.position.set(ox+0.02, 0.06, 0.37);
+    headGroup.add(hl);
+
+    // small bottom highlight
+    const hl2 = new THREE.Mesh(new THREE.SphereGeometry(0.01, 6, 6), hlMat.clone());
+    hl2.position.set(ox-0.01, -0.01, 0.37);
+    headGroup.add(hl2);
   });
+
+  // ── Cheek blush (2 soft pink circles) ──
+  const blushMat = new THREE.MeshBasicMaterial({color:0xffaaaa, transparent:true, opacity:0.35});
+  [[-0.2, -0.06],[0.2, -0.06]].forEach(([bx, by])=>{
+    const blush = new THREE.Mesh(new THREE.CircleGeometry(0.06, 12), blushMat);
+    blush.position.set(bx, by, 0.36);
+    headGroup.add(blush);
+  });
+
+  // ── Mouth (small curved smile — torus arc) ──
+  const smileGeo = new THREE.TorusGeometry(0.04, 0.012, 8, 12, Math.PI);
+  const smileMat = new THREE.MeshBasicMaterial({color:0xcc6666});
+  const smile = new THREE.Mesh(smileGeo, smileMat);
+  smile.position.set(0, -0.08, 0.35);
+  smile.rotation.x = -0.1;
+  smile.rotation.z = Math.PI; // flip so curve goes up = smile
+  headGroup.add(smile);
+
+  group.add(headGroup);
+  avatarHead = headGroup;
+
+  // ── Body (short chubby cylinder) ──
+  const bodyGeo = new THREE.CylinderGeometry(0.18, 0.22, 0.4, 20);
   const body = new THREE.Mesh(bodyGeo, bodyMat);
-  body.position.y = 0.35;
+  body.position.y = 0.2;
   body.castShadow = true;
   group.add(body);
 
-  // 머리
-  const headGeo = new THREE.SphereGeometry(0.28, 16, 16);
-  const headMat = new THREE.MeshStandardMaterial({
-    color:0xfdbcb4, emissive:0xc084fc, emissiveIntensity:0.1,
-    roughness:0.6,
+  // ── Arms (small spheres on sides) ──
+  const armMat = bodyMat.clone();
+  [[-1, 1]].forEach(()=>{
+    [-0.28, 0.28].forEach((ax, i)=>{
+      const arm = new THREE.Mesh(new THREE.SphereGeometry(0.09, 12, 12), armMat);
+      arm.position.set(ax, 0.26, 0.02);
+      arm.scale.set(0.8, 1, 0.8);
+      arm.castShadow = true;
+      group.add(arm);
+      // small hand (skin sphere)
+      const hand = new THREE.Mesh(new THREE.SphereGeometry(0.055, 10, 10), skinMat.clone());
+      hand.position.set(ax * 1.2, 0.15, 0.04);
+      group.add(hand);
+    });
   });
-  const head = new THREE.Mesh(headGeo, headMat);
-  head.position.y = 0.95;
-  head.castShadow = true;
-  group.add(head);
 
-  // 아우라 링
-  const ringGeo = new THREE.TorusGeometry(0.45, 0.025, 8, 40);
+  // ── Legs (groups for walk animation) ──
+  const legMat = new THREE.MeshStandardMaterial({color:0x6d28d9, roughness:0.5, metalness:0.1});
+  const footMat = new THREE.MeshStandardMaterial({color:0x4c1d95, roughness:0.4});
+  const legNames = ['left','right'];
+  [-0.09, 0.09].forEach((lx, li)=>{
+    const legGroup = new THREE.Group();
+    legGroup.position.set(lx, -0.1, 0);
+    const legMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.08, 0.22, 12), legMat.clone());
+    legMesh.castShadow = true;
+    legGroup.add(legMesh);
+    const foot = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 8), footMat.clone());
+    foot.position.set(0, -0.12, 0.02);
+    foot.scale.set(1, 0.6, 1.2);
+    legGroup.add(foot);
+    group.add(legGroup);
+  });
+
+  // ── Ground shadow ──
+  const shGeo = new THREE.CircleGeometry(0.35, 20);
+  const shMat = new THREE.MeshBasicMaterial({color:0x000000, transparent:true, opacity:0.2});
+  const sh = new THREE.Mesh(shGeo, shMat);
+  sh.rotation.x = -Math.PI/2; sh.position.y = -0.33;
+  group.add(sh);
+
+  // ── Aura ring ──
+  const ringGeo = new THREE.TorusGeometry(0.35, 0.015, 8, 48);
   const ringMat = new THREE.MeshStandardMaterial({
-    color:0xc084fc, emissive:0xc084fc, emissiveIntensity:1.5,
-    transparent:true, opacity:0.8,
+    color:bodyColor, emissive:bodyColor, emissiveIntensity:1.0,
+    transparent:true, opacity:0.5,
   });
   const ring = new THREE.Mesh(ringGeo, ringMat);
-  ring.position.y = 0.4;
-  ring.rotation.x = Math.PI/2;
+  ring.position.y = 0.0; ring.rotation.x = Math.PI/2;
   ring.userData.isAura = true;
   group.add(ring);
 
-  // 발밑 그림자 원
-  const shadowGeo = new THREE.CircleGeometry(0.3, 16);
-  const shadowMat = new THREE.MeshBasicMaterial({color:0x000000, transparent:true, opacity:0.3});
-  const shadow = new THREE.Mesh(shadowGeo, shadowMat);
-  shadow.rotation.x = -Math.PI/2;
-  shadow.position.y = -1.48;
-  group.add(shadow);
+  // ── Character glow ──
+  const charLight = new THREE.PointLight(bodyColor, 0.4, 3);
+  charLight.position.y = 0.5;
+  group.add(charLight);
 
-  // 이름표 (작은 발광 박스)
-  const labelGeo = new THREE.BoxGeometry(0.9, 0.18, 0.02);
-  const labelMat = new THREE.MeshStandardMaterial({color:0x110022, emissive:0xc084fc, emissiveIntensity:0.3, transparent:true, opacity:0.85});
-  const label = new THREE.Mesh(labelGeo, labelMat);
-  label.position.y = 1.4;
-  group.add(label);
-
-  group.position.set(0, -1.5, 0.5);
+  group.position.set(2.2, -1.2, 1.5);  // 방 오른쪽 앞
+  group.scale.setScalar(0.55);          // 방 대비 작게
   group.userData.isMyAvatar = true;
-  group.userData.floatOffset = 0;
   roomGroup.add(group);
   myAvatarMesh = group;
+
+  // ── CSS Nametag overlay ──
+  let tag = document.getElementById('avatarTag');
+  if(!tag){
+    tag = document.createElement('div');
+    tag.id = 'avatarTag';
+    tag.style.cssText = 'position:absolute;top:0;left:0;z-index:70;pointer-events:none;font-family:Orbitron,monospace;text-align:center;transition:opacity .3s';
+    tag.innerHTML = '<div style="font-size:12px;font-weight:900;color:#f0c040;text-shadow:0 0 8px rgba(240,192,64,.4),0 1px 3px rgba(0,0,0,.8);letter-spacing:1px">별빛 탐험가</div><div style="font-size:10px;color:#c084fc;margin-top:2px;text-shadow:0 1px 3px rgba(0,0,0,.8)">Lv.23</div>';
+    document.getElementById('canvasContainer').appendChild(tag);
+  }
 }
+
+// (3D pouch removed — now HTML overlay)
 
 // ══════════════════════════════════════════
 //  아이템 3D 배치
@@ -795,10 +1212,10 @@ const ITEM_3D_PRESETS = [
 ];
 
 const SLOT_POSITIONS = [
-  [-1.8, -1.0, -2.0], [0, -1.0, -2.2], [1.8, -1.0, -2.0],
-  [-2.2, -0.8, -0.5], [2.2, -0.8, -0.5],
-  [-1.5, -1.0, 0.8],  [1.5, -1.0, 0.8],
-  [0, -1.0, 0.5],
+  [-2.5, -1.0, -2.8], [0, -1.0, -3.0], [2.5, -1.0, -2.8],
+  [-3.0, -0.8, -0.5], [3.0, -0.8, -0.5],
+  [-2.0, -1.0, 1.2],  [2.0, -1.0, 1.2],
+  [0, -1.0, 0.8],
 ];
 
 function buildItems() {
@@ -845,18 +1262,18 @@ function buildItems() {
 let particleSystem;
 function buildParticles() {
   if(particleSystem) scene.remove(particleSystem);
-  const count = 200;
+  const count = 300;
   const geo = new THREE.BufferGeometry();
   const pos = new Float32Array(count*3);
   for(let i=0;i<count;i++){
-    pos[i*3]   = (Math.random()-0.5)*5;
-    pos[i*3+1] = Math.random()*4-1.5;
-    pos[i*3+2] = (Math.random()-0.5)*4;
+    pos[i*3]   = (Math.random()-0.5)*7;
+    pos[i*3+1] = Math.random()*5-1.5;
+    pos[i*3+2] = (Math.random()-0.5)*6;
   }
   geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
   const mat = new THREE.PointsMaterial({
-    color: currentTheme.accent, size:0.025,
-    transparent:true, opacity:0.6,
+    color: currentTheme.accent, size:0.02,
+    transparent:true, opacity:0.5,
     blending: THREE.AdditiveBlending,
   });
   particleSystem = new THREE.Points(geo, mat);
@@ -870,59 +1287,116 @@ function animate() {
   requestAnimationFrame(animate);
   floatTime += 0.016;
 
-  // ── 내 캐릭터 목적지로 부드럽게 이동 ──
-  if(myAvatarMesh && avatarTargetPos) {
-    const spd = 0.06;
-    const dx = avatarTargetPos.x - myAvatarMesh.position.x;
-    const dz = avatarTargetPos.z - myAvatarMesh.position.z;
-    const dist = Math.sqrt(dx*dx + dz*dz);
-    if(dist > 0.05) {
-      myAvatarMesh.position.x += dx * spd;
-      myAvatarMesh.position.z += dz * spd;
-      // 이동 방향으로 캐릭터 회전
-      myAvatarMesh.rotation.y = Math.atan2(dx, dz);
-    } else {
-      myAvatarMesh.position.x = avatarTargetPos.x;
-      myAvatarMesh.position.z = avatarTargetPos.z;
-      avatarTargetPos = null;
-    }
-  }
-
-  // 아바타 부유 애니메이션
+  // ── 키보드 WASD/화살표 이동 ──
   if(myAvatarMesh) {
-    myAvatarMesh.position.y = -1.5 + Math.sin(floatTime*0.8)*0.06;
+    let mx = 0, mz = 0;
+    if(keysPressed['w']||keysPressed['arrowup'])    mz -= 1;
+    if(keysPressed['s']||keysPressed['arrowdown'])   mz += 1;
+    if(keysPressed['a']||keysPressed['arrowleft'])   mx -= 1;
+    if(keysPressed['d']||keysPressed['arrowright'])   mx += 1;
+    const kbMoving = (mx!==0||mz!==0);
+
+    if(kbMoving) {
+      avatarTargetPos = null; // 키보드 우선
+      const speed = 0.04;
+      const len = Math.sqrt(mx*mx+mz*mz);
+      let newX = myAvatarMesh.position.x + (mx/len)*speed;
+      let newZ = myAvatarMesh.position.z + (mz/len)*speed;
+      newX = Math.max(ROOM_BOUNDS.xMin, Math.min(ROOM_BOUNDS.xMax, newX));
+      newZ = Math.max(ROOM_BOUNDS.zMin, Math.min(ROOM_BOUNDS.zMax, newZ));
+      myAvatarMesh.position.x = newX;
+      myAvatarMesh.position.z = newZ;
+      myAvatarMesh.rotation.y = Math.atan2(mx, mz);
+    }
+
+    // ── 탭투무브 (모바일) ──
+    if(!kbMoving && avatarTargetPos) {
+      const dx = avatarTargetPos.x - myAvatarMesh.position.x;
+      const dz = avatarTargetPos.z - myAvatarMesh.position.z;
+      const dist = Math.sqrt(dx*dx+dz*dz);
+      if(dist > 0.05) {
+        const speed = 0.04;
+        myAvatarMesh.position.x += (dx/dist)*speed;
+        myAvatarMesh.position.z += (dz/dist)*speed;
+        myAvatarMesh.rotation.y = Math.atan2(dx, dz);
+      } else {
+        myAvatarMesh.position.x = avatarTargetPos.x;
+        myAvatarMesh.position.z = avatarTargetPos.z;
+        avatarTargetPos = null;
+      }
+    }
+
+    // ── idle 애니메이션 ──
+    const breath = Math.sin(floatTime*0.8)*0.02;
+    myAvatarMesh.position.y = -1.2 + breath;
+
+    if(avatarHead) {
+      avatarHead.rotation.z = Math.sin(floatTime*0.5)*0.05;
+      avatarHead.rotation.x = Math.sin(floatTime*0.35+1)*0.03;
+    }
     myAvatarMesh.children.forEach(child=>{
       if(child.userData.isAura) child.rotation.z = floatTime*0.6;
     });
+
+    // CSS 이름표
+    const tag = document.getElementById('avatarTag');
+    if(tag && camera && renderer) {
+      const pos = new THREE.Vector3(
+        myAvatarMesh.position.x,
+        myAvatarMesh.position.y + 1.0,
+        myAvatarMesh.position.z
+      );
+      pos.project(camera);
+      const cvs = renderer.domElement;
+      const sx = (pos.x * 0.5 + 0.5) * cvs.clientWidth;
+      const sy = (-pos.y * 0.5 + 0.5) * cvs.clientHeight;
+      tag.style.left = sx + 'px';
+      tag.style.top = sy + 'px';
+      tag.style.transform = 'translate(-50%,-100%)';
+      tag.style.opacity = pos.z < 1 ? '1' : '0';
+    }
   }
 
-  // 아이템 부유
+  // ── Items float ──
   if(roomGroup) {
     roomGroup.children.forEach(obj=>{
       if(obj.userData.itemId !== undefined) {
-        obj.position.y += Math.sin(floatTime + obj.userData.floatOffset)*0.0005;
-        obj.rotation.y += 0.003;
-      }
-      if(obj.userData.isAura) obj.rotation.z = floatTime * 0.5;
-      // 클릭 링 이펙트 크기 확장
-      if(obj.userData.isClickRing) {
-        obj.scale.x += 0.08; obj.scale.y += 0.08;
-        if(obj.material) obj.material.opacity -= 0.05;
+        obj.position.y += Math.sin(floatTime + obj.userData.floatOffset)*0.0004;
+        obj.rotation.y += 0.002;
       }
     });
   }
 
-  // 파티클 회전
-  if(particleSystem) particleSystem.rotation.y += 0.0003;
+  // ── Ceiling stars twinkle ──
+  ceilingStars.forEach(s=>{
+    const val = Math.sin(floatTime*s.userData.speed+s.userData.phase)*0.5+0.5;
+    s.material.opacity = 0.2+val*0.8;
+    s.material.transparent = true;
+  });
 
-  // 조명 펄스
-  if(accentLight) accentLight.intensity = 2.0 + Math.sin(floatTime*1.2)*0.5;
+  // ── Particles drift ──
+  if(particleSystem) {
+    particleSystem.rotation.y += 0.0002;
+    const pos = particleSystem.geometry.attributes.position.array;
+    for(let i=0;i<pos.length;i+=3){
+      pos[i+1] += 0.001;
+      if(pos[i+1] > 3.5) pos[i+1] = -1.5;
+    }
+    particleSystem.geometry.attributes.position.needsUpdate = true;
+  }
+
+  // ── Memory Stars ──
+  if(window._memoryStarUpdate) window._memoryStarUpdate(floatTime);
+
+  // ── Lighting pulse ──
+  if(accentLight) accentLight.intensity = 1.8 + Math.sin(floatTime*0.8)*0.3;
+  if(pointLight1) pointLight1.intensity = 1.0 + Math.sin(floatTime*1.1+1)*0.2;
 
   renderer.render(scene, camera);
 }
 
 // ══════════════════════════════════════════
-//  카메라 컨트롤
+//  오빗 카메라 (방 전체 조감)
 // ══════════════════════════════════════════
 function updateCameraPos() {
   camera.position.x = camRadius * Math.sin(camTheta) * Math.cos(camPhi);
@@ -931,132 +1405,136 @@ function updateCameraPos() {
   camera.lookAt(0, 0, 0);
 }
 
-// 클릭 vs 드래그 구분용
-let dragMoved = false;
-
+// ══════════════════════════════════════════
+//  마우스/터치 컨트롤
+// ══════════════════════════════════════════
 function onMouseDown(e) {
-  mouseDown=true;
-  dragMoved=false;
-  lastMouse={x:e.clientX, y:e.clientY};
+  mouseDown = true;
+  dragMoved = false;
+  lastMouse = {x:e.clientX, y:e.clientY};
 }
+
 function onMouseMove(e) {
   if(!mouseDown) return;
   const dx = (e.clientX - lastMouse.x) * 0.005;
   const dy = (e.clientY - lastMouse.y) * 0.003;
-  // 일정 거리 이상 움직이면 드래그로 판단
-  const dist = Math.sqrt(
-    Math.pow(e.clientX-lastMouse.x,2)+Math.pow(e.clientY-lastMouse.y,2)
-  );
+  const dist = Math.sqrt(Math.pow(e.clientX-lastMouse.x,2)+Math.pow(e.clientY-lastMouse.y,2));
   if(dist > 4) dragMoved = true;
   camTheta -= dx;
-  camPhi = Math.max(-0.1, Math.min(1.0, camPhi - dy));
+  camPhi = Math.max(0.1, Math.min(1.2, camPhi - dy));
   updateCameraPos();
-  lastMouse={x:e.clientX, y:e.clientY};
+  lastMouse = {x:e.clientX, y:e.clientY};
 }
 
-// ── 클릭 시 내 캐릭터 이동 ──
+// 클릭: 별똥별 체크 → 바닥 탭투무브
 function onCanvasClick(e) {
-  if(dragMoved) return; // 드래그면 무시
-  moveAvatarToClick(e.clientX, e.clientY);
-}
-
-function moveAvatarToClick(clientX, clientY) {
+  if(dragMoved) return;
   const canvas = document.getElementById('threeCanvas');
   const rect = canvas.getBoundingClientRect();
   const mouse = new THREE.Vector2(
-    ((clientX - rect.left) / rect.width) * 2 - 1,
-    -((clientY - rect.top) / rect.height) * 2 + 1
+    ((e.clientX - rect.left) / rect.width) * 2 - 1,
+    -((e.clientY - rect.top) / rect.height) * 2 + 1
   );
-
   const raycaster = new THREE.Raycaster();
   raycaster.setFromCamera(mouse, camera);
 
-  // 바닥 평면과 교차점 계산
+  // 별똥별 클릭 우선
+  if(window._memoryStarClick && window._memoryStarClick(raycaster)) return;
+
+  // 바닥 클릭 → 캐릭터 이동
   const floorPlane = new THREE.Plane(new THREE.Vector3(0,1,0), 1.5);
   const target = new THREE.Vector3();
   raycaster.ray.intersectPlane(floorPlane, target);
-
-  if(!target) return;
-
-  // 방 경계 안으로 제한
-  target.x = Math.max(-2.5, Math.min(2.5, target.x));
-  target.z = Math.max(-2.0, Math.min(2.0, target.z));
-
-  // 캐릭터 이동 목적지 설정
-  avatarTargetPos = target.clone();
-
-  // 클릭 위치에 파티클 효과
-  spawnClickEffect(target);
-  showToast('🌟 캐릭터가 이동 중...');
-}
-
-// 클릭 위치 파티클
-function spawnClickEffect(pos) {
-  for(let i=0;i<8;i++){
-    const geo = new THREE.SphereGeometry(0.04,6,6);
-    const mat = new THREE.MeshStandardMaterial({
-      color:0xc084fc, emissive:0xc084fc, emissiveIntensity:2, transparent:true, opacity:0.9
-    });
-    const p = new THREE.Mesh(geo, mat);
-    const angle = (i/8)*Math.PI*2;
-    p.position.set(
-      pos.x + Math.cos(angle)*0.3,
-      pos.y + 0.05,
-      pos.z + Math.sin(angle)*0.3
-    );
-    p.userData.life = 1.0;
-    scene.add(p);
-    setTimeout(()=>scene.remove(p), 800);
+  if(target) {
+    target.x = Math.max(ROOM_BOUNDS.xMin, Math.min(ROOM_BOUNDS.xMax, target.x));
+    target.z = Math.max(ROOM_BOUNDS.zMin, Math.min(ROOM_BOUNDS.zMax, target.z));
+    avatarTargetPos = target.clone();
   }
-  // 클릭 링 이펙트
-  const ringGeo = new THREE.RingGeometry(0.1, 0.15, 32);
-  const ringMat = new THREE.MeshBasicMaterial({color:0xc084fc, transparent:true, opacity:0.8, side:THREE.DoubleSide});
-  const ring = new THREE.Mesh(ringGeo, ringMat);
-  ring.rotation.x = -Math.PI/2;
-  ring.position.set(pos.x, pos.y+0.02, pos.z);
-  ring.userData.isClickRing = true;
-  scene.add(ring);
-  setTimeout(()=>scene.remove(ring), 600);
 }
+
 function onWheel(e) {
-  camRadius = Math.max(3, Math.min(12, camRadius + e.deltaY*0.01));
+  camRadius = Math.max(4, Math.min(12, camRadius + e.deltaY*0.008));
   updateCameraPos();
 }
 
-let touchStart = null;
+// ── 터치 ──
+let touchCamId = null;
 function onTouchStart(e) {
   if(e.touches.length===1) {
-    mouseDown=true;
-    touchStart={x:e.touches[0].clientX, y:e.touches[0].clientY};
-    lastMouse=touchStart;
+    const t = e.touches[0];
+    touchCamId = t.identifier;
+    mouseDown = true;
+    dragMoved = false;
+    lastMouse = {x:t.clientX, y:t.clientY};
   }
 }
 function onTouchMove(e) {
-  if(!mouseDown || e.touches.length!==1) return;
   e.preventDefault();
-  const dx=(e.touches[0].clientX-lastMouse.x)*0.005;
-  const dy=(e.touches[0].clientY-lastMouse.y)*0.003;
-  camTheta-=dx; camPhi=Math.max(-0.1,Math.min(1.0,camPhi-dy));
-  updateCameraPos();
-  lastMouse={x:e.touches[0].clientX, y:e.touches[0].clientY};
+  for(let i=0;i<e.changedTouches.length;i++){
+    const t = e.changedTouches[i];
+    if(t.identifier === touchCamId && mouseDown) {
+      const dx = (t.clientX - lastMouse.x)*0.005;
+      const dy = (t.clientY - lastMouse.y)*0.003;
+      const dist = Math.sqrt(Math.pow(t.clientX-lastMouse.x,2)+Math.pow(t.clientY-lastMouse.y,2));
+      if(dist > 4) dragMoved = true;
+      camTheta -= dx;
+      camPhi = Math.max(0.1, Math.min(1.2, camPhi - dy));
+      updateCameraPos();
+      lastMouse = {x:t.clientX, y:t.clientY};
+    }
+  }
+}
+function onTouchEnd(e) {
+  for(let i=0;i<e.changedTouches.length;i++){
+    const t = e.changedTouches[i];
+    if(t.identifier === touchCamId) {
+      touchCamId = null;
+      mouseDown = false;
+      // 탭: 별똥별 또는 탭투무브
+      if(!dragMoved) {
+        const canvas = document.getElementById('threeCanvas');
+        const rect = canvas.getBoundingClientRect();
+        const mouse = new THREE.Vector2(
+          ((t.clientX - rect.left) / rect.width) * 2 - 1,
+          -((t.clientY - rect.top) / rect.height) * 2 + 1
+        );
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(mouse, camera);
+        if(window._memoryStarClick && window._memoryStarClick(raycaster)) return;
+        // 바닥 탭 → 이동
+        const floorPlane = new THREE.Plane(new THREE.Vector3(0,1,0), 1.5);
+        const target = new THREE.Vector3();
+        raycaster.ray.intersectPlane(floorPlane, target);
+        if(target) {
+          target.x = Math.max(ROOM_BOUNDS.xMin, Math.min(ROOM_BOUNDS.xMax, target.x));
+          target.z = Math.max(ROOM_BOUNDS.zMin, Math.min(ROOM_BOUNDS.zMax, target.z));
+          avatarTargetPos = target.clone();
+        }
+      }
+    }
+  }
 }
 
 function onResize() {
   const canvas = document.getElementById('threeCanvas');
   const container = canvas.parentElement;
   const w = container.clientWidth;
-  const h = container.clientHeight - 220;
+  const h = container.clientHeight;
   camera.aspect = w/h;
   camera.updateProjectionMatrix();
   renderer.setSize(w, h);
 }
 
-function resetCamera() { camTheta=0.3; camPhi=0.5; camRadius=7; updateCameraPos(); showToast('📷 카메라 리셋'); }
-function zoomIn() { camRadius=Math.max(3,camRadius-0.8); updateCameraPos(); }
-function zoomOut() { camRadius=Math.min(12,camRadius+0.8); updateCameraPos(); }
+function resetCamera() {
+  camTheta = 0.5; camPhi = 0.55; camRadius = 7.5;
+  updateCameraPos();
+  showToast('📷 카메라 리셋');
+}
+function zoomIn() { camRadius = Math.max(4, camRadius-0.8); updateCameraPos(); }
+function zoomOut() { camRadius = Math.min(12, camRadius+0.8); updateCameraPos(); }
 function toggleLight() {
   lightMode=(lightMode+1)%3;
-  const modes=[[0.4,2.5],[0.8,1.0],[0.1,4.0]];
+  const modes=[[0.9,2.0],[1.2,1.2],[0.4,3.0]];
   ambientLight.intensity=modes[lightMode][0];
   accentLight.intensity=modes[lightMode][1];
   showToast(['🔆 기본 조명','☀️ 밝은 조명','🌙 무드 조명'][lightMode]);
@@ -1077,14 +1555,53 @@ function applyTheme(themeId) {
 // ══════════════════════════════════════════
 //  편집 모드
 // ══════════════════════════════════════════
+const EDIT_CATEGORIES = [
+  { id:'furniture', name:'가구', icon:'🪑', filter:i=>['별빛 조명','오라클 테이블','소파','책장'].includes(i.name) },
+  { id:'wall',      name:'벽장식', icon:'🖼️', filter:i=>['포스터','포토카드','화환'].includes(i.name) },
+  { id:'lighting',  name:'조명', icon:'💡', filter:i=>['별빛 조명','홀로그램'].includes(i.name) },
+  { id:'goods',     name:'굿즈', icon:'🎤', filter:i=>['응원봉','앨범'].includes(i.name) },
+  { id:'effect',    name:'이펙트', icon:'✨', filter:i=>['홀로그램','제네시스 오브','황금 시계'].includes(i.name) },
+];
+let editCategory = 'furniture';
+
 function toggleEdit() {
-  isEditMode=!isEditMode;
-  const btn=document.getElementById('editBtn');
-  btn.textContent=isEditMode?'완료 ✓':'꾸미기 ✏️';
-  btn.style.background=isEditMode
-    ?'linear-gradient(90deg,#10b981,#059669)'
-    :'linear-gradient(90deg,var(--accent),var(--accent2))';
-  showToast(isEditMode?'✏️ 아이템 클릭해서 배치/제거!':'✓ 꾸미기 완료!');
+  isEditMode = !isEditMode;
+  const app = document.getElementById('app');
+
+  if(isEditMode) {
+    app.classList.add('edit-active');
+    renderEditTabs();
+    renderEditItems();
+    setTimeout(()=> onResize(), 50);
+    showToast('✏️ 아이템을 선택해서 배치하세요!');
+  } else {
+    app.classList.remove('edit-active');
+    setTimeout(()=> onResize(), 50);
+    showToast('✓ 꾸미기 완료!');
+  }
+}
+
+function renderEditTabs() {
+  document.getElementById('etTabs').innerHTML = EDIT_CATEGORIES.map(c =>
+    `<div class="et-tab ${c.id===editCategory?'active':''}" onclick="switchEditTab('${c.id}')">${c.icon} ${c.name}</div>`
+  ).join('');
+}
+
+function switchEditTab(catId) {
+  editCategory = catId;
+  renderEditTabs();
+  renderEditItems();
+}
+
+function renderEditItems() {
+  const cat = EDIT_CATEGORIES.find(c=>c.id===editCategory);
+  const filtered = ITEMS.filter(i=> cat ? cat.filter(i) : true);
+  document.getElementById('etItems').innerHTML = filtered.map(item => `
+    <div class="et-item ${item.placed?'placed':''}" onclick="onItemClick(${item.id})">
+      <div class="et-item-em">${item.emoji}</div>
+      <div class="et-item-name">${item.name}</div>
+    </div>
+  `).join('') || '<div style="color:var(--muted);font-size:11px;padding:10px">이 카테고리에 아이템이 없습니다</div>';
 }
 
 function onItemClick(itemId) {
@@ -1269,7 +1786,6 @@ window.addEventListener('load', ()=>{
   updateStage();
   showToast('🖱️ 드래그로 방을 회전해보세요!');
 });
-</script>
 
 /* ══════════════════════════
    별빛 배경 스크립트
@@ -1423,6 +1939,380 @@ window.addEventListener('load', ()=>{
   }
   loop();
 })();
+
+// ══════════════════════════════════
+// MUSIC BOX — ARTIST DIARY
+// ══════════════════════════════════
+(function(){
+  const LEAGUE_BOX={dust:'box-dust',star:'box-star',planet:'box-planet',nova:'box-nova',quasar:'box-quasar'};
+  const LEAGUE_SEAL={dust:'🔒',star:'⭐',planet:'🪐',nova:'💜',quasar:'👑'};
+  const TIME_SLOTS=[{kr:'아침',en:'Morning'},{kr:'점심',en:'Lunch'},{kr:'오후',en:'Afternoon'},{kr:'자기 전',en:'Bedtime'}];
+  const SAMPLES=[
+    '오늘 아침에 눈을 뜨자마자 창문으로 햇살이 쏟아졌어. 연습실 가는 길에 좋아하는 노래 들으면서 걸었는데, 문득 너희 생각이 났어. 이 노래도 너희가 추천해줬잖아 💛\n\nThe morning sunlight poured through my window today. Walking to practice, listening to a song you recommended — it made me think of you.',
+    '안무 연습 끝나고 잠깐 쉬는 시간. 오늘 거울 앞에서 새 안무 맞추다가 웃음이 터졌어. 아직 비밀인데... 곧 보여줄 수 있을 것 같아. 기대해도 좋아 🔥\n\nJust finished choreography practice. I burst out laughing trying the new moves. It\'s still a secret... but I can show you soon.',
+    '하루가 정말 길었어. 녹음하고, 회의하고, 또 연습하고. 근데 팬레터 읽었는데... 진짜 울 뻔했어. 어제 너희가 보내준 응원 다 봤어 💛 고마워, 진심으로.\n\nWhat a long day. But I read your fan letters... I almost cried. I saw all your support yesterday. Thank you, truly.',
+    '비 오는 아침이야. 커피 마시면서 창밖 보는데, 빗소리가 좋더라. 오늘은 작업실에서 새 곡 작업! 너희한테 제일 먼저 들려주고 싶은 멜로디가 있어 🎵\n\nRainy morning. Sipping coffee, watching the rain. Today I\'ll work on a new song. There\'s a melody I want you to hear first.',
+    '점심에 멤버들이랑 떡볶이 먹었어! 맵다고 난리 났는데 나는 괜찮았거든 ㅋㅋ 😎 오후에 팬미팅 준비하는데 벌써부터 설레. 너희 만날 생각에!\n\nHad tteokbokki with the members! Everyone was dying from the spice but I was fine 😎 Getting ready for the fan meeting — excited to see you!',
+  ];
+
+  const league=localStorage.getItem('asteria_league')||'star';
+  const loy=parseInt(localStorage.getItem('asteria_loy'))||10;
+  const count=loy>=81?4:loy>=51?3:loy>=21?2:1;
+  const today=new Date().toISOString().slice(0,10);
+  let readList=JSON.parse(localStorage.getItem('asteria_diary_read')||'[]');
+
+  const diaries=[];
+  for(let i=0;i<count;i++){
+    const slot=TIME_SLOTS[i%4];
+    diaries.push({text:SAMPLES[i%5],kr:slot.kr,en:slot.en,date:today,
+      read:readList.includes(today+'_'+i),reacted:false,commented:false});
+  }
+  let curIdx=0;
+  const unread=diaries.filter(d=>!d.read).length;
+
+  // init gift box badge
+  function updateGiftBadge(){
+    const ur=diaries.filter(d=>!d.read).length;
+    const badge=document.getElementById('giftboxBadge');
+    if(ur>0){badge.textContent=ur;badge.classList.remove('hidden');}
+    else{badge.classList.add('hidden');}
+  }
+  updateGiftBadge();
+
+  window.openGiftBox=function(){
+    // 뚜껑 열기 애니메이션
+    const box=document.getElementById('giftbox');
+    box.classList.add('open');
+    setTimeout(()=>{
+      curIdx=diaries.findIndex(d=>!d.read);
+      if(curIdx<0)curIdx=0;
+      showEntry(curIdx);
+      document.getElementById('diaryOv').classList.add('show');
+    }, 400);
+  };
+
+  window.openMusicDiary=window.openGiftBox;
+
+  window.closeMusicDiary=function(){
+    document.getElementById('diaryOv').classList.remove('show');
+    // 뚜껑 닫기
+    const box=document.getElementById('giftbox');
+    box.classList.remove('open');
+    updateGiftBadge();
+  };
+
+  function showEntry(idx){
+    const d=diaries[idx];if(!d)return;
+    document.getElementById('dcDate').textContent=d.date.replace(/-/g,'.');
+    document.getElementById('dcTime').textContent=d.kr+' — '+d.en;
+    document.getElementById('dcText').textContent=d.text;
+    document.getElementById('dcCnt').textContent=(idx+1)+' / '+diaries.length;
+    document.getElementById('dcPrev').disabled=idx===0;
+    document.getElementById('dcNext').disabled=idx===diaries.length-1;
+    document.querySelectorAll('.dc-react').forEach(b=>b.classList.remove('sel'));
+    document.getElementById('dcInput').value='';
+    const rw=document.getElementById('dcReward');rw.classList.remove('show');rw.textContent='';
+    if(!d.read){
+      d.read=true;readList.push(d.date+'_'+idx);
+      localStorage.setItem('asteria_diary_read',JSON.stringify(readList));
+      // LOY +1
+      const curLoy=parseInt(localStorage.getItem('asteria_loy')||'10');
+      localStorage.setItem('asteria_loy',String(curLoy+1));
+      reward('📖 일기 읽기 — LOY +1  |  Diary read — LOY +1');
+    }
+  }
+
+  function reward(msg){const el=document.getElementById('dcReward');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),3000);}
+
+  window.diaryNav=function(dir){const n=curIdx+dir;if(n<0||n>=diaries.length)return;curIdx=n;showEntry(curIdx);};
+
+  window.diaryReact=function(btn){
+    const d=diaries[curIdx];if(!d||d.reacted)return;
+    btn.classList.add('sel');d.reacted=true;
+    // sparks
+    const rect=btn.getBoundingClientRect(),cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
+    for(let i=0;i<12;i++){const sp=document.createElement('div');sp.className='diary-spark';const a=Math.random()*Math.PI*2,dist=30+Math.random()*50;sp.style.left=cx+'px';sp.style.top=cy+'px';sp.style.setProperty('--sx',Math.cos(a)*dist+'px');sp.style.setProperty('--sy',Math.sin(a)*dist+'px');sp.style.width=(3+Math.random()*4)+'px';sp.style.height=sp.style.width;document.body.appendChild(sp);setTimeout(()=>sp.remove(),700);}
+    // LOY+1 SOC+1
+    const cl=parseInt(localStorage.getItem('asteria_loy')||'10');localStorage.setItem('asteria_loy',String(cl+1));
+    const cs=parseInt(localStorage.getItem('asteria_soc')||'0');localStorage.setItem('asteria_soc',String(cs+1));
+    reward('💛 감정 반응 — LOY +1, SOC +1  |  Reaction sent');
+  };
+
+  window.diaryComment=function(){
+    const inp=document.getElementById('dcInput'),txt=inp.value.trim();if(!txt)return;
+    const d=diaries[curIdx];if(!d||d.commented)return;
+    d.commented=true;inp.value='';inp.placeholder='응원이 전달되었습니다 💛';
+    const cs=parseInt(localStorage.getItem('asteria_soc')||'0');localStorage.setItem('asteria_soc',String(cs+2));
+    reward('💬 댓글 작성 — SOC +2  |  Comment sent');
+  };
+})();
+
+// ══════════════════════════════════════════
+// MEMORY SHOOTING STARS (기억의 별똥별)
+// Canvas 별 모양 텍스처 + PlaneGeometry
+// ══════════════════════════════════════════
+(function(){
+  const MEMORIES = [
+    { date:'2026.03.28', text:'제국의 시민이 되다\nBecame a citizen of the Empire', color:0xf0c040, r:0.15, stats:{LOY:10,ACT:5,SOC:3,ECO:1,CRE:2,INT:4} },
+    { date:'2026.04.05', text:'7일 연속 출석!\n7-day login streak!', color:0xffffff, r:0.10, stats:{LOY:20,ACT:15,SOC:8,ECO:3,CRE:5,INT:6} },
+    { date:'2026.04.15', text:'스타 리그 진입!\nEntered Star League!', color:0xc0c0c0, r:0.12, stats:{LOY:35,ACT:28,SOC:15,ECO:8,CRE:12,INT:10} },
+    { date:'2026.05.01', text:'아티스트 생일 축하!\nHappy Birthday to our Artist!', color:0xf472b6, r:0.10, stats:{LOY:50,ACT:35,SOC:25,ECO:10,CRE:20,INT:15} },
+    { date:'2026.05.20', text:'LOY 50 달성!\nLOY 50 achieved!', color:0xc084fc, r:0.10, stats:{LOY:50,ACT:40,SOC:30,ECO:12,CRE:25,INT:18} },
+  ];
+
+  const statColors = {LOY:'#f0c040',ACT:'#ef4444',SOC:'#38bdf8',ECO:'#10b981',CRE:'#a78bfa',INT:'#fbbf24'};
+  let starMeshes = [];   // group per star (plane + glow + light)
+  let starData = [];
+  let activeMemoryIdx = -1;
+  let burstParticles = [];
+
+  // ── Canvas로 뾰족한 별 모양 텍스처 생성 ──
+  function createStarTexture(hexColor, size){
+    const res = size || 128;
+    const cv = document.createElement('canvas');
+    cv.width = res; cv.height = res;
+    const ctx = cv.getContext('2d');
+    const cx = res/2, cy = res/2;
+    const c = new THREE.Color(hexColor);
+    const rgb = `${Math.floor(c.r*255)},${Math.floor(c.g*255)},${Math.floor(c.b*255)}`;
+
+    // 배경 glow (부드러운 원형 그라디언트)
+    const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, res*0.48);
+    bgGrad.addColorStop(0, `rgba(${rgb},0.3)`);
+    bgGrad.addColorStop(0.5, `rgba(${rgb},0.08)`);
+    bgGrad.addColorStop(1, `rgba(${rgb},0)`);
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, res, res);
+
+    // 6갈래 뾰족한 별 그리기
+    const spikes = 6;
+    const outerR = res * 0.38;
+    const innerR = res * 0.14;
+    ctx.beginPath();
+    for(let i = 0; i < spikes * 2; i++){
+      const angle = (i * Math.PI / spikes) - Math.PI/2;
+      const r = i % 2 === 0 ? outerR : innerR;
+      const sx = cx + Math.cos(angle) * r;
+      const sy = cy + Math.sin(angle) * r;
+      if(i === 0) ctx.moveTo(sx, sy);
+      else ctx.lineTo(sx, sy);
+    }
+    ctx.closePath();
+
+    // 별 내부 그라디언트 (중심 밝고 바깥 원래 색)
+    const starGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, outerR);
+    starGrad.addColorStop(0, '#ffffff');
+    starGrad.addColorStop(0.3, `rgba(${rgb},1)`);
+    starGrad.addColorStop(1, `rgba(${rgb},0.85)`);
+    ctx.fillStyle = starGrad;
+    ctx.fill();
+
+    // 별 외곽 은은한 glow
+    ctx.shadowColor = `rgba(${rgb},0.9)`;
+    ctx.shadowBlur = res * 0.15;
+    ctx.fill();
+
+    const tex = new THREE.CanvasTexture(cv);
+    tex.needsUpdate = true;
+    return tex;
+  }
+
+  function init(){
+    if(!roomGroup){ setTimeout(init, 300); return; }
+
+    MEMORIES.forEach((m, i)=>{
+      const angle = (i / MEMORIES.length) * Math.PI * 1.6 + 0.3;
+      const radius = 1.5 + Math.random() * 1.5;
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius - 0.5;
+      const y = 2.7 + Math.random() * 0.3; // 천장 바로 아래 y≈2.8
+
+      // 별 모양 그룹
+      const group = new THREE.Group();
+      group.position.set(x, y, z);
+      group.userData.memoryIdx = i;
+
+      // ── 별 모양 PlaneGeometry + Canvas 텍스처 ──
+      const planeSize = m.r * 5;
+      const starTex = createStarTexture(m.color, 128);
+      const starGeo = new THREE.PlaneGeometry(planeSize, planeSize);
+      const starMat = new THREE.MeshBasicMaterial({
+        map: starTex, transparent: true, depthWrite: false,
+        blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+      });
+      const starPlane = new THREE.Mesh(starGeo, starMat);
+      starPlane.userData.memoryIdx = i;
+      group.add(starPlane);
+
+      // 90도 회전한 두 번째 평면 (어느 각도에서든 별 모양 보임)
+      const starPlane2 = new THREE.Mesh(starGeo.clone(), starMat.clone());
+      starPlane2.rotation.y = Math.PI / 2;
+      starPlane2.userData.memoryIdx = i;
+      group.add(starPlane2);
+
+      // ── glow sphere (은은한 구형 후광) ──
+      const glowGeo = new THREE.SphereGeometry(m.r * 2.2, 12, 8);
+      const glowMat = new THREE.MeshBasicMaterial({
+        color: m.color, transparent: true, opacity: 0.08,
+        blending: THREE.AdditiveBlending,
+      });
+      const glow = new THREE.Mesh(glowGeo, glowMat);
+      group.add(glow);
+
+      // ── point light ──
+      const light = new THREE.PointLight(m.color, 0.4, 2.5);
+      group.add(light);
+
+      roomGroup.add(group);
+      starMeshes.push(group);
+      starData.push({
+        ...m, baseX:x, baseY:y, baseZ:z,
+        phase: Math.random()*6.28,
+        speed: 0.3 + Math.random()*0.4,
+        rotSpeed: 0.4 + Math.random()*0.6,
+        visible: true
+      });
+    });
+  }
+
+  // ── 애니메이션 (떠다니기 + 회전 + 반짝임) ──
+  window._memoryStarUpdate = function(t){
+    starMeshes.forEach((group, i)=>{
+      const d = starData[i];
+      if(!d.visible){ group.visible = false; return; }
+      group.visible = true;
+
+      // 천장에 붙어서 천천히 떠다니기 (수직은 미세하게)
+      group.position.x = d.baseX + Math.sin(t*d.speed + d.phase)*0.12;
+      group.position.y = d.baseY + Math.sin(t*d.speed*0.7 + d.phase*2)*0.03;
+      group.position.z = d.baseZ + Math.cos(t*d.speed*0.5 + d.phase)*0.08;
+
+      // 천천히 회전 (Y축)
+      group.rotation.y = t * d.rotSpeed * 0.5;
+
+      // 반짝임: 밝기 커졌다 작아졌다 (scale + opacity)
+      const twinkle = 0.7 + Math.sin(t*d.speed*2.5 + d.phase)*0.3;
+      const scalePulse = 1.0 + Math.sin(t*d.speed*1.8 + d.phase)*0.12;
+      group.scale.setScalar(scalePulse);
+
+      // 별 평면들 밝기 조절
+      group.children.forEach(child => {
+        if(child.material && child.material.map){
+          child.material.opacity = twinkle;
+        }
+        // glow sphere 밝기 동기화
+        if(child.geometry && child.geometry.type === 'SphereGeometry' && child.material.blending === THREE.AdditiveBlending){
+          child.material.opacity = 0.04 + Math.sin(t*d.speed*2 + d.phase)*0.06;
+        }
+        // point light 밝기
+        if(child.isLight){
+          child.intensity = 0.2 + Math.sin(t*d.speed*2 + d.phase)*0.3;
+        }
+      });
+    });
+
+    // burst particles update
+    for(let i=burstParticles.length-1;i>=0;i--){
+      const p = burstParticles[i];
+      p.mesh.position.x += p.vx;
+      p.mesh.position.y += p.vy;
+      p.mesh.position.z += p.vz;
+      p.vy -= 0.002;
+      p.life -= 0.02;
+      p.mesh.material.opacity = Math.max(0, p.life);
+      p.mesh.scale.setScalar(p.life);
+      if(p.life <= 0){
+        roomGroup.remove(p.mesh);
+        p.mesh.geometry.dispose(); p.mesh.material.dispose();
+        burstParticles.splice(i, 1);
+      }
+    }
+  };
+
+  // ── 클릭 감지 (raycaster) ──
+  window._memoryStarClick = function(raycaster){
+    if(starMeshes.length === 0) return false;
+    // 모든 visible 별의 자식 평면들을 대상으로 raycasting
+    const targets = [];
+    starMeshes.forEach((group, i)=>{
+      if(!starData[i].visible) return;
+      group.children.forEach(child => {
+        if(child.material && child.material.map) targets.push(child);
+      });
+    });
+    const hits = raycaster.intersectObjects(targets, false);
+    if(hits.length > 0){
+      const idx = hits[0].object.userData.memoryIdx;
+      if(idx !== undefined){ burstAndShow(idx); return true; }
+    }
+    return false;
+  };
+
+  function burstAndShow(idx){
+    const group = starMeshes[idx];
+    const d = starData[idx];
+    const pos = group.position.clone();
+
+    // 팡! 파티클 20개 — 별 색상의 작은 입자
+    for(let i=0;i<20;i++){
+      const pg = new THREE.SphereGeometry(0.025, 6, 6);
+      const pm = new THREE.MeshBasicMaterial({
+        color: d.color, transparent:true, opacity:0.9,
+        blending: THREE.AdditiveBlending,
+      });
+      const p = new THREE.Mesh(pg, pm);
+      p.position.copy(pos);
+      const a = Math.random()*Math.PI*2;
+      const el = (Math.random()-0.5)*Math.PI;
+      const spd = 0.03 + Math.random()*0.05;
+      roomGroup.add(p);
+      burstParticles.push({
+        mesh:p,
+        vx: Math.cos(a)*Math.cos(el)*spd,
+        vy: Math.sin(el)*spd + 0.02,
+        vz: Math.sin(a)*Math.cos(el)*spd,
+        life: 1.0
+      });
+    }
+
+    activeMemoryIdx = idx;
+
+    // 추억 카드 모달 (별은 사라지지 않고 유지)
+    const card = document.getElementById('memoryCard');
+    const c = new THREE.Color(d.color);
+    card.style.borderTop = `3px solid rgb(${Math.floor(c.r*255)},${Math.floor(c.g*255)},${Math.floor(c.b*255)})`;
+
+    document.getElementById('mcDate').textContent = d.date;
+    document.getElementById('mcText').textContent = d.text;
+    document.getElementById('mcMemo').value = '';
+    document.getElementById('mcSaved').classList.remove('show');
+
+    const statsEl = document.getElementById('mcStats');
+    statsEl.innerHTML = Object.entries(d.stats).map(([k,v])=>
+      `<div class="mc-stat"><div class="mc-stat-label">${k}</div><div class="mc-stat-val" style="color:${statColors[k]}">${v}</div></div>`
+    ).join('');
+
+    document.getElementById('memoryOv').classList.add('show');
+  }
+
+  window.closeMemory = function(){
+    document.getElementById('memoryOv').classList.remove('show');
+    activeMemoryIdx = -1;
+  };
+
+  window.saveMemoryMemo = function(){
+    const inp = document.getElementById('mcMemo');
+    const txt = inp.value.trim();
+    if(!txt) return;
+    inp.value = '';
+    inp.placeholder = '저장 완료! — Saved!';
+    document.getElementById('mcSaved').classList.add('show');
+    setTimeout(()=>document.getElementById('mcSaved').classList.remove('show'), 2500);
+  };
+
+  init();
+})();
+</script>
 
 </body>
 </html>

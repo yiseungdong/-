@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>스탯 대시보드 — ASTERIA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --void:#030308;--panel:rgba(5,12,30,.96);
+  --border:rgba(200,175,80,.13);--gold:#f0c040;
+  --accent:#4a90d9;--text:#e8ecf4;--muted:rgba(160,180,210,.5);
+}
+html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-family:'Noto Sans KR',sans-serif;overflow-x:hidden}
+#starCanvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+#app{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative;z-index:1}
+
+/* ── 네비 ── */
+.top-nav{display:flex;align-items:center;background:var(--panel);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0}
+.top-nav::-webkit-scrollbar{display:none}
+.top-nav-item{flex-shrink:0;display:flex;flex-direction:column;align-items:center;padding:10px 14px;cursor:pointer;text-decoration:none;color:var(--muted);border-bottom:2px solid transparent;gap:3px;transition:all .2s}
+.top-nav-item.active{color:var(--accent);border-bottom-color:var(--accent)}
+.top-nav-icon{font-size:18px}.top-nav-label{font-size:9px;font-weight:500;white-space:nowrap}
+
+/* ── 타이틀 ── */
+.page-title{text-align:center;padding:20px 16px 10px;font-family:'Orbitron',monospace;font-size:16px;font-weight:900;color:var(--gold);letter-spacing:2px}
+.page-sub{text-align:center;font-size:10px;color:var(--muted);margin-bottom:16px}
+
+/* ── 헥사곤 차트 ── */
+.hex-wrap{display:flex;justify-content:center;padding:0 16px;margin-bottom:8px}
+#hexCanvas{display:block}
+
+/* ── 총합 ── */
+.total-bar{text-align:center;padding:10px 16px 16px}
+.total-val{font-family:'Orbitron',monospace;font-size:28px;font-weight:900;color:var(--gold)}
+.total-label{font-size:10px;color:var(--muted);margin-top:2px}
+.milestone-bar{display:flex;align-items:center;gap:10px;justify-content:center;margin-top:10px}
+.ms-track{width:180px;height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden}
+.ms-fill{height:100%;background:linear-gradient(90deg,var(--gold),#e6a800);border-radius:4px;transition:width 1s ease-out}
+.ms-text{font-size:10px;color:var(--muted)}
+.ms-next{font-size:11px;color:var(--gold);font-weight:700;margin-top:6px}
+
+/* ── 스탯 카드 그리드 ── */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 24px}
+.stat-card{
+  background:rgba(255,255,255,.03);border:1px solid var(--border);
+  border-radius:14px;padding:14px;cursor:pointer;transition:all .2s;
+  position:relative;overflow:hidden;
+}
+.stat-card:hover{border-color:var(--gold);background:rgba(240,192,64,.04);transform:translateY(-2px)}
+.stat-card-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.stat-card-icon{font-size:22px}
+.stat-card-name{font-size:12px;font-weight:700}
+.stat-card-en{font-size:9px;color:var(--muted);font-family:'Orbitron',monospace}
+.stat-card-val{font-family:'Orbitron',monospace;font-size:24px;font-weight:900;margin-bottom:4px}
+.stat-card-rank{font-size:10px;color:var(--accent);font-weight:600}
+.stat-card-change{position:absolute;top:10px;right:12px;font-size:11px;font-weight:700}
+.stat-card-change.up{color:#10b981}
+.stat-card-change.down{color:#ef4444}
+
+/* ── 상세 모달 ── */
+.stat-modal{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;padding:16px}
+.stat-modal.show{display:flex}
+.sm-card{background:rgba(8,8,22,.97);border:1px solid var(--border);border-radius:20px;width:380px;max-width:95vw;padding:24px}
+.sm-close{float:right;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer}
+.sm-icon{font-size:36px;margin-bottom:6px}
+.sm-name{font-size:18px;font-weight:900;margin-bottom:2px}
+.sm-en{font-size:11px;color:var(--muted);font-family:'Orbitron',monospace;margin-bottom:14px}
+.sm-val{font-family:'Orbitron',monospace;font-size:32px;font-weight:900;color:var(--gold);margin-bottom:4px}
+.sm-rank{font-size:12px;color:var(--accent);margin-bottom:16px}
+.sm-section{font-size:10px;color:var(--muted);margin-bottom:6px;letter-spacing:1px}
+.sm-graph{height:80px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;margin-bottom:16px;position:relative;overflow:hidden}
+.sm-graph canvas{width:100%;height:100%}
+.sm-sources{display:flex;flex-direction:column;gap:4px}
+.sm-source{display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.sm-source-name{color:var(--text)}.sm-source-val{color:var(--gold);font-weight:700;font-family:'Orbitron',monospace}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(12,12,26,.97);border:1px solid var(--border);border-radius:12px;padding:10px 20px;font-size:12px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<canvas id="starCanvas"></canvas>
+<div id="toast" class="toast"></div>
+
+<!-- 스탯 상세 모달 -->
+<div class="stat-modal" id="statModal">
+  <div class="sm-card">
+    <button class="sm-close" onclick="closeStatModal()">✕</button>
+    <div id="smIcon" class="sm-icon"></div>
+    <div id="smName" class="sm-name"></div>
+    <div id="smEn" class="sm-en"></div>
+    <div id="smVal" class="sm-val"></div>
+    <div id="smRank" class="sm-rank"></div>
+    <div class="sm-section">최근 7일 변동 — LAST 7 DAYS</div>
+    <div class="sm-graph"><canvas id="smGraph"></canvas></div>
+    <div class="sm-section">획득 경로 — SOURCES</div>
+    <div id="smSources" class="sm-sources"></div>
+  </div>
+</div>
+
+<div id="app">
+  <nav class="top-nav">
+    <a class="top-nav-item" href="/"><div class="top-nav-icon">🏠</div><div class="top-nav-label">홈</div></a>
+    <a class="top-nav-item" href="/astra.html"><div class="top-nav-icon">⭐</div><div class="top-nav-label">아스트라</div></a>
+    <a class="top-nav-item" href="/room3d.html"><div class="top-nav-icon">🏡</div><div class="top-nav-label">내 방</div></a>
+    <a class="top-nav-item" href="/league.html"><div class="top-nav-icon">🌌</div><div class="top-nav-label">리그</div></a>
+    <a class="top-nav-item active" href="/stats.html"><div class="top-nav-icon">📊</div><div class="top-nav-label">스탯</div></a>
+    <a class="top-nav-item" href="/shop.html"><div class="top-nav-icon">🛒</div><div class="top-nav-label">상점</div></a>
+  </nav>
+
+  <div class="page-title">STAT DASHBOARD</div>
+  <div class="page-sub">나의 6대 스탯 — My Hexagonal Stats</div>
+
+  <!-- 헥사곤 차트 -->
+  <div class="hex-wrap">
+    <canvas id="hexCanvas" width="340" height="340"></canvas>
+  </div>
+
+  <!-- 총합 -->
+  <div class="total-bar">
+    <div class="total-val" id="totalVal">0</div>
+    <div class="total-label">총합 스탯 — Total Stats</div>
+    <div class="milestone-bar">
+      <div class="ms-text" id="msCurrent">—</div>
+      <div class="ms-track"><div class="ms-fill" id="msFill" style="width:0%"></div></div>
+      <div class="ms-text" id="msNext">—</div>
+    </div>
+    <div class="ms-next" id="msReward"></div>
+  </div>
+
+  <!-- 스탯 카드 -->
+  <div class="stat-grid" id="statGrid"></div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+//  별빛 배경
+// ══════════════════════════════════════════
+(function(){
+  const cv=document.getElementById('starCanvas'),ctx=cv.getContext('2d');
+  let W,H;
+  function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight}
+  resize();addEventListener('resize',resize);
+  const S=Array.from({length:180},()=>({x:Math.random()*2000,y:Math.random()*2000,r:Math.random()<.8?Math.random()*.6+.3:Math.random()*1.2+.8,b:Math.random()*.5+.3,p:Math.random()*6.28,s:Math.random()*.008+.002,c:Math.random()<.08?'#f0c040':Math.random()<.06?'#c084fc':'#fff'}));
+  (function loop(){ctx.clearRect(0,0,W,H);S.forEach(s=>{s.p+=s.s;const a=s.b*(.5+.5*Math.sin(s.p));ctx.globalAlpha=a;ctx.fillStyle=s.c;ctx.beginPath();ctx.arc(s.x%W,s.y%H,s.r,0,6.28);ctx.fill()});ctx.globalAlpha=1;requestAnimationFrame(loop)})();
+})();
+
+// ══════════════════════════════════════════
+//  데이터
+// ══════════════════════════════════════════
+const STATS_DEF=[
+  {key:'LOY',name:'성실',en:'Loyalty',icon:'💛',color:'#f0c040'},
+  {key:'ACT',name:'행동',en:'Action',icon:'🔥',color:'#ef4444'},
+  {key:'SOC',name:'사회',en:'Social',icon:'💬',color:'#38bdf8'},
+  {key:'ECO',name:'경제',en:'Economy',icon:'💰',color:'#10b981'},
+  {key:'CRE',name:'창의',en:'Creative',icon:'🎨',color:'#a78bfa'},
+  {key:'INT',name:'지성',en:'Intelligence',icon:'📚',color:'#fbbf24'},
+];
+
+const DEFAULT_STATS={LOY:145,ACT:89,SOC:67,ECO:34,CRE:112,INT:78};
+const LEAGUE_AVG={LOY:80,ACT:65,SOC:55,ECO:40,CRE:70,INT:60};
+const MILESTONES=[
+  {at:100,label:'닉네임 색상 변경'},
+  {at:200,label:'프로필 배경'},
+  {at:300,label:'채팅 +5분'},
+  {at:500,label:'방 BGM'},
+  {at:800,label:'특별 이모지팩'},
+  {at:1000,label:'"전설의 개척자" 칭호'},
+];
+
+// localStorage에서 가져오기
+const stored=JSON.parse(localStorage.getItem('asteria_stats')||'null');
+const myStats={};
+STATS_DEF.forEach(s=>{
+  myStats[s.key]=stored?.[s.key]??DEFAULT_STATS[s.key];
+});
+
+// 변동 (프로토타입: 랜덤)
+const changes={};
+STATS_DEF.forEach(s=>{changes[s.key]=Math.floor(Math.random()*10)-2});
+
+// 상위 % (프로토타입: 랜덤)
+const topPct={};
+STATS_DEF.forEach(s=>{topPct[s.key]=Math.floor(Math.random()*30)+5});
+
+// ══════════════════════════════════════════
+//  헥사곤 차트 (Canvas)
+// ══════════════════════════════════════════
+const hexCv=document.getElementById('hexCanvas');
+const hexCtx=hexCv.getContext('2d');
+const HCX=170, HCY=170, HR=120;
+let animProgress=0;
+
+function drawHexChart(progress){
+  const ctx=hexCtx;
+  const w=hexCv.width, h=hexCv.height;
+  ctx.clearRect(0,0,w,h);
+
+  const maxVal=200; // 스탯 최대 표시값
+  const axes=STATS_DEF.length;
+
+  // 배경 격자 (4겹)
+  for(let g=1;g<=4;g++){
+    const r=HR*(g/4);
+    ctx.beginPath();
+    for(let i=0;i<=axes;i++){
+      const angle=(i%axes)*(Math.PI*2/axes)-Math.PI/2;
+      const px=HCX+Math.cos(angle)*r;
+      const py=HCY+Math.sin(angle)*r;
+      if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    }
+    ctx.strokeStyle='rgba(255,255,255,.08)';
+    ctx.lineWidth=1;
+    ctx.stroke();
+  }
+
+  // 축 선
+  for(let i=0;i<axes;i++){
+    const angle=i*(Math.PI*2/axes)-Math.PI/2;
+    ctx.beginPath();
+    ctx.moveTo(HCX,HCY);
+    ctx.lineTo(HCX+Math.cos(angle)*HR,HCY+Math.sin(angle)*HR);
+    ctx.strokeStyle='rgba(255,255,255,.06)';
+    ctx.lineWidth=1;
+    ctx.stroke();
+  }
+
+  // 리그 평균 (회색 점선)
+  ctx.beginPath();
+  STATS_DEF.forEach((s,i)=>{
+    const angle=i*(Math.PI*2/axes)-Math.PI/2;
+    const val=LEAGUE_AVG[s.key]/maxVal;
+    const r=HR*val*progress;
+    const px=HCX+Math.cos(angle)*r;
+    const py=HCY+Math.sin(angle)*r;
+    if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+  });
+  ctx.closePath();
+  ctx.setLineDash([4,4]);
+  ctx.strokeStyle='rgba(160,160,180,.4)';
+  ctx.lineWidth=1.5;
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='rgba(160,160,180,.06)';
+  ctx.fill();
+
+  // 내 스탯 (골드 반투명)
+  ctx.beginPath();
+  STATS_DEF.forEach((s,i)=>{
+    const angle=i*(Math.PI*2/axes)-Math.PI/2;
+    const val=Math.min(1, myStats[s.key]/maxVal);
+    const r=HR*val*progress;
+    const px=HCX+Math.cos(angle)*r;
+    const py=HCY+Math.sin(angle)*r;
+    if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+  });
+  ctx.closePath();
+  ctx.fillStyle='rgba(240,192,64,.2)';
+  ctx.fill();
+  ctx.strokeStyle='rgba(240,192,64,.8)';
+  ctx.lineWidth=2;
+  ctx.stroke();
+
+  // 꼭짓점 점 + 라벨
+  STATS_DEF.forEach((s,i)=>{
+    const angle=i*(Math.PI*2/axes)-Math.PI/2;
+    const val=Math.min(1, myStats[s.key]/maxVal);
+    const r=HR*val*progress;
+    const px=HCX+Math.cos(angle)*r;
+    const py=HCY+Math.sin(angle)*r;
+
+    // 점
+    ctx.beginPath();
+    ctx.arc(px,py,4,0,Math.PI*2);
+    ctx.fillStyle=s.color;
+    ctx.fill();
+    ctx.strokeStyle='#fff';
+    ctx.lineWidth=1.5;
+    ctx.stroke();
+
+    // 라벨 (바깥)
+    const lx=HCX+Math.cos(angle)*(HR+22);
+    const ly=HCY+Math.sin(angle)*(HR+22);
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.font='bold 10px Orbitron,monospace';
+    ctx.fillStyle=s.color;
+    ctx.fillText(s.key,lx,ly-7);
+    ctx.font='bold 13px Orbitron,monospace';
+    ctx.fillStyle='#e8ecf4';
+    ctx.fillText(myStats[s.key],lx,ly+8);
+  });
+}
+
+// 펼쳐지는 애니메이션
+function animateChart(){
+  animProgress+=0.025;
+  if(animProgress>1) animProgress=1;
+  drawHexChart(animProgress);
+  if(animProgress<1) requestAnimationFrame(animateChart);
+}
+
+// ══════════════════════════════════════════
+//  총합 + 마일스톤
+// ══════════════════════════════════════════
+function renderTotal(){
+  const total=Object.values(myStats).reduce((a,b)=>a+b,0);
+  document.getElementById('totalVal').textContent=total;
+
+  let current=null, next=null;
+  for(let i=0;i<MILESTONES.length;i++){
+    if(total>=MILESTONES[i].at) current=MILESTONES[i];
+    else { next=MILESTONES[i]; break; }
+  }
+  if(!next) next=MILESTONES[MILESTONES.length-1];
+  if(!current) current={at:0,label:'시작'};
+
+  const prevAt=current.at;
+  const nextAt=next.at;
+  const pct=Math.min(100, Math.floor((total-prevAt)/(nextAt-prevAt)*100));
+
+  document.getElementById('msCurrent').textContent=current.at;
+  document.getElementById('msNext').textContent=next.at;
+  document.getElementById('msFill').style.width=pct+'%';
+  document.getElementById('msReward').textContent=
+    total>=1000?'🏆 전설의 개척자 달성!':`다음 보상: ${next.label} (${nextAt-total} 남음)`;
+}
+
+// ══════════════════════════════════════════
+//  스탯 카드
+// ══════════════════════════════════════════
+function renderCards(){
+  document.getElementById('statGrid').innerHTML=STATS_DEF.map(s=>{
+    const val=myStats[s.key];
+    const ch=changes[s.key];
+    const pct=topPct[s.key];
+    return `
+    <div class="stat-card" onclick="openStatModal('${s.key}')" style="border-left:3px solid ${s.color}">
+      <div class="stat-card-change ${ch>=0?'up':'down'}">${ch>=0?'+':''} ${ch} ${ch>=0?'↑':'↓'}</div>
+      <div class="stat-card-header">
+        <div class="stat-card-icon">${s.icon}</div>
+        <div>
+          <div class="stat-card-name">${s.name}</div>
+          <div class="stat-card-en">${s.en}</div>
+        </div>
+      </div>
+      <div class="stat-card-val" style="color:${s.color}">${val}</div>
+      <div class="stat-card-rank">상위 ${pct}% — Top ${pct}%</div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+//  상세 모달
+// ══════════════════════════════════════════
+function openStatModal(key){
+  const s=STATS_DEF.find(d=>d.key===key);
+  const val=myStats[key];
+  document.getElementById('smIcon').textContent=s.icon;
+  document.getElementById('smName').textContent=s.name;
+  document.getElementById('smEn').textContent=s.en.toUpperCase();
+  document.getElementById('smVal').textContent=val;
+  document.getElementById('smRank').textContent=`상위 ${topPct[key]}% — Top ${topPct[key]}%`;
+
+  // 7일 그래프 (프로토타입: 랜덤)
+  const cv=document.getElementById('smGraph');
+  cv.width=cv.parentElement.clientWidth;
+  cv.height=80;
+  const ctx=cv.getContext('2d');
+  const data=[];
+  let v=val-Math.floor(Math.random()*20);
+  for(let d=6;d>=0;d--){
+    data.push(v);
+    v+=Math.floor(Math.random()*8)-2;
+  }
+  const maxD=Math.max(...data)*1.1, minD=Math.min(...data)*0.9;
+  ctx.beginPath();
+  data.forEach((d,i)=>{
+    const x=20+i*((cv.width-40)/6);
+    const y=10+(1-(d-minD)/(maxD-minD))*60;
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  });
+  ctx.strokeStyle=s.color;
+  ctx.lineWidth=2;
+  ctx.stroke();
+  // 점
+  data.forEach((d,i)=>{
+    const x=20+i*((cv.width-40)/6);
+    const y=10+(1-(d-minD)/(maxD-minD))*60;
+    ctx.beginPath();ctx.arc(x,y,3,0,6.28);ctx.fillStyle=s.color;ctx.fill();
+  });
+
+  // 획득 경로
+  const sources={
+    LOY:[['일기 읽기','LOY +1/회'],['출석 체크','LOY +2/일'],['감정 반응','LOY +1/회']],
+    ACT:[['미션 참여','ACT +3/회'],['투표 참여','ACT +2/회'],['이벤트 참가','ACT +5/회']],
+    SOC:[['댓글 작성','SOC +2/회'],['별자리 활동','SOC +3/회'],['방문 흔적','SOC +1/회']],
+    ECO:[['거래소 거래','ECO +2/회'],['상점 구매','ECO +1/회'],['기부','ECO +3/회']],
+    CRE:[['방 꾸미기','CRE +3/회'],['팬아트','CRE +5/회'],['의견 채택','CRE +5/회']],
+    INT:[['퀴즈 정답','INT +2/회'],['아티스트 정보','INT +1/회'],['전략 분석','INT +3/회']],
+  };
+  document.getElementById('smSources').innerHTML=(sources[key]||[]).map(([n,v])=>`
+    <div class="sm-source"><span class="sm-source-name">${n}</span><span class="sm-source-val">${v}</span></div>
+  `).join('');
+
+  document.getElementById('statModal').classList.add('show');
+}
+function closeStatModal(){document.getElementById('statModal').classList.remove('show')}
+
+// ══════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+renderTotal();
+renderCards();
+setTimeout(()=>animateChart(),300);
+</script>
+</body>
+</html>
