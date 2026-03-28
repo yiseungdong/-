@@ -5,8 +5,14 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { Pool } = require('pg');
 const cron = require('node-cron');
+const http = require('http');
+const { Server } = require('socket.io');
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: { origin: '*', methods: ['GET', 'POST'] }
+});
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'asteria-empire-secret-2026';
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'asteria-refresh-secret-2026';
@@ -5004,6 +5010,153 @@ app.get('/api/pipeline/fanclub/:id', async (req, res) => {
   }
 });
 
+// ══════════════════════════════════════════════
+//  Socket.IO: 실시간 통신 (#40)
+// ══════════════════════════════════════════════
+
+// 접속 중인 유저 관리
+const connectedUsers = new Map();
+
+io.on('connection', (socket) => {
+  console.log(`🔌 소켓 연결: ${socket.id}`);
+
+  // 인증 (JWT 토큰으로 유저 식별)
+  socket.on('authenticate', async (token) => {
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      const user = await pool.query(
+        'SELECT id, nickname, league, fandom_id, org_id FROM users WHERE id = $1',
+        [decoded.id]
+      );
+      if (!user.rows[0]) return socket.emit('auth_error', '유저를 찾을 수 없습니다.');
+
+      const u = user.rows[0];
+      connectedUsers.set(socket.id, {
+        userId: u.id, nickname: u.nickname,
+        league: u.league, fandomId: u.fandom_id, orgId: u.org_id
+      });
+
+      // 팬클럽 방 + 리그 방 자동 입장
+      if (u.fandom_id) socket.join(`fandom:${u.fandom_id}`);
+      if (u.org_id) socket.join(`org:${u.org_id}`);
+      socket.join(`league:${u.league}`);
+      socket.join('global');
+
+      socket.emit('authenticated', { userId: u.id, nickname: u.nickname });
+
+      // 접속자 수 브로드캐스트
+      io.to('global').emit('online_count', connectedUsers.size);
+
+      console.log(`✅ 인증 완료: ${u.nickname} (${socket.id})`);
+    } catch (err) {
+      socket.emit('auth_error', '인증 실패');
+    }
+  });
+
+  // 실시간 채팅 메시지 전송
+  socket.on('chat_message', async (data) => {
+    const user = connectedUsers.get(socket.id);
+    if (!user) return socket.emit('error', '인증이 필요합니다.');
+
+    const { room, message } = data;
+    if (!message || message.length > 500) return;
+
+    try {
+      // DB 저장
+      const result = await pool.query(
+        `INSERT INTO chat_messages (user_id, room, message) VALUES ($1, $2, $3) RETURNING id, created_at`,
+        [user.userId, room || 'global', message]
+      );
+
+      // SOC 스탯 +1
+      await pool.query('UPDATE users SET stat_soc = stat_soc + 1, ap = ap + 5, last_active = NOW() WHERE id = $1', [user.userId]);
+
+      // 해당 방에 브로드캐스트
+      const targetRoom = room || 'global';
+      io.to(targetRoom).emit('new_message', {
+        id: result.rows[0].id,
+        userId: user.userId,
+        nickname: user.nickname,
+        message,
+        room: targetRoom,
+        createdAt: result.rows[0].created_at
+      });
+    } catch (err) {
+      console.error('채팅 전송 오류:', err.message);
+    }
+  });
+
+  // 활동 완료 시 팬클럽에 실시간 알림
+  socket.on('activity_completed', (data) => {
+    const user = connectedUsers.get(socket.id);
+    if (!user || !user.fandomId) return;
+
+    io.to(`fandom:${user.fandomId}`).emit('member_activity', {
+      nickname: user.nickname,
+      activity: data.activity,
+      apEarned: data.apEarned,
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  // 타이핑 표시
+  socket.on('typing', (data) => {
+    const user = connectedUsers.get(socket.id);
+    if (!user) return;
+    socket.to(data.room || 'global').emit('user_typing', {
+      nickname: user.nickname,
+      room: data.room || 'global'
+    });
+  });
+
+  // 연결 해제
+  socket.on('disconnect', () => {
+    const user = connectedUsers.get(socket.id);
+    connectedUsers.delete(socket.id);
+    io.to('global').emit('online_count', connectedUsers.size);
+    if (user) console.log(`🔌 연결 해제: ${user.nickname}`);
+  });
+});
+
+// 실시간 알림 전송 헬퍼 (다른 API에서 호출 가능)
+function emitToUser(userId, event, data) {
+  for (const [socketId, user] of connectedUsers.entries()) {
+    if (user.userId === userId) {
+      io.to(socketId).emit(event, data);
+    }
+  }
+}
+
+function emitToFandom(fandomId, event, data) {
+  io.to(`fandom:${fandomId}`).emit(event, data);
+}
+
+function emitToLeague(league, event, data) {
+  io.to(`league:${league}`).emit(event, data);
+}
+
+function emitToAll(event, data) {
+  io.to('global').emit(event, data);
+}
+
+// 실시간 접속자 API
+app.get('/api/realtime/online', (req, res) => {
+  const users = Array.from(connectedUsers.values());
+  const leagueCount = {};
+  const fandomCount = {};
+
+  for (const u of users) {
+    leagueCount[u.league] = (leagueCount[u.league] || 0) + 1;
+    if (u.fandomId) fandomCount[u.fandomId] = (fandomCount[u.fandomId] || 0) + 1;
+  }
+
+  res.json({
+    totalOnline: connectedUsers.size,
+    byLeague: leagueCount,
+    byFandom: fandomCount
+  });
+});
+
 // ── SPA fallback ──
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
@@ -5140,8 +5293,9 @@ app.get('/api/system/cron-status', (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`🌟 ASTERIA 실행 중: http://localhost:${PORT}`);
+  console.log('🔌 Socket.IO 실시간 통신 활성화');
   // 서버 시작 5초 후 파이프라인 1회 실행 (DB 초기화 대기)
   setTimeout(() => runFullPipeline().catch(err => console.error('파이프라인 초기 실행 오류:', err)), 5000);
 });

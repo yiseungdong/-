@@ -755,8 +755,8 @@
           },
           {
             "id": 40,
-            "name": "Socket.IO 실시간 통신",
-            "status": "todo"
+            "name": "Socket.IO 실시간 통신 (채팅+알림+접속자+활동피드)",
+            "status": "done"
           }
         ]
       },
