@@ -2713,6 +2713,15 @@ const ORG_TYPES_BY_LEAGUE = {
   dust:   ['gathering', 'point'],
 };
 
+// 리그별 조직 최대 인원
+const ORG_MAX_MEMBERS = {
+  dust:   { gathering: 2000, point: 200 },
+  star:   { territory: 20000, base: 2000, unit: 200 },
+  planet: { territory: 25000, base: 2500, unit: 250 },
+  nova:   { province: 100000, district: 10000, square: 1000, lounge: 100 },
+  quasar: { empire: 200000, dominion: 40000, sector: 8000, cluster: 1000, orbit: 100 },
+};
+
 // ── 팬클럽 API ──
 
 // GET /api/fanclub/list — 팬클럽 목록
@@ -3103,6 +3112,359 @@ app.get('/api/league/rival/:fanclubId', async (req, res) => {
     });
   } catch (err) {
     console.error('라이벌 비교 오류:', err);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// ══════════════════════════════════════════════
+//  API: Organization 보완 (#35)
+// ══════════════════════════════════════════════
+
+// 1. POST /api/org/create — 조직 생성
+app.post('/api/org/create', authenticateToken, async (req, res) => {
+  const { fanclub_id, parent_id, name, org_type } = req.body;
+  if (!fanclub_id || !name || !org_type)
+    return res.status(400).json({ message: 'fanclub_id, name, org_type이 필요합니다.' });
+
+  try {
+    // 팬클럽 존재 + 리그 확인
+    const fc = await pool.query('SELECT id, league FROM fanclubs WHERE id = $1', [fanclub_id]);
+    if (!fc.rows[0]) return res.status(404).json({ message: '팬클럽을 찾을 수 없습니다.' });
+    const league = fc.rows[0].league;
+
+    // 해당 리그에서 허용되는 org_type인지 확인
+    const allowedTypes = ORG_TYPES_BY_LEAGUE[league] || [];
+    if (!allowedTypes.includes(org_type))
+      return res.status(400).json({ message: `${league} 리그에서 사용 가능한 조직 타입: ${allowedTypes.join(', ')}` });
+
+    // 이름 중복 확인 (같은 팬클럽 내)
+    const nameExists = await pool.query(
+      'SELECT id FROM organizations WHERE fanclub_id = $1 AND name = $2',
+      [fanclub_id, name]
+    );
+    if (nameExists.rows.length > 0)
+      return res.status(409).json({ message: '같은 팬클럽 내에 동일한 이름의 모임이 이미 있습니다.' });
+
+    // 상위 조직 검증
+    let depth = 1;
+    if (parent_id) {
+      const parent = await pool.query(
+        'SELECT id, fanclub_id, depth FROM organizations WHERE id = $1',
+        [parent_id]
+      );
+      if (!parent.rows[0]) return res.status(404).json({ message: '상위 조직을 찾을 수 없습니다.' });
+      if (parent.rows[0].fanclub_id !== fanclub_id)
+        return res.status(400).json({ message: '상위 조직이 다른 팬클럽 소속입니다.' });
+      depth = parent.rows[0].depth + 1;
+    }
+
+    // max_members 결정
+    const maxMembers = (ORG_MAX_MEMBERS[league] && ORG_MAX_MEMBERS[league][org_type]) || 200;
+
+    const result = await pool.query(
+      `INSERT INTO organizations (fanclub_id, parent_id, name, org_type, depth, max_members)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+      [fanclub_id, parent_id || null, name, org_type, depth, maxMembers]
+    );
+
+    res.status(201).json({
+      message: '모임이 생성되었습니다.',
+      orgId: result.rows[0].id,
+      name,
+      orgType: org_type,
+      depth,
+      maxMembers
+    });
+  } catch (err) {
+    console.error('조직 생성 오류:', err);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// 2. DELETE /api/org/:id — 조직 삭제
+app.delete('/api/org/:id', authenticateToken, async (req, res) => {
+  try {
+    const orgId = parseInt(req.params.id);
+    const org = await pool.query('SELECT id, name, member_count FROM organizations WHERE id = $1', [orgId]);
+    if (!org.rows[0]) return res.status(404).json({ message: '모임을 찾을 수 없습니다.' });
+
+    // 멤버가 남아있으면 삭제 불가
+    if (org.rows[0].member_count > 0)
+      return res.status(400).json({ message: `멤버가 ${org.rows[0].member_count}명 남아있어 삭제할 수 없습니다. 멤버를 먼저 이동시켜 주세요.` });
+
+    // 하위 조직이 있으면 삭제 불가
+    const children = await pool.query('SELECT id FROM organizations WHERE parent_id = $1 LIMIT 1', [orgId]);
+    if (children.rows.length > 0)
+      return res.status(400).json({ message: '하위 조직이 존재합니다. 하위 조직을 먼저 삭제해 주세요.' });
+
+    await pool.query('DELETE FROM organizations WHERE id = $1', [orgId]);
+    res.json({ message: `${org.rows[0].name} 모임이 삭제되었습니다.` });
+  } catch (err) {
+    console.error('조직 삭제 오류:', err);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// 3. POST /api/org/transfer — 멤버 소모임 이동
+app.post('/api/org/transfer', authenticateToken, async (req, res) => {
+  const { target_org_id } = req.body;
+  if (!target_org_id) return res.status(400).json({ message: 'target_org_id가 필요합니다.' });
+
+  try {
+    const user = await pool.query('SELECT fandom_id, org_id FROM users WHERE id = $1', [req.user.id]);
+    if (!user.rows[0]?.fandom_id)
+      return res.status(400).json({ message: '팬클럽에 가입되어 있지 않습니다.' });
+
+    const currentOrgId = user.rows[0].org_id;
+    if (currentOrgId === target_org_id)
+      return res.status(400).json({ message: '이미 해당 모임에 소속되어 있습니다.' });
+
+    // 대상 조직 확인
+    const targetOrg = await pool.query(
+      'SELECT id, fanclub_id, name, member_count, max_members FROM organizations WHERE id = $1',
+      [target_org_id]
+    );
+    if (!targetOrg.rows[0]) return res.status(404).json({ message: '대상 모임을 찾을 수 없습니다.' });
+
+    // 같은 팬클럽인지 확인
+    if (targetOrg.rows[0].fanclub_id !== user.rows[0].fandom_id)
+      return res.status(400).json({ message: '같은 팬클럽 소속 모임으로만 이동할 수 있습니다.' });
+
+    // 자리 확인
+    if (targetOrg.rows[0].member_count >= targetOrg.rows[0].max_members)
+      return res.status(400).json({ message: '대상 모임에 자리가 없습니다.' });
+
+    // 이전 모임 이름 조회
+    let fromName = '(없음)';
+    if (currentOrgId) {
+      const fromOrg = await pool.query('SELECT name FROM organizations WHERE id = $1', [currentOrgId]);
+      fromName = fromOrg.rows[0]?.name || '(없음)';
+      await pool.query('UPDATE organizations SET member_count = GREATEST(member_count - 1, 0) WHERE id = $1', [currentOrgId]);
+    }
+
+    // 새 모임 멤버 추가
+    await pool.query('UPDATE organizations SET member_count = member_count + 1 WHERE id = $1', [target_org_id]);
+
+    // 유저 업데이트
+    await pool.query('UPDATE users SET org_id = $1 WHERE id = $2', [target_org_id, req.user.id]);
+
+    // SOC +1 (새 환경 적응)
+    await pool.query('UPDATE users SET stat_soc = stat_soc + 1, last_active = NOW() WHERE id = $1', [req.user.id]);
+
+    res.json({
+      message: `${targetOrg.rows[0].name} 소모임으로 이동했습니다!`,
+      from: fromName,
+      to: targetOrg.rows[0].name
+    });
+  } catch (err) {
+    console.error('소모임 이동 오류:', err);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// 4. GET /api/org/weekly-eval/:fanclubId — 주간 소모임 평가
+app.get('/api/org/weekly-eval/:fanclubId', async (req, res) => {
+  try {
+    const fcId = parseInt(req.params.fanclubId);
+
+    // 해당 팬클럽의 최하위 조직들 조회
+    const orgs = await pool.query(
+      `SELECT id, name, org_type, depth, member_count FROM organizations
+       WHERE fanclub_id = $1 ORDER BY depth DESC, name`,
+      [fcId]
+    );
+    if (orgs.rows.length === 0) return res.status(404).json({ message: '모임이 없습니다.' });
+
+    const evaluated = [];
+
+    for (const org of orgs.rows) {
+      if (org.member_count === 0) {
+        evaluated.push({ ...org, activityDensity: 0, missionRate: 0, totalAp: 0, weeklyScore: 0 });
+        continue;
+      }
+
+      // 최근 7일 활동 수
+      const activity = await pool.query(
+        `SELECT COUNT(*) AS cnt, COALESCE(SUM(al.ap_earned), 0) AS total_ap,
+                COUNT(DISTINCT al.user_id) AS active_users
+         FROM activity_logs al JOIN users u ON u.id = al.user_id
+         WHERE u.org_id = $1 AND al.created_at > NOW() - INTERVAL '7 days'`,
+        [org.id]
+      );
+
+      const activityDensity = Math.round((parseInt(activity.rows[0].cnt) / org.member_count) * 100 * 10) / 10;
+      const missionRate = Math.round((parseInt(activity.rows[0].active_users) / org.member_count) * 100 * 10) / 10;
+      const totalAp = parseInt(activity.rows[0].total_ap);
+
+      evaluated.push({
+        id: org.id, name: org.name, orgType: org.org_type, depth: org.depth,
+        memberCount: org.member_count,
+        activityDensity: Math.min(activityDensity, 999),
+        missionRate: Math.min(missionRate, 100),
+        totalAp,
+        weeklyScore: 0 // 아래에서 정규화 후 계산
+      });
+    }
+
+    // 기여도 정규화 (최대 AP를 100으로)
+    const maxAp = Math.max(...evaluated.map(e => e.totalAp), 1);
+    for (const e of evaluated) {
+      const normalizedAp = (e.totalAp / maxAp) * 100;
+      e.weeklyScore = Math.round((e.activityDensity * 0.4 + e.missionRate * 0.3 + normalizedAp * 0.3) * 10) / 10;
+    }
+
+    // 순위 정렬
+    evaluated.sort((a, b) => b.weeklyScore - a.weeklyScore);
+    const total = evaluated.length;
+    evaluated.forEach((e, i) => {
+      e.rank = i + 1;
+      const pct = (i + 1) / total;
+      if (pct <= 0.2) e.grade = 'ace';
+      else if (pct <= 0.5) e.grade = 'good';
+      else if (pct <= 0.8) e.grade = 'normal';
+      else e.grade = 'crisis';
+    });
+
+    // organizations 테이블 업데이트
+    for (const e of evaluated) {
+      await pool.query(
+        'UPDATE organizations SET activity_density = $1, mission_completion = $2, contribution_score = $3 WHERE id = $4',
+        [e.activityDensity, e.missionRate, e.weeklyScore, e.id]
+      );
+    }
+
+    res.json({
+      fanclubId: fcId,
+      evaluationDate: new Date().toISOString().split('T')[0],
+      period: '최근 7일',
+      organizations: evaluated,
+      aceOrgs: evaluated.filter(e => e.grade === 'ace').slice(0, 3),
+      crisisOrgs: evaluated.filter(e => e.activityDensity <= 30),
+      totalOrgsEvaluated: total
+    });
+  } catch (err) {
+    console.error('주간 평가 오류:', err);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// 5. GET /api/org/crisis/:fanclubId — 위기 모임 감지
+app.get('/api/org/crisis/:fanclubId', async (req, res) => {
+  try {
+    const fcId = parseInt(req.params.fanclubId);
+    const orgs = await pool.query(
+      'SELECT id, name, org_type, member_count FROM organizations WHERE fanclub_id = $1 AND member_count > 0',
+      [fcId]
+    );
+
+    const crisisOrgs = [];
+    for (const org of orgs.rows) {
+      // 최근 7일 활동 유저 수
+      const active = await pool.query(
+        `SELECT COUNT(DISTINCT al.user_id) AS active_users
+         FROM activity_logs al JOIN users u ON u.id = al.user_id
+         WHERE u.org_id = $1 AND al.created_at > NOW() - INTERVAL '7 days'`,
+        [org.id]
+      );
+      const activeMembers = parseInt(active.rows[0].active_users);
+      const density = Math.round((activeMembers / org.member_count) * 100 * 10) / 10;
+
+      // activity_density 업데이트
+      await pool.query('UPDATE organizations SET activity_density = $1 WHERE id = $2', [density, org.id]);
+
+      if (density <= 30) {
+        let severity, recommendation;
+        if (density <= 10) {
+          severity = 'critical';
+          recommendation = '리더의 긴급 에너지 수혈이 필요합니다!';
+        } else if (density <= 20) {
+          severity = 'warning';
+          recommendation = '멤버 참여 독려 미션을 시작하세요.';
+        } else {
+          severity = 'caution';
+          recommendation = '활동 유도 공지를 보내세요.';
+        }
+
+        crisisOrgs.push({
+          id: org.id, name: org.name, orgType: org.org_type,
+          memberCount: org.member_count,
+          activeMembers,
+          activityDensity: density,
+          severity,
+          recommendation
+        });
+      }
+    }
+
+    crisisOrgs.sort((a, b) => a.activityDensity - b.activityDensity);
+
+    res.json({
+      fanclubId: fcId,
+      crisisOrgs,
+      totalCrisis: crisisOrgs.length,
+      totalOrgs: orgs.rows.length
+    });
+  } catch (err) {
+    console.error('위기 모임 감지 오류:', err);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// 6. GET /api/org/mvp/:fanclubId — MVP 모임/개인 선정
+app.get('/api/org/mvp/:fanclubId', async (req, res) => {
+  try {
+    const fcId = parseInt(req.params.fanclubId);
+
+    // 모임 MVP: 주간 종합 점수 상위 3개
+    const mvpOrgs = await pool.query(
+      `SELECT id, name, org_type, contribution_score, activity_density, mission_completion
+       FROM organizations WHERE fanclub_id = $1
+       ORDER BY contribution_score DESC LIMIT 3`,
+      [fcId]
+    );
+
+    const orgBadges = ['이번 주 최우수 모임', '주간 핵심전력', '주간 든든한 기둥'];
+    const mvpOrgList = mvpOrgs.rows.map((org, i) => ({
+      rank: i + 1,
+      id: org.id,
+      name: org.name,
+      orgType: org.org_type,
+      weeklyScore: parseFloat(org.contribution_score),
+      badge: orgBadges[i]
+    }));
+
+    // 개인 MVP: 최근 7일 AP 상위 10명 (해당 팬클럽 소속)
+    const mvpMembers = await pool.query(
+      `SELECT u.id, u.nickname, u.emoji, u.level, u.grade,
+              COALESCE(SUM(al.ap_earned), 0) AS weekly_ap
+       FROM users u
+       JOIN activity_logs al ON al.user_id = u.id
+       WHERE u.fandom_id = $1 AND u.is_banned = FALSE
+         AND al.created_at > NOW() - INTERVAL '7 days'
+       GROUP BY u.id, u.nickname, u.emoji, u.level, u.grade
+       ORDER BY weekly_ap DESC LIMIT 10`,
+      [fcId]
+    );
+
+    const now = new Date();
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - 6);
+
+    res.json({
+      fanclubId: fcId,
+      period: `${weekStart.toISOString().split('T')[0]} ~ ${now.toISOString().split('T')[0]}`,
+      mvpOrgs: mvpOrgList,
+      mvpMembers: mvpMembers.rows.map((m, i) => ({
+        rank: i + 1,
+        id: m.id,
+        nickname: m.nickname,
+        emoji: m.emoji,
+        level: m.level,
+        weeklyAp: parseInt(m.weekly_ap)
+      }))
+    });
+  } catch (err) {
+    console.error('MVP 선정 오류:', err);
     res.status(500).json({ message: '서버 오류입니다.' });
   }
 });

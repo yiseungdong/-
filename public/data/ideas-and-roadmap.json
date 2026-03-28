@@ -730,8 +730,8 @@
           },
           {
             "id": 35,
-            "name": "Organization API (트리 CRUD)",
-            "status": "todo"
+            "name": "Organization API (CRUD+이동+주간평가+위기감지+MVP)",
+            "status": "done"
           },
           {
             "id": 36,
