@@ -234,20 +234,6 @@ let startTime = performance.now();
 let elapsed = 0;
 let centerGlow = 0;
 
-// 방문 횟수 체크 (버전 분기)
-const visitCount = parseInt(localStorage.getItem('asteria_visit_count') || '0');
-localStorage.setItem('asteria_visit_count', String(visitCount + 1));
-const isFirstVisit = visitCount === 0;
-
-// 재방문: 짧은 버전 (로고+버튼 즉시 표시, 클릭으로만 이동)
-if (!isFirstVisit) {
-  phase = 'idle';
-  stars.forEach(s => { s.born = true; s.opacity = s.maxOpacity; });
-  document.getElementById('logoContainer').style.opacity = '1';
-  document.getElementById('orbitContainer').style.opacity = '1';
-  document.getElementById('entryContainer').style.opacity = '1';
-}
-
 // ── 별 그리기 함수 ──
 function drawStar(star) {
   if (star.opacity <= 0) return;
@@ -296,8 +282,7 @@ function animate(now) {
   const cx = canvas.width / 2;
   const cy = canvas.height / 2;
 
-  if (isFirstVisit) {
-    // ── Step 1: 별 탄생 (0~3초) ──
+  // ── Step 1: 별 탄생 (0~3초) ──
     if (phase === 'birth') {
       stars.forEach(s => {
         if (elapsed >= s.birthDelay && !s.born) {
@@ -408,13 +393,6 @@ function animate(now) {
         s.y += (s.originY - s.y) * 0.05;
       });
     }
-  } else {
-    // 재방문: 반짝임만
-    stars.forEach(s => {
-      s.twinklePhase += s.twinkleSpeed;
-      s.opacity = s.maxOpacity * (0.5 + 0.5 * Math.sin(s.twinklePhase));
-    });
-  }
 
   // ── 별 그리기 ──
   stars.forEach(drawStar);
