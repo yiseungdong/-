@@ -1646,8 +1646,84 @@ async function initDB() {
     await client.query(`CREATE INDEX IF NOT EXISTS idx_moderation_fanclub ON ai_moderation_log(fanclub_id, created_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_fanclub_mood ON fanclub_mood(fanclub_id, record_date)`);
 
+    // ── 버그 리포트 + 피드백 + 오픈 이벤트 테이블 ──
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS bug_reports (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        page VARCHAR(30) NOT NULL,
+        issue_type VARCHAR(30) NOT NULL,
+        description TEXT,
+        status VARCHAR(20) DEFAULT 'open' CHECK (status IN ('open','reviewing','resolved','closed')),
+        admin_note TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS user_feedback (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        satisfaction INTEGER CHECK (satisfaction BETWEEN 1 AND 5),
+        best_feature VARCHAR(30),
+        improvement TEXT,
+        new_feature_request TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS open_events (
+        id SERIAL PRIMARY KEY,
+        event_type VARCHAR(30) NOT NULL,
+        title VARCHAR(100) NOT NULL,
+        description TEXT,
+        reward_type VARCHAR(20) NOT NULL,
+        reward_amount INTEGER DEFAULT 0,
+        reward_item VARCHAR(50),
+        start_date TIMESTAMP NOT NULL,
+        end_date TIMESTAMP NOT NULL,
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS open_event_claims (
+        id SERIAL PRIMARY KEY,
+        event_id INTEGER REFERENCES open_events(id),
+        user_id INTEGER REFERENCES users(id),
+        claimed_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(event_id, user_id)
+      )
+    `);
+
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_bug_reports_status ON bug_reports(status, created_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_user_feedback_user ON user_feedback(user_id, created_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_open_events_active ON open_events(is_active, start_date, end_date)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_event_claims_user ON open_event_claims(user_id, event_id)`);
+
+    // 오픈 이벤트 초기 데이터 삽입 (테이블이 비어있을 때만)
+    const eventCount = await client.query('SELECT COUNT(*) AS cnt FROM open_events');
+    if (parseInt(eventCount.rows[0].cnt) === 0) {
+      const defaultEvents = [
+        ['pioneer_welcome', '🌟 개척자 환영 보상 / Pioneer Welcome', '아스테리아의 첫 번째 탐험가에게 드리는 특별 선물! 개척자 전용 골드 별똥별과 스타더스트를 받으세요.', 'stardust', 1000, 'pioneer_golden_star', '2026-04-01', '2027-04-01'],
+        ['first_login', '✨ 첫 로그인 축하 / First Login Celebration', '아스테리아에 첫 발을 디딘 것을 축하합니다! 스타더스트 500과 기본 방 가구 세트를 선물로 드려요.', 'stardust', 500, 'basic_room_set', '2026-04-01', '2026-07-01'],
+        ['seven_day_streak', '🔥 7일 연속 출석 챌린지 / 7-Day Streak Challenge', '7일 연속 출석하면 레어 아이템 "개척의 별" 획득! 꾸준함이 곧 힘입니다.', 'stardust', 300, 'pioneer_star_item', '2026-04-01', '2026-07-01'],
+        ['first_fanclub', '🏛️ 첫 팬클럽 가입 축하 / First Fanclub Welcome', '팬클럽에 가입하고 동료 팬들과 함께하세요! 가입 보상으로 스타더스트 200을 드려요.', 'stardust', 200, null, '2026-04-01', '2026-07-01'],
+        ['feedback_event', '💬 첫 피드백 이벤트 / Share Your Voice', '피드백 페이지에서 의견을 남기면 스타더스트 200 보너스! 여러분의 목소리가 아스테리아를 만듭니다.', 'stardust', 200, null, '2026-04-01', '2026-07-01']
+      ];
+      for (const e of defaultEvents) {
+        await client.query(
+          `INSERT INTO open_events (event_type, title, description, reward_type, reward_amount, reward_item, start_date, end_date) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+          e
+        );
+      }
+      console.log('  📌 오픈 이벤트 5개 초기 데이터 삽입');
+    }
+
     await client.query('COMMIT');
-    console.log('✅ 아스테리아 DB 초기화 완료 — 52개 테이블 생성');
+    console.log('✅ 아스테리아 DB 초기화 완료 — 56개 테이블 생성');
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('❌ DB 초기화 실패:', err.message);
@@ -11591,6 +11667,230 @@ app.get('/api/insight/:fanclubId', async (req, res) => {
     });
   } catch (err) {
     console.error('인사이트 리포트 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// ══════════════════════════════════════════════
+//  버그 리포트 / 피드백 / 오픈 이벤트 API
+// ══════════════════════════════════════════════
+
+// POST /api/bugs — 버그 리포트 제출
+app.post('/api/bugs', authenticateToken, async (req, res) => {
+  try {
+    const { page, issue_type, description } = req.body;
+    if (!page || !issue_type) return res.status(400).json({ message: 'page, issue_type은 필수입니다.' });
+
+    const result = await pool.query(
+      `INSERT INTO bug_reports (user_id, page, issue_type, description) VALUES ($1, $2, $3, $4) RETURNING *`,
+      [req.user.id, page, issue_type, description || '']
+    );
+    res.status(201).json({ message: '🐛 신고 완료! 빠르게 확인할게요', bug: result.rows[0] });
+  } catch (err) {
+    console.error('버그 리포트 제출 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/bugs — 관리자용: 버그 리포트 목록
+app.get('/api/bugs', authenticateToken, async (req, res) => {
+  try {
+    const statusFilter = req.query.status;
+    let query = `SELECT br.*, u.nickname FROM bug_reports br LEFT JOIN users u ON br.user_id = u.id`;
+    const params = [];
+    if (statusFilter) { query += ' WHERE br.status = $1'; params.push(statusFilter); }
+    query += ' ORDER BY br.created_at DESC LIMIT 100';
+
+    const result = await pool.query(query, params);
+    res.json({ bugs: result.rows });
+  } catch (err) {
+    console.error('버그 리포트 목록 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// PATCH /api/bugs/:id — 관리자용: 상태 변경 + 메모
+app.patch('/api/bugs/:id', authenticateToken, async (req, res) => {
+  try {
+    const { status, admin_note } = req.body;
+    const validStatuses = ['open', 'reviewing', 'resolved', 'closed'];
+    if (status && !validStatuses.includes(status)) {
+      return res.status(400).json({ message: `status는 ${validStatuses.join(', ')} 중 하나여야 합니다.` });
+    }
+
+    const updates = [];
+    const params = [];
+    let idx = 1;
+    if (status) { updates.push(`status = $${idx++}`); params.push(status); }
+    if (admin_note !== undefined) { updates.push(`admin_note = $${idx++}`); params.push(admin_note); }
+    if (updates.length === 0) return res.status(400).json({ message: '변경할 항목이 없습니다.' });
+
+    params.push(req.params.id);
+    await pool.query(`UPDATE bug_reports SET ${updates.join(', ')} WHERE id = $${idx}`, params);
+    res.json({ message: '버그 리포트 업데이트 완료' });
+  } catch (err) {
+    console.error('버그 리포트 업데이트 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// POST /api/feedback — 피드백 제출
+app.post('/api/feedback', authenticateToken, async (req, res) => {
+  try {
+    const { satisfaction, best_feature, improvement, new_feature_request } = req.body;
+    if (!satisfaction || satisfaction < 1 || satisfaction > 5) {
+      return res.status(400).json({ message: '만족도(1~5)는 필수입니다.' });
+    }
+
+    // 월 1회 제한 체크
+    const thisMonth = await pool.query(
+      `SELECT id FROM user_feedback WHERE user_id = $1 AND created_at >= date_trunc('month', NOW()) AND created_at < date_trunc('month', NOW()) + INTERVAL '1 month'`,
+      [req.user.id]
+    );
+    if (thisMonth.rows.length > 0) {
+      return res.status(400).json({ message: '이번 달에는 이미 피드백을 제출했습니다. (월 1회 제한)' });
+    }
+
+    await pool.query(
+      `INSERT INTO user_feedback (user_id, satisfaction, best_feature, improvement, new_feature_request) VALUES ($1, $2, $3, $4, $5)`,
+      [req.user.id, satisfaction, best_feature || '', improvement || '', new_feature_request || '']
+    );
+
+    // LOY+2, SOC+1 보상
+    await pool.query('UPDATE users SET stat_loy = stat_loy + 2, stat_soc = stat_soc + 1 WHERE id = $1', [req.user.id]);
+
+    res.status(201).json({ message: '💫 소중한 의견 감사합니다! LOY+2, SOC+1' });
+  } catch (err) {
+    console.error('피드백 제출 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/feedback/stats — 관리자용: 피드백 통계
+app.get('/api/feedback/stats', authenticateToken, async (req, res) => {
+  try {
+    const avg = await pool.query('SELECT AVG(satisfaction)::numeric(3,1) AS avg_satisfaction, COUNT(*) AS total FROM user_feedback');
+    const topFeatures = await pool.query(
+      `SELECT best_feature, COUNT(*) AS cnt FROM user_feedback WHERE best_feature != '' GROUP BY best_feature ORDER BY cnt DESC LIMIT 3`
+    );
+    const recent = await pool.query(
+      `SELECT uf.*, u.nickname FROM user_feedback uf LEFT JOIN users u ON uf.user_id = u.id ORDER BY uf.created_at DESC LIMIT 10`
+    );
+
+    res.json({
+      avgSatisfaction: parseFloat(avg.rows[0].avg_satisfaction) || 0,
+      totalFeedback: parseInt(avg.rows[0].total),
+      topFeatures: topFeatures.rows,
+      recentFeedback: recent.rows
+    });
+  } catch (err) {
+    console.error('피드백 통계 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/events/active — 진행 중인 이벤트 목록
+app.get('/api/events/active', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM open_events WHERE is_active = true AND start_date <= NOW() AND end_date >= NOW() ORDER BY created_at DESC`
+    );
+    res.json({ events: result.rows });
+  } catch (err) {
+    console.error('이벤트 목록 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/events/:id — 이벤트 상세
+app.get('/api/events/:id', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM open_events WHERE id = $1', [req.params.id]);
+    if (result.rows.length === 0) return res.status(404).json({ message: '이벤트를 찾을 수 없습니다.' });
+    res.json({ event: result.rows[0] });
+  } catch (err) {
+    console.error('이벤트 상세 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// POST /api/events/:id/claim — 이벤트 보상 수령
+app.post('/api/events/:id/claim', authenticateToken, async (req, res) => {
+  try {
+    // 이벤트 존재 + 기간 체크
+    const event = await pool.query(
+      `SELECT * FROM open_events WHERE id = $1 AND is_active = true AND start_date <= NOW() AND end_date >= NOW()`,
+      [req.params.id]
+    );
+    if (event.rows.length === 0) {
+      return res.status(400).json({ message: '이벤트가 종료되었거나 존재하지 않습니다.' });
+    }
+
+    // 중복 수령 체크
+    const claimed = await pool.query(
+      'SELECT id FROM open_event_claims WHERE event_id = $1 AND user_id = $2',
+      [req.params.id, req.user.id]
+    );
+    if (claimed.rows.length > 0) {
+      return res.status(400).json({ message: '이미 수령한 보상입니다.' });
+    }
+
+    const e = event.rows[0];
+
+    // 보상 수령 기록
+    await pool.query(
+      'INSERT INTO open_event_claims (event_id, user_id) VALUES ($1, $2)',
+      [req.params.id, req.user.id]
+    );
+
+    // 스타더스트 지급
+    if (e.reward_amount > 0) {
+      await pool.query('UPDATE users SET stardust = stardust + $1 WHERE id = $2', [e.reward_amount, req.user.id]);
+      const user = await pool.query('SELECT stardust FROM users WHERE id = $1', [req.user.id]);
+      await pool.query(
+        `INSERT INTO stardust_ledger (user_id, amount, balance_after, type, description) VALUES ($1, $2, $3, 'event_reward', $4)`,
+        [req.user.id, e.reward_amount, user.rows[0].stardust, e.title]
+      );
+    }
+
+    res.status(201).json({
+      message: `🎉 보상을 수령했습니다! 스타더스트 +${e.reward_amount}`,
+      reward: { stardust: e.reward_amount, item: e.reward_item }
+    });
+  } catch (err) {
+    console.error('이벤트 보상 수령 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/events/my-claims — 내가 수령한 이벤트 목록
+app.get('/api/events/my-claims', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT oe.*, oec.claimed_at FROM open_event_claims oec
+       JOIN open_events oe ON oec.event_id = oe.id
+       WHERE oec.user_id = $1 ORDER BY oec.claimed_at DESC`,
+      [req.user.id]
+    );
+    res.json({ claims: result.rows });
+  } catch (err) {
+    console.error('이벤트 수령 내역 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/events/unclaimed-count — 미수령 이벤트 수 (네비게이션 알림 뱃지용)
+app.get('/api/events/unclaimed-count', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT COUNT(*) AS cnt FROM open_events oe
+       WHERE oe.is_active = true AND oe.start_date <= NOW() AND oe.end_date >= NOW()
+         AND oe.id NOT IN (SELECT event_id FROM open_event_claims WHERE user_id = $1)`,
+      [req.user.id]
+    );
+    res.json({ unclaimedCount: parseInt(result.rows[0].cnt) });
+  } catch (err) {
+    console.error('미수령 이벤트 수 조회 오류:', err.message);
     res.status(500).json({ message: '서버 오류입니다.' });
   }
 });

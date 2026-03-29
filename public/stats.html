@@ -427,5 +427,39 @@ renderTotal();
 renderCards();
 setTimeout(()=>animateChart(),300);
 </script>
+<!-- 버그 리포트 플로팅 버튼 + 모달 -->
+<style>
+.bug-report-btn{position:fixed;bottom:80px;right:20px;width:48px;height:48px;border-radius:50%;background:rgba(5,12,30,0.93);border:1px solid rgba(200,175,80,0.13);color:#4a90d9;font-size:20px;cursor:pointer;z-index:9999;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,0.3);transition:all .3s}
+.bug-report-btn:hover{background:#4a90d9;color:#fff;transform:scale(1.1)}
+.bug-modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:10000;align-items:center;justify-content:center}
+.bug-modal-overlay.open{display:flex}
+.bug-modal{background:rgba(5,12,30,0.97);border:1px solid rgba(200,175,80,0.2);border-radius:16px;padding:28px;max-width:420px;width:90%;max-height:80vh;overflow-y:auto;color:#e8ecf4}
+.bug-modal h3{font-family:Orbitron,monospace;font-size:18px;color:#f0c040;margin-bottom:16px}
+.bug-modal label{display:block;font-size:13px;color:rgba(160,180,210,0.7);margin:12px 0 6px}
+.bug-modal select,.bug-modal textarea{width:100%;padding:10px;border:1px solid rgba(200,175,80,0.15);border-radius:8px;background:rgba(255,255,255,0.05);color:#e8ecf4;font-family:'Noto Sans KR',sans-serif;font-size:14px;outline:none}
+.bug-modal select:focus,.bug-modal textarea:focus{border-color:#4a90d9}
+.bug-modal textarea{resize:vertical;min-height:80px}
+.bug-modal-btns{display:flex;gap:10px;margin-top:18px}
+.bug-modal-btns button{flex:1;padding:10px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;border:none;font-family:'Noto Sans KR',sans-serif}
+.bug-submit{background:linear-gradient(90deg,#4a90d9,#7c5ce0);color:#fff}
+.bug-cancel{background:transparent;border:1px solid rgba(200,175,80,0.2)!important;color:#e8ecf4}
+</style>
+<button class="bug-report-btn" onclick="document.getElementById('bugModal').classList.add('open')" title="버그 신고">🐛</button>
+<div class="bug-modal-overlay" id="bugModal" onclick="if(event.target===this)this.classList.remove('open')">
+<div class="bug-modal">
+<h3>🐛 버그 신고</h3>
+<label>어떤 페이지에서 문제가 발생했나요?</label>
+<select id="bugPage"><option value="home">홈</option><option value="astra">아스트라</option><option value="room">내 방</option><option value="nebula">성궤</option><option value="avatar">아바타</option><option value="shop">상점</option><option value="chat">채팅</option><option value="league">리그</option><option value="stats">스탯</option><option value="archetype">아키타입</option><option value="other">기타</option></select>
+<label>어떤 문제인가요?</label>
+<select id="bugType"><option value="not_visible">화면이 안 보여요</option><option value="not_clickable">버튼이 안 눌려요</option><option value="error">에러가 떠요</option><option value="slow">느려요</option><option value="other">기타</option></select>
+<label>자세한 설명 (선택, 최대 500자)</label>
+<textarea id="bugDesc" maxlength="500" placeholder="어떤 상황에서 문제가 발생했는지 알려주세요..."></textarea>
+<div class="bug-modal-btns">
+<button class="bug-cancel" onclick="document.getElementById('bugModal').classList.remove('open')">취소</button>
+<button class="bug-submit" onclick="submitBugReport()">제출하기</button>
+</div></div></div>
+<script>
+async function submitBugReport(){var t=localStorage.getItem('accessToken');if(!t){alert('로그인이 필요합니다.');return}try{var r=await fetch('/api/bugs',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},body:JSON.stringify({page:document.getElementById('bugPage').value,issue_type:document.getElementById('bugType').value,description:document.getElementById('bugDesc').value})});var d=await r.json();if(r.ok){if(typeof showToast==='function')showToast(d.message);else alert(d.message);document.getElementById('bugModal').classList.remove('open');document.getElementById('bugDesc').value=''}else{alert(d.message||'제출 실패')}}catch(e){alert('네트워크 오류')}}
+</script>
 </body>
 </html>

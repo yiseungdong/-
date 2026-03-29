@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>개인정보 처리방침 — ASTERIA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --void:#020a18; --panel:rgba(5,12,30,0.93);
+  --border:rgba(200,175,80,0.13); --gold:#f0c040;
+  --accent:#4a90d9; --accent2:#7c5ce0;
+  --text:#e8ecf4; --muted:rgba(160,180,210,0.5);
+}
+html,body { width:100%; min-height:100%; background:var(--void); color:var(--text); font-family:'Noto Sans KR',sans-serif; }
+
+/* 별빛 배경 */
+.starfield { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; overflow:hidden; }
+.starfield .star {
+  position:absolute; border-radius:50%; background:white;
+  animation: twinkle 3s ease-in-out infinite alternate;
+}
+@keyframes twinkle { 0%{opacity:0.2} 100%{opacity:0.8} }
+
+/* 상단 네비게이션 */
+.top-nav {
+  position:fixed; top:0; left:0; right:0; z-index:100;
+  background:var(--panel); backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 24px; height:56px;
+}
+.nav-logo {
+  font-family:'Orbitron',monospace; font-size:18px; font-weight:900; letter-spacing:3px;
+  background:linear-gradient(135deg,var(--gold),var(--accent));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  text-decoration:none;
+}
+.nav-back {
+  color:var(--accent); text-decoration:none; font-size:14px; font-weight:500;
+  display:flex; align-items:center; gap:6px; transition:color 0.2s;
+}
+.nav-back:hover { color:var(--gold); }
+
+/* 본문 */
+.content {
+  position:relative; z-index:1;
+  max-width:800px; margin:0 auto; padding:80px 24px 60px;
+}
+h1 {
+  font-family:'Orbitron',monospace; font-size:28px; font-weight:900;
+  background:linear-gradient(135deg,var(--gold),var(--accent));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  margin-bottom:8px; line-height:1.3;
+}
+.subtitle { color:var(--muted); font-size:14px; margin-bottom:40px; }
+h2 {
+  color:var(--accent); font-size:20px; font-weight:700;
+  margin-top:40px; margin-bottom:16px;
+  padding-bottom:8px; border-bottom:1px solid var(--border);
+}
+h2 .en { display:block; color:var(--muted); font-size:13px; font-weight:400; margin-top:4px; }
+p, li { font-size:15px; line-height:1.8; color:var(--text); }
+ul { padding-left:20px; margin-bottom:16px; }
+li { margin-bottom:6px; }
+li::marker { color:var(--accent); }
+.section { margin-bottom:32px; }
+.highlight {
+  background:rgba(74,144,217,0.08); border:1px solid rgba(74,144,217,0.15);
+  border-radius:10px; padding:16px 20px; margin:16px 0;
+}
+.highlight p { font-size:14px; }
+.footer-note {
+  margin-top:60px; padding-top:20px; border-top:1px solid var(--border);
+  text-align:center; color:var(--muted); font-size:13px;
+}
+
+@media (max-width:640px) {
+  .content { padding:70px 16px 40px; }
+  h1 { font-size:22px; }
+  h2 { font-size:17px; }
+}
+</style>
+</head>
+<body>
+
+<!-- 별빛 배경 -->
+<div class="starfield" id="starfield"></div>
+
+<!-- 상단 네비게이션 -->
+<nav class="top-nav">
+  <a href="/" class="nav-logo">ASTERIA</a>
+  <a href="/" class="nav-back">← 돌아가기</a>
+</nav>
+
+<!-- 본문 -->
+<div class="content">
+  <h1>개인정보 처리방침</h1>
+  <p class="subtitle">Privacy Policy — 시행일: 2026년 4월 1일</p>
+
+  <div class="section">
+    <h2>1. 수집하는 개인정보 <span class="en">Information We Collect</span></h2>
+    <ul>
+      <li><strong>이메일 주소</strong> — 회원가입 필수 (계정 식별 및 비밀번호 찾기)</li>
+      <li><strong>닉네임</strong> — 회원가입 필수 (커뮤니티 내 표시)</li>
+      <li><strong>소셜 계정 ID</strong> — 소셜 로그인(카카오/구글) 사용 시</li>
+      <li><strong>기기 정보</strong> — 중복 계정 방지 목적 (기기 해시값만 저장)</li>
+      <li><strong>활동 기록</strong> — 스탯, AP, 출석, 게시글 등 플랫폼 내 활동</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>2. 수집 목적 <span class="en">Purpose</span></h2>
+    <ul>
+      <li>회원 식별 및 서비스 제공</li>
+      <li>리그 시스템 운영 (스탯 계산, 승격/강등 판정)</li>
+      <li>부정행위 방지 (매크로/다중 계정 탐지)</li>
+      <li>서비스 개선 및 익명 통계 분석</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>3. 보관 기간 <span class="en">Retention</span></h2>
+    <ul>
+      <li>회원 탈퇴 시까지 보관</li>
+      <li>탈퇴 후 <strong>30일 내 파기</strong></li>
+      <li>법적 의무 보관 항목은 관련 법령에 따름</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>4. 제3자 제공 <span class="en">Third Party Sharing</span></h2>
+    <div class="highlight">
+      <p>원칙적으로 수집된 개인정보를 제3자에게 제공하지 않습니다.</p>
+      <p>예외: 법적 요청 또는 수사 기관 협조 시</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>5. 보안 조치 <span class="en">Security Measures</span></h2>
+    <ul>
+      <li><strong>비밀번호</strong> — bcrypt 암호화 (cost factor 12)</li>
+      <li><strong>민감 데이터</strong> — AES-256 암호화</li>
+      <li><strong>통신</strong> — HTTPS 적용</li>
+      <li><strong>접근 제한</strong> — JWT 인증 + Rate Limiting</li>
+      <li><strong>감사 로그</strong> — 불변성 DB 기록 (무결성 검사)</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>6. 이용자 권리 <span class="en">User Rights</span></h2>
+    <ul>
+      <li>개인정보 열람, 수정, 삭제를 요청할 수 있습니다.</li>
+      <li>회원 탈퇴 시 모든 개인정보가 파기됩니다.</li>
+      <li>문의: 관리자 페이지 또는 서비스 내 문의 기능</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>7. 쿠키 및 저장소 <span class="en">Cookies & Storage</span></h2>
+    <ul>
+      <li>로그인 유지를 위한 JWT 토큰 저장 (localStorage)</li>
+      <li>광고 목적의 쿠키는 사용하지 않습니다.</li>
+      <li>서비스 이용에 필수적인 정보만 저장합니다.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>8. 시행일 <span class="en">Effective Date</span></h2>
+    <p>본 개인정보 처리방침은 <strong>2026년 4월 1일</strong>부터 시행됩니다.</p>
+    <p>변경 시 서비스 내 공지를 통해 안내합니다.</p>
+  </div>
+
+  <div class="footer-note">
+    <p>ASTERIA — 팬이 주인인 세계</p>
+    <p>이 문서는 정보통신망 이용촉진 및 정보보호 등에 관한 법률에 따라 작성되었습니다.</p>
+  </div>
+</div>
+
+<script>
+// 별빛 배경 생성
+(function() {
+  const field = document.getElementById('starfield');
+  for (let i = 0; i < 120; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    const size = Math.random() * 2.5 + 0.5;
+    star.style.width = size + 'px';
+    star.style.height = size + 'px';
+    star.style.left = Math.random() * 100 + '%';
+    star.style.top = Math.random() * 100 + '%';
+    star.style.animationDelay = Math.random() * 3 + 's';
+    star.style.animationDuration = (2 + Math.random() * 3) + 's';
+    field.appendChild(star);
+  }
+})();
+</script>
+</body>
+</html>
