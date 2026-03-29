@@ -215,6 +215,7 @@ function init(){
 
 /* ═══ 메인 드로잉 ═══ */
 function draw(){
+  if(!t)return;
   ctx.clearRect(0,0,W,H);
   drawSky();drawGround();drawRoads();drawPlaza();
   drawPond();drawBridge();drawFlowers();
@@ -559,7 +560,7 @@ function render(league){
 }
 
 function showData(d){const tl=LG[d.league];document.getElementById('hName').textContent=d.name+' STARIUM';document.getElementById('hLg').textContent=tl.name+' 리그';document.getElementById('hRk').textContent='#'+d.rank;document.getElementById('hOn').textContent=d.online.toLocaleString();document.getElementById('bM').textContent=d.members.toLocaleString();document.getElementById('bS').textContent=d.score;document.getElementById('bE').style.width=d.energy+'%';document.getElementById('bP').textContent=d.energy+'%';document.getElementById('bD').textContent='D-'+d.dday;}
-function setW(e){let c='w-clear';if(e>=150)c='w-fest';else if(e<30)c='w-dark';else if(e<60)c='w-fog';document.getElementById('weatherOv')&&(document.getElementById('weatherOv')||{}).className;const m={'w-clear':['☀️','맑음'],'w-fog':['🌫️','안개'],'w-dark':['🌑','암흑'],'w-fest':['🎆','축제']};const[i,tx]=m[c]||['☀️','맑음'];document.getElementById('wI').textContent=i;document.getElementById('wT').textContent=tx;}
+function setW(e){let c='w-clear';if(e>=150)c='w-fest';else if(e<30)c='w-dark';else if(e<60)c='w-fog';const wo=document.getElementById('weatherOv');if(wo)wo.className=c;const m={'w-clear':['☀️','맑음'],'w-fog':['🌫️','안개'],'w-dark':['🌑','암흑'],'w-fest':['🎆','축제']};const[i,tx]=m[c]||['☀️','맑음'];document.getElementById('wI').textContent=i;document.getElementById('wT').textContent=tx;}
 
 /* 드래그 */
 function initDrag(){
@@ -579,7 +580,7 @@ function initDrag(){
   cont.addEventListener('touchend',e=>{if(!moved){const tc=e.changedTouches[0];const a=document.getElementById('myAv');a.style.left=(tc.clientX-cx-12)+'px';a.style.top=(tc.clientY-cy-12)+'px';a.classList.add('walk');setTimeout(()=>a.classList.remove('walk'),700)}en()});
 }
 function animNPC(){document.querySelectorAll('.npc').forEach(n=>{setInterval(()=>{const cl=parseFloat(n.style.left)||900,ct=parseFloat(n.style.top)||800;n.style.left=Math.max(400,Math.min(1500,cl+(Math.random()-.5)*50))+'px';n.style.top=Math.max(500,Math.min(1100,ct+(Math.random()-.5)*40))+'px'},5000+Math.random()*4000)})}
-function playEnt(name){const ov=document.getElementById('ent');ov.style.background=LG[DM.league].ground;document.getElementById('entT').textContent=name+' STARIUM';setTimeout(()=>{document.getElementById('entT').textContent='WELCOME';document.getElementById('entS').textContent=name+' STARIUM'},1200);setTimeout(()=>{ov.classList.add('fo');setTimeout(()=>{ov.style.display='none';showToast('🌟 '+name+' STARIUM');setTimeout(()=>{document.getElementById('hint').classList.add('show');setTimeout(()=>document.getElementById('hint').classList.remove('show'),3000)},1000)},800)},2000)}
+/* playEnt 로직은 DOMContentLoaded에 통합 */
 
 /* 모달 */
 const MO={
@@ -596,7 +597,22 @@ function closeMo(e){if(e&&e.target!==e.currentTarget)return;document.getElementB
 function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3000)}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMo()});
 
-window.addEventListener('DOMContentLoaded',()=>{init();render(DM.league);showData(DM);setW(DM.energy);initDrag();playEnt(DM.name);animNPC()});
+window.addEventListener('DOMContentLoaded',()=>{
+  init();render(DM.league);showData(DM);setW(DM.energy);initDrag();animNPC();
+  /* 진입 애니메이션: 2초 후 확실히 제거 */
+  const ent=document.getElementById('ent');
+  if(ent){
+    ent.style.background=LG[DM.league].ground;
+    document.getElementById('entT').textContent=DM.name+' STARIUM';
+    setTimeout(()=>{document.getElementById('entT').textContent='WELCOME';document.getElementById('entS').textContent=DM.name+' STARIUM'},1000);
+    setTimeout(()=>{
+      ent.classList.add('fo');
+      setTimeout(()=>{ent.style.display='none';showToast('🌟 '+DM.name+' STARIUM');
+        setTimeout(()=>{document.getElementById('hint').classList.add('show');setTimeout(()=>document.getElementById('hint').classList.remove('show'),3000)},1000);
+      },800);
+    },2000);
+  }
+});
 window.switchLeague=function(l){if(!LG[l])return;DM.league=l;render(l);showData(DM);showToast('🌟 '+LG[l].name+' — '+LG[l].vName)};
 </script>
 </body>
