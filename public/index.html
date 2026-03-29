@@ -52,22 +52,25 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 .slogan-kr{font-size:14px;color:var(--text);font-weight:400;letter-spacing:1px}
 .slogan-en{font-size:11px;color:var(--muted);font-weight:300;margin-top:3px;letter-spacing:0.5px}
 
-/* ── 하단 네비게이션 ── */
-.bottom-nav{
-  position:fixed;bottom:0;left:0;width:100%;height:64px;
-  background:rgba(3,3,8,0.95);backdrop-filter:blur(10px);
-  border-top:1px solid rgba(180,150,255,0.13);
-  display:flex;align-items:center;justify-content:space-around;z-index:100;
+/* ── 상단 네비게이션 ── */
+.top-nav {
+  position:sticky; top:0; z-index:300;
+  display:flex; align-items:center;
+  background:rgba(10,10,22,0.96); backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(180,150,255,0.13);
+  overflow-x:auto; -webkit-overflow-scrolling:touch;
 }
-.nav-item{
-  display:flex;flex-direction:column;align-items:center;
-  text-decoration:none;color:rgba(200,190,220,0.5);
-  transition:color .2s;gap:2px;
+.top-nav::-webkit-scrollbar { display:none; }
+.top-nav-item {
+  flex-shrink:0; display:flex; flex-direction:column; align-items:center;
+  padding:10px 14px; cursor:pointer; text-decoration:none;
+  color:rgba(200,190,220,0.5); border-bottom:2px solid transparent;
+  gap:3px; transition:all .2s;
 }
-.nav-item.active{color:#f0c040}
-.nav-item:hover{color:#e8e4f0}
-.nav-icon{font-size:18px}
-.nav-label{font-family:'Noto Sans KR',sans-serif;font-size:9px;font-weight:500}
+.top-nav-item.active { color:#c084fc; border-bottom-color:#c084fc; }
+.top-nav-item:hover { color:#e8e4f0; }
+.top-nav-icon { font-size:18px; }
+.top-nav-label { font-size:9px; font-weight:500; white-space:nowrap; }
 
 /* ── 페이지 컨테이너 ── */
 .page{display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;flex-direction:column;overflow:hidden}
