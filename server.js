@@ -1153,8 +1153,76 @@ async function initDB() {
       ON CONFLICT DO NOTHING
     `);
 
+    // ── 소울 레조넌스 (#55) ──
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS music_tracks (
+        id SERIAL PRIMARY KEY,
+        title VARCHAR(200) NOT NULL,
+        artist_name VARCHAR(100) DEFAULT 'Artist',
+        duration_sec INTEGER DEFAULT 240,
+        genre VARCHAR(30),
+        color_theme VARCHAR(7) DEFAULT '#c084fc',
+        visual_style VARCHAR(30) DEFAULT 'calm',
+        mood VARCHAR(30) DEFAULT 'neutral',
+        is_title_track BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS listening_log (
+        id BIGSERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        track_id INTEGER NOT NULL REFERENCES music_tracks(id),
+        duration_sec INTEGER DEFAULT 0,
+        resonance_gained DECIMAL(6,2) DEFAULT 0,
+        is_storm_event BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_listen_user ON listening_log(user_id, created_at DESC)`);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS resonance_levels (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) UNIQUE,
+        level INTEGER DEFAULT 1,
+        total_exp DECIMAL(10,2) DEFAULT 0,
+        total_listening_min INTEGER DEFAULT 0,
+        favorite_track_id INTEGER REFERENCES music_tracks(id),
+        visual_stage VARCHAR(30) DEFAULT 'calm',
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS storm_events (
+        id SERIAL PRIMARY KEY,
+        fandom_id INTEGER REFERENCES fanclubs(id),
+        track_id INTEGER NOT NULL REFERENCES music_tracks(id),
+        scheduled_at TIMESTAMP NOT NULL,
+        duration_min INTEGER DEFAULT 30,
+        status VARCHAR(20) DEFAULT 'upcoming',
+        participant_count INTEGER DEFAULT 0,
+        bonus_qp INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // 소울 레조넌스 시드 데이터
+    await client.query(`
+      INSERT INTO music_tracks (title, artist_name, duration_sec, genre, color_theme, visual_style, mood, is_title_track) VALUES
+        ('Starlight', 'Artist', 210, 'dance', '#f0c040', 'energetic', 'excited', true),
+        ('Moonrise', 'Artist', 240, 'ballad', '#38bdf8', 'calm', 'romantic', false),
+        ('Supernova', 'Artist', 195, 'edm', '#ef4444', 'explosive', 'powerful', true),
+        ('Nebula Dream', 'Artist', 260, 'r&b', '#c084fc', 'dreamy', 'peaceful', false),
+        ('Gravity', 'Artist', 225, 'pop', '#34d399', 'flowing', 'hopeful', true),
+        ('Aurora', 'Artist', 250, 'pop', '#ec4899', 'colorful', 'joyful', false)
+      ON CONFLICT DO NOTHING
+    `);
+
     await client.query('COMMIT');
-    console.log('✅ 아스테리아 DB 초기화 완료 — 24개 테이블 생성');
+    console.log('✅ 아스테리아 DB 초기화 완료 — 28개 테이블 생성');
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('❌ DB 초기화 실패:', err.message);
@@ -8826,6 +8894,182 @@ app.post('/api/avatar/snapshot', authenticateToken, async (req, res) => {
   } catch (err) {
     console.error('스냅샷 생성 오류:', err.message);
     res.status(500).json({ error: '스냅샷 생성 실패' });
+  }
+});
+
+// ══════════════════════════════════════════════
+//  소울 레조넌스 (#55) — 음악 청취 & 공명 시스템
+// ══════════════════════════════════════════════
+
+const RESONANCE_LEVELS = [
+  { level: 1, exp: 0, visual: 'calm', label: '잔잔한 파동' },
+  { level: 2, exp: 30, visual: 'ripple', label: '물결치는 빛' },
+  { level: 3, exp: 80, visual: 'glow', label: '은은한 광채' },
+  { level: 4, exp: 150, visual: 'aurora', label: '오로라의 숨결' },
+  { level: 5, exp: 250, visual: 'galaxy', label: '은하수의 노래' },
+  { level: 6, exp: 400, visual: 'nebula', label: '성운의 공명' },
+  { level: 7, exp: 600, visual: 'supernova', label: '초신성의 울림' },
+  { level: 8, exp: 850, visual: 'quasar_pulse', label: '퀘이사의 맥동' },
+  { level: 9, exp: 1200, visual: 'cosmic_storm', label: '우주 폭풍' },
+  { level: 10, exp: 2000, visual: 'universe', label: '우주의 조화' },
+];
+
+// 현재 exp에 맞는 공명 레벨 계산
+function getResonanceLevel(totalExp) {
+  let result = RESONANCE_LEVELS[0];
+  for (const rl of RESONANCE_LEVELS) {
+    if (totalExp >= rl.exp) result = rl;
+    else break;
+  }
+  return result;
+}
+
+// API 1. 트랙 목록 조회
+app.get('/api/resonance/tracks', async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT * FROM music_tracks ORDER BY id');
+    res.json({ tracks: rows });
+  } catch (err) {
+    console.error('트랙 목록 조회 오류:', err.message);
+    res.status(500).json({ error: '트랙 목록 조회 실패' });
+  }
+});
+
+// API 2. 음악 청취 기록 & 공명 경험치 획득
+app.post('/api/resonance/listen', authenticateToken, async (req, res) => {
+  const userId = req.user.id;
+  const { track_id, duration_sec } = req.body;
+  try {
+    if (!track_id || !duration_sec) {
+      return res.status(400).json({ error: 'track_id와 duration_sec는 필수입니다' });
+    }
+    // 최소 60초, 최대 600초 제한
+    const clampedSec = Math.max(60, Math.min(600, Number(duration_sec)));
+
+    // 트랙 존재 확인
+    const trackRes = await pool.query('SELECT * FROM music_tracks WHERE id = $1', [track_id]);
+    if (trackRes.rows.length === 0) {
+      return res.status(404).json({ error: '존재하지 않는 트랙입니다' });
+    }
+    const track = trackRes.rows[0];
+
+    // 공명 exp 계산
+    const resonanceGained = parseFloat((clampedSec / 60).toFixed(2));
+
+    // 청취 로그 기록
+    await pool.query(
+      `INSERT INTO listening_log (user_id, track_id, duration_sec, resonance_gained)
+       VALUES ($1, $2, $3, $4)`,
+      [userId, track_id, clampedSec, resonanceGained]
+    );
+
+    // resonance_levels upsert
+    const upsertRes = await pool.query(
+      `INSERT INTO resonance_levels (user_id, total_exp, total_listening_min, updated_at)
+       VALUES ($1, $2, $3, NOW())
+       ON CONFLICT (user_id) DO UPDATE SET
+         total_exp = resonance_levels.total_exp + $2,
+         total_listening_min = resonance_levels.total_listening_min + $3,
+         updated_at = NOW()
+       RETURNING *`,
+      [userId, resonanceGained, Math.floor(clampedSec / 60)]
+    );
+    const rl = upsertRes.rows[0];
+
+    // 레벨업 체크
+    const newLevel = getResonanceLevel(parseFloat(rl.total_exp));
+    if (newLevel.level !== rl.level) {
+      await pool.query(
+        `UPDATE resonance_levels SET level = $1, visual_stage = $2 WHERE user_id = $3`,
+        [newLevel.level, newLevel.visual, userId]
+      );
+    }
+
+    // LOY +1, AP +20 지급
+    await pool.query(
+      `UPDATE users SET stat_loy = stat_loy + 1, ap = ap + 20 WHERE id = $1`,
+      [userId]
+    );
+
+    res.json({
+      track: { id: track.id, title: track.title, color_theme: track.color_theme },
+      listenedSec: clampedSec,
+      resonanceGained,
+      currentLevel: newLevel.level,
+      currentExp: parseFloat(rl.total_exp),
+      visualStage: newLevel.visual
+    });
+  } catch (err) {
+    console.error('청취 기록 오류:', err.message);
+    res.status(500).json({ error: '청취 기록 실패' });
+  }
+});
+
+// API 3. 내 공명 상태 조회
+app.get('/api/resonance/my', authenticateToken, async (req, res) => {
+  const userId = req.user.id;
+  try {
+    // 공명 레벨 조회 (없으면 기본값)
+    const rlRes = await pool.query('SELECT * FROM resonance_levels WHERE user_id = $1', [userId]);
+    let rl = rlRes.rows[0] || { level: 1, total_exp: 0, total_listening_min: 0, visual_stage: 'calm' };
+
+    const currentLevel = getResonanceLevel(parseFloat(rl.total_exp));
+    const nextLevel = RESONANCE_LEVELS.find(l => l.level === currentLevel.level + 1);
+    const expToNext = nextLevel ? parseFloat((nextLevel.exp - rl.total_exp).toFixed(2)) : 0;
+
+    // 최근 청취 10건
+    const recentRes = await pool.query(
+      `SELECT ll.*, mt.title, mt.artist_name, mt.color_theme
+       FROM listening_log ll
+       JOIN music_tracks mt ON mt.id = ll.track_id
+       WHERE ll.user_id = $1
+       ORDER BY ll.created_at DESC LIMIT 10`,
+      [userId]
+    );
+
+    res.json({
+      level: currentLevel.level,
+      label: currentLevel.label,
+      visualStage: currentLevel.visual,
+      totalExp: parseFloat(rl.total_exp),
+      expToNextLevel: expToNext,
+      totalListeningMin: rl.total_listening_min,
+      recentListens: recentRes.rows
+    });
+  } catch (err) {
+    console.error('내 공명 상태 조회 오류:', err.message);
+    res.status(500).json({ error: '공명 상태 조회 실패' });
+  }
+});
+
+// API 4. 공명 랭킹 TOP10
+app.get('/api/resonance/ranking', async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT u.nickname, rl.level, rl.total_exp, rl.visual_stage
+       FROM resonance_levels rl
+       JOIN users u ON u.id = rl.user_id
+       ORDER BY rl.total_exp DESC
+       LIMIT 10`
+    );
+
+    // 라벨 매핑
+    const ranking = rows.map((r, i) => {
+      const lvl = getResonanceLevel(parseFloat(r.total_exp));
+      return {
+        rank: i + 1,
+        nickname: r.nickname,
+        level: r.level,
+        label: lvl.label,
+        totalExp: parseFloat(r.total_exp),
+        visualStage: r.visual_stage
+      };
+    });
+
+    res.json({ ranking });
+  } catch (err) {
+    console.error('공명 랭킹 조회 오류:', err.message);
+    res.status(500).json({ error: '공명 랭킹 조회 실패' });
   }
 });
 
