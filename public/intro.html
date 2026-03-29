@@ -64,6 +64,12 @@ canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0}
   font-family:'Noto Sans KR',sans-serif;font-size:13px;
   cursor:pointer;pointer-events:auto;transition:color 0.2s;letter-spacing:1px;
 }
+.tagline-en{font-family:'Orbitron',monospace;font-size:clamp(11px,1.6vw,14px);margin-top:8px;letter-spacing:2px;opacity:0.6}
+.tap-hint{
+  font-size:13px;color:var(--muted);letter-spacing:1px;margin-top:4px;
+  animation:blink 1.8s ease-in-out infinite;
+}
+@keyframes blink{0%,100%{opacity:0.3}50%{opacity:1}}
 .skip-btn:hover{color:#fff}
 
 @media(max-width:768px){
@@ -85,13 +91,15 @@ canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0}
 <!-- 로고 + 문구 -->
 <div id="logoContainer">
   <h1 class="logo">ASTERIA</h1>
-  <p class="tagline">Every star begins with a single fan. You are the universe.</p>
+  <p class="tagline">먼지에서 은하로, 팬이 주권을 갖는 우주</p>
+  <p class="tagline tagline-en">From Dust to Galaxy — Where Fans Own the Universe</p>
 </div>
 
 <!-- 성궤번호 + 입장 버튼 -->
 <div id="entryContainer">
   <p class="orbit-number">✦ 성궤각인 #00,000,001 ✦</p>
   <button class="enter-btn" onclick="goToMain()">은하에 입장하기 / Enter the Galaxy</button>
+  <p class="tap-hint" id="tapHint">화면을 터치하세요 / Tap to Enter</p>
 </div>
 
 <!-- 스킵 버튼 -->
@@ -210,19 +218,12 @@ const visitCount = parseInt(localStorage.getItem('asteria_visit_count') || '0');
 localStorage.setItem('asteria_visit_count', String(visitCount + 1));
 const isFirstVisit = visitCount === 0;
 
-// 재방문: 짧은 버전
+// 재방문: 짧은 버전 (로고+버튼 즉시 표시, 클릭으로만 이동)
 if (!isFirstVisit) {
   phase = 'idle';
   stars.forEach(s => { s.born = true; s.opacity = s.maxOpacity; });
   document.getElementById('logoContainer').style.opacity = '1';
   document.getElementById('entryContainer').style.opacity = '1';
-  // 1.5초 후 자동 이동
-  setTimeout(goToMain, 1500);
-  // 아무 곳 클릭 시 즉시 이동
-  document.body.addEventListener('click', function handler(e) {
-    if (e.target.classList.contains('skip-btn') || e.target.classList.contains('enter-btn')) return;
-    goToMain();
-  }, { once: true });
 }
 
 // ── 별 그리기 함수 ──
