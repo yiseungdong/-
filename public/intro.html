@@ -172,7 +172,7 @@ class Star {
     this.opacity = 0; // 탄생 단계에서 서서히 나타남
     this.maxOpacity = Math.random() * 0.5 + 0.5;
     this.color = getRandomStarColor();
-    this.birthDelay = Math.random() * 3000; // 0~3초 사이 랜덤 등장
+    this.birthDelay = Math.random() * 1500; // 0~1.5초 사이 랜덤 등장 (2초 안에 전부)
     // gather 단계에서 원형 배치 목표 (중앙 기준 반지름 80px 원 위)
     const gatherAngle = Math.random() * Math.PI * 2;
     this.gatherX = 0; // animate에서 cx + cos * 80 계산
@@ -313,7 +313,7 @@ function animate(now) {
         }
       });
 
-      if (elapsed >= 3000) {
+      if (elapsed >= 2000) {
         phase = 'gather';
         // gather 시작 시 각 별의 원형 목표 좌표 계산 (중앙 반지름 80px 원 위)
         const radius = 80;
@@ -327,7 +327,7 @@ function animate(now) {
 
     // ── Step 2: 중앙으로 원형 모임 (3~7초, 4초간) ──
     if (phase === 'gather') {
-      const gatherProgress = Math.min(1, (elapsed - 3000) / 4000);
+      const gatherProgress = Math.min(1, (elapsed - 2000) / 4000);
       // ease-in: 처음 느리게 → 점점 빨라짐
       const eased = gatherProgress * gatherProgress;
       centerGlow = eased;
@@ -350,7 +350,7 @@ function animate(now) {
         s.opacity = s.maxOpacity * (0.7 + 0.3 * Math.sin(s.twinklePhase));
       });
 
-      if (elapsed >= 7000) {
+      if (elapsed >= 6000) {
         phase = 'explode';
         // 플래시 효과
         const flash = document.getElementById('flash');
@@ -362,7 +362,7 @@ function animate(now) {
 
     // ── Step 3: 폭발 (7~8초) ──
     if (phase === 'explode') {
-      const explodeProgress = Math.min(1, (elapsed - 7000) / 1000);
+      const explodeProgress = Math.min(1, (elapsed - 6000) / 1000);
       centerGlow = Math.max(0, 1 - explodeProgress * 2);
 
       stars.forEach(s => {
@@ -386,12 +386,12 @@ function animate(now) {
       });
 
       // 로고 + 성궤번호 페이드인 (7.3초부터)
-      if (elapsed >= 7300) {
+      if (elapsed >= 6300) {
         document.getElementById('logoContainer').style.opacity = '1';
         document.getElementById('orbitContainer').style.opacity = '1';
       }
 
-      if (elapsed >= 8000) {
+      if (elapsed >= 7000) {
         phase = 'idle';
         // 입장 버튼 표시
         document.getElementById('entryContainer').style.opacity = '1';
