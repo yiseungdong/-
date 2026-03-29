@@ -781,6 +781,35 @@ async function initDB() {
 
     await client.query(`CREATE INDEX IF NOT EXISTS idx_trade_status ON trade_listings(status)`);
 
+    // ── HW 밴 리스트 (#46) ──
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS hw_ban_list (
+        id              SERIAL PRIMARY KEY,
+        hw_fingerprint  VARCHAR(500) NOT NULL UNIQUE,
+        banned_user_id  INTEGER REFERENCES users(id),
+        reason          VARCHAR(255) NOT NULL,
+        banned_by       VARCHAR(20) NOT NULL DEFAULT 'system',
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_hw_ban ON hw_ban_list(hw_fingerprint)`);
+
+    // ── 기기 등록부 (#46) ──
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS device_registry (
+        id              SERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id),
+        hw_fingerprint  VARCHAR(500) NOT NULL,
+        device_name     VARCHAR(100),
+        last_used       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        is_primary      BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, hw_fingerprint)
+      )
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_device_user ON device_registry(user_id)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_device_hw ON device_registry(hw_fingerprint)`);
+
     await client.query('COMMIT');
     console.log('✅ 아스테리아 DB 초기화 완료 — 24개 테이블 생성');
   } catch (err) {
@@ -5155,6 +5184,255 @@ app.get('/api/realtime/online', (req, res) => {
     byLeague: leagueCount,
     byFandom: fandomCount
   });
+});
+
+// ══════════════════════════════════════════════
+//  #46 제로티켓 실명제 + HW 밴
+// ══════════════════════════════════════════════
+
+const MAX_DEVICES_PER_USER = 3;
+
+// ── 1) POST /api/device/register — 기기 등록 ──
+app.post('/api/device/register', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { hw_fingerprint, device_name } = req.body;
+
+    if (!hw_fingerprint || !device_name) {
+      return res.status(400).json({ error: 'hw_fingerprint, device_name 필수' });
+    }
+
+    // HW 밴 여부 확인
+    const banCheck = await pool.query(
+      'SELECT reason FROM hw_ban_list WHERE hw_fingerprint = $1',
+      [hw_fingerprint]
+    );
+    if (banCheck.rows.length > 0) {
+      return res.status(403).json({
+        error: '차단된 기기',
+        reason: banCheck.rows[0].reason,
+        message: '이 기기는 영구 차단되었습니다.'
+      });
+    }
+
+    // 이미 등록된 기기인지 확인
+    const existing = await pool.query(
+      'SELECT id FROM device_registry WHERE user_id = $1 AND hw_fingerprint = $2',
+      [userId, hw_fingerprint]
+    );
+
+    if (existing.rows.length > 0) {
+      // 이미 등록됨 → last_used만 갱신
+      await pool.query(
+        'UPDATE device_registry SET last_used = CURRENT_TIMESTAMP, device_name = $1 WHERE user_id = $2 AND hw_fingerprint = $3',
+        [device_name, userId, hw_fingerprint]
+      );
+    } else {
+      // 기기 수 확인 → 초과 시 가장 오래된 기기 삭제
+      const countRes = await pool.query(
+        'SELECT COUNT(*)::int AS cnt FROM device_registry WHERE user_id = $1',
+        [userId]
+      );
+      const currentCount = countRes.rows[0].cnt;
+
+      if (currentCount >= MAX_DEVICES_PER_USER) {
+        // 가장 오래된 기기 삭제 (초과분 모두 제거)
+        const toDelete = currentCount - MAX_DEVICES_PER_USER + 1;
+        await pool.query(`
+          DELETE FROM device_registry WHERE id IN (
+            SELECT id FROM device_registry WHERE user_id = $1
+            ORDER BY last_used ASC LIMIT $2
+          )
+        `, [userId, toDelete]);
+      }
+
+      // 첫 번째 기기면 primary로 설정
+      const isPrimary = currentCount === 0;
+      await pool.query(
+        'INSERT INTO device_registry (user_id, hw_fingerprint, device_name, is_primary) VALUES ($1, $2, $3, $4)',
+        [userId, hw_fingerprint, device_name, isPrimary]
+      );
+    }
+
+    // 최종 기기 수 조회
+    const finalCount = await pool.query(
+      'SELECT COUNT(*)::int AS cnt FROM device_registry WHERE user_id = $1',
+      [userId]
+    );
+
+    res.json({
+      message: '기기 등록 완료',
+      deviceCount: finalCount.rows[0].cnt,
+      maxDevices: MAX_DEVICES_PER_USER
+    });
+  } catch (err) {
+    console.error('기기 등록 오류:', err.message);
+    res.status(500).json({ error: '기기 등록 실패' });
+  }
+});
+
+// ── 2) GET /api/device/my-devices — 내 등록 기기 목록 ──
+app.get('/api/device/my-devices', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const result = await pool.query(
+      'SELECT id, device_name, is_primary, last_used, created_at FROM device_registry WHERE user_id = $1 ORDER BY last_used DESC',
+      [userId]
+    );
+
+    const devices = result.rows.map(d => ({
+      id: d.id,
+      deviceName: d.device_name,
+      isPrimary: d.is_primary,
+      lastUsed: d.last_used,
+      createdAt: d.created_at
+    }));
+
+    res.json({
+      devices,
+      count: devices.length,
+      maxDevices: MAX_DEVICES_PER_USER
+    });
+  } catch (err) {
+    console.error('기기 목록 조회 오류:', err.message);
+    res.status(500).json({ error: '기기 목록 조회 실패' });
+  }
+});
+
+// ── 3) DELETE /api/device/:deviceId — 기기 제거 ──
+app.delete('/api/device/:deviceId', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const deviceId = parseInt(req.params.deviceId);
+
+    // 본인 기기만 삭제 가능
+    const result = await pool.query(
+      'DELETE FROM device_registry WHERE id = $1 AND user_id = $2 RETURNING id',
+      [deviceId, userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: '기기를 찾을 수 없거나 권한 없음' });
+    }
+
+    res.json({ message: '기기 제거 완료', deletedDeviceId: deviceId });
+  } catch (err) {
+    console.error('기기 제거 오류:', err.message);
+    res.status(500).json({ error: '기기 제거 실패' });
+  }
+});
+
+// ── 4) POST /api/hw-ban/check — HW 밴 체크 (로그인 전 호출용) ──
+app.post('/api/hw-ban/check', async (req, res) => {
+  try {
+    const { hw_fingerprint } = req.body;
+
+    if (!hw_fingerprint) {
+      return res.status(400).json({ error: 'hw_fingerprint 필수' });
+    }
+
+    const result = await pool.query(
+      'SELECT reason FROM hw_ban_list WHERE hw_fingerprint = $1',
+      [hw_fingerprint]
+    );
+
+    if (result.rows.length > 0) {
+      return res.json({
+        banned: true,
+        reason: result.rows[0].reason,
+        message: '이 기기는 영구 차단되었습니다.'
+      });
+    }
+
+    res.json({ banned: false });
+  } catch (err) {
+    console.error('HW 밴 체크 오류:', err.message);
+    res.status(500).json({ error: 'HW 밴 체크 실패' });
+  }
+});
+
+// ── 5) POST /api/hw-ban/ban — HW 밴 등록 (시스템/관리자용) ──
+app.post('/api/hw-ban/ban', authenticateToken, async (req, res) => {
+  try {
+    const { user_id, reason } = req.body;
+
+    if (!user_id || !reason) {
+      return res.status(400).json({ error: 'user_id, reason 필수' });
+    }
+
+    // 해당 유저의 모든 등록 기기 조회
+    const devices = await pool.query(
+      'SELECT hw_fingerprint FROM device_registry WHERE user_id = $1',
+      [user_id]
+    );
+
+    let bannedCount = 0;
+    for (const device of devices.rows) {
+      // hw_ban_list에 추가 (중복 무시)
+      await pool.query(`
+        INSERT INTO hw_ban_list (hw_fingerprint, banned_user_id, reason, banned_by)
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (hw_fingerprint) DO NOTHING
+      `, [device.hw_fingerprint, user_id, reason, req.user.nickname || 'system']);
+      bannedCount++;
+    }
+
+    // 유저 밴 처리
+    await pool.query(
+      'UPDATE users SET is_banned = TRUE, ban_reason = $1 WHERE id = $2',
+      [reason, user_id]
+    );
+
+    // penalties 테이블에 영구 추방 기록
+    await pool.query(`
+      INSERT INTO penalties (user_id, penalty_type, reason, issued_by, severity, starts_at)
+      VALUES ($1, 'eternal_exile', $2, $3, 'critical', CURRENT_TIMESTAMP)
+    `, [user_id, reason, req.user.nickname || 'system']);
+
+    res.json({
+      message: 'HW 밴 완료',
+      bannedDevices: bannedCount,
+      userId: user_id
+    });
+  } catch (err) {
+    console.error('HW 밴 등록 오류:', err.message);
+    res.status(500).json({ error: 'HW 밴 등록 실패' });
+  }
+});
+
+// ── 6) GET /api/zero-ticket/my-tickets — 내 제로티켓 목록 ──
+app.get('/api/zero-ticket/my-tickets', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const result = await pool.query(
+      'SELECT id, event_name, event_date, venue, seat_info, gps_verified, checked_in_at, is_archived, created_at FROM zero_tickets WHERE user_id = $1 ORDER BY event_date DESC',
+      [userId]
+    );
+
+    const tickets = result.rows.map(t => ({
+      id: t.id,
+      eventName: t.event_name,
+      eventDate: t.event_date,
+      venue: t.venue,
+      seatInfo: t.seat_info,
+      gpsVerified: t.gps_verified,
+      checkedInAt: t.checked_in_at,
+      isArchived: t.is_archived
+    }));
+
+    const activeTickets = tickets.filter(t => !t.isArchived).length;
+    const archivedTickets = tickets.filter(t => t.isArchived).length;
+
+    res.json({
+      tickets,
+      totalTickets: tickets.length,
+      activeTickets,
+      archivedTickets
+    });
+  } catch (err) {
+    console.error('제로티켓 조회 오류:', err.message);
+    res.status(500).json({ error: '제로티켓 조회 실패' });
+  }
 });
 
 // ── SPA fallback ──
