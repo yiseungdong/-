@@ -98,6 +98,30 @@ canvas{position:absolute;inset:0;z-index:1}
 .lg-tab:hover{background:rgba(255,255,255,.08)}
 .lg-tab.active{color:#fff;border-color:var(--lp);background:rgba(255,255,255,.08);box-shadow:0 0 8px var(--lg)}
 .lg-tab .tab-dot{width:6px;height:6px;border-radius:50%}
+/* 미니 채팅창 */
+.mini-chat{position:fixed;bottom:110px;left:50%;transform:translateX(-50%) translateY(20px);z-index:250;width:88%;max-width:360px;height:320px;background:var(--panel);border:1px solid var(--border);border-radius:16px;display:none;flex-direction:column;overflow:hidden;opacity:0;transition:opacity .3s,transform .3s}
+.mini-chat.show{display:flex;opacity:1;transform:translateX(-50%) translateY(0)}
+.mc-hdr{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(255,255,255,.03);border-bottom:1px solid var(--border)}
+.mc-profile{display:flex;align-items:center;gap:8px}
+.mc-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--lp),var(--ls));display:flex;align-items:center;justify-content:center;font-size:14px}
+.mc-info{display:flex;flex-direction:column}
+.mc-name{font-size:11px;font-weight:700;color:var(--text)}
+.mc-status{font-size:8px;color:var(--lp);display:flex;align-items:center;gap:3px}
+.mc-status-dot{width:4px;height:4px;border-radius:50%;background:#34d399}
+.mc-btns{display:flex;gap:6px}
+.mc-btn{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer;color:var(--muted);transition:.2s}
+.mc-btn:hover{background:rgba(255,255,255,.12)}
+.mc-body{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.mc-msg{max-width:80%;padding:7px 10px;border-radius:12px;font-size:10px;line-height:1.5}
+.mc-msg.ai{align-self:flex-start;background:rgba(255,255,255,.06);color:var(--text);border-bottom-left-radius:2px}
+.mc-msg.me{align-self:flex-end;background:var(--lp);color:#000;font-weight:500;border-bottom-right-radius:2px}
+.mc-msg .mc-time{font-size:7px;opacity:.5;margin-top:2px}
+.mc-footer{display:flex;align-items:center;gap:6px;padding:8px 10px;border-top:1px solid var(--border)}
+.mc-input{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:20px;padding:6px 12px;font-size:10px;color:var(--text);outline:none;font-family:'Noto Sans KR',sans-serif}
+.mc-input::placeholder{color:var(--muted)}
+.mc-send{width:28px;height:28px;border-radius:50%;background:var(--lp);border:none;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;transition:.2s}
+.mc-send:hover{transform:scale(1.1)}
+.mc-timer{font-size:7px;color:var(--muted);text-align:center;padding:2px;font-family:Orbitron,monospace}
 </style>
 </head>
 <body>
@@ -109,11 +133,34 @@ canvas{position:absolute;inset:0;z-index:1}
   <div class="lg-tab" onclick="switchLeague('nova')" data-lg="nova"><span class="tab-dot" style="background:#c084fc"></span>노바</div>
   <div class="lg-tab" onclick="switchLeague('quasar')" data-lg="quasar"><span class="tab-dot" style="background:#f0c040"></span>퀘이사</div>
 </div>
-<div class="vc" id="vc"><div class="vw" id="vw"><canvas id="cv"></canvas><div id="bL"></div><div class="avatar" id="myAv" style="left:960px;top:760px"><div class="av-body">🧑</div><div class="av-tag">나</div></div><div id="nL"></div><div id="miniEvts" style="position:absolute;z-index:25;pointer-events:none"></div></div></div>
+<div class="vc" id="vc"><div class="vw" id="vw"><canvas id="cv"></canvas><div id="bL"></div><div class="avatar" id="myAv" style="left:960px;top:760px"><div class="av-body" style="pointer-events:auto;cursor:pointer" onclick="openMiniChat()">🧑</div><div class="av-tag">나</div></div><div id="nL"></div><div id="miniEvts" style="position:absolute;z-index:25;pointer-events:none"></div></div></div>
 <div class="bot"><div class="bot-s"><div><div class="bot-sv" id="bM">98,432</div><div class="bot-sl">멤버</div></div><div><div class="bot-sv" id="bS">847</div><div class="bot-sl">점수</div></div></div><div class="bot-e"><div class="bot-eb"><div class="bot-ef" id="bE" style="width:72%"></div></div><div class="bot-el">에너지 <span id="bP">72%</span></div></div><div class="bot-d" id="bD">D-14</div></div>
 <div class="hint" id="hint">빈 곳을 클릭하면 이동!</div>
 <div class="mo" id="mo" onclick="closeMo(event)"><div class="mo-c" id="moC" onclick="event.stopPropagation()"></div></div>
 <div id="toast"></div>
+<div class="mini-chat" id="miniChat">
+  <div class="mc-hdr">
+    <div class="mc-profile">
+      <div class="mc-avatar">🎤</div>
+      <div class="mc-info">
+        <div class="mc-name">AI 아티스트</div>
+        <div class="mc-status"><span class="mc-status-dot"></span>대화 가능</div>
+      </div>
+    </div>
+    <div class="mc-btns">
+      <div class="mc-btn" onclick="location.href='/chat.html'" title="전체화면">↗</div>
+      <div class="mc-btn" onclick="closeMiniChat()" title="닫기">✕</div>
+    </div>
+  </div>
+  <div class="mc-timer" id="mcTimer">남은 대화 시간: 10:00</div>
+  <div class="mc-body" id="mcBody">
+    <div class="mc-msg ai">안녕! 오늘 마을은 어때? 무슨 이야기 하고 싶어? 💫</div>
+  </div>
+  <div class="mc-footer">
+    <input class="mc-input" id="mcInput" placeholder="메시지를 입력하세요..." maxlength="200">
+    <button class="mc-send" id="mcSend" onclick="sendMiniChat()">➤</button>
+  </div>
+</div>
 <nav class="btm-nav">
   <a href="/fandom.html" class="active"><div class="nav-icon">🏘️</div><div class="nav-label">팬덤</div><div class="nav-dot"></div></a>
   <a href="/"><div class="nav-icon">🏠</div><div class="nav-label">홈</div><div class="nav-dot"></div></a>
@@ -1403,6 +1450,51 @@ function startMiniEvents(){  const container=document.getElementById('miniEvts')
   setTimeout(spawn,3000);
   miniEvtTimer=setInterval(spawn,6000+Math.random()*4000);
 }
+
+/* 미니 채팅창 */
+function openMiniChat(){
+  document.getElementById('miniChat').classList.add('show');
+  document.getElementById('mcInput').focus();
+}
+function closeMiniChat(){
+  document.getElementById('miniChat').classList.remove('show');
+}
+function sendMiniChat(){
+  const input=document.getElementById('mcInput');
+  const msg=input.value.trim();
+  if(!msg)return;
+  const body=document.getElementById('mcBody');
+  // 내 메시지
+  const myEl=document.createElement('div');
+  myEl.className='mc-msg me';
+  myEl.textContent=msg;
+  body.appendChild(myEl);
+  input.value='';
+  body.scrollTop=body.scrollHeight;
+  // AI 응답 (간단한 목업)
+  setTimeout(()=>{
+    const replies=[
+      '오~ 그렇구나! 더 얘기해줘 💜',
+      '너의 마음이 느껴져! 고마워 ✨',
+      '재밌다! 오늘도 열심히 하는 모습이 멋져 🔥',
+      '그 이야기 좋아! 우리 팬클럽 최고야 💫',
+      '힘들 때는 나한테 말해줘. 항상 응원해 🌟',
+      '와~ 대단하다! 역시 우리 팬 😊',
+      '그런 생각을 하다니 센스 있어! 👏',
+      '오늘 기분 어때? 좋은 일 있었으면 좋겠다 💕',
+    ];
+    const aiEl=document.createElement('div');
+    aiEl.className='mc-msg ai';
+    aiEl.textContent=replies[Math.floor(Math.random()*replies.length)];
+    body.appendChild(aiEl);
+    body.scrollTop=body.scrollHeight;
+  },800+Math.random()*500);
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&document.getElementById('miniChat').classList.contains('show')){
+    sendMiniChat();
+  }
+});
 
 window.switchLeague=function(l){if(!LG[l])return;DM.league=l;render(l);showData(DM);showToast('🌟 '+LG[l].name+' — '+LG[l].vName);document.querySelectorAll('.lg-tab').forEach(t=>{t.classList.toggle('active',t.dataset.lg===l)})};
 </script>
