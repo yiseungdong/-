@@ -1761,6 +1761,12 @@ app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 
 app.use(express.json());
+
+// 루트 경로 → 인트로 페이지 (express.static보다 먼저 선언해야 index.html 대신 intro.html 제공)
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'intro.html'));
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ── JWT 인증 미들웨어 (authenticateToken) ──
@@ -11893,11 +11899,6 @@ app.get('/api/events/unclaimed-count', authenticateToken, async (req, res) => {
     console.error('미수령 이벤트 수 조회 오류:', err.message);
     res.status(500).json({ message: '서버 오류입니다.' });
   }
-});
-
-// 루트 경로 → 인트로 페이지
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'intro.html'));
 });
 
 // ── SPA fallback ──
