@@ -288,26 +288,95 @@ function drawRoads(){
 }
 
 function drawPlaza(){
-  // 중앙 광장 (큰 원형)
-  ctx.fillStyle=t.plazaColor;ctx.strokeStyle=t.plazaLine;ctx.lineWidth=2;
-  ctx.beginPath();ctx.ellipse(W/2,H/2,260,200,0,0,Math.PI*2);ctx.fill();ctx.stroke();
-  // 광장 안쪽 원
-  ctx.strokeStyle=t.plazaLine+'60';ctx.lineWidth=1;
-  ctx.beginPath();ctx.ellipse(W/2,H/2,180,140,0,0,Math.PI*2);ctx.stroke();
-  ctx.beginPath();ctx.ellipse(W/2,H/2,100,80,0,0,Math.PI*2);ctx.stroke();
-  // 광장 포장 패턴
-  if(t.neon){
-    ctx.strokeStyle=t.lp+'15';ctx.lineWidth=.5;
-    for(let a=0;a<Math.PI*2;a+=Math.PI/6){
-      ctx.beginPath();ctx.moveTo(W/2,H/2);
-      ctx.lineTo(W/2+Math.cos(a)*260,H/2+Math.sin(a)*200);ctx.stroke();
+  const mx=W/2,my=H/2;
+  const league=DM.league;
+  const time=Date.now()/1000;
+
+  if(league==='dust'){
+    // 더스트: 모닥불 둘러싼 모래바닥 원형
+    ctx.fillStyle=t.plazaColor;
+    ctx.beginPath();ctx.ellipse(mx,my,200,160,0,0,Math.PI*2);ctx.fill();
+    // 모래 텍스처 점
+    ctx.fillStyle='rgba(255,255,255,.02)';
+    for(let i=0;i<30;i++){
+      const a=i*Math.PI*2/30,r=40+i*4.5;
+      ctx.beginPath();ctx.arc(mx+Math.cos(a)*r,my+Math.sin(a)*r*.8,1,0,Math.PI*2);ctx.fill();
     }
-  }
-  // 광장 빛 (라스베가스 느낌)
-  if(t.extraGlow){
-    const g=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,280);
+    // 돌 테두리
+    ctx.fillStyle=t.plazaLine;
+    for(let i=0;i<20;i++){
+      const a=i*Math.PI*2/20,r=195;
+      ctx.beginPath();ctx.ellipse(mx+Math.cos(a)*r,my+Math.sin(a)*r*.8,5,3.5,a,0,Math.PI*2);ctx.fill();
+    }
+  } else if(league==='star'){
+    // 스타: 벽돌 포장 광장
+    ctx.fillStyle=t.plazaColor;ctx.strokeStyle=t.plazaLine;ctx.lineWidth=2;
+    ctx.beginPath();ctx.ellipse(mx,my,260,200,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.strokeStyle=t.plazaLine+'60';ctx.lineWidth=1;
+    ctx.beginPath();ctx.ellipse(mx,my,180,140,0,0,Math.PI*2);ctx.stroke();
+    ctx.beginPath();ctx.ellipse(mx,my,100,80,0,0,Math.PI*2);ctx.stroke();
+    // 방사형 벽돌 패턴
+    ctx.strokeStyle=t.plazaLine+'30';ctx.lineWidth=.5;
+    for(let a=0;a<Math.PI*2;a+=Math.PI/8){
+      ctx.beginPath();ctx.moveTo(mx+Math.cos(a)*50,my+Math.sin(a)*40);
+      ctx.lineTo(mx+Math.cos(a)*250,my+Math.sin(a)*195);ctx.stroke();
+    }  } else if(league==='planet'){
+    // 플래닛: 네온 타일 광장
+    ctx.fillStyle=t.plazaColor;ctx.strokeStyle=t.plazaLine;ctx.lineWidth=2;
+    ctx.beginPath();ctx.ellipse(mx,my,260,200,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+    // 육각형 타일 패턴
+    ctx.strokeStyle=t.lp+'12';ctx.lineWidth=.5;
+    for(let row=-4;row<=4;row++){
+      for(let col=-5;col<=5;col++){        const hx=mx+col*40+(row%2)*20,hy=my+row*35;
+        const dist=Math.sqrt(((hx-mx)/260)**2+((hy-my)/200)**2);
+        if(dist>1)continue;
+        ctx.beginPath();
+        for(let i=0;i<6;i++){          const a=i*Math.PI/3-Math.PI/6;
+          const px=hx+Math.cos(a)*18,py=hy+Math.sin(a)*18;
+i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+        }
+        ctx.closePath();ctx.stroke();
+      }
+    }
+    // 네온 빛
+    const g=ctx.createRadialGradient(mx,my,0,mx,my,280);
     g.addColorStop(0,t.lg);g.addColorStop(1,'transparent');
-    ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(W/2,H/2,280,220,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(mx,my,280,220,0,0,Math.PI*2);ctx.fill();
+  } else if(league==='nova'){
+    // 노바: 홀로그램 광장
+    ctx.fillStyle=t.plazaColor;ctx.strokeStyle=t.plazaLine;ctx.lineWidth=2;
+    ctx.beginPath();ctx.ellipse(mx,my,260,200,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+    // 동심원 네온 펄스
+    for(let i=0;i<5;i++){
+      const pulse=(time*.3+i*.2)%1;
+      const r=50+pulse*210;
+      ctx.strokeStyle=t.lp+(Math.floor((1-pulse)*40)).toString(16).padStart(2,'0');
+      ctx.lineWidth=1;
+      ctx.beginPath();ctx.ellipse(mx,my,r,r*.77,0,0,Math.PI*2);ctx.stroke();
+    }
+    // 빛    const g=ctx.createRadialGradient(mx,my,0,mx,my,300);
+    g.addColorStop(0,t.lg);g.addColorStop(1,'transparent');
+    ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(mx,my,300,230,0,0,Math.PI*2);ctx.fill();
+  } else if(league==='quasar'){
+    // 퀘이사: 황금 대광장
+    ctx.fillStyle=t.plazaColor;ctx.strokeStyle=t.plazaLine;ctx.lineWidth=3;
+    ctx.beginPath();ctx.ellipse(mx,my,280,220,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+    // 이중 테두리
+    ctx.strokeStyle='#f0c04020';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.ellipse(mx,my,270,212,0,0,Math.PI*2);ctx.stroke();
+    // 별 모양 포장 패턴
+    ctx.strokeStyle='#f0c04015';ctx.lineWidth=.8;
+    for(let i=0;i<12;i++){
+      const a=i*Math.PI/6;
+      ctx.beginPath();ctx.moveTo(mx,my);
+      ctx.lineTo(mx+Math.cos(a)*270,my+Math.sin(a)*212);ctx.stroke();
+    }
+    ctx.beginPath();ctx.ellipse(mx,my,180,140,0,0,Math.PI*2);ctx.stroke();
+    ctx.beginPath();ctx.ellipse(mx,my,90,70,0,0,Math.PI*2);ctx.stroke();
+    // 황금빛
+    const g=ctx.createRadialGradient(mx,my,0,mx,my,320);
+    g.addColorStop(0,'rgba(240,192,64,.15)');g.addColorStop(1,'transparent');
+    ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(mx,my,320,250,0,0,Math.PI*2);ctx.fill();
   }
 }
 
@@ -663,19 +732,105 @@ function drawLamps(){
 function drawMonument(){
   const mx=W/2,my=H/2;
   const time=Date.now()/1000;
-  // 받침대 빛
-  if(t.extraGlow){
-    const g=ctx.createRadialGradient(mx,my+20,0,mx,my+20,80);
+  const league=DM.league;
+
+  if(league==='dust'){
+    // 모닥불 + 나무 기둥
+    ctx.fillStyle='#3a2a18';ctx.fillRect(mx-3,my-25,6,30);
+    // 큰 모닥불
+    const stones=[[mx-18,my+8],[mx-12,my+12],[mx-5,my+13],[mx+3,my+12],[mx+10,my+10],[mx+16,my+7]];
+    ctx.fillStyle='#4a3a28';
+    stones.forEach(([sx,sy])=>{ctx.beginPath();ctx.ellipse(sx,sy,5,3,0,0,Math.PI*2);ctx.fill();});
+    for(let j=0;j<5;j++){
+      const fa=.5+Math.sin(time*3+j*1.5)*.3;
+      ctx.globalAlpha=fa;
+      ctx.fillStyle=['#ff4400','#ff6600','#ffaa00','#ffcc44','#ff8800'][j];
+      ctx.beginPath();ctx.ellipse(mx+Math.sin(time*2+j)*5,my-j*6,6-j*.8,10-j*1.5,0,0,Math.PI*2);ctx.fill();
+    }
+    ctx.globalAlpha=1;
+    // 불빛
+    const fg=ctx.createRadialGradient(mx,my,0,mx,my,80);
+    fg.addColorStop(0,'rgba(255,150,50,.1)');fg.addColorStop(1,'transparent');
+ctx.fillStyle=fg;ctx.beginPath();ctx.arc(mx,my,80,0,Math.PI*2);ctx.fill();
+  } else if(league==='star'){
+    // 별 조형물 + 받침대
+    if(t.extraGlow){
+      const g=ctx.createRadialGradient(mx,my+20,0,mx,my+20,80);
+      g.addColorStop(0,t.lg);g.addColorStop(1,'transparent');
+      ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(mx,my+20,80,30,0,0,Math.PI*2);ctx.fill();
+    }
+    ctx.fillStyle=t.roadColor;
+    ctx.beginPath();ctx.moveTo(mx-35,my+15);ctx.lineTo(mx-25,my+5);ctx.lineTo(mx+25,my+5);ctx.lineTo(mx+35,my+15);ctx.lineTo(mx+35,my+25);ctx.lineTo(mx-35,my+25);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.08)';ctx.stroke();
+    ctx.fillStyle=t.plazaLine;ctx.fillRect(mx-8,my-30,16,38);
+  } else if(league==='planet'){
+    // 지구본 조형물
+    const g=ctx.createRadialGradient(mx,my+20,0,mx,my+20,90);
     g.addColorStop(0,t.lg);g.addColorStop(1,'transparent');
-    ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(mx,my+20,80,30,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(mx,my+20,90,35,0,0,Math.PI*2);ctx.fill();
+    // 받침대
+    ctx.fillStyle=t.roadColor;
+    ctx.beginPath();ctx.moveTo(mx-40,my+18);ctx.lineTo(mx-28,my+5);ctx.lineTo(mx+28,my+5);ctx.lineTo(mx+40,my+18);ctx.lineTo(mx+40,my+28);ctx.lineTo(mx-40,my+28);ctx.closePath();ctx.fill();
+    // 기둥
+    ctx.fillStyle=t.plazaLine;ctx.fillRect(mx-4,my-35,8,42);
+    // 지구본 (원)
+    ctx.strokeStyle=t.lp+'60';ctx.lineWidth=1;
+    ctx.beginPath();ctx.arc(mx,my-42,18,0,Math.PI*2);ctx.stroke();
+    ctx.beginPath();ctx.ellipse(mx,my-42,8,18,0,0,Math.PI*2);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(mx-18,my-42);ctx.lineTo(mx+18,my-42);ctx.stroke();
+  } else if(league==='nova'){
+    // 홀로그램 타워
+    const g=ctx.createRadialGradient(mx,my+20,0,mx,my+20,100);
+    g.addColorStop(0,t.lg);g.addColorStop(1,'transparent');
+    ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(mx,my+20,100,40,0,0,Math.PI*2);ctx.fill();
+    // 받침대 (하이테크)
+    ctx.fillStyle=t.plazaLine;
+    ctx.beginPath();ctx.roundRect(mx-30,my+10,60,18,3);ctx.fill();
+    ctx.strokeStyle=t.lp+'40';ctx.lineWidth=1;ctx.stroke();
+    // 에너지 빔
+    ctx.strokeStyle=t.lp+'30';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(mx,my+10);ctx.lineTo(mx,my-50);ctx.stroke();
+    // 회전 링
+    for(let i=0;i<3;i++){
+      const ra=time*(.5+i*.2)+i*Math.PI*2/3;
+      const ry=my-15-i*12;
+      const rx=20-i*3;
+      ctx.strokeStyle=t.lp+((40-i*10).toString(16));
+      ctx.lineWidth=1.5-i*.3;
+      ctx.beginPath();ctx.ellipse(mx,ry,rx,rx*.4,ra*.3,0,Math.PI*2);ctx.stroke();
+    }
+    // 상단 빛
+    ctx.fillStyle=t.lp;ctx.shadowColor=t.lp;ctx.shadowBlur=15;
+    ctx.beginPath();ctx.arc(mx,my-50,4,0,Math.PI*2);ctx.fill();
+    ctx.shadowBlur=0;
+  } else if(league==='quasar'){
+    // 황금 왕관 조형물
+    const g=ctx.createRadialGradient(mx,my+20,0,mx,my+20,120);
+    g.addColorStop(0,'rgba(240,192,64,.15)');g.addColorStop(1,'transparent');
+    ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(mx,my+20,120,45,0,0,Math.PI*2);ctx.fill();
+    // 받침대 (대리석)
+    ctx.fillStyle='#2a200e';
+    ctx.beginPath();ctx.moveTo(mx-45,my+18);ctx.lineTo(mx-35,my);ctx.lineTo(mx+35,my);ctx.lineTo(mx+45,my+18);ctx.lineTo(mx+45,my+28);ctx.lineTo(mx-45,my+28);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='#f0c04020';ctx.lineWidth=1;ctx.stroke();
+    // 왕관 몸체
+    ctx.fillStyle='#d4a010';
+    ctx.beginPath();ctx.moveTo(mx-22,my);ctx.lineTo(mx-22,my-20);
+    ctx.lineTo(mx-15,my-12);ctx.lineTo(mx-7,my-28);
+    ctx.lineTo(mx,my-18);ctx.lineTo(mx+7,my-28);
+    ctx.lineTo(mx+15,my-12);ctx.lineTo(mx+22,my-20);
+    ctx.lineTo(mx+22,my);ctx.closePath();ctx.fill();
+    // 왕관 빛    ctx.shadowColor='#f0c040';ctx.shadowBlur=20;ctx.fill();ctx.shadowBlur=0;
+    // 왕관 하단 밴드
+    ctx.fillStyle='#e8b830';
+    ctx.beginPath();ctx.roundRect(mx-22,my-3,44,6,1);ctx.fill();
+    // 보석
+    const gems=[{x:mx-7,y:my-24,c:'#ff4444'},{x:mx,y:my-15,c:'#44ff44'},{x:mx+7,y:my-24,c:'#4488ff'}];
+gems.forEach(gm=>{
+      ctx.fillStyle=gm.c;ctx.shadowColor=gm.c;ctx.shadowBlur=6;
+      ctx.beginPath();ctx.arc(gm.x,gm.y,2.5,0,Math.PI*2);ctx.fill();
+      ctx.shadowBlur=0;
+    });
   }
-  // 받침대
-  ctx.fillStyle=t.roadColor;
-  ctx.beginPath();ctx.moveTo(mx-35,my+15);ctx.lineTo(mx-25,my+5);ctx.lineTo(mx+25,my+5);ctx.lineTo(mx+35,my+15);ctx.lineTo(mx+35,my+25);ctx.lineTo(mx-35,my+25);ctx.closePath();ctx.fill();
-  ctx.strokeStyle='rgba(255,255,255,.08)';ctx.stroke();
-  // 기둥
-  ctx.fillStyle=t.plazaLine;ctx.fillRect(mx-8,my-30,16,38);
-  // 심볼은 HTML에서 렌더링
 }
 
 function drawSmoke(){
