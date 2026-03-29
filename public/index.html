@@ -73,7 +73,23 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 .page{display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;flex-direction:column;overflow:hidden}
 .page.active{display:flex}
 
-/* ── 홈: 퀘이사 리그맵 ── */
+/* ── 리그 전환 탭 ── */
+.league-tabs{
+  display:flex;justify-content:center;gap:8px;padding:8px 16px;
+  background:rgba(3,3,8,0.8);position:relative;z-index:50;
+}
+.league-tab{
+  display:flex;align-items:center;gap:6px;padding:8px 16px;
+  border:1px solid rgba(180,150,255,0.13);border-radius:20px;
+  background:rgba(10,10,22,0.8);color:rgba(200,190,220,0.5);
+  font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:500;
+  cursor:pointer;transition:all .3s;
+}
+.league-tab:hover{border-color:rgba(180,150,255,0.3);color:#e8e4f0}
+.league-tab.active{border-color:#f0c040;color:#f0c040;background:rgba(240,192,64,0.1)}
+.tab-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+
+/* ── 홈: 리그맵 ── */
 #page-home{padding-top:100px;padding-bottom:64px}
 .qhdr{
   display:flex;flex-direction:column;align-items:center;padding:8px 20px 6px;gap:3px;
@@ -265,8 +281,8 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
   .slogan-banner{padding:10px 16px}
   .slogan-kr{font-size:12px}
   .slogan-en{font-size:10px}
-  .bnav-icon{font-size:18px}
-  .bnav-label{font-size:9px}
+  .league-tabs{gap:4px;padding:6px 8px}
+  .league-tab{padding:6px 10px;font-size:11px}
   .rp{display:none}
   .ltop{margin-top:56px;padding:10px 16px}
   .btn-back{padding:6px 12px;font-size:12px}
@@ -327,9 +343,18 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
   </div>
 </div>
 
+<!-- 리그 전환 탭 -->
+<div class="league-tabs" id="leagueTabs">
+  <button class="league-tab" data-league="dust" onclick="switchLeague('dust')"><span class="tab-dot" style="background:#94a3b8"></span><span>더스트</span></button>
+  <button class="league-tab" data-league="star" onclick="switchLeague('star')"><span class="tab-dot" style="background:#fbbf24"></span><span>스타</span></button>
+  <button class="league-tab" data-league="planet" onclick="switchLeague('planet')"><span class="tab-dot" style="background:#34d399"></span><span>플래닛</span></button>
+  <button class="league-tab" data-league="nova" onclick="switchLeague('nova')"><span class="tab-dot" style="background:#c084fc"></span><span>노바</span></button>
+  <button class="league-tab active" data-league="quasar" onclick="switchLeague('quasar')"><span class="tab-dot" style="background:#f0c040"></span><span>퀘이사</span></button>
+</div>
+
 <!-- ══════ 페이지들 ══════ -->
 
-<!-- 홈: 퀘이사 리그맵 -->
+<!-- 홈: 리그맵 -->
 <div id="page-home" class="page active">
   <div class="qhdr">
     <div class="qhdr-top"><span class="qhdr-gem">✦</span><span class="qhdr-title">Quasar League</span><span class="qhdr-gem">✦</span></div>
@@ -646,6 +671,115 @@ function showAvChat(msg){
 
 // ── 버그 리포트 ──
 async function submitBugReport(){var t=localStorage.getItem('accessToken');if(!t){alert('로그인이 필요합니다.');return}try{var r=await fetch('/api/bugs',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},body:JSON.stringify({page:document.getElementById('bugPage').value,issue_type:document.getElementById('bugType').value,description:document.getElementById('bugDesc').value})});var d=await r.json();if(r.ok){showToast(d.message);document.getElementById('bugModal').classList.remove('open');document.getElementById('bugDesc').value=''}else{alert(d.message||'제출 실패')}}catch(e){alert('네트워크 오류')}}
+
+// ── 리그 전환 ──
+const LEAGUE_DATA = {
+  dust: {
+    name:'DUST LEAGUE', subtitle:'모든 별의 시작점 · 신생 팬클럽', color:'#94a3b8',
+    fanclubs:[
+      {name:'STARDUST',score:'12,450',rank:1,icon:'⭐',size:380,fontSize:100,orbClass:'r1'},
+      {name:'MOONLIGHT',score:'9,800',rank:2,icon:'🌙',size:200,fontSize:54,orbClass:'r2'},
+      {name:'TWILIGHT',score:'7,200',rank:3,icon:'🌅',size:200,fontSize:54,orbClass:'r3'},
+      {name:'NEBULA KIDS',score:'5,100',rank:4,icon:'💫',size:200,fontSize:54,orbClass:'r4'},
+      {name:'FIRST LIGHT',score:'3,200',rank:5,icon:'✨',size:200,fontSize:54,orbClass:'r5'}
+    ]
+  },
+  star: {
+    name:'STAR LEAGUE', subtitle:'빛나는 도약 · 성장하는 팬클럽', color:'#fbbf24',
+    fanclubs:[
+      {name:'GOLDEN WAVE',score:'45,200',rank:1,icon:'🌊',size:380,fontSize:100,orbClass:'r1'},
+      {name:'SUNFLOWER',score:'38,900',rank:2,icon:'🌻',size:200,fontSize:54,orbClass:'r2'},
+      {name:'LIGHTBEAM',score:'31,500',rank:3,icon:'💡',size:200,fontSize:54,orbClass:'r3'},
+      {name:'HONEY BEE',score:'25,800',rank:4,icon:'🐝',size:200,fontSize:54,orbClass:'r4'},
+      {name:'SUNRISE',score:'19,400',rank:5,icon:'🌅',size:200,fontSize:54,orbClass:'r5'}
+    ]
+  },
+  planet: {
+    name:'PLANET LEAGUE', subtitle:'궤도에 오른 힘 · 안정된 팬클럽', color:'#34d399',
+    fanclubs:[
+      {name:'EVERGREEN',score:'78,500',rank:1,icon:'🌿',size:380,fontSize:100,orbClass:'r1'},
+      {name:'OCEAN DEEP',score:'65,200',rank:2,icon:'🌊',size:200,fontSize:54,orbClass:'r2'},
+      {name:'EARTH CORE',score:'54,800',rank:3,icon:'🌍',size:200,fontSize:54,orbClass:'r3'},
+      {name:'JADE',score:'43,100',rank:4,icon:'💚',size:200,fontSize:54,orbClass:'r4'},
+      {name:'FOREST',score:'35,600',rank:5,icon:'🌲',size:200,fontSize:54,orbClass:'r5'}
+    ]
+  },
+  nova: {
+    name:'NOVA LEAGUE', subtitle:'폭발하는 에너지 · 영향력 있는 팬클럽', color:'#c084fc',
+    fanclubs:[
+      {name:'SUPERNOVA',score:'112,000',rank:1,icon:'💜',size:380,fontSize:100,orbClass:'r1'},
+      {name:'PURPLE RAIN',score:'98,700',rank:2,icon:'🔮',size:200,fontSize:54,orbClass:'r2'},
+      {name:'COSMOS',score:'87,300',rank:3,icon:'🌌',size:200,fontSize:54,orbClass:'r3'},
+      {name:'MYSTIC',score:'76,500',rank:4,icon:'✨',size:200,fontSize:54,orbClass:'r4'},
+      {name:'VIOLET',score:'65,200',rank:5,icon:'💟',size:200,fontSize:54,orbClass:'r5'}
+    ]
+  },
+  quasar: {
+    name:'QUASAR LEAGUE', subtitle:'제국의 정점 · 실시간 팬클럽 화력 순위', color:'#f0c040',
+    fanclubs:[
+      {name:'SERENADE',score:'127,450',rank:1,icon:'🌟',size:380,fontSize:100,orbClass:'r1'},
+      {name:'NOVA CORE',score:'98,320',rank:2,icon:'💜',size:200,fontSize:54,orbClass:'r2'},
+      {name:'ECLIPSE',score:'82,100',rank:3,icon:'🔵',size:200,fontSize:54,orbClass:'r3'},
+      {name:'AURORA',score:'71,880',rank:4,icon:'💚',size:200,fontSize:54,orbClass:'r4'},
+      {name:'SOLARIS',score:'63,240',rank:5,icon:'🔴',size:200,fontSize:54,orbClass:'r5'}
+    ]
+  }
+};
+
+// 노드 위치 (1위 중앙, 2위 북, 3위 남, 4위 서, 5위 동)
+const NODE_POSITIONS = [
+  {left:710,top:410}, {left:800,top:55}, {left:800,top:950}, {left:155,top:500}, {left:1445,top:500}
+];
+
+function switchLeague(league) {
+  const data = LEAGUE_DATA[league];
+  if (!data) return;
+
+  // 탭 active 변경 + 리그 색상 적용
+  document.querySelectorAll('.league-tab').forEach(tab => {
+    tab.classList.remove('active');
+    tab.style.borderColor = '';
+    tab.style.color = '';
+    tab.style.background = '';
+  });
+  const activeTab = document.querySelector(`[data-league="${league}"]`);
+  activeTab.classList.add('active');
+  activeTab.style.borderColor = data.color;
+  activeTab.style.color = data.color;
+  activeTab.style.background = `${data.color}15`;
+
+  // 리그 헤더 업데이트
+  document.querySelector('.qhdr-title').textContent = data.name;
+  document.querySelector('.qhdr-title').style.color = data.color;
+  document.querySelectorAll('.qhdr-gem').forEach(g => g.style.color = data.color);
+  document.querySelector('.qhdr-sub').textContent = `— ${data.subtitle} —`;
+
+  // 별자리 노드 업데이트
+  const cw = document.getElementById('cw');
+  // 기존 노드 제거
+  cw.querySelectorAll('.q-node').forEach(n => n.remove());
+
+  // 새 노드 생성
+  data.fanclubs.forEach((fc, i) => {
+    const pos = NODE_POSITIONS[i];
+    const node = document.createElement('div');
+    node.className = 'q-node' + (i === 0 ? ' c1' : '');
+    node.setAttribute('data-fan', fc.name);
+    node.style.left = pos.left + 'px';
+    node.style.top = pos.top + 'px';
+    node.onclick = function() { goFromNode(this); };
+    node.innerHTML = `
+      <div class="q-orb ${fc.orbClass}"><span style="font-size:${fc.fontSize}px">${fc.icon}</span><div class="q-rank">${fc.rank}</div></div>
+      <div class="q-lbl"><div class="q-name">${fc.name}</div><div class="q-score">${fc.score} QP</div></div>
+    `;
+    cw.appendChild(node);
+  });
+
+  // 링 색상 변경
+  cw.querySelectorAll('.q-ring').forEach(ring => {
+    ring.style.borderColor = `${data.color}20`;
+  });
+}
 
 // ══════════════════════════════════════════════
 //  별빛 배경 스크립트
