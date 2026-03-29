@@ -564,7 +564,9 @@ body::-webkit-scrollbar { width:0; }
 
 /* ── 탭 슬라이드 ── */
 .tab-content-wrapper {
-  overflow:hidden; position:relative; z-index:1;
+  overflow:hidden;
+  position:relative;
+  z-index:1;
 }
 .tab-slider {
   display:flex;
@@ -572,7 +574,10 @@ body::-webkit-scrollbar { width:0; }
   will-change:transform;
 }
 .tab-panel {
-  min-width:100%; flex-shrink:0;
+  min-width:100%;
+  flex-shrink:0;
+  overflow-y:auto;
+  max-height:calc(100vh - 150px);
 }
 </style>
 </head>
