@@ -87,12 +87,18 @@ canvas{position:absolute;inset:0;z-index:1}
 .nav-label{font-size:8px;font-weight:500;letter-spacing:-.3px}
 .nav-dot{width:3px;height:3px;border-radius:50%;background:var(--lp);margin-top:1px;opacity:0;transition:opacity .2s}
 .btm-nav a.active .nav-dot{opacity:1}
+/* 미니 이벤트 팝업 */
+.mini-evt-float{position:absolute;z-index:25;pointer-events:none;display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:12px;background:rgba(10,10,22,.85);border:1px solid var(--border);backdrop-filter:blur(4px);white-space:nowrap;animation:evtFloat 3.5s ease-out forwards}
+.mini-evt-float .ei{font-size:12px}
+.mini-evt-float .et{font-size:8px;color:var(--text)}
+.mini-evt-float .en{color:var(--lp);font-weight:700}
+@keyframes evtFloat{0%{opacity:0;transform:translateY(10px)}10%{opacity:1;transform:translateY(0)}75%{opacity:1;transform:translateY(-8px)}100%{opacity:0;transform:translateY(-20px)}}
 </style>
 </head>
 <body>
 <div class="ent" id="ent"><div class="ent-t" id="entT">STARIUM</div><div class="ent-s" id="entS">entering...</div></div>
 <header class="hdr"><div class="hdr-l"><div class="hdr-back" onclick="history.length>1?history.back():location='/'">←</div><div><div class="hdr-name" id="hName">STARIUM</div><div class="hdr-sub"><span class="hdr-dot"></span><span id="hLg">스타 리그</span> · <span id="hRk">#3</span></div></div></div><div class="hdr-r"><div class="hdr-w"><span id="wI">☀️</span><span id="wT">맑음</span></div><div class="hdr-on"><span class="hdr-on-dot"></span><span id="hOn">1,234</span></div></div></header>
-<div class="vc" id="vc"><div class="vw" id="vw"><canvas id="cv"></canvas><div id="bL"></div><div class="avatar" id="myAv" style="left:960px;top:760px"><div class="av-body">🧑</div><div class="av-tag">나</div></div><div id="nL"></div></div></div>
+<div class="vc" id="vc"><div class="vw" id="vw"><canvas id="cv"></canvas><div id="bL"></div><div class="avatar" id="myAv" style="left:960px;top:760px"><div class="av-body">🧑</div><div class="av-tag">나</div></div><div id="nL"></div><div id="miniEvts" style="position:absolute;z-index:25;pointer-events:none"></div></div></div>
 <div class="bot"><div class="bot-s"><div><div class="bot-sv" id="bM">98,432</div><div class="bot-sl">멤버</div></div><div><div class="bot-sv" id="bS">847</div><div class="bot-sl">점수</div></div></div><div class="bot-e"><div class="bot-eb"><div class="bot-ef" id="bE" style="width:72%"></div></div><div class="bot-el">에너지 <span id="bP">72%</span></div></div><div class="bot-d" id="bD">D-14</div></div>
 <div class="hint" id="hint">빈 곳을 클릭하면 이동!</div>
 <div class="mo" id="mo" onclick="closeMo(event)"><div class="mo-c" id="moC" onclick="event.stopPropagation()"></div></div>
@@ -260,7 +266,7 @@ function draw(){
   ctx.clearRect(0,0,W,H);
   drawSky();drawGround();drawRoads();drawPlaza();
   drawPond();drawBridge();drawFlowers();
-  drawBuildings();drawLamps();drawMonument();
+  drawBuildings();drawLamps();drawMonument();drawGate();drawProps();
   drawSmoke();drawParticles();
   anim=requestAnimationFrame(draw);
 }
@@ -1085,6 +1091,10 @@ function drawParticles(){
   ctx.globalAlpha=1;
 }
 
+// 게이트/소품은 Part 2에서 구현 예정 — 임시 stub
+function drawGate(){}
+function drawProps(){}
+
 /* ═══ 렌더 ═══ */
 function render(league){
   t=LG[league];if(!t)return;
@@ -1193,6 +1203,7 @@ window.addEventListener('DOMContentLoaded',()=>{
       setTimeout(()=>{
         ent.style.display='none';
         ent.remove();
+        startMiniEvents();
         showToast('🌟 '+DM.name+' STARIUM');
         setTimeout(()=>{
           document.getElementById('hint').classList.add('show');
@@ -1203,8 +1214,52 @@ window.addEventListener('DOMContentLoaded',()=>{
   } else {
     /* 진입 화면 없으면 바로 렌더링 */
     render(DM.league);showData(DM);setW(DM.energy);initDrag();animNPC();
+    startMiniEvents();
   }
 });
+/* 미니 이벤트 팝업 (살아있는 마을) */
+const MINI_EVENTS=[
+  {icon:'⚡',tpl:'{name}님이 출석체크!'},
+  {icon:'🏆',tpl:'{name}님이 레벨업!'},
+  {icon:'💌',tpl:'새 소원이 등록되었습니다!'},
+  {icon:'🎵',tpl:'{name}님이 소울 레조넌스!'},
+  {icon:'🗳️',tpl:'투표소에 새 안건 등록!'},
+  {icon:'🎁',tpl:'{name}님이 선물을 보냈어요!'},
+  {icon:'📝',tpl:'{name}님이 게시글 작성!'},
+  {icon:'🌟',tpl:'{name}님이 별똥별을 띄웠어요!'},
+  {icon:'👋',tpl:'{name}님이 마을에 입장!'},
+  {icon:'🎪',tpl:'이벤트 광장이 활기차요!'},
+  {icon:'💫',tpl:'{name}님 아키타입 진화!'},
+  {icon:'🔥',tpl:'우리 팬클럽 순위 상승!'},
+  {icon:'🏅',tpl:'{name}님이 뱃지 획득!'},
+  {icon:'💜',tpl:'{name}님이 팬아트 업로드!'},
+  {icon:'📊',tpl:'오늘 활동 에너지 +5%!'},];
+const MINI_NAMES=['StarFan','MoonChild','ArmyLove','PurpleU','Dreamer','GalaxyHeart','NovaRider','CosmicSoul','StellarBoy','LightBeam','OrbitGirl','StarDust99','NeonWave','EchoStar','LunarFox'];
+let miniEvtTimer=null;
+
+function startMiniEvents(){  const container=document.getElementById('miniEvts');
+  if(!container||miniEvtTimer)return;
+
+  function spawn(){
+    if(document.hidden)return;
+    const evt=MINI_EVENTS[Math.floor(Math.random()*MINI_EVENTS.length)];
+    const name=MINI_NAMES[Math.floor(Math.random()*MINI_NAMES.length)];
+    const text=evt.tpl.replace('{name}',name);
+
+    const el=document.createElement('div');
+    el.className='mini-evt-float';
+    el.style.left=(W*.15+Math.random()*W*.7)+'px';
+    el.style.top=(H*.25+Math.random()*H*.45)+'px';
+    el.innerHTML='<span class="ei">'+evt.icon+'</span><span class="et"><span class="en">'+name+'</span> '+text.replace(name+'님','님')+'</span>';
+
+    container.appendChild(el);
+    setTimeout(()=>el.remove(),4000);
+  }
+
+  setTimeout(spawn,3000);
+  miniEvtTimer=setInterval(spawn,6000+Math.random()*4000);
+}
+
 window.switchLeague=function(l){if(!LG[l])return;DM.league=l;render(l);showData(DM);showToast('🌟 '+LG[l].name+' — '+LG[l].vName)};
 </script>
 </body>
