@@ -1496,6 +1496,65 @@ document.addEventListener('keydown',e=>{
   }
 });
 
+/* 미니 채팅창 드래그 이동 */
+(function(){
+  let isDrag=false,startX=0,startY=0,origX=0,origY=0;
+  document.addEventListener('mousedown',function(e){
+    const hdr=e.target.closest('.mc-hdr');
+    if(!hdr||e.target.closest('.mc-btn'))return;
+    const chat=document.getElementById('miniChat');
+    if(!chat.classList.contains('show'))return;
+    isDrag=true;
+    startX=e.clientX;startY=e.clientY;
+    const rect=chat.getBoundingClientRect();
+    origX=rect.left;origY=rect.top;
+    chat.style.transition='none';
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove',function(e){
+    if(!isDrag)return;
+    const chat=document.getElementById('miniChat');
+    const dx=e.clientX-startX,dy=e.clientY-startY;
+    chat.style.left=(origX+dx)+'px';
+    chat.style.top=(origY+dy)+'px';
+    chat.style.bottom='auto';
+    chat.style.transform='none';
+  });
+  document.addEventListener('mouseup',function(){
+    if(!isDrag)return;
+    isDrag=false;
+    document.getElementById('miniChat').style.transition='opacity .3s';
+  });
+  /* 터치 지원 */
+  document.addEventListener('touchstart',function(e){
+    const hdr=e.target.closest('.mc-hdr');
+    if(!hdr||e.target.closest('.mc-btn'))return;
+    const chat=document.getElementById('miniChat');
+    if(!chat.classList.contains('show'))return;
+    isDrag=true;
+    const tc=e.touches[0];
+    startX=tc.clientX;startY=tc.clientY;
+    const rect=chat.getBoundingClientRect();
+    origX=rect.left;origY=rect.top;
+    chat.style.transition='none';
+  },{passive:true});
+  document.addEventListener('touchmove',function(e){
+    if(!isDrag)return;
+    const tc=e.touches[0];
+    const chat=document.getElementById('miniChat');
+    const dx=tc.clientX-startX,dy=tc.clientY-startY;
+    chat.style.left=(origX+dx)+'px';
+    chat.style.top=(origY+dy)+'px';
+    chat.style.bottom='auto';
+    chat.style.transform='none';
+  },{passive:true});
+  document.addEventListener('touchend',function(){
+    if(!isDrag)return;
+    isDrag=false;
+    document.getElementById('miniChat').style.transition='opacity .3s';
+  });
+})();
+
 window.switchLeague=function(l){if(!LG[l])return;DM.league=l;render(l);showData(DM);showToast('🌟 '+LG[l].name+' — '+LG[l].vName);document.querySelectorAll('.lg-tab').forEach(t=>{t.classList.toggle('active',t.dataset.lg===l)})};
 </script>
 </body>
