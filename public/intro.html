@@ -45,6 +45,8 @@ canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0}
   font-family:'Orbitron',monospace;font-size:clamp(11px,1.8vw,15px);
   color:var(--gold);letter-spacing:3px;opacity:0.7;
 }
+.orbit-sub{font-size:clamp(11px,1.5vw,13px);color:var(--gold);opacity:0.5;margin-top:6px;letter-spacing:0.5px}
+.orbit-sub-en{font-family:'Orbitron',monospace;font-size:clamp(9px,1.2vw,11px);opacity:0.35;margin-top:3px;letter-spacing:1px}
 .enter-btn{
   padding:15px 44px;border:2px solid var(--gold);border-radius:30px;
   background:transparent;color:var(--gold);font-family:'Orbitron',monospace;
@@ -98,6 +100,8 @@ canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0}
 <!-- 성궤번호 + 입장 버튼 -->
 <div id="entryContainer">
   <p class="orbit-number">✦ 성궤각인 #00,000,001 ✦</p>
+  <p class="orbit-sub">아스테리아가 당신에게 부여한 유일한 별. 기억하세요</p>
+  <p class="orbit-sub orbit-sub-en">Your one and only star from Asteria</p>
   <button class="enter-btn" onclick="goToMain()">은하에 입장하기 / Enter the Galaxy</button>
   <p class="tap-hint" id="tapHint">화면을 터치하세요 / Tap to Enter</p>
 </div>
@@ -155,7 +159,11 @@ class Star {
     this.opacity = 0; // 탄생 단계에서 서서히 나타남
     this.maxOpacity = Math.random() * 0.5 + 0.5;
     this.color = getRandomStarColor();
-    this.birthDelay = Math.random() * 2000; // 0~2초 사이 랜덤 등장
+    this.birthDelay = Math.random() * 3000; // 0~3초 사이 랜덤 등장
+    // gather 단계에서 원형 배치 목표 (중앙 기준 반지름 80px 원 위)
+    const gatherAngle = Math.random() * Math.PI * 2;
+    this.gatherX = 0; // animate에서 cx + cos * 80 계산
+    this.gatherY = 0;
     this.born = false;
   }
 }
@@ -275,7 +283,7 @@ function animate(now) {
   const cy = canvas.height / 2;
 
   if (isFirstVisit) {
-    // ── Step 1: 별 탄생 (0~2초) ──
+    // ── Step 1: 별 탄생 (0~3초) ──
     if (phase === 'birth') {
       stars.forEach(s => {
         if (elapsed >= s.birthDelay && !s.born) {
@@ -291,25 +299,35 @@ function animate(now) {
         }
       });
 
-      if (elapsed >= 2000) phase = 'gather';
+      if (elapsed >= 3000) {
+        phase = 'gather';
+        // gather 시작 시 각 별의 원형 목표 좌표 계산 (중앙 반지름 80px 원 위)
+        const radius = 80;
+        stars.forEach((s, i) => {
+          const a = (i / STAR_COUNT) * Math.PI * 2;
+          s.gatherX = cx + Math.cos(a) * radius;
+          s.gatherY = cy + Math.sin(a) * radius;
+        });
+      }
     }
 
-    // ── Step 2: 중앙으로 모임 (2~4초) ──
+    // ── Step 2: 중앙으로 원형 모임 (3~7초, 4초간) ──
     if (phase === 'gather') {
-      const gatherProgress = Math.min(1, (elapsed - 2000) / 2000);
+      const gatherProgress = Math.min(1, (elapsed - 3000) / 4000);
       // ease-in: 처음 느리게 → 점점 빨라짐
       const eased = gatherProgress * gatherProgress;
       centerGlow = eased;
 
       stars.forEach(s => {
-        const dx = cx - s.x;
-        const dy = cy - s.y;
+        // 원형 목표 좌표를 향해 소용돌이치며 이동
+        const dx = s.gatherX - s.x;
+        const dy = s.gatherY - s.y;
         const angle = Math.atan2(dy, dx);
         const dist = Math.sqrt(dx * dx + dy * dy);
 
-        // 소용돌이 이동 (나선형)
+        // 소용돌이 회전 + 원형 목표로 수렴
         const spiralStrength = 0.5 + eased * 0.3;
-        const moveSpeed = 0.02 + eased * 0.04;
+        const moveSpeed = 0.015 + eased * 0.035;
         s.x += Math.cos(angle + spiralStrength) * dist * moveSpeed;
         s.y += Math.sin(angle + spiralStrength) * dist * moveSpeed;
 
@@ -318,7 +336,7 @@ function animate(now) {
         s.opacity = s.maxOpacity * (0.7 + 0.3 * Math.sin(s.twinklePhase));
       });
 
-      if (elapsed >= 4000) {
+      if (elapsed >= 7000) {
         phase = 'explode';
         // 플래시 효과
         const flash = document.getElementById('flash');
@@ -328,9 +346,9 @@ function animate(now) {
       }
     }
 
-    // ── Step 3: 폭발 (4~5초) ──
+    // ── Step 3: 폭발 (7~8초) ──
     if (phase === 'explode') {
-      const explodeProgress = Math.min(1, (elapsed - 4000) / 1000);
+      const explodeProgress = Math.min(1, (elapsed - 7000) / 1000);
       centerGlow = Math.max(0, 1 - explodeProgress * 2);
 
       stars.forEach(s => {
@@ -353,12 +371,12 @@ function animate(now) {
         s.opacity = s.maxOpacity * (0.6 + 0.4 * Math.sin(s.twinklePhase));
       });
 
-      // 로고 페이드인 (4.3초부터)
-      if (elapsed >= 4300) {
+      // 로고 페이드인 (7.3초부터)
+      if (elapsed >= 7300) {
         document.getElementById('logoContainer').style.opacity = '1';
       }
 
-      if (elapsed >= 5000) {
+      if (elapsed >= 8000) {
         phase = 'idle';
         // 입장 버튼 표시
         document.getElementById('entryContainer').style.opacity = '1';
