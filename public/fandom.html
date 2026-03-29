@@ -108,7 +108,14 @@ canvas{position:absolute;inset:0;z-index:1}
 </nav>
 
 <script>
-const W=2000,H=1600;
+let W=2000,H=1600;
+const MAP_SIZE={
+  dust:{w:1400,h:1100},
+  star:{w:1800,h:1400},
+  planet:{w:2200,h:1700},
+  nova:{w:2600,h:2000},
+  quasar:{w:3000,h:2300}
+};
 const DM={name:'BTS ARMY',league:'star',rank:3,members:98432,score:847,energy:72,dday:14,online:1234,
 ann:['🔥 시즌 종료 D-14!','📢 새로운 소원 제안!'],ld:{n:'StarCommander',lv:78,a:'전략가'}};
 
@@ -213,15 +220,30 @@ quasar:{name:'퀘이사',lp:'#f0c040',ls:'#e6a800',lg:'rgba(240,192,64,.4)',lr:2
 
 /* 건물 위치 (광장 둘레에 넓게 분포한 단독주택) */
 const icons={dust:{hq:'⛺',board:'📌',vote:'📝',wish:'🕯️',org:'🏕️',event:'🔥',honor:'📜'},star:{hq:'🏰',board:'📋',vote:'🗳️',wish:'⭐',org:'🏗️',event:'🎪',honor:'🏛️'},planet:{hq:'🏢',board:'📊',vote:'🗳️',wish:'💫',org:'🏙️',event:'🎪',honor:'🏛️'},nova:{hq:'🏗️',board:'💻',vote:'🗳️',wish:'🌟',org:'🗼',event:'🎆',honor:'🏛️'},quasar:{hq:'👑',board:'📡',vote:'🗳️',wish:'✨',org:'🏯',event:'🎊',honor:'🏛️'}};
-const BLD=[
-  {id:'hq',x:860,y:380,w:140,h:120,nK:'팬클럽 본부',nE:'HQ'},
-  {id:'org',x:420,y:480,w:110,h:120,nK:'조직도 타워',nE:'Org Tower'},
-  {id:'wish',x:1360,y:480,w:120,h:110,nK:'소원의 신전',nE:'Wish Temple'},
-  {id:'board',x:320,y:780,w:120,h:100,nK:'게시판 거리',nE:'Board St.'},
-  {id:'vote',x:1440,y:780,w:110,h:100,nK:'투표소',nE:'Vote Center'},
-  {id:'event',x:480,y:1100,w:130,h:100,nK:'이벤트 광장',nE:'Event Plaza'},
-  {id:'honor',x:1280,y:1100,w:120,h:105,nK:'명예의 전당',nE:'Hall of Honor'},
+const BLD_BASE=[
+  {id:'hq',rx:.43,ry:.24,rw:.07,rh:.075,nK:'팬클럽 본부',nE:'HQ'},
+  {id:'org',rx:.21,ry:.30,rw:.055,rh:.075,nK:'조직도 타워',nE:'Org Tower'},
+  {id:'wish',rx:.68,ry:.30,rw:.06,rh:.069,nK:'소원의 신전',nE:'Wish Temple'},
+  {id:'board',rx:.16,ry:.49,rw:.06,rh:.063,nK:'게시판 거리',nE:'Board St.'},
+  {id:'vote',rx:.72,ry:.49,rw:.055,rh:.063,nK:'투표소',nE:'Vote Center'},
+  {id:'event',rx:.24,ry:.69,rw:.065,rh:.063,nK:'이벤트 광장',nE:'Event Plaza'},
+  {id:'honor',rx:.64,ry:.69,rw:.06,rh:.066,nK:'명예의 전당',nE:'Hall of Honor'},
 ];
+let BLD=[];
+const SCALE={dust:.8,star:.9,planet:1,nova:1.1,quasar:1.2};
+
+function calcBLD(league){
+  const sc=SCALE[league]||1;
+  BLD=BLD_BASE.map(b=>({
+    id:b.id,
+    x:Math.round(b.rx*W),
+    y:Math.round(b.ry*H),
+    w:Math.round(b.rw*W*sc),
+    h:Math.round(b.rh*H*sc),
+    nK:b.nK,
+    nE:b.nE
+  }));
+}
 
 let cv,ctx,t,anim;
 
@@ -901,6 +923,13 @@ function drawParticles(){
 /* ═══ 렌더 ═══ */
 function render(league){
   t=LG[league];if(!t)return;
+  // 리그별 맵 크기 적용
+  const ms=MAP_SIZE[league]||MAP_SIZE.star;
+  W=ms.w;H=ms.h;
+  cv.width=W;cv.height=H;
+  document.getElementById('vw').style.width=W+'px';
+  document.getElementById('vw').style.height=H+'px';
+  calcBLD(league);
   t.stars=({dust:60,star:100,planet:120,nova:150,quasar:180})[league];
   t.sBright=({dust:.4,star:.6,planet:.5,nova:.7,quasar:.85})[league];
   const r=document.documentElement;
@@ -952,7 +981,7 @@ function initDrag(){
   cx=-(W/2-ww/2);cy=-(H/2-wh/2);
   world.style.transform=`translate(${cx}px,${cy}px)`;
   function st(x,y){drag=true;sx=x;sy=y;ox=cx;oy=cy;moved=false}
-  function mv(x,y){if(!drag)return;const dx=x-sx,dy=y-sy;if(Math.abs(dx)>3||Math.abs(dy)>3)moved=true;cx=ox+dx;cy=oy+dy;cx=Math.max(-(W-ww+150),Math.min(150,cx));cy=Math.max(-(H-wh+150),Math.min(150,cy));world.style.transform=`translate(${cx}px,${cy}px)`}
+  function mv(x,y){if(!drag)return;const dx=x-sx,dy=y-sy;if(Math.abs(dx)>3||Math.abs(dy)>3)moved=true;cx=ox+dx;cy=oy+dy;const padX=Math.min(150,ww*.2),padY=Math.min(150,wh*.2);cx=Math.max(-(W-ww+padX),Math.min(padX,cx));cy=Math.max(-(H-wh+padY),Math.min(padY,cy));world.style.transform=`translate(${cx}px,${cy}px)`}
   function en(){drag=false}
   cont.addEventListener('mousedown',e=>{if(e.target.closest('.bld,.hdr-back,.mo'))return;st(e.clientX,e.clientY)});
   window.addEventListener('mousemove',e=>mv(e.clientX,e.clientY));window.addEventListener('mouseup',en);
@@ -961,7 +990,7 @@ function initDrag(){
   cont.addEventListener('touchmove',e=>{const tc=e.touches[0];mv(tc.clientX,tc.clientY)},{passive:true});
   cont.addEventListener('touchend',e=>{if(!moved){const tc=e.changedTouches[0];const a=document.getElementById('myAv');a.style.left=(tc.clientX-cx-12)+'px';a.style.top=(tc.clientY-cy-12)+'px';a.classList.add('walk');setTimeout(()=>a.classList.remove('walk'),700)}en()});
 }
-function animNPC(){document.querySelectorAll('.npc').forEach(n=>{setInterval(()=>{const cl=parseFloat(n.style.left)||900,ct=parseFloat(n.style.top)||800;n.style.left=Math.max(400,Math.min(1500,cl+(Math.random()-.5)*50))+'px';n.style.top=Math.max(500,Math.min(1100,ct+(Math.random()-.5)*40))+'px'},5000+Math.random()*4000)})}
+function animNPC(){document.querySelectorAll('.npc').forEach(n=>{setInterval(()=>{const cl=parseFloat(n.style.left)||900,ct=parseFloat(n.style.top)||800;n.style.left=Math.max(W*.2,Math.min(W*.8,cl+(Math.random()-.5)*50))+'px';n.style.top=Math.max(H*.3,Math.min(H*.7,ct+(Math.random()-.5)*40))+'px'},5000+Math.random()*4000)})}
 /* playEnt 로직은 DOMContentLoaded에 통합 */
 
 /* 모달 */
