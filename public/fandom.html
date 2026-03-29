@@ -266,18 +266,182 @@ function draw(){
 }
 
 function drawSky(){
-  const g=ctx.createLinearGradient(0,0,0,H*.45);
+  const skyH=H*.45;
+  const g=ctx.createLinearGradient(0,0,0,skyH);
   g.addColorStop(0,t.sky[0]);g.addColorStop(1,t.ground);
-  ctx.fillStyle=g;ctx.fillRect(0,0,W,H*.45);
-  // 별
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,skyH);
   const time=Date.now()/1000;
-  for(let i=0;i<(t.stars||80);i++){
-    const sx=(i*137.5)%W,sy=(i*97.3)%(H*.4);
-    const a=.15+Math.sin(time*.5+i)*(.2+t.sBright*.3);
+  const league=DM.league;
+
+  // === 별 (공통, 개수만 차등) ===
+  const starCount=t.stars||80;
+  for(let i=0;i<starCount;i++){
+    const sx=(i*137.5)%W,sy=(i*97.3)%(skyH);
+    const a=.15+Math.sin(time*.5+i)*(.2+(t.sBright||.5)*.3);
     ctx.globalAlpha=Math.max(0,a);ctx.fillStyle='#fff';
-    const starR=i%10===0?1.5:0.8; ctx.beginPath();ctx.arc(sx,sy,starR,0,Math.PI*2);ctx.fill();
+    const starR=i%10===0?1.5:0.8;
+    ctx.beginPath();ctx.arc(sx,sy,starR,0,Math.PI*2);ctx.fill();
   }
   ctx.globalAlpha=1;
+
+  if(league==='dust'){
+    // 먼지 안개 레이어
+    for(let i=0;i<3;i++){
+      const fogY=skyH*.3+i*skyH*.15;
+      const fg=ctx.createLinearGradient(0,fogY,0,fogY+skyH*.2);
+      fg.addColorStop(0,'transparent');
+      fg.addColorStop(.5,'rgba(80,70,50,.04)');
+      fg.addColorStop(1,'transparent');
+      ctx.fillStyle=fg;
+      ctx.fillRect(0,fogY,W,skyH*.2);
+    }
+    // 유성 1개 (느리게)
+    const mPhase=(time*.08)%1;
+    if(mPhase<.3){
+      const mx=W*.2+mPhase*W*.6,my=skyH*.1+mPhase*skyH*.5;
+      ctx.globalAlpha=.3*(1-mPhase/.3);
+      ctx.strokeStyle='#aa9060';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(mx,my);ctx.lineTo(mx-30,my-15);ctx.stroke();
+      ctx.fillStyle='#aa9060';ctx.beginPath();ctx.arc(mx,my,1.2,0,Math.PI*2);ctx.fill();
+      ctx.globalAlpha=1;
+    }
+
+  } else if(league==='star'){
+    // 은하수 (희미한 띠)
+    ctx.save();
+    ctx.globalAlpha=.06;
+    const mgrd=ctx.createLinearGradient(W*.1,0,W*.9,skyH);
+    mgrd.addColorStop(0,'transparent');mgrd.addColorStop(.3,'#ffeedd');
+    mgrd.addColorStop(.5,'#ffe8cc');mgrd.addColorStop(.7,'#ffeedd');
+    mgrd.addColorStop(1,'transparent');
+    ctx.fillStyle=mgrd;
+    ctx.beginPath();
+    ctx.moveTo(W*.05,0);ctx.quadraticCurveTo(W*.3,skyH*.4,W*.5,skyH*.5);
+    ctx.quadraticCurveTo(W*.7,skyH*.6,W*.95,skyH*.2);
+    ctx.lineTo(W*.9,skyH*.15);ctx.quadraticCurveTo(W*.65,skyH*.5,W*.45,skyH*.45);
+    ctx.quadraticCurveTo(W*.25,skyH*.35,W*.1,0);
+    ctx.closePath();ctx.fill();
+    ctx.restore();
+    // 유성 가끔
+    const mP2=(time*.12)%1;
+    if(mP2<.2){
+      const mx=W*.3+mP2*W*.5,my=skyH*.05+mP2*skyH*.4;
+      ctx.globalAlpha=.4*(1-mP2/.2);      ctx.strokeStyle='#ffd700';ctx.lineWidth=1.2;
+      ctx.beginPath();ctx.moveTo(mx,my);ctx.lineTo(mx-40,my-18);ctx.stroke();
+      ctx.fillStyle='#ffd700';ctx.beginPath();ctx.arc(mx,my,1.5,0,Math.PI*2);ctx.fill();
+      ctx.globalAlpha=1;
+    }
+
+  } else if(league==='planet'){
+    // 거대 고리 행성
+    const px=W*.75,py=skyH*.3,pr=skyH*.28;
+    // 행성 본체
+    const pgrd=ctx.createRadialGradient(px-pr*.2,py-pr*.1,0,px,py,pr);
+    pgrd.addColorStop(0,'#1a4a3a');pgrd.addColorStop(.5,'#0e3028');
+    pgrd.addColorStop(1,'#082018');
+    ctx.fillStyle=pgrd;
+    ctx.beginPath();ctx.arc(px,py,pr,0,Math.PI*2);ctx.fill();
+    // 행성 대기
+    ctx.strokeStyle='rgba(52,211,153,.08)';ctx.lineWidth=3;
+    ctx.beginPath();ctx.arc(px,py,pr+3,0,Math.PI*2);ctx.stroke();
+    // 행성 줄무늬
+    ctx.globalAlpha=.06;
+    for(let i=-3;i<=3;i++){
+      ctx.strokeStyle='#40e0a0';ctx.lineWidth=2;
+      ctx.beginPath();
+      const sy2=py+i*pr*.18;
+      ctx.moveTo(px-pr*.9,sy2);ctx.quadraticCurveTo(px,sy2+i*2,px+pr*.9,sy2);ctx.stroke();
+    }
+    ctx.globalAlpha=1;
+    // 고리 (앞쪽)
+    ctx.strokeStyle='rgba(52,211,153,.12)';ctx.lineWidth=8;
+    ctx.beginPath();ctx.ellipse(px,py,pr*1.7,pr*.25,.15,Math.PI*.05,Math.PI*.95);ctx.stroke();
+    ctx.strokeStyle='rgba(52,211,153,.06)';ctx.lineWidth=4;
+    ctx.beginPath();ctx.ellipse(px,py,pr*1.9,pr*.3,.15,Math.PI*.1,Math.PI*.9);ctx.stroke();
+    // 행성 그림자 (고리 뒷부분 가림)
+    ctx.fillStyle=pgrd;
+    ctx.beginPath();ctx.arc(px,py,pr,0,Math.PI*2);ctx.fill();
+    // 고리 (뒤쪽)
+    ctx.strokeStyle='rgba(52,211,153,.08)';ctx.lineWidth=6;
+    ctx.beginPath();ctx.ellipse(px,py,pr*1.7,pr*.25,.15,Math.PI*1.05,Math.PI*1.95);ctx.stroke();
+
+  } else if(league==='nova'){
+    // 오로라 물결
+    for(let i=0;i<4;i++){
+      const ay=skyH*(.15+i*.12);
+      const wave=Math.sin(time*.3+i*.8)*skyH*.05;
+      ctx.globalAlpha=.04+Math.sin(time*.5+i)*.02;
+      const agrd=ctx.createLinearGradient(0,ay+wave,0,ay+wave+skyH*.15);
+      const colors=[
+        ['#c084fc','#a855f7','#7c3aed'],
+        ['#818cf8','#6366f1','#4f46e5'],
+        ['#c084fc','#d946ef','#a855f7'],
+        ['#38bdf8','#818cf8','#c084fc']
+      ][i];
+      agrd.addColorStop(0,'transparent');agrd.addColorStop(.3,colors[0]);
+      agrd.addColorStop(.6,colors[1]);agrd.addColorStop(1,'transparent');
+      ctx.fillStyle=agrd;
+      ctx.beginPath();
+      ctx.moveTo(0,ay+wave);
+      for(let x=0;x<=W;x+=W/20){
+        const yy=ay+wave+Math.sin(time*.4+x*.003+i*1.5)*skyH*.06;
+        ctx.lineTo(x,yy);
+      }
+      for(let x=W;x>=0;x-=W/20){
+        const yy=ay+wave+skyH*.15+Math.sin(time*.3+x*.004+i)*skyH*.04;
+        ctx.lineTo(x,yy);
+      }
+      ctx.closePath();ctx.fill();
+    }
+    ctx.globalAlpha=1;
+
+  } else if(league==='quasar'){
+    // 황금빛 은하수 (굵고 밝게)
+    ctx.save();
+    ctx.globalAlpha=.1;
+    const mgrd=ctx.createLinearGradient(0,0,W,skyH);
+    mgrd.addColorStop(0,'transparent');mgrd.addColorStop(.2,'#f0c040');
+    mgrd.addColorStop(.4,'#ffe080');mgrd.addColorStop(.6,'#f0c040');
+    mgrd.addColorStop(.8,'#ffe080');mgrd.addColorStop(1,'transparent');
+    ctx.fillStyle=mgrd;
+    ctx.beginPath();
+    ctx.moveTo(0,skyH*.1);
+    ctx.bezierCurveTo(W*.2,skyH*.5,W*.4,skyH*.15,W*.5,skyH*.4);
+    ctx.bezierCurveTo(W*.6,skyH*.65,W*.8,skyH*.2,W,skyH*.35);
+    ctx.lineTo(W,skyH*.25);
+    ctx.bezierCurveTo(W*.75,skyH*.1,W*.55,skyH*.55,W*.45,skyH*.3);
+    ctx.bezierCurveTo(W*.35,skyH*.05,W*.15,skyH*.4,0,skyH*.02);
+    ctx.closePath();ctx.fill();
+    ctx.restore();
+    // 별자리 라인 연결
+    ctx.strokeStyle='rgba(240,192,64,.08)';ctx.lineWidth=.5;
+    const constellations=[
+      [[W*.1,skyH*.15],[W*.15,skyH*.1],[W*.2,skyH*.18],[W*.18,skyH*.25]],
+      [[W*.55,skyH*.08],[W*.6,skyH*.15],[W*.65,skyH*.05],[W*.7,skyH*.12]],
+      [[W*.8,skyH*.2],[W*.85,skyH*.12],[W*.9,skyH*.22],[W*.88,skyH*.3]]
+    ];
+    constellations.forEach(pts=>{
+      ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);
+      for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i][0],pts[i][1]);
+      ctx.stroke();
+      pts.forEach(([px,py])=>{
+        ctx.fillStyle='#f0c040';ctx.globalAlpha=.6;
+        ctx.beginPath();ctx.arc(px,py,2,0,Math.PI*2);ctx.fill();
+        ctx.globalAlpha=1;
+      });
+    });
+    // 유성우 (3개 동시)
+    for(let m=0;m<3;m++){      const mP=(time*.15+m*.33)%1;
+      if(mP<.25){
+        const mmx=W*(.1+m*.3)+mP*W*.3,mmy=skyH*.05+mP*skyH*.5;
+        ctx.globalAlpha=.5*(1-mP/.25);
+        ctx.strokeStyle='#ffd700';ctx.lineWidth=1.5;
+        ctx.beginPath();ctx.moveTo(mmx,mmy);ctx.lineTo(mmx-50,mmy-22);ctx.stroke();
+        ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(mmx,mmy,2,0,Math.PI*2);ctx.fill();
+      }
+    }
+    ctx.globalAlpha=1;
+  }
 }
 
 function drawGround(){
