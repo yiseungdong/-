@@ -533,6 +533,47 @@ html, body {
 
 /* ── 스크롤바 숨기기 ── */
 body::-webkit-scrollbar { width:0; }
+
+/* ── 탭 바 ── */
+.tab-bar {
+  position:sticky; top:96px; z-index:200;
+  display:flex; align-items:center;
+  background:rgba(10,10,22,0.96); backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(180,150,255,0.13);
+  position:relative;
+}
+.tab-btn {
+  flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
+  padding:12px 8px; border:none; background:none;
+  color:rgba(200,190,220,0.5); font-size:12px; font-weight:600;
+  font-family:'Noto Sans KR',sans-serif;
+  cursor:pointer; transition:color .3s;
+  position:relative; z-index:1;
+}
+.tab-btn.active { color:#f0c040; }
+.tab-btn:hover { color:#e8e4f0; }
+.tab-icon { font-size:16px; }
+.tab-text { font-size:11px; white-space:nowrap; }
+.tab-indicator {
+  position:absolute; bottom:0; left:0;
+  height:2px; width:33.33%;
+  background:#f0c040;
+  transition:transform .3s cubic-bezier(.4,0,.2,1);
+  border-radius:2px;
+}
+
+/* ── 탭 슬라이드 ── */
+.tab-content-wrapper {
+  overflow:hidden; position:relative; z-index:1;
+}
+.tab-slider {
+  display:flex;
+  transition:transform .4s cubic-bezier(.4,0,.2,1);
+  will-change:transform;
+}
+.tab-panel {
+  min-width:100%; flex-shrink:0;
+}
 </style>
 </head>
 <body>
@@ -581,149 +622,186 @@ body::-webkit-scrollbar { width:0; }
     </div>
   </div>
 
-  <!-- 2. 아바타 스테이지 (핵심) -->
-  <div class="avatar-stage" id="avatarStage">
-    <div class="stage-bg" id="stageBg"></div>
-    <div class="orbit-rings" id="orbitRings">
-      <div class="orbit-ring"></div>
-      <div class="orbit-ring"></div>
-      <div class="orbit-ring"></div>
-    </div>
-    <canvas id="avatarCanvas" width="280" height="280"></canvas>
-    <div class="avatar-info">
-      <div class="av-name" id="avName">별빛 탐험가</div>
-      <div class="av-grade" id="avGrade">SPIRIT · 정체성의 확립</div>
-      <div class="av-league-badge">
-        <span class="league-icon" id="leagueIcon">🌠</span>
-        <span class="league-name" id="leagueName">더스트 리그</span>
-      </div>
-    </div>
-    <div class="level-bar-wrap">
-      <div class="level-label">
-        <span id="levelText">Lv. 1</span>
-        <span id="expText">0 / 100 EXP</span>
-      </div>
-      <div class="level-bar">
-        <div class="level-fill" id="levelFill" style="width:0%"></div>
-      </div>
-    </div>
+  <!-- 탭 바 -->
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="character" onclick="switchTab('character')">
+      <span class="tab-icon">⭐</span>
+      <span class="tab-text">캐릭터</span>
+    </button>
+    <button class="tab-btn" data-tab="orbit" onclick="switchTab('orbit')">
+      <span class="tab-icon">🌌</span>
+      <span class="tab-text">성궤</span>
+    </button>
+    <button class="tab-btn" data-tab="record" onclick="switchTab('record')">
+      <span class="tab-icon">📜</span>
+      <span class="tab-text">전적</span>
+    </button>
+    <div class="tab-indicator" id="tabIndicator"></div>
   </div>
 
-  <!-- 3. 리그 전환 탭 (테스트용) -->
-  <div class="league-tab-bar" id="leagueTabBar">
-    <!-- JS에서 5개 리그 탭 생성 -->
-  </div>
+  <!-- 탭 컨텐츠 -->
+  <div class="tab-content-wrapper">
+    <div class="tab-slider" id="tabSlider">
 
-  <!-- 4. 오늘의 활동 요약 카드 -->
-  <div class="today-summary">
-    <div class="section-title">✦ TODAY 오늘의 활동</div>
-    <div class="summary-grid" id="summaryGrid">
-      <div class="summary-card">
-        <div class="summary-icon">🎯</div>
-        <div class="summary-value" id="sumMission">3/5</div>
-        <div class="summary-label">미션 완료 Missions</div>
-      </div>
-      <div class="summary-card">
-        <div class="summary-icon">⚡</div>
-        <div class="summary-value" id="sumAP">+240</div>
-        <div class="summary-label">획득 AP Gained</div>
-      </div>
-      <div class="summary-card">
-        <div class="summary-icon">📈</div>
-        <div class="summary-value" id="sumStat">+12</div>
-        <div class="summary-label">성장 스탯 Growth</div>
-      </div>
-      <div class="summary-card">
-        <div class="summary-icon">🏆</div>
-        <div class="summary-value" id="sumRank">▲ 2</div>
-        <div class="summary-label">랭킹 변동 Rank</div>
-      </div>
-    </div>
-  </div>
+      <!-- ═══ 패널 1: 캐릭터 ═══ -->
+      <div class="tab-panel" id="panel-character">
 
-  <!-- 5. 헥사곤 스탯 -->
-  <div class="hex-section">
-    <div class="section-title">✦ HEXAGON 헥사곤 스탯</div>
-    <div class="hex-row">
-      <canvas id="hexCanvas" width="180" height="180"></canvas>
-      <div class="stat-list" id="statList">
-        <!-- JS에서 6개 스탯 생성 -->
-      </div>
-    </div>
-  </div>
+        <!-- 2. 아바타 스테이지 (핵심) -->
+        <div class="avatar-stage" id="avatarStage">
+          <div class="stage-bg" id="stageBg"></div>
+          <div class="orbit-rings" id="orbitRings">
+            <div class="orbit-ring"></div>
+            <div class="orbit-ring"></div>
+            <div class="orbit-ring"></div>
+          </div>
+          <canvas id="avatarCanvas" width="280" height="280"></canvas>
+          <div class="avatar-info">
+            <div class="av-name" id="avName">별빛 탐험가</div>
+            <div class="av-grade" id="avGrade">SPIRIT · 정체성의 확립</div>
+            <div class="av-league-badge">
+              <span class="league-icon" id="leagueIcon">🌠</span>
+              <span class="league-name" id="leagueName">더스트 리그</span>
+            </div>
+          </div>
+          <div class="level-bar-wrap">
+            <div class="level-label">
+              <span id="levelText">Lv. 1</span>
+              <span id="expText">0 / 100 EXP</span>
+            </div>
+            <div class="level-bar">
+              <div class="level-fill" id="levelFill" style="width:0%"></div>
+            </div>
+          </div>
+        </div>
 
-  <!-- 6. 아우라 이펙트 카드 -->
-  <div class="aura-display">
-    <div class="section-title">✦ AURA 아우라 이펙트</div>
-    <div class="aura-card">
-      <div class="aura-preview" id="auraPreview">✨</div>
-      <div class="aura-name" id="auraName">별의 먼지</div>
-      <div class="aura-desc" id="auraDesc">은은한 먼지 파티클이 캐릭터 주변을 감싼다</div>
-    </div>
-  </div>
+        <!-- 3. 리그 전환 탭 (테스트용) -->
+        <div class="league-tab-bar" id="leagueTabBar"></div>
 
-  <!-- 7. 프로필 카드 -->
-  <div class="profile-section">
-    <div class="section-title">✦ PROFILE 프로필</div>
-    <div class="profile-card" id="profileCard">
-      <div class="profile-item">
-        <div class="profile-label">아키타입 Archetype</div>
-        <div class="profile-value" id="profArchetype">수호자</div>
-      </div>
-      <div class="profile-item">
-        <div class="profile-label">칭호 Title</div>
-        <div class="profile-value" id="profTitle">별빛 탐험가</div>
-      </div>
-      <div class="profile-item">
-        <div class="profile-label">팬클럽 소속 Fandom</div>
-        <div class="profile-value" id="profFandom">에스파 유니버스</div>
-      </div>
-      <div class="profile-item">
-        <div class="profile-label">가입일 Joined</div>
-        <div class="profile-value" id="profJoined">2026.03.15</div>
-      </div>
-    </div>
-  </div>
+        <!-- 4. 오늘의 활동 요약 카드 -->
+        <div class="today-summary">
+          <div class="section-title">✦ TODAY 오늘의 활동</div>
+          <div class="summary-grid" id="summaryGrid"></div>
+        </div>
 
-  <!-- 8. 경쟁 알림 배너 -->
-  <div class="comp-alert" id="compAlert">
-    <div class="comp-alert-icon">⚔️</div>
-    <div class="comp-alert-text">
-      <div class="comp-alert-title">팬덤 화력전 진행 중!</div>
-      <div class="comp-alert-sub">우리 팬덤 현재 3위 — 2위까지 1,240pt 남음</div>
-    </div>
-    <button class="comp-alert-btn">참여하기</button>
-  </div>
+        <!-- 5. 헥사곤 스탯 -->
+        <div class="hex-section">
+          <div class="section-title">✦ HEXAGON 헥사곤 스탯</div>
+          <div class="hex-row">
+            <canvas id="hexCanvas" width="180" height="180"></canvas>
+            <div class="stat-list" id="statList"></div>
+          </div>
+        </div>
 
-  <!-- 9. 실시간 순위 (팬덤 화력 순위) -->
-  <div class="competition-panel">
-    <div class="section-title">✦ RANKING 팬덤 화력 순위</div>
-    <div class="comp-card">
-      <div class="comp-header">
-        <div class="comp-header-left">🏆 실시간 순위</div>
-        <div class="comp-live">LIVE</div>
-      </div>
-      <div class="comp-list" id="compList">
-        <!-- JS에서 순위 생성 -->
-      </div>
-    </div>
-  </div>
+        <!-- 6. 아우라 이펙트 카드 -->
+        <div class="aura-display">
+          <div class="section-title">✦ AURA 아우라 이펙트</div>
+          <div class="aura-card">
+            <div class="aura-preview" id="auraPreview">✨</div>
+            <div class="aura-name" id="auraName">별의 먼지</div>
+            <div class="aura-desc" id="auraDesc">은은한 먼지 파티클이 캐릭터 주변을 감싼다</div>
+          </div>
+        </div>
 
-  <!-- 10. 오늘의 성장 미션 -->
-  <div class="missions-section">
-    <div class="section-title">✦ MISSIONS 오늘의 성장 미션</div>
-    <div class="mission-list" id="missionList">
-      <!-- JS에서 미션 생성 -->
-    </div>
-  </div>
+        <!-- 7. 프로필 카드 -->
+        <div class="profile-section">
+          <div class="section-title">✦ PROFILE 프로필</div>
+          <div class="profile-card" id="profCard"></div>
+        </div>
 
-  <!-- 11. 리그 성장 로드맵 -->
-  <div class="league-progress">
-    <div class="section-title">✦ ROADMAP 리그 성장 로드맵</div>
-    <div class="progress-track" id="progressTrack">
-      <!-- JS에서 5개 리그 노드 생성 -->
-    </div>
-  </div>
+        <!-- 8. 경쟁 알림 배너 -->
+        <div class="comp-alert" id="compAlert">
+          <div class="comp-alert-icon">⚔️</div>
+          <div class="comp-alert-text">
+            <div class="comp-alert-title" id="alertTitle">팬덤 화력전 진행 중!</div>
+            <div class="comp-alert-sub" id="alertBody">우리 팬덤 현재 3위 — 2위까지 1,240pt 남음</div>
+          </div>
+          <button class="comp-alert-btn" id="alertBtn" onclick="doMission()">참여하기</button>
+        </div>
+
+        <!-- 9. 실시간 순위 -->
+        <div class="competition-panel">
+          <div class="section-title">✦ RANKING 팬덤 화력 순위</div>
+          <div class="comp-card">
+            <div class="comp-header">
+              <div class="comp-header-left">🏆 실시간 순위</div>
+              <div class="comp-live">LIVE</div>
+            </div>
+            <div class="comp-list" id="compRows"></div>
+          </div>
+        </div>
+
+        <!-- 10. 오늘의 성장 미션 -->
+        <div class="missions-section">
+          <div class="section-title">✦ MISSIONS 오늘의 성장 미션</div>
+          <div class="mission-list" id="missionList"></div>
+        </div>
+
+        <!-- 11. 리그 성장 로드맵 -->
+        <div class="league-progress">
+          <div class="section-title">✦ ROADMAP 리그 성장 로드맵</div>
+          <div class="progress-track" id="leagueRoad"></div>
+        </div>
+
+      </div><!-- /panel-character -->
+
+      <!-- ═══ 패널 2: 성궤 ═══ -->
+      <div class="tab-panel" id="panel-orbit">
+        <div class="orbit-card-container" style="padding:16px;">
+          <div class="orbit-card" style="background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;">
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
+              <div id="occOrb" style="width:64px;height:64px;border-radius:50%;background:radial-gradient(circle,rgba(192,132,252,.3),rgba(7,7,15,.9));display:flex;align-items:center;justify-content:center;font-size:32px;">🌟</div>
+              <div>
+                <div id="occName" style="font-size:16px;font-weight:700;">별빛 탐험가</div>
+                <div id="occGrade" style="font-size:11px;color:var(--muted);margin-top:4px;">Lv.1 성아 — SEED</div>
+                <div id="occArchetype" style="font-size:10px;color:var(--accent);margin-top:2px;">수호자</div>
+              </div>
+            </div>
+            <div style="font-size:9px;color:var(--muted);text-align:right;" id="oscNumber">OSC-2026-0001</div>
+          </div>
+          <div class="section-title" style="margin-bottom:12px;">✦ STATS 스탯 현황</div>
+          <div id="orbitStats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;"></div>
+          <div class="section-title" style="margin-bottom:12px;">✦ RESOURCES 리소스</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;">
+            <div style="background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;">
+              <div style="font-size:9px;color:var(--muted);">AP</div>
+              <div id="resAP" style="font-size:14px;font-weight:700;color:var(--gold);">0</div>
+            </div>
+            <div style="background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;">
+              <div style="font-size:9px;color:var(--muted);">CP</div>
+              <div id="resCP" style="font-size:14px;font-weight:700;color:var(--accent);">0</div>
+            </div>
+            <div style="background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;">
+              <div style="font-size:9px;color:var(--muted);">스타더스트</div>
+              <div id="resSD" style="font-size:14px;font-weight:700;color:#38bdf8;">0</div>
+            </div>
+          </div>
+          <div class="section-title" style="margin-bottom:12px;">✦ MENU 성궤 메뉴</div>
+          <div id="orbitMenuGrid" style="display:grid;gap:8px;margin-bottom:16px;"></div>
+          <div class="section-title" style="margin-bottom:12px;">✦ SOVEREIGN 소버린 진행도</div>
+          <div id="sovereignCard" style="background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;"></div>
+        </div>
+      </div><!-- /panel-orbit -->
+
+      <!-- ═══ 패널 3: 전적 ═══ -->
+      <div class="tab-panel" id="panel-record">
+        <div style="padding:16px;">
+          <div class="section-title" style="margin-bottom:12px;">✦ PROFILE 프로필</div>
+          <div id="profileCard" style="background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;"></div>
+          <div class="section-title" style="margin-bottom:12px;">✦ HEATMAP 활동 잔디</div>
+          <div style="background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;overflow-x:auto;">
+            <canvas id="heatmapCanvas"></canvas>
+          </div>
+          <div class="section-title" style="margin-bottom:12px;">✦ MILESTONES 마일스톤</div>
+          <div id="milestoneTimeline" style="margin-bottom:16px;"></div>
+          <div class="section-title" style="margin-bottom:12px;">✦ SEASON 시즌 기록</div>
+          <div id="seasonCard" style="background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;"></div>
+          <div class="section-title" style="margin-bottom:12px;">✦ BADGES 뱃지</div>
+          <div id="badgeGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;"></div>
+        </div>
+      </div><!-- /panel-record -->
+
+    </div><!-- /tab-slider -->
+  </div><!-- /tab-content-wrapper -->
 
 </div><!-- /app -->
 
