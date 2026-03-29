@@ -1255,8 +1255,265 @@ async function initDB() {
     `);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_memory_user ON auto_memories(user_id, created_at DESC)`);
 
+    // ── 소원의 성궤 테이블 (#57) ──
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS wishes (
+        id SERIAL PRIMARY KEY,
+        fanclub_id INTEGER REFERENCES fanclubs(id),
+        proposer_id INTEGER REFERENCES users(id),
+        org_id INTEGER REFERENCES organizations(id),
+        org_level INTEGER DEFAULT 0,
+        title VARCHAR(100) NOT NULL,
+        description TEXT,
+        category VARCHAR(20) NOT NULL CHECK (category IN ('event','content','platform','community','charity','challenge')),
+        wish_type VARCHAR(20) DEFAULT 'main' CHECK (wish_type IN ('main','sub','surprise')),
+        status VARCHAR(20) DEFAULT 'proposed' CHECK (status IN ('proposed','climbing','selected','active','completed','failed','expired')),
+        energy_goal INTEGER NOT NULL DEFAULT 50000,
+        energy_current INTEGER DEFAULT 0,
+        season_id INTEGER,
+        sympathy_count INTEGER DEFAULT 0,
+        sympathy_threshold DECIMAL(3,2) DEFAULT 0.30,
+        sympathy_deadline TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW(),
+        selected_at TIMESTAMP,
+        completed_at TIMESTAMP
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS wish_sympathies (
+        id SERIAL PRIMARY KEY,
+        wish_id INTEGER REFERENCES wishes(id),
+        user_id INTEGER REFERENCES users(id),
+        org_id INTEGER REFERENCES organizations(id),
+        created_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(wish_id, user_id)
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS wish_energy_contributions (
+        id SERIAL PRIMARY KEY,
+        wish_id INTEGER REFERENCES wishes(id),
+        user_id INTEGER REFERENCES users(id),
+        energy_amount INTEGER NOT NULL,
+        source VARCHAR(30) NOT NULL CHECK (source IN ('auto_activity','mission','stardust','bonus')),
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS wish_missions (
+        id SERIAL PRIMARY KEY,
+        wish_id INTEGER REFERENCES wishes(id),
+        title VARCHAR(100) NOT NULL,
+        description TEXT,
+        energy_reward INTEGER NOT NULL DEFAULT 100,
+        mission_type VARCHAR(20) DEFAULT 'daily',
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS wish_archive (
+        id SERIAL PRIMARY KEY,
+        wish_id INTEGER REFERENCES wishes(id),
+        fanclub_id INTEGER REFERENCES fanclubs(id),
+        title VARCHAR(100),
+        category VARCHAR(20),
+        wish_type VARCHAR(20),
+        energy_goal INTEGER,
+        energy_final INTEGER,
+        achievement_rate DECIMAL(5,2),
+        contributor_count INTEGER,
+        season_id INTEGER,
+        star_name VARCHAR(100),
+        completed_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // ── 국민 투표 테이블 (#57) ──
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS sovereign_votes (
+        id SERIAL PRIMARY KEY,
+        fanclub_id INTEGER REFERENCES fanclubs(id),
+        proposer_id INTEGER REFERENCES users(id),
+        title VARCHAR(200) NOT NULL,
+        description TEXT,
+        vote_type VARCHAR(20) NOT NULL CHECK (vote_type IN ('leader_election','leader_recall','village_change','rule_change')),
+        status VARCHAR(20) DEFAULT 'discussion' CHECK (status IN ('discussion','voting','completed','cancelled')),
+        discussion_start TIMESTAMP DEFAULT NOW(),
+        discussion_end TIMESTAMP,
+        voting_start TIMESTAMP,
+        voting_end TIMESTAMP,
+        votes_for INTEGER DEFAULT 0,
+        votes_against INTEGER DEFAULT 0,
+        total_eligible INTEGER DEFAULT 0,
+        result VARCHAR(10) CHECK (result IN ('passed','rejected','tie')),
+        is_close_call BOOLEAN DEFAULT false,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS sovereign_vote_ballots (
+        id SERIAL PRIMARY KEY,
+        vote_id INTEGER REFERENCES sovereign_votes(id),
+        user_id INTEGER REFERENCES users(id),
+        choice VARCHAR(10) NOT NULL CHECK (choice IN ('for','against')),
+        created_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(vote_id, user_id)
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS sovereign_vote_discussions (
+        id SERIAL PRIMARY KEY,
+        vote_id INTEGER REFERENCES sovereign_votes(id),
+        user_id INTEGER REFERENCES users(id),
+        content TEXT NOT NULL,
+        stance VARCHAR(10) CHECK (stance IN ('for','against','neutral')),
+        likes INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // 소원/투표 인덱스
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_wishes_fanclub ON wishes(fanclub_id, status)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_wish_sympathies_wish ON wish_sympathies(wish_id)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_wish_energy_wish ON wish_energy_contributions(wish_id, user_id)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_sovereign_votes_fanclub ON sovereign_votes(fanclub_id, status)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_sovereign_ballots_vote ON sovereign_vote_ballots(vote_id)`);
+
+    // ── 경쟁 시스템 테이블 (Phase 6, #58~#65) ──
+
+    // ① 라이벌 매칭 테이블
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS rival_matches (
+        id SERIAL PRIMARY KEY,
+        season_id INTEGER,
+        month INTEGER NOT NULL,
+        year INTEGER NOT NULL,
+        user1_id INTEGER REFERENCES users(id),
+        user2_id INTEGER REFERENCES users(id),
+        user1_ap INTEGER DEFAULT 0,
+        user2_ap INTEGER DEFAULT 0,
+        winner_id INTEGER REFERENCES users(id),
+        status VARCHAR(20) DEFAULT 'matched' CHECK (status IN ('matched','active','completed','declined')),
+        user1_message TEXT,
+        user2_message TEXT,
+        match_start TIMESTAMP,
+        match_end TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(user1_id, month, year)
+      )
+    `);
+
+    // ① 스탯킹 기록 테이블
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS stat_kings (
+        id SERIAL PRIMARY KEY,
+        season_id INTEGER,
+        month INTEGER NOT NULL,
+        year INTEGER NOT NULL,
+        user_id INTEGER REFERENCES users(id),
+        fanclub_id INTEGER REFERENCES fanclubs(id),
+        stat_type VARCHAR(10) NOT NULL CHECK (stat_type IN ('LOY','ACT','SOC','ECO','CRE','INT')),
+        growth_amount DECIMAL(10,2) DEFAULT 0,
+        rank_position INTEGER NOT NULL,
+        league VARCHAR(20),
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // ② 모임 워즈 테이블
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS org_wars (
+        id SERIAL PRIMARY KEY,
+        season_id INTEGER,
+        month INTEGER NOT NULL,
+        year INTEGER NOT NULL,
+        parent_org_id INTEGER REFERENCES organizations(id),
+        fanclub_id INTEGER REFERENCES fanclubs(id),
+        mission_type VARCHAR(30) NOT NULL,
+        mission_title VARCHAR(100) NOT NULL,
+        status VARCHAR(20) DEFAULT 'announced' CHECK (status IN ('announced','active','completed')),
+        winner_org_id INTEGER REFERENCES organizations(id),
+        mvp_user_id INTEGER REFERENCES users(id),
+        match_start TIMESTAMP,
+        match_end TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // ② 모임 워즈 참가 모임별 점수
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS org_wars_scores (
+        id SERIAL PRIMARY KEY,
+        war_id INTEGER REFERENCES org_wars(id),
+        org_id INTEGER REFERENCES organizations(id),
+        score DECIMAL(10,2) DEFAULT 0,
+        member_count INTEGER DEFAULT 0,
+        participation_rate DECIMAL(5,2) DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // ③ 화력 전선 — 팬클럽 일일 에너지 기록
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS firepower_daily (
+        id SERIAL PRIMARY KEY,
+        fanclub_id INTEGER REFERENCES fanclubs(id),
+        record_date DATE NOT NULL DEFAULT CURRENT_DATE,
+        energy_total INTEGER DEFAULT 0,
+        energy_peak INTEGER DEFAULT 0,
+        peak_hour INTEGER,
+        active_members INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(fanclub_id, record_date)
+      )
+    `);
+
+    // ③ 미러 매치 이벤트 기록
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS mirror_match_events (
+        id SERIAL PRIMARY KEY,
+        upper_fanclub_id INTEGER REFERENCES fanclubs(id),
+        lower_fanclub_id INTEGER REFERENCES fanclubs(id),
+        upper_league VARCHAR(20),
+        lower_league VARCHAR(20),
+        score_gap DECIMAL(10,2),
+        event_type VARCHAR(20) CHECK (event_type IN ('alert','break','close_call')),
+        reversed BOOLEAN DEFAULT false,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // ④ 시즌 MVP 테이블
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS season_mvps (
+        id SERIAL PRIMARY KEY,
+        season_id INTEGER NOT NULL,
+        fanclub_id INTEGER REFERENCES fanclubs(id),
+        user_id INTEGER REFERENCES users(id),
+        category VARCHAR(20) NOT NULL CHECK (category IN ('activity','growth','contribution','rookie','guardian')),
+        score DECIMAL(12,2) DEFAULT 0,
+        league VARCHAR(20),
+        awarded_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // 경쟁 ��스템 인덱스
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_rival_matches_users ON rival_matches(user1_id, user2_id, month, year)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_stat_kings_fanclub ON stat_kings(fanclub_id, month, year, stat_type)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_org_wars_fanclub ON org_wars(fanclub_id, month, year)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_firepower_daily_fanclub ON firepower_daily(fanclub_id, record_date)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_mirror_match_events ON mirror_match_events(created_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_season_mvps_season ON season_mvps(season_id, category)`);
+
     await client.query('COMMIT');
-    console.log('✅ 아스테리아 DB 초기화 완료 — 30개 테이블 생성');
+    console.log('✅ 아스테리아 DB 초기화 완료 — 45개 테이블 생성');
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('❌ DB 초기화 실패:', err.message);
@@ -2255,12 +2512,21 @@ app.post('/api/user/checkin', authenticateToken, async (req, res) => {
       bonusMessage = `연속 ${streak}일 출석 보너스! 스타더스트 +${bonus}`;
     }
 
+    // 소원 에너지 자동 기부 (출석 +10)
+    const userInfo = await pool.query('SELECT fandom_id FROM users WHERE id = $1', [req.user.id]);
+    let wishEnergyMsg = null;
+    if (userInfo.rows[0]?.fandom_id) {
+      const contributed = await autoContributeWishEnergy(req.user.id, userInfo.rows[0].fandom_id, 10);
+      if (contributed) wishEnergyMsg = '소원 에너지 +10 자동 기부!';
+    }
+
     res.json({
       message: `출석 완료! 연속 ${streak}일째`,
       streak,
       loyDelta: 1,
       apDelta: 10,
-      bonus: bonusMessage
+      bonus: bonusMessage,
+      wishEnergy: wishEnergyMsg
     });
   } catch (err) {
     console.error('출석 체크 오류:', err);
@@ -8413,7 +8679,7 @@ app.post('/api/constellation/season-reset', authenticateToken, async (req, res) 
 
 const AVATAR_CATEGORIES = ['outfit', 'accessory', 'effect', 'background', 'badge'];
 const MAX_PRESET_SLOTS = 5;
-const LEAGUE_ORDER = ['dust', 'star', 'planet', 'nova', 'quasar'];
+// LEAGUE_ORDER는 상단에서 이미 선언됨
 
 // 리그 체크 헬퍼 (유저 리그가 요구 리그 이상인지)
 function meetsLeagueRequirement(userLeague, requiredLeague) {
@@ -9565,6 +9831,912 @@ app.get('/api/memory/my-year', authenticateToken, async (req, res) => {
   }
 });
 
+// ══════════════════════════════════════════════
+//  소원의 성궤 API (#57)
+// ══════════════════════════════════════════════
+
+// 소원 시각화 단계 계산 헬퍼
+function getWishVisualStage(energyCurrent, energyGoal) {
+  const pct = energyGoal > 0 ? (energyCurrent / energyGoal) * 100 : 0;
+  if (pct <= 16) return { stage: 'dust', name: '먼지', percent: pct };
+  if (pct <= 33) return { stage: 'small_star', name: '작은별', percent: pct };
+  if (pct <= 50) return { stage: 'medium_star', name: '중간별', percent: pct };
+  if (pct <= 67) return { stage: 'large_star', name: '큰별', percent: pct };
+  if (pct <= 84) return { stage: 'giant_star', name: '거대별', percent: pct };
+  return { stage: 'supernova', name: '초신성', percent: pct };
+}
+
+// 소원 에너지 자동 기부 헬퍼 (출석/미션/게시글 등에서 호출)
+async function autoContributeWishEnergy(userId, fanclubId, amount, client) {
+  const db = client || pool;
+  // 해당 팬클럽에 active 소원 중 메인 소원 찾기
+  const activeWish = await db.query(
+    `SELECT id FROM wishes WHERE fanclub_id = $1 AND status = 'active' AND wish_type = 'main' LIMIT 1`,
+    [fanclubId]
+  );
+  if (activeWish.rows.length === 0) return null;
+
+  const wishId = activeWish.rows[0].id;
+  await db.query('UPDATE wishes SET energy_current = energy_current + $1 WHERE id = $2', [amount, wishId]);
+  await db.query(
+    `INSERT INTO wish_energy_contributions (wish_id, user_id, energy_amount, source) VALUES ($1, $2, $3, 'auto_activity')`,
+    [wishId, userId, amount]
+  );
+  return wishId;
+}
+
+// POST /api/wishes — 소원 제안
+app.post('/api/wishes', authenticateToken, async (req, res) => {
+  try {
+    const { title, description, category, fanclub_id, org_id } = req.body;
+
+    // 필수값 검증
+    if (!title || !category || !fanclub_id || !org_id) {
+      return res.status(400).json({ message: 'title, category, fanclub_id, org_id는 필수입니다.' });
+    }
+    const validCategories = ['event', 'content', 'platform', 'community', 'charity', 'challenge'];
+    if (!validCategories.includes(category)) {
+      return res.status(400).json({ message: `category는 ${validCategories.join(', ')} 중 하나여야 합니다.` });
+    }
+
+    // 월 1개 제한 체크
+    const thisMonth = await pool.query(
+      `SELECT id FROM wishes WHERE proposer_id = $1 AND created_at >= date_trunc('month', NOW()) AND created_at < date_trunc('month', NOW()) + INTERVAL '1 month'`,
+      [req.user.id]
+    );
+    if (thisMonth.rows.length > 0) {
+      return res.status(400).json({ message: '이번 달에는 이미 소원을 제안했습니다. (월 1개 제한)' });
+    }
+
+    // 리그별 에너지 목표치 결정
+    const fanclub = await pool.query('SELECT league, member_count FROM fanclubs WHERE id = $1', [fanclub_id]);
+    if (fanclub.rows.length === 0) {
+      return res.status(404).json({ message: '팬클럽을 찾을 수 없습니다.' });
+    }
+    const energyGoals = { dust: 50000, star: 200000, planet: 800000, nova: 5000000, quasar: 15000000 };
+    const energyGoal = energyGoals[fanclub.rows[0].league] || 50000;
+
+    // 소원 생성
+    const result = await pool.query(
+      `INSERT INTO wishes (fanclub_id, proposer_id, org_id, title, description, category, energy_goal, sympathy_deadline)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW() + INTERVAL '7 days')
+       RETURNING *`,
+      [fanclub_id, req.user.id, org_id, title, description || '', category, energyGoal]
+    );
+
+    res.status(201).json({ message: '소원이 제안되었습니다!', wish: result.rows[0] });
+  } catch (err) {
+    console.error('소원 제안 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/wishes/fanclub/:fanclubId — 팬클럽 소원 목록
+app.get('/api/wishes/fanclub/:fanclubId', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT w.*, u.nickname AS proposer_nickname,
+              CASE WHEN w.energy_goal > 0 THEN ROUND((w.energy_current::numeric / w.energy_goal) * 100, 1) ELSE 0 END AS energy_progress
+       FROM wishes w
+       JOIN users u ON w.proposer_id = u.id
+       WHERE w.fanclub_id = $1 AND w.status IN ('proposed', 'climbing', 'selected', 'active')
+       ORDER BY w.status = 'active' DESC, w.sympathy_count DESC, w.created_at DESC`,
+      [req.params.fanclubId]
+    );
+    res.json({ wishes: result.rows });
+  } catch (err) {
+    console.error('소원 목록 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/wishes/:id — 소원 상세
+app.get('/api/wishes/:id', async (req, res) => {
+  try {
+    const wish = await pool.query(
+      `SELECT w.*, u.nickname AS proposer_nickname
+       FROM wishes w JOIN users u ON w.proposer_id = u.id
+       WHERE w.id = $1`,
+      [req.params.id]
+    );
+    if (wish.rows.length === 0) return res.status(404).json({ message: '소원을 찾을 수 없습니다.' });
+
+    const w = wish.rows[0];
+    // 기여자 수 조회
+    const contributors = await pool.query(
+      'SELECT COUNT(DISTINCT user_id) AS cnt FROM wish_energy_contributions WHERE wish_id = $1',
+      [req.params.id]
+    );
+    // 시각화 단계 계산
+    const visual = getWishVisualStage(w.energy_current, w.energy_goal);
+
+    res.json({
+      wish: w,
+      contributorCount: parseInt(contributors.rows[0].cnt),
+      visual,
+      energyProgress: w.energy_goal > 0 ? Math.round((w.energy_current / w.energy_goal) * 1000) / 10 : 0
+    });
+  } catch (err) {
+    console.error('소원 상세 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// POST /api/wishes/:id/sympathy — 소원 공감
+app.post('/api/wishes/:id/sympathy', authenticateToken, async (req, res) => {
+  try {
+    const wishId = req.params.id;
+
+    // 소원 존재 확인
+    const wish = await pool.query('SELECT * FROM wishes WHERE id = $1', [wishId]);
+    if (wish.rows.length === 0) return res.status(404).json({ message: '소원을 찾을 수 없습니다.' });
+    if (!['proposed', 'climbing'].includes(wish.rows[0].status)) {
+      return res.status(400).json({ message: '공감 기간이 아닙니다.' });
+    }
+
+    // 공감 등록 (중복 시 UNIQUE 제약으로 에러)
+    await pool.query(
+      'INSERT INTO wish_sympathies (wish_id, user_id, org_id) VALUES ($1, $2, $3)',
+      [wishId, req.user.id, wish.rows[0].org_id]
+    );
+
+    // 공감 수 업데이트
+    await pool.query('UPDATE wishes SET sympathy_count = sympathy_count + 1 WHERE id = $1', [wishId]);
+
+    // 제안자에게 LOY+1 반영
+    await pool.query('UPDATE users SET stat_loy = stat_loy + 1 WHERE id = $1', [wish.rows[0].proposer_id]);
+
+    // 현재 공감 현황 반환
+    const updated = await pool.query('SELECT sympathy_count FROM wishes WHERE id = $1', [wishId]);
+    res.json({ message: '공감 완료!', sympathyCount: updated.rows[0].sympathy_count });
+  } catch (err) {
+    if (err.code === '23505') {
+      return res.status(409).json({ message: '이미 공감한 소원입니다.' });
+    }
+    console.error('소원 공감 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/wishes/:id/sympathy-status — 공감 현황
+app.get('/api/wishes/:id/sympathy-status', authenticateToken, async (req, res) => {
+  try {
+    const wish = await pool.query('SELECT * FROM wishes WHERE id = $1', [req.params.id]);
+    if (wish.rows.length === 0) return res.status(404).json({ message: '소원을 찾을 수 없습니다.' });
+
+    const w = wish.rows[0];
+    // 해당 모임 멤버 수 조회
+    const orgMembers = await pool.query('SELECT member_count FROM organizations WHERE id = $1', [w.org_id]);
+    const memberCount = orgMembers.rows[0]?.member_count || 0;
+    const requiredSympathy = Math.ceil(memberCount * 0.3);
+
+    // 내가 공감했는지 확인
+    const mySympathy = await pool.query(
+      'SELECT id FROM wish_sympathies WHERE wish_id = $1 AND user_id = $2',
+      [req.params.id, req.user.id]
+    );
+
+    res.json({
+      currentSympathy: w.sympathy_count,
+      requiredSympathy,
+      memberCount,
+      ratio: memberCount > 0 ? Math.round((w.sympathy_count / memberCount) * 1000) / 10 : 0,
+      deadline: w.sympathy_deadline,
+      isSympathized: mySympathy.rows.length > 0
+    });
+  } catch (err) {
+    console.error('공감 현황 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// POST /api/wishes/:id/contribute — 에너지 기부 (스타더스트)
+app.post('/api/wishes/:id/contribute', authenticateToken, async (req, res) => {
+  try {
+    const { amount } = req.body;
+    if (!amount || amount <= 0) return res.status(400).json({ message: '기부할 에너지 양을 입력하세요.' });
+
+    const wishId = req.params.id;
+    // 소원 상태 확인
+    const wish = await pool.query('SELECT * FROM wishes WHERE id = $1', [wishId]);
+    if (wish.rows.length === 0) return res.status(404).json({ message: '소원을 찾을 수 없습니다.' });
+    if (wish.rows[0].status !== 'active') {
+      return res.status(400).json({ message: '활성 상태인 소원에만 에너지를 기부할 수 있습니다.' });
+    }
+
+    // 스타더스트 잔액 확인
+    const user = await pool.query('SELECT stardust FROM users WHERE id = $1', [req.user.id]);
+    if (user.rows[0].stardust < amount) {
+      return res.status(400).json({
+        message: `스타더스트가 부족합니다. (필요: ${amount}, 보유: ${user.rows[0].stardust})`
+      });
+    }
+
+    // 스타더스트 차감 + 에너지 기부
+    await pool.query('UPDATE users SET stardust = stardust - $1 WHERE id = $2', [amount, req.user.id]);
+    await pool.query('UPDATE wishes SET energy_current = energy_current + $1 WHERE id = $2', [amount, wishId]);
+    await pool.query(
+      `INSERT INTO wish_energy_contributions (wish_id, user_id, energy_amount, source) VALUES ($1, $2, $3, 'stardust')`,
+      [wishId, req.user.id, amount]
+    );
+
+    // 스타더스트 원장 기록
+    const newBalance = user.rows[0].stardust - amount;
+    await pool.query(
+      `INSERT INTO stardust_ledger (user_id, amount, balance_after, type, description) VALUES ($1, $2, $3, 'wish_contribute', '소원 에너지 기부')`,
+      [req.user.id, -amount, newBalance]
+    );
+
+    // LOY+1 (일 1회만)
+    const todayContrib = await pool.query(
+      `SELECT id FROM wish_energy_contributions WHERE wish_id = $1 AND user_id = $2 AND source = 'stardust' AND created_at::date = CURRENT_DATE`,
+      [wishId, req.user.id]
+    );
+    if (todayContrib.rows.length <= 1) {
+      await pool.query('UPDATE users SET stat_loy = stat_loy + 1 WHERE id = $1', [req.user.id]);
+    }
+
+    const updated = await pool.query('SELECT energy_current, energy_goal FROM wishes WHERE id = $1', [wishId]);
+    const visual = getWishVisualStage(updated.rows[0].energy_current, updated.rows[0].energy_goal);
+
+    res.json({
+      message: `에너지 ${amount} 기부 완료!`,
+      energyCurrent: updated.rows[0].energy_current,
+      energyGoal: updated.rows[0].energy_goal,
+      visual
+    });
+  } catch (err) {
+    console.error('에너지 기부 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/wishes/:id/contributors — 기여자 목록
+app.get('/api/wishes/:id/contributors', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT wec.user_id, u.nickname, SUM(wec.energy_amount) AS total_energy
+       FROM wish_energy_contributions wec
+       JOIN users u ON wec.user_id = u.id
+       WHERE wec.wish_id = $1
+       GROUP BY wec.user_id, u.nickname
+       ORDER BY total_energy DESC`,
+      [req.params.id]
+    );
+
+    const contributors = result.rows;
+    const totalContrib = contributors.length;
+    // 상위 10%, 30% 경계선 계산
+    const top10Idx = Math.max(1, Math.ceil(totalContrib * 0.1));
+    const top30Idx = Math.max(1, Math.ceil(totalContrib * 0.3));
+
+    const ranked = contributors.map((c, i) => ({
+      ...c,
+      rank: i + 1,
+      tier: i < top10Idx ? 'gold' : i < top30Idx ? 'silver' : 'bronze'
+    }));
+
+    res.json({ contributors: ranked, totalContributors: totalContrib });
+  } catch (err) {
+    console.error('기여자 목록 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/wishes/archive/:fanclubId — 소원 아카이브
+app.get('/api/wishes/archive/:fanclubId', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM wish_archive WHERE fanclub_id = $1 ORDER BY completed_at DESC`,
+      [req.params.fanclubId]
+    );
+    res.json({ archives: result.rows });
+  } catch (err) {
+    console.error('소원 아카이브 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// ══════════════════════════════════════════════
+//  국민 투표 API (#57)
+// ══════════════════════════════════════════════
+
+// POST /api/votes — 투표 발의
+app.post('/api/votes', authenticateToken, async (req, res) => {
+  try {
+    const { title, description, vote_type, fanclub_id } = req.body;
+
+    if (!title || !vote_type || !fanclub_id) {
+      return res.status(400).json({ message: 'title, vote_type, fanclub_id는 필수입니다.' });
+    }
+    const validTypes = ['leader_election', 'leader_recall', 'village_change', 'rule_change'];
+    if (!validTypes.includes(vote_type)) {
+      return res.status(400).json({ message: `vote_type은 ${validTypes.join(', ')} 중 하나여야 합니다.` });
+    }
+
+    // 팬클럽 멤버 수 조회 (투표 자격자 수)
+    const fanclub = await pool.query('SELECT member_count FROM fanclubs WHERE id = $1', [fanclub_id]);
+    if (fanclub.rows.length === 0) return res.status(404).json({ message: '팬클럽을 찾을 수 없습니다.' });
+
+    const result = await pool.query(
+      `INSERT INTO sovereign_votes (fanclub_id, proposer_id, title, description, vote_type, discussion_end, total_eligible)
+       VALUES ($1, $2, $3, $4, $5, NOW() + INTERVAL '72 hours', $6)
+       RETURNING *`,
+      [fanclub_id, req.user.id, title, description || '', vote_type, fanclub.rows[0].member_count]
+    );
+
+    // 발의자에게 CRE+5, 스타더스트 100 보상
+    await pool.query('UPDATE users SET stat_cre = stat_cre + 5, stardust = stardust + 100 WHERE id = $1', [req.user.id]);
+
+    res.status(201).json({ message: '투표가 발의되었습니다! 72시간 토론이 시작됩니다.', vote: result.rows[0] });
+  } catch (err) {
+    console.error('투표 발의 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/votes/fanclub/:fanclubId — 팬클럽 투표 목록
+app.get('/api/votes/fanclub/:fanclubId', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT sv.*, u.nickname AS proposer_nickname,
+              CASE WHEN sv.total_eligible > 0 THEN ROUND(((sv.votes_for + sv.votes_against)::numeric / sv.total_eligible) * 100, 1) ELSE 0 END AS participation_rate
+       FROM sovereign_votes sv
+       JOIN users u ON sv.proposer_id = u.id
+       WHERE sv.fanclub_id = $1
+       ORDER BY sv.created_at DESC`,
+      [req.params.fanclubId]
+    );
+    res.json({ votes: result.rows });
+  } catch (err) {
+    console.error('투표 목록 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/votes/:id — 투표 상세
+app.get('/api/votes/:id', async (req, res) => {
+  try {
+    const vote = await pool.query(
+      `SELECT sv.*, u.nickname AS proposer_nickname
+       FROM sovereign_votes sv JOIN users u ON sv.proposer_id = u.id
+       WHERE sv.id = $1`,
+      [req.params.id]
+    );
+    if (vote.rows.length === 0) return res.status(404).json({ message: '투표를 찾을 수 없습니다.' });
+
+    const v = vote.rows[0];
+    // 토론 목록 (최신 50개)
+    const discussions = await pool.query(
+      `SELECT d.*, u.nickname FROM sovereign_vote_discussions d JOIN users u ON d.user_id = u.id
+       WHERE d.vote_id = $1 ORDER BY d.created_at DESC LIMIT 50`,
+      [req.params.id]
+    );
+
+    // 남은 시간 계산
+    let remainingMs = 0;
+    if (v.status === 'discussion' && v.discussion_end) {
+      remainingMs = new Date(v.discussion_end) - new Date();
+    } else if (v.status === 'voting' && v.voting_end) {
+      remainingMs = new Date(v.voting_end) - new Date();
+    }
+
+    res.json({
+      vote: v,
+      discussions: discussions.rows,
+      remainingMs: Math.max(0, remainingMs),
+      participationRate: v.total_eligible > 0 ? Math.round(((v.votes_for + v.votes_against) / v.total_eligible) * 1000) / 10 : 0
+    });
+  } catch (err) {
+    console.error('투표 상세 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// POST /api/votes/:id/discuss — 토론 참여
+app.post('/api/votes/:id/discuss', authenticateToken, async (req, res) => {
+  try {
+    const { content, stance } = req.body;
+    if (!content) return res.status(400).json({ message: '내용을 입력하세요.' });
+    if (stance && !['for', 'against', 'neutral'].includes(stance)) {
+      return res.status(400).json({ message: "stance는 'for', 'against', 'neutral' 중 하나여야 합니다." });
+    }
+
+    // 토론 기간 확인
+    const vote = await pool.query('SELECT status FROM sovereign_votes WHERE id = $1', [req.params.id]);
+    if (vote.rows.length === 0) return res.status(404).json({ message: '투표를 찾을 수 없습니다.' });
+    if (vote.rows[0].status !== 'discussion') {
+      return res.status(400).json({ message: '토론 기간에만 의견을 남길 수 있습니다.' });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO sovereign_vote_discussions (vote_id, user_id, content, stance) VALUES ($1, $2, $3, $4) RETURNING *`,
+      [req.params.id, req.user.id, content, stance || 'neutral']
+    );
+
+    // SOC+3 스탯 반영
+    await pool.query('UPDATE users SET stat_soc = stat_soc + 3 WHERE id = $1', [req.user.id]);
+
+    res.status(201).json({ message: '토론에 참여했습니다! SOC+3', discussion: result.rows[0] });
+  } catch (err) {
+    console.error('토론 참여 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// POST /api/votes/:id/cast — 투표하기
+app.post('/api/votes/:id/cast', authenticateToken, async (req, res) => {
+  try {
+    const { choice } = req.body;
+    if (!choice || !['for', 'against'].includes(choice)) {
+      return res.status(400).json({ message: "choice는 'for' 또는 'against'여야 합니다." });
+    }
+
+    // 투표 기간 확인
+    const vote = await pool.query('SELECT status FROM sovereign_votes WHERE id = $1', [req.params.id]);
+    if (vote.rows.length === 0) return res.status(404).json({ message: '투표를 찾을 수 없습니다.' });
+    if (vote.rows[0].status !== 'voting') {
+      return res.status(400).json({ message: '투표 기간에만 투표할 수 있습니다.' });
+    }
+
+    // 투표 등록 (중복 시 UNIQUE 제약)
+    await pool.query(
+      'INSERT INTO sovereign_vote_ballots (vote_id, user_id, choice) VALUES ($1, $2, $3)',
+      [req.params.id, req.user.id, choice]
+    );
+
+    // 찬반 카운트 업데이트
+    const col = choice === 'for' ? 'votes_for' : 'votes_against';
+    await pool.query(`UPDATE sovereign_votes SET ${col} = ${col} + 1 WHERE id = $1`, [req.params.id]);
+
+    // ACT+2, LOY+1 스탯 반영
+    await pool.query('UPDATE users SET stat_act = stat_act + 2, stat_loy = stat_loy + 1 WHERE id = $1', [req.user.id]);
+
+    res.json({ message: '투표 완료! ACT+2, LOY+1' });
+  } catch (err) {
+    if (err.code === '23505') {
+      return res.status(409).json({ message: '이미 투표했습니다.' });
+    }
+    console.error('투표 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/votes/:id/result — 투표 결과
+app.get('/api/votes/:id/result', async (req, res) => {
+  try {
+    const vote = await pool.query('SELECT * FROM sovereign_votes WHERE id = $1', [req.params.id]);
+    if (vote.rows.length === 0) return res.status(404).json({ message: '투표를 찾을 수 없습니다.' });
+
+    const v = vote.rows[0];
+    if (v.status !== 'completed') {
+      return res.status(400).json({ message: '투표가 아직 진행 중입니다.' });
+    }
+
+    const totalVotes = v.votes_for + v.votes_against;
+    const participationRate = v.total_eligible > 0 ? Math.round((totalVotes / v.total_eligible) * 1000) / 10 : 0;
+
+    // 연출 타입 결정
+    let ceremony = 'normal';
+    if (v.is_close_call) ceremony = 'close_call';
+    else if (v.result === 'passed') ceremony = 'golden_fireworks';
+    else if (v.result === 'rejected') ceremony = 'silver_mist';
+
+    res.json({
+      vote: v,
+      totalVotes,
+      participationRate,
+      ceremony,
+      forPercent: totalVotes > 0 ? Math.round((v.votes_for / totalVotes) * 1000) / 10 : 0,
+      againstPercent: totalVotes > 0 ? Math.round((v.votes_against / totalVotes) * 1000) / 10 : 0
+    });
+  } catch (err) {
+    console.error('투표 결과 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// ══════════════════════════════════════════════
+//  경쟁 시스템 API (Phase 6, #58~#65 통합)
+// ══════════════════════════════════════════════
+
+// 리그별 스탯킹 인원 헬퍼
+function getStatKingCount(league) {
+  const counts = { dust: 10, star: 20, planet: 30, nova: 40, quasar: 50 };
+  return counts[league] || 10;
+}
+
+// 모임 워즈 종목 풀
+const ORG_WAR_MISSIONS = [
+  { type: 'total_ap', title: '총 AP 대결' },
+  { type: 'full_attendance', title: '전원 출석 속도전' },
+  { type: 'quiz_accuracy', title: '퀴즈 정답률 대결' },
+  { type: 'creative_likes', title: '창작물 좋아요 대결' },
+  { type: 'checkin_streak', title: '연속 출석 대결' },
+  { type: 'energy_contrib', title: '에너지 기부 대결' }
+];
+
+// ── ① 라이벌 & 스탯킹 ──
+
+// POST /api/rivals/match — 월간 라이벌 자동 매칭
+app.post('/api/rivals/match', authenticateToken, async (req, res) => {
+  try {
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
+
+    // 활성 유저 목록 (팬클럽 소속, 최근 7일 활동)
+    const users = await pool.query(`
+      SELECT u.id, u.level, u.org_id, u.fandom_id, u.league,
+             (u.stat_loy + u.stat_act + u.stat_soc + u.stat_eco + u.stat_cre + u.stat_int) AS total_stat
+      FROM users u
+      WHERE u.fandom_id IS NOT NULL AND u.last_active >= NOW() - INTERVAL '7 days'
+      ORDER BY u.org_id, u.level
+    `);
+
+    let matchCount = 0;
+    const matched = new Set();
+
+    for (let i = 0; i < users.rows.length; i++) {
+      const u1 = users.rows[i];
+      if (matched.has(u1.id)) continue;
+
+      // 같은 소모임 내에서 매칭 상대 찾기
+      for (let j = i + 1; j < users.rows.length; j++) {
+        const u2 = users.rows[j];
+        if (matched.has(u2.id)) continue;
+        if (u1.org_id !== u2.org_id) continue;
+
+        // 레벨 ±3, 종합 스�� ±10%
+        const levelDiff = Math.abs(u1.level - u2.level);
+        const statRatio = u1.total_stat > 0 ? Math.abs(u1.total_stat - u2.total_stat) / u1.total_stat : 1;
+        if (levelDiff > 3 || statRatio > 0.1) continue;
+
+        // 이번 달 이미 매칭 확인
+        try {
+          // 셋째 주 월요일~수요일 계산
+          const firstDay = new Date(year, month - 1, 1);
+          const firstMonday = new Date(firstDay);
+          firstMonday.setDate(firstDay.getDate() + ((8 - firstDay.getDay()) % 7));
+          const thirdMonday = new Date(firstMonday);
+          thirdMonday.setDate(firstMonday.getDate() + 14);
+          const thirdWednesday = new Date(thirdMonday);
+          thirdWednesday.setDate(thirdMonday.getDate() + 2);
+          thirdWednesday.setHours(23, 59, 59);
+
+          await pool.query(
+            `INSERT INTO rival_matches (season_id, month, year, user1_id, user2_id, match_start, match_end, status)
+             VALUES ((SELECT id FROM seasons WHERE status = 'active' LIMIT 1), $1, $2, $3, $4, $5, $6, 'matched')`,
+            [month, year, u1.id, u2.id, thirdMonday, thirdWednesday]
+          );
+          matched.add(u1.id);
+          matched.add(u2.id);
+          matchCount++;
+        } catch (dupErr) {
+          // UNIQUE 제약 위반 → 이미 매칭됨, 스킵
+          if (dupErr.code !== '23505') throw dupErr;
+        }
+        break;
+      }
+    }
+
+    res.json({ message: `라이벌 매칭 완료! ${matchCount}쌍 매칭됨`, matchCount });
+  } catch (err) {
+    console.error('라이벌 매칭 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/rivals/my — 내 현재 라이벌 정보
+app.get('/api/rivals/my', authenticateToken, async (req, res) => {
+  try {
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
+
+    const match = await pool.query(
+      `SELECT rm.*,
+              u1.nickname AS user1_nickname, u1.level AS user1_level,
+              u1.stat_loy AS u1_loy, u1.stat_act AS u1_act, u1.stat_soc AS u1_soc,
+              u1.stat_eco AS u1_eco, u1.stat_cre AS u1_cre, u1.stat_int AS u1_int,
+              u2.nickname AS user2_nickname, u2.level AS user2_level,
+              u2.stat_loy AS u2_loy, u2.stat_act AS u2_act, u2.stat_soc AS u2_soc,
+              u2.stat_eco AS u2_eco, u2.stat_cre AS u2_cre, u2.stat_int AS u2_int
+       FROM rival_matches rm
+       JOIN users u1 ON rm.user1_id = u1.id
+       JOIN users u2 ON rm.user2_id = u2.id
+       WHERE (rm.user1_id = $1 OR rm.user2_id = $1) AND rm.month = $2 AND rm.year = $3
+       LIMIT 1`,
+      [req.user.id, month, year]
+    );
+
+    if (match.rows.length === 0) {
+      return res.json({ match: null, message: '이번 달 라이벌 매칭이 없습니다.' });
+    }
+
+    const m = match.rows[0];
+    const isUser1 = m.user1_id === req.user.id;
+
+    // 헥사곤 비교 데이터 구성
+    const myHexagon = isUser1
+      ? { LOY: m.u1_loy, ACT: m.u1_act, SOC: m.u1_soc, ECO: m.u1_eco, CRE: m.u1_cre, INT: m.u1_int }
+      : { LOY: m.u2_loy, ACT: m.u2_act, SOC: m.u2_soc, ECO: m.u2_eco, CRE: m.u2_cre, INT: m.u2_int };
+    const rivalHexagon = isUser1
+      ? { LOY: m.u2_loy, ACT: m.u2_act, SOC: m.u2_soc, ECO: m.u2_eco, CRE: m.u2_cre, INT: m.u2_int }
+      : { LOY: m.u1_loy, ACT: m.u1_act, SOC: m.u1_soc, ECO: m.u1_eco, CRE: m.u1_cre, INT: m.u1_int };
+
+    const remainingMs = m.match_end ? Math.max(0, new Date(m.match_end) - now) : 0;
+
+    res.json({
+      match: m,
+      myAp: isUser1 ? m.user1_ap : m.user2_ap,
+      rivalAp: isUser1 ? m.user2_ap : m.user1_ap,
+      rivalNickname: isUser1 ? m.user2_nickname : m.user1_nickname,
+      rivalLevel: isUser1 ? m.user2_level : m.user1_level,
+      hexagon: { me: myHexagon, rival: rivalHexagon },
+      remainingMs
+    });
+  } catch (err) {
+    console.error('라이벌 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// POST /api/rivals/:id/decline — 라이벌 거부
+app.post('/api/rivals/:id/decline', authenticateToken, async (req, res) => {
+  try {
+    const match = await pool.query(
+      'SELECT * FROM rival_matches WHERE id = $1 AND (user1_id = $2 OR user2_id = $2)',
+      [req.params.id, req.user.id]
+    );
+    if (match.rows.length === 0) return res.status(404).json({ message: '매칭을 찾을 수 없습니다.' });
+    if (match.rows[0].status !== 'matched') {
+      return res.status(400).json({ message: '매칭 대기 상태에서만 거부할 수 있습니다.' });
+    }
+
+    await pool.query('UPDATE rival_matches SET status = $1 WHERE id = $2', ['declined', req.params.id]);
+    res.json({ message: '라이벌 대결을 거부했습니다.' });
+  } catch (err) {
+    console.error('라이벌 거부 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// POST /api/rivals/:id/message — 대결 후 격려 메시지
+app.post('/api/rivals/:id/message', authenticateToken, async (req, res) => {
+  try {
+    const { content } = req.body;
+    if (!content) return res.status(400).json({ message: '메시지 내용을 입력하세요.' });
+
+    const match = await pool.query(
+      'SELECT * FROM rival_matches WHERE id = $1 AND (user1_id = $2 OR user2_id = $2)',
+      [req.params.id, req.user.id]
+    );
+    if (match.rows.length === 0) return res.status(404).json({ message: '매칭을 찾을 수 없습니다.' });
+    if (match.rows[0].status !== 'completed') {
+      return res.status(400).json({ message: '대결 완료 후에만 격려 메시지를 보낼 수 있습니다.' });
+    }
+
+    const m = match.rows[0];
+    const col = m.user1_id === req.user.id ? 'user1_message' : 'user2_message';
+    await pool.query(`UPDATE rival_matches SET ${col} = $1 WHERE id = $2`, [content, req.params.id]);
+
+    // SOC+2 스탯 반영
+    await pool.query('UPDATE users SET stat_soc = stat_soc + 2 WHERE id = $1', [req.user.id]);
+
+    res.json({ message: '격려 메시지를 보냈습니다! SOC+2' });
+  } catch (err) {
+    console.error('격려 메시지 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/stat-kings/:fanclubId — 이달의 스탯킹 목록
+app.get('/api/stat-kings/:fanclubId', async (req, res) => {
+  try {
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
+
+    const result = await pool.query(
+      `SELECT sk.*, u.nickname, u.level, u.league
+       FROM stat_kings sk
+       JOIN users u ON sk.user_id = u.id
+       WHERE sk.fanclub_id = $1 AND sk.month = $2 AND sk.year = $3
+       ORDER BY sk.stat_type, sk.rank_position`,
+      [req.params.fanclubId, month, year]
+    );
+
+    // 스탯별 그룹핑
+    const grouped = {};
+    for (const row of result.rows) {
+      if (!grouped[row.stat_type]) grouped[row.stat_type] = [];
+      grouped[row.stat_type].push(row);
+    }
+
+    res.json({ statKings: grouped, month, year });
+  } catch (err) {
+    console.error('스탯킹 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// ── ② 모임 워즈 ──
+
+// GET /api/org-wars/fanclub/:fanclubId — 모임 워즈 목록
+app.get('/api/org-wars/fanclub/:fanclubId', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT ow.*, wo.name AS winner_org_name, mu.nickname AS mvp_nickname
+       FROM org_wars ow
+       LEFT JOIN organizations wo ON ow.winner_org_id = wo.id
+       LEFT JOIN users mu ON ow.mvp_user_id = mu.id
+       WHERE ow.fanclub_id = $1
+       ORDER BY ow.created_at DESC LIMIT 12`,
+      [req.params.fanclubId]
+    );
+    res.json({ wars: result.rows });
+  } catch (err) {
+    console.error('모임 워즈 목록 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/org-wars/:id — 모임 워즈 상세 (점수판 포함)
+app.get('/api/org-wars/:id', async (req, res) => {
+  try {
+    const war = await pool.query('SELECT * FROM org_wars WHERE id = $1', [req.params.id]);
+    if (war.rows.length === 0) return res.status(404).json({ message: '모임 워즈를 찾을 수 없습니다.' });
+
+    const scores = await pool.query(
+      `SELECT ows.*, o.name AS org_name
+       FROM org_wars_scores ows
+       JOIN organizations o ON ows.org_id = o.id
+       WHERE ows.war_id = $1
+       ORDER BY ows.score DESC`,
+      [req.params.id]
+    );
+
+    const remainingMs = war.rows[0].match_end
+      ? Math.max(0, new Date(war.rows[0].match_end) - new Date()) : 0;
+
+    res.json({ war: war.rows[0], scores: scores.rows, remainingMs });
+  } catch (err) {
+    console.error('모임 워즈 상세 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// ── ③ 화력 전선 ──
+
+// GET /api/firepower/fanclub/:fanclubId — 화력 전선 (일일/주간 데이터)
+app.get('/api/firepower/fanclub/:fanclubId', async (req, res) => {
+  try {
+    // 최근 7일 일일 에너지 기록
+    const daily = await pool.query(
+      `SELECT * FROM firepower_daily WHERE fanclub_id = $1 ORDER BY record_date DESC LIMIT 7`,
+      [req.params.fanclubId]
+    );
+
+    // 오늘 실시간 에너지 (팬클럽 소속 유저들의 오늘 AP 합산)
+    const todayEnergy = await pool.query(
+      `SELECT COALESCE(SUM(ah.delta), 0) AS today_total
+       FROM activity_history ah
+       JOIN users u ON ah.user_id = u.id
+       WHERE u.fandom_id = $1 AND ah.created_at::date = CURRENT_DATE`,
+      [req.params.fanclubId]
+    );
+
+    // 팬��럽 에너지 목표 (리그별)
+    const fanclub = await pool.query('SELECT league, energy FROM fanclubs WHERE id = $1', [req.params.fanclubId]);
+    const energyGoals = { dust: 5000, star: 20000, planet: 80000, nova: 500000, quasar: 1500000 };
+    const goal = energyGoals[fanclub.rows[0]?.league] || 5000;
+    const todayTotal = parseInt(todayEnergy.rows[0]?.today_total || 0);
+    const gaugePercent = Math.min(100, Math.round((todayTotal / goal) * 100));
+
+    res.json({
+      daily: daily.rows,
+      today: { energy: todayTotal, goal, gaugePercent },
+      league: fanclub.rows[0]?.league
+    });
+  } catch (err) {
+    console.error('화력 전선 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/firepower/heatmap/:fanclubId — 시간대별 히트맵
+app.get('/api/firepower/heatmap/:fanclubId', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT EXTRACT(HOUR FROM ah.created_at)::integer AS hour, COUNT(*) AS activity_count
+       FROM activity_history ah
+       JOIN users u ON ah.user_id = u.id
+       WHERE u.fandom_id = $1 AND ah.created_at >= NOW() - INTERVAL '7 days'
+       GROUP BY hour ORDER BY hour`,
+      [req.params.fanclubId]
+    );
+
+    // 24시간 배열로 변환
+    const heatmap = Array(24).fill(0);
+    for (const row of result.rows) {
+      heatmap[row.hour] = parseInt(row.activity_count);
+    }
+
+    res.json({ heatmap });
+  } catch (err) {
+    console.error('히트맵 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/firepower/mirror-events — 최근 미러 매치 이벤트
+app.get('/api/firepower/mirror-events', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT mme.*, f1.name AS upper_name, f2.name AS lower_name
+       FROM mirror_match_events mme
+       LEFT JOIN fanclubs f1 ON mme.upper_fanclub_id = f1.id
+       LEFT JOIN fanclubs f2 ON mme.lower_fanclub_id = f2.id
+       ORDER BY mme.created_at DESC LIMIT 20`
+    );
+    res.json({ events: result.rows });
+  } catch (err) {
+    console.error('미러 매치 이벤트 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// ── ④ 시즌 MVP ──
+
+// GET /api/season-mvp/:seasonId — 시즌 MVP 목록
+app.get('/api/season-mvp/:seasonId', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT sm.*, u.nickname, u.level, u.league, f.name AS fanclub_name
+       FROM season_mvps sm
+       JOIN users u ON sm.user_id = u.id
+       LEFT JOIN fanclubs f ON sm.fanclub_id = f.id
+       WHERE sm.season_id = $1
+       ORDER BY sm.category`,
+      [req.params.seasonId]
+    );
+
+    // 부문별 그룹핑
+    const categoryNames = {
+      activity: '🏃 활동왕', growth: '📈 성장왕', contribution: '🤝 기여왕',
+      rookie: '🌟 신인상', guardian: '🛡️ 수호자상'
+    };
+    const mvps = result.rows.map(r => ({
+      ...r,
+      categoryName: categoryNames[r.category] || r.category
+    }));
+
+    res.json({ mvps });
+  } catch (err) {
+    console.error('시즌 MVP 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/season-mvp/hall-of-fame — 명예의 전당
+app.get('/api/season-mvp/hall-of-fame', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT sm.*, u.nickname, u.level, f.name AS fanclub_name, s.name AS season_name
+       FROM season_mvps sm
+       JOIN users u ON sm.user_id = u.id
+       LEFT JOIN fanclubs f ON sm.fanclub_id = f.id
+       LEFT JOIN seasons s ON sm.season_id = s.id
+       ORDER BY sm.season_id DESC, sm.category`
+    );
+    res.json({ hallOfFame: result.rows });
+  } catch (err) {
+    console.error('명예의 전당 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
 // ── SPA fallback ──
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
@@ -9682,11 +10854,616 @@ cron.schedule('0 * * * *', async () => {
   }
 });
 
+// Cron 5. 매일 자정 02:00 — 소원 파이프라인 자동 처리
+cron.schedule('0 2 * * *', async () => {
+  console.log('⏰ [CRON] 소원 파이프라인 처리 시작...');
+  try {
+    // 1) 공감 마감 체크: 7일 지났는데 30% 미달 → 만료
+    const expiredResult = await pool.query(`
+      UPDATE wishes SET status = 'expired'
+      WHERE status IN ('proposed', 'climbing')
+        AND sympathy_deadline < NOW()
+        AND sympathy_count < (
+          SELECT COALESCE(CEIL(o.member_count * 0.3), 1)
+          FROM organizations o WHERE o.id = wishes.org_id
+        )
+      RETURNING id, title
+    `);
+    if (expiredResult.rowCount > 0) {
+      console.log(`  ⏳ 만료된 소원 ${expiredResult.rowCount}건: ${expiredResult.rows.map(r => r.title).join(', ')}`);
+    }
+
+    // 2) 공감 달성 체크: 30% 이상 → 상위 모임으로 이동
+    const climbCandidates = await pool.query(`
+      SELECT w.id, w.org_id, w.org_level, w.fanclub_id, o.parent_id, o.member_count,
+             COALESCE(CEIL(o.member_count * 0.3), 1) AS required_sympathy
+      FROM wishes w
+      JOIN organizations o ON w.org_id = o.id
+      WHERE w.status IN ('proposed', 'climbing')
+        AND w.sympathy_deadline >= NOW()
+        AND w.sympathy_count >= COALESCE(CEIL(o.member_count * 0.3), 1)
+    `);
+
+    for (const wish of climbCandidates.rows) {
+      if (wish.parent_id) {
+        // 상위 모임 존재 → 올라가기
+        await pool.query(`
+          UPDATE wishes SET org_id = $1, org_level = org_level + 1, sympathy_count = 0,
+                 sympathy_deadline = NOW() + INTERVAL '7 days', status = 'climbing'
+          WHERE id = $2
+        `, [wish.parent_id, wish.id]);
+        // 기존 공감 초기화
+        await pool.query('DELETE FROM wish_sympathies WHERE wish_id = $1', [wish.id]);
+        console.log(`  ⬆️ 소원 #${wish.id} 상위 모임으로 이동 (레벨 ${wish.org_level + 1})`);
+      } else {
+        // 최상위 도달 → 팬클럽 레벨 소원 후보
+        await pool.query(`UPDATE wishes SET status = 'selected' WHERE id = $1`, [wish.id]);
+        console.log(`  ⭐ 소원 #${wish.id} 팬클럽 레벨 도달!`);
+      }
+    }
+
+    // 3) 팬클럽별 selected 소원 → active 전환 (상위 3개: 1위=main, 2~3위=sub)
+    const fanclubs = await pool.query('SELECT DISTINCT fanclub_id FROM wishes WHERE status = $1', ['selected']);
+    for (const fc of fanclubs.rows) {
+      // 이미 active 소원이 있으면 건너뛰기
+      const existing = await pool.query(
+        `SELECT id FROM wishes WHERE fanclub_id = $1 AND status = 'active'`, [fc.fanclub_id]
+      );
+      if (existing.rows.length > 0) continue;
+
+      const selected = await pool.query(
+        `SELECT id, sympathy_count FROM wishes WHERE fanclub_id = $1 AND status = 'selected' ORDER BY sympathy_count DESC LIMIT 3`,
+        [fc.fanclub_id]
+      );
+      for (let i = 0; i < selected.rows.length; i++) {
+        const wishType = i === 0 ? 'main' : 'sub';
+        await pool.query(
+          `UPDATE wishes SET status = 'active', wish_type = $1, selected_at = NOW() WHERE id = $2`,
+          [wishType, selected.rows[i].id]
+        );
+      }
+      if (selected.rows.length > 0) {
+        console.log(`  🌟 팬클럽 #${fc.fanclub_id}: ${selected.rows.length}개 소원 활성화`);
+      }
+    }
+
+    // 4) 완료된 소원 체크 (에너지 목표 달성)
+    const completed = await pool.query(`
+      UPDATE wishes SET status = 'completed', completed_at = NOW()
+      WHERE status = 'active' AND energy_current >= energy_goal
+      RETURNING *
+    `);
+    for (const w of completed.rows) {
+      // 아카이브 저장
+      const contribCount = await pool.query(
+        'SELECT COUNT(DISTINCT user_id) AS cnt FROM wish_energy_contributions WHERE wish_id = $1', [w.id]
+      );
+      await pool.query(
+        `INSERT INTO wish_archive (wish_id, fanclub_id, title, category, wish_type, energy_goal, energy_final, achievement_rate, contributor_count, season_id, star_name)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, 100.0, $8, $9, $10)`,
+        [w.id, w.fanclub_id, w.title, w.category, w.wish_type, w.energy_goal, w.energy_current,
+         parseInt(contribCount.rows[0].cnt), w.season_id, `소원의 별: ${w.title}`]
+      );
+      console.log(`  🎉 소원 달성! "${w.title}" → 아카이브 저장`);
+    }
+
+    console.log('✅ [CRON] 소원 파이프라인 처리 완료');
+  } catch (err) {
+    console.error('❌ [CRON] 소원 파이프라인 오류:', err.message);
+  }
+});
+
+// Cron 6. 매 시간 30분 — 국민 투표 자동 처리
+cron.schedule('30 * * * *', async () => {
+  try {
+    // 1) 토론→투표 전환: discussion_end 지난 투표
+    const toVoting = await pool.query(`
+      UPDATE sovereign_votes SET status = 'voting', voting_start = NOW(), voting_end = NOW() + INTERVAL '24 hours'
+      WHERE status = 'discussion' AND discussion_end <= NOW()
+      RETURNING id, title
+    `);
+    if (toVoting.rowCount > 0) {
+      console.log(`🗳️ [CRON] 토론→투표 전환: ${toVoting.rows.map(r => r.title).join(', ')}`);
+    }
+
+    // 2) 투표 종료: voting_end 지난 투표 → 결과 계산
+    const toComplete = await pool.query(`
+      SELECT * FROM sovereign_votes WHERE status = 'voting' AND voting_end <= NOW()
+    `);
+    for (const v of toComplete.rows) {
+      let result = 'tie';
+      if (v.votes_for > v.votes_against) result = 'passed';
+      else if (v.votes_for < v.votes_against) result = 'rejected';
+
+      // 박빙 체크: 다수 쪽 비율 55% 이하
+      const totalVotes = v.votes_for + v.votes_against;
+      const majorityPct = totalVotes > 0 ? (Math.max(v.votes_for, v.votes_against) / totalVotes) * 100 : 0;
+      const isCloseCall = majorityPct > 0 && majorityPct <= 55;
+
+      await pool.query(
+        `UPDATE sovereign_votes SET status = 'completed', result = $1, is_close_call = $2 WHERE id = $3`,
+        [result, isCloseCall, v.id]
+      );
+      console.log(`🗳️ [CRON] 투표 종료 #${v.id} "${v.title}": ${result}${isCloseCall ? ' (박빙!)' : ''}`);
+    }
+  } catch (err) {
+    console.error('❌ [CRON] 국민 투표 처리 오류:', err.message);
+  }
+});
+
+// Cron 7. 매일 자정 03:00 — 화력 일일 기록
+cron.schedule('0 3 * * *', async () => {
+  console.log('⏰ [CRON] 화력 일일 기록 시작...');
+  try {
+    // 어제 날짜 기준 집계 (자정 넘어서 실행되므로)
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const dateStr = yesterday.toISOString().split('T')[0];
+
+    const fanclubs = await pool.query('SELECT id FROM fanclubs');
+    let recorded = 0;
+
+    for (const fc of fanclubs.rows) {
+      // 팬클럽 소속 유저들의 어제 활동 집계
+      const stats = await pool.query(
+        `SELECT COALESCE(SUM(ah.delta), 0) AS total,
+                MAX(ah.delta) AS peak,
+                COUNT(DISTINCT ah.user_id) AS active_members
+         FROM activity_history ah
+         JOIN users u ON ah.user_id = u.id
+         WHERE u.fandom_id = $1 AND ah.created_at::date = $2::date`,
+        [fc.id, dateStr]
+      );
+
+      // 피크 시간 계산
+      const peakHour = await pool.query(
+        `SELECT EXTRACT(HOUR FROM ah.created_at)::integer AS hour, SUM(ah.delta) AS hourly_total
+         FROM activity_history ah
+         JOIN users u ON ah.user_id = u.id
+         WHERE u.fandom_id = $1 AND ah.created_at::date = $2::date
+         GROUP BY hour ORDER BY hourly_total DESC LIMIT 1`,
+        [fc.id, dateStr]
+      );
+
+      const total = parseInt(stats.rows[0]?.total || 0);
+      if (total === 0) continue;
+
+      await pool.query(
+        `INSERT INTO firepower_daily (fanclub_id, record_date, energy_total, energy_peak, peak_hour, active_members)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         ON CONFLICT (fanclub_id, record_date) DO UPDATE SET
+           energy_total = $3, energy_peak = $4, peak_hour = $5, active_members = $6`,
+        [fc.id, dateStr, total, parseInt(stats.rows[0]?.peak || 0),
+         peakHour.rows[0]?.hour || 0, parseInt(stats.rows[0]?.active_members || 0)]
+      );
+      recorded++;
+    }
+    console.log(`✅ [CRON] 화력 일일 기록 완료: ${recorded}개 팬클럽`);
+  } catch (err) {
+    console.error('❌ [CRON] 화력 일일 기록 오류:', err.message);
+  }
+});
+
+// Cron 8. 매시간 15분 — 미러 매치 체크
+cron.schedule('15 * * * *', async () => {
+  try {
+    // 같은 리그 내 팬클럽 점수 비교 → 경계선 5% 이내 감지
+    const leagues = ['dust', 'star', 'planet', 'nova', 'quasar'];
+    for (const league of leagues) {
+      const clubs = await pool.query(
+        `SELECT id, name, energy FROM fanclubs WHERE league = $1 ORDER BY energy DESC`,
+        [league]
+      );
+      if (clubs.rows.length < 2) continue;
+
+      for (let i = 0; i < clubs.rows.length - 1; i++) {
+        const upper = clubs.rows[i];
+        const lower = clubs.rows[i + 1];
+        if (upper.energy === 0) continue;
+
+        const gap = ((upper.energy - lower.energy) / upper.energy) * 100;
+        if (gap <= 5) {
+          // 기존 alert 중복 방지 (오늘 이미 생성했으면 스킵)
+          const existing = await pool.query(
+            `SELECT id FROM mirror_match_events
+             WHERE upper_fanclub_id = $1 AND lower_fanclub_id = $2
+               AND created_at::date = CURRENT_DATE AND event_type = 'alert'`,
+            [upper.id, lower.id]
+          );
+          if (existing.rows.length > 0) continue;
+
+          await pool.query(
+            `INSERT INTO mirror_match_events (upper_fanclub_id, lower_fanclub_id, upper_league, lower_league, score_gap, event_type)
+             VALUES ($1, $2, $3, $3, $4, 'alert')`,
+            [upper.id, lower.id, league, gap]
+          );
+
+          // 역전 감지 (이전 기록에서 순위가 바뀌었는지)
+          const prevRecord = await pool.query(
+            `SELECT id FROM mirror_match_events
+             WHERE upper_fanclub_id = $1 AND lower_fanclub_id = $2 AND event_type = 'alert'
+             AND created_at < CURRENT_DATE ORDER BY created_at DESC LIMIT 1`,
+            [lower.id, upper.id]
+          );
+          if (prevRecord.rows.length > 0) {
+            // 역전 발생!
+            await pool.query(
+              `INSERT INTO mirror_match_events (upper_fanclub_id, lower_fanclub_id, upper_league, lower_league, score_gap, event_type, reversed)
+               VALUES ($1, $2, $3, $3, $4, 'break', true)`,
+              [lower.id, upper.id, league, gap]
+            );
+            // Socket.IO 전서버 알림
+            io.emit('mirror_break', {
+              message: `💥 미러 브레이크! ${lower.name}이(가) ${upper.name}을(를) 역전했습니다!`,
+              league, upperName: lower.name, lowerName: upper.name
+            });
+            console.log(`💥 [MIRROR] 역전! ${lower.name} > ${upper.name} (${league})`);
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error('❌ [CRON] 미러 매치 체크 오류:', err.message);
+  }
+});
+
+// Cron 9. 매월 첫째 주 월요일 00:30 — 모임 워즈 자동 생성
+cron.schedule('30 0 1-7 * 1', async () => {
+  const now = new Date();
+  if (now.getDate() > 7) return; // 첫째 주만
+  console.log('⏰ [CRON] 모임 워즈 자동 생성 시작...');
+  try {
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
+    // 랜덤 종목 선택
+    const mission = ORG_WAR_MISSIONS[Math.floor(Math.random() * ORG_WAR_MISSIONS.length)];
+
+    // 수요일 23:59 계산
+    const matchEnd = new Date(now);
+    matchEnd.setDate(now.getDate() + 2);
+    matchEnd.setHours(23, 59, 59);
+
+    const fanclubs = await pool.query('SELECT id FROM fanclubs');
+    let warCount = 0;
+
+    for (const fc of fanclubs.rows) {
+      // 중간 레벨 조직 (parent_id가 있고 children이 있는 조직) 찾기
+      const parentOrgs = await pool.query(
+        `SELECT DISTINCT o.parent_id FROM organizations o
+         WHERE o.fanclub_id = $1 AND o.parent_id IS NOT NULL`,
+        [fc.id]
+      );
+
+      for (const po of parentOrgs.rows) {
+        if (!po.parent_id) continue;
+        await pool.query(
+          `INSERT INTO org_wars (season_id, month, year, parent_org_id, fanclub_id, mission_type, mission_title, status, match_start, match_end)
+           VALUES ((SELECT id FROM seasons WHERE status = 'active' LIMIT 1), $1, $2, $3, $4, $5, $6, 'active', NOW(), $7)`,
+          [month, year, po.parent_id, fc.id, mission.type, mission.title, matchEnd]
+        );
+
+        // 참가 소모임 점수 초기화
+        const childOrgs = await pool.query(
+          'SELECT id, member_count FROM organizations WHERE parent_id = $1', [po.parent_id]
+        );
+        const warId = (await pool.query('SELECT id FROM org_wars ORDER BY id DESC LIMIT 1')).rows[0].id;
+        for (const child of childOrgs.rows) {
+          await pool.query(
+            'INSERT INTO org_wars_scores (war_id, org_id, member_count) VALUES ($1, $2, $3)',
+            [warId, child.id, child.member_count || 0]
+          );
+        }
+        warCount++;
+      }
+    }
+    console.log(`✅ [CRON] 모임 워즈 ${warCount}건 생성 완료 (종목: ${mission.title})`);
+  } catch (err) {
+    console.error('❌ [CRON] 모임 워즈 생성 오류:', err.message);
+  }
+});
+
+// Cron 10. 매월 첫째 주 목요일 00:00 — 모임 워즈 결과 집계
+cron.schedule('0 0 1-7 * 4', async () => {
+  const now = new Date();
+  if (now.getDate() > 7) return; // 첫째 주만
+  console.log('⏰ [CRON] 모임 워즈 결과 집계 시작...');
+  try {
+    const activeWars = await pool.query(`SELECT * FROM org_wars WHERE status = 'active'`);
+
+    for (const war of activeWars.rows) {
+      // 각 참가 모임의 점수 집계 (종목별 기준)
+      const scores = await pool.query(
+        'SELECT * FROM org_wars_scores WHERE war_id = $1 ORDER BY score DESC', [war.id]
+      );
+
+      if (scores.rows.length === 0) continue;
+
+      const winner = scores.rows[0];
+      // MVP: 우승 모임 내 최고 AP 유저
+      const mvp = await pool.query(
+        `SELECT u.id FROM users u WHERE u.org_id = $1 ORDER BY u.ap DESC LIMIT 1`,
+        [winner.org_id]
+      );
+
+      await pool.query(
+        `UPDATE org_wars SET status = 'completed', winner_org_id = $1, mvp_user_id = $2 WHERE id = $3`,
+        [winner.org_id, mvp.rows[0]?.id || null, war.id]
+      );
+
+      // MVP 보상: AP 1000 + ACT+10, LOY+5
+      if (mvp.rows[0]) {
+        await pool.query(
+          'UPDATE users SET ap = ap + 1000, stat_act = stat_act + 10, stat_loy = stat_loy + 5 WHERE id = $1',
+          [mvp.rows[0].id]
+        );
+      }
+    }
+    console.log(`✅ [CRON] 모임 워즈 결과 집계 완료: ${activeWars.rowCount}건`);
+  } catch (err) {
+    console.error('❌ [CRON] 모임 워즈 결과 집계 오류:', err.message);
+  }
+});
+
+// Cron 11. 매월 셋째 주 월요일 00:00 — 라이벌 자동 매칭
+cron.schedule('0 0 15-21 * 1', async () => {
+  const now = new Date();
+  if (now.getDate() < 15 || now.getDate() > 21) return; // 셋째 주만
+  console.log('⏰ [CRON] 라이벌 자동 매칭 시작...');
+  try {
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
+
+    const users = await pool.query(`
+      SELECT u.id, u.level, u.org_id, u.fandom_id, u.league,
+             (u.stat_loy + u.stat_act + u.stat_soc + u.stat_eco + u.stat_cre + u.stat_int) AS total_stat
+      FROM users u
+      WHERE u.fandom_id IS NOT NULL AND u.last_active >= NOW() - INTERVAL '7 days'
+      ORDER BY u.org_id, u.level
+    `);
+
+    let matchCount = 0;
+    const matched = new Set();
+    // 셋째 주 수요일 23:59
+    const matchEnd = new Date(now);
+    matchEnd.setDate(now.getDate() + 2);
+    matchEnd.setHours(23, 59, 59);
+
+    for (let i = 0; i < users.rows.length; i++) {
+      const u1 = users.rows[i];
+      if (matched.has(u1.id)) continue;
+
+      for (let j = i + 1; j < users.rows.length; j++) {
+        const u2 = users.rows[j];
+        if (matched.has(u2.id) || u1.org_id !== u2.org_id) continue;
+
+        const levelDiff = Math.abs(u1.level - u2.level);
+        const statRatio = u1.total_stat > 0 ? Math.abs(u1.total_stat - u2.total_stat) / u1.total_stat : 1;
+        if (levelDiff > 3 || statRatio > 0.1) continue;
+
+        try {
+          await pool.query(
+            `INSERT INTO rival_matches (season_id, month, year, user1_id, user2_id, match_start, match_end, status)
+             VALUES ((SELECT id FROM seasons WHERE status = 'active' LIMIT 1), $1, $2, $3, $4, $5, $6, 'matched')`,
+            [month, year, u1.id, u2.id, now, matchEnd]
+          );
+          matched.add(u1.id);
+          matched.add(u2.id);
+          matchCount++;
+        } catch (dupErr) {
+          if (dupErr.code !== '23505') throw dupErr;
+        }
+        break;
+      }
+    }
+    console.log(`✅ [CRON] 라이벌 자동 매칭 완료: ${matchCount}쌍`);
+  } catch (err) {
+    console.error('❌ [CRON] 라이벌 자동 매칭 오류:', err.message);
+  }
+});
+
+// Cron 12. 매월 셋째 주 목요일 00:00 — 라이벌 결과 + 스탯킹 집계
+cron.schedule('0 0 15-21 * 4', async () => {
+  const now = new Date();
+  if (now.getDate() < 15 || now.getDate() > 21) return; // 셋째 주만
+  console.log('⏰ [CRON] 라이벌 결과 + 스탯킹 집계 시작...');
+  try {
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
+
+    // ── 라이벌 결과 집계 ──
+    const matches = await pool.query(
+      `SELECT * FROM rival_matches WHERE month = $1 AND year = $2 AND status IN ('matched', 'active')`,
+      [month, year]
+    );
+
+    for (const m of matches.rows) {
+      const winnerId = m.user1_ap > m.user2_ap ? m.user1_id
+                     : m.user2_ap > m.user1_ap ? m.user2_id : null;
+
+      await pool.query(
+        `UPDATE rival_matches SET status = 'completed', winner_id = $1 WHERE id = $2`,
+        [winnerId, m.id]
+      );
+
+      // 승자 보상: ACT+3, 스타더스트 300
+      if (winnerId) {
+        await pool.query(
+          'UPDATE users SET stat_act = stat_act + 3, stardust = stardust + 300 WHERE id = $1',
+          [winnerId]
+        );
+
+        // 5연승 체크
+        const streak = await pool.query(
+          `SELECT COUNT(*) AS cnt FROM rival_matches
+           WHERE winner_id = $1 AND status = 'completed'
+           ORDER BY year DESC, month DESC LIMIT 5`,
+          [winnerId]
+        );
+        if (parseInt(streak.rows[0].cnt) >= 5) {
+          console.log(`🏆 [RIVAL] ${winnerId} 5연승 달성! "무패의 도전자" 칭호`);
+        }
+      }
+    }
+    console.log(`  ⚔️ 라이벌 결과: ${matches.rowCount}건 집계`);
+
+    // ── 스탯킹 집계 ──
+    const statTypes = ['LOY', 'ACT', 'SOC', 'ECO', 'CRE', 'INT'];
+    const statColumns = { LOY: 'stat_loy', ACT: 'stat_act', SOC: 'stat_soc', ECO: 'stat_eco', CRE: 'stat_cre', INT: 'stat_int' };
+    let kingCount = 0;
+
+    // 팬클럽별 처리
+    const fanclubs = await pool.query('SELECT id, league FROM fanclubs');
+    for (const fc of fanclubs.rows) {
+      const topN = getStatKingCount(fc.league);
+
+      for (const stat of statTypes) {
+        const col = statColumns[stat];
+        // 셋째 주 월~수 3일간 스탯 성장량 (stat_history 기반)
+        const growth = await pool.query(
+          `SELECT sh.user_id, SUM(sh.delta) AS growth
+           FROM stat_history sh
+           JOIN users u ON sh.user_id = u.id
+           WHERE u.fandom_id = $1 AND sh.stat_name = $2
+             AND sh.created_at >= (NOW() - INTERVAL '3 days')
+           GROUP BY sh.user_id
+           ORDER BY growth DESC LIMIT $3`,
+          [fc.id, stat.toLowerCase(), topN]
+        );
+
+        for (let i = 0; i < growth.rows.length; i++) {
+          await pool.query(
+            `INSERT INTO stat_kings (season_id, month, year, user_id, fanclub_id, stat_type, growth_amount, rank_position, league)
+             VALUES ((SELECT id FROM seasons WHERE status = 'active' LIMIT 1), $1, $2, $3, $4, $5, $6, $7, $8)`,
+            [month, year, growth.rows[i].user_id, fc.id, stat, growth.rows[i].growth, i + 1, fc.league]
+          );
+          kingCount++;
+        }
+      }
+    }
+    console.log(`  👑 스탯킹: ${kingCount}명 선정`);
+    console.log('✅ [CRON] 라이벌 결과 + 스탯킹 집계 완료');
+  } catch (err) {
+    console.error('❌ [CRON] 라이벌/스탯킹 집계 오류:', err.message);
+  }
+});
+
+// Cron 13. 시즌 종료 시 — 시즌 MVP 산출 (시즌 상태 cron과 연동)
+cron.schedule('5 0 * * *', async () => {
+  try {
+    // 방금 ended 된 시즌이 있는지 확인
+    const endedSeason = await pool.query(
+      `SELECT id FROM seasons WHERE status = 'ended' AND rest_ends_at >= NOW() - INTERVAL '1 day' AND rest_ends_at < NOW()`
+    );
+    if (endedSeason.rows.length === 0) return;
+
+    const seasonId = endedSeason.rows[0].id;
+    console.log(`⏰ [CRON] 시즌 MVP 산출 시작 (시즌 #${seasonId})...`);
+
+    const fanclubs = await pool.query('SELECT id, league FROM fanclubs');
+
+    for (const fc of fanclubs.rows) {
+      // 🏃 활동왕: 시즌 최다 AP
+      const activity = await pool.query(
+        `SELECT u.id, u.ap AS score FROM users u WHERE u.fandom_id = $1 ORDER BY u.ap DESC LIMIT 1`, [fc.id]
+      );
+      if (activity.rows[0]) {
+        await pool.query(
+          `INSERT INTO season_mvps (season_id, fanclub_id, user_id, category, score, league) VALUES ($1, $2, $3, 'activity', $4, $5)`,
+          [seasonId, fc.id, activity.rows[0].id, activity.rows[0].score, fc.league]
+        );
+      }
+
+      // 📈 성장왕: 시즌 최다 레벨업
+      const growth = await pool.query(
+        `SELECT sh.user_id, SUM(sh.delta) AS score FROM stat_history sh
+         JOIN users u ON sh.user_id = u.id
+         WHERE u.fandom_id = $1 AND sh.created_at >= (SELECT starts_at FROM seasons WHERE id = $2)
+         GROUP BY sh.user_id ORDER BY score DESC LIMIT 1`,
+        [fc.id, seasonId]
+      );
+      if (growth.rows[0]) {
+        await pool.query(
+          `INSERT INTO season_mvps (season_id, fanclub_id, user_id, category, score, league) VALUES ($1, $2, $3, 'growth', $4, $5)`,
+          [seasonId, fc.id, growth.rows[0].user_id, growth.rows[0].score, fc.league]
+        );
+      }
+
+      // 🤝 기여왕: 시즌 최다 팬클럽 기여도 (에너지 기부 + 활동)
+      const contrib = await pool.query(
+        `SELECT user_id, SUM(energy_amount) AS score FROM wish_energy_contributions wec
+         JOIN wishes w ON wec.wish_id = w.id
+         WHERE w.fanclub_id = $1
+         GROUP BY user_id ORDER BY score DESC LIMIT 1`,
+        [fc.id]
+      );
+      if (contrib.rows[0]) {
+        await pool.query(
+          `INSERT INTO season_mvps (season_id, fanclub_id, user_id, category, score, league) VALUES ($1, $2, $3, 'contribution', $4, $5)`,
+          [seasonId, fc.id, contrib.rows[0].user_id, contrib.rows[0].score, fc.league]
+        );
+      }
+
+      // 🌟 신인상: 해당 시즌 가입자 중 최고 성장
+      const rookie = await pool.query(
+        `SELECT u.id, u.level AS score FROM users u
+         WHERE u.fandom_id = $1 AND u.created_at >= (SELECT starts_at FROM seasons WHERE id = $2)
+         ORDER BY u.level DESC LIMIT 1`,
+        [fc.id, seasonId]
+      );
+      if (rookie.rows[0]) {
+        await pool.query(
+          `INSERT INTO season_mvps (season_id, fanclub_id, user_id, category, score, league) VALUES ($1, $2, $3, 'rookie', $4, $5)`,
+          [seasonId, fc.id, rookie.rows[0].id, rookie.rows[0].score, fc.league]
+        );
+      }
+
+      // 🛡️ 수호자상: SOC 기반 최다 멘토링/도움
+      const guardian = await pool.query(
+        `SELECT u.id, u.stat_soc AS score FROM users u WHERE u.fandom_id = $1 ORDER BY u.stat_soc DESC LIMIT 1`, [fc.id]
+      );
+      if (guardian.rows[0]) {
+        await pool.query(
+          `INSERT INTO season_mvps (season_id, fanclub_id, user_id, category, score, league) VALUES ($1, $2, $3, 'guardian', $4, $5)`,
+          [seasonId, fc.id, guardian.rows[0].id, guardian.rows[0].score, fc.league]
+        );
+      }
+    }
+
+    // MVP 수상자 보상: 스타더스트 5000
+    await pool.query(
+      `UPDATE users SET stardust = stardust + 5000 WHERE id IN (SELECT user_id FROM season_mvps WHERE season_id = $1)`,
+      [seasonId]
+    );
+
+    // Socket.IO 전서버 발표
+    const mvpList = await pool.query(
+      `SELECT sm.category, u.nickname, f.name AS fanclub_name
+       FROM season_mvps sm JOIN users u ON sm.user_id = u.id LEFT JOIN fanclubs f ON sm.fanclub_id = f.id
+       WHERE sm.season_id = $1`, [seasonId]
+    );
+    io.emit('season_mvp_announcement', {
+      message: `🏆 시즌 #${seasonId} MVP 발표!`,
+      mvps: mvpList.rows
+    });
+
+    console.log(`✅ [CRON] 시즌 MVP 산출 완료 (시즌 #${seasonId})`);
+  } catch (err) {
+    console.error('❌ [CRON] 시즌 MVP 산출 오류:', err.message);
+  }
+});
+
 console.log('📅 스케줄러 등록 완료:');
 console.log('  - 매일 00:00 에너지 파이프라인');
 console.log('  - 매주 월 01:00 주간 소모임 평가');
+console.log('  - 매일 02:00 소원 파이프라인');
+console.log('  - 매일 03:00 화력 일일 기록');
 console.log('  - 매일 06:00 만료 데이터 정리');
 console.log('  - 매시간 시즌 상태 자동 업데이트');
+console.log('  - 매시간 15분 미러 매치 체크');
+console.log('  - 매시간 30분 국민 투표 자동 처리');
+console.log('  - 매월 첫째주 월 모임워즈 생성 / 목 결과집계');
+console.log('  - 매월 셋째주 월 라이벌매칭 / 목 결과+스탯킹');
+console.log('  - 시즌종료 시 MVP 산출');
 
 // 스케줄러 상태 API (공개)
 app.get('/api/system/cron-status', (req, res) => {
@@ -9694,8 +11471,17 @@ app.get('/api/system/cron-status', (req, res) => {
     schedulers: [
       { name: '에너지 파이프라인', schedule: '매일 00:00', lastRun: lastPipelineRun },
       { name: '주간 소모임 평가', schedule: '매주 월요일 01:00' },
+      { name: '소원 파이프라인', schedule: '매일 02:00' },
+      { name: '화력 일일 기록', schedule: '매일 03:00' },
       { name: '만료 데이터 정리', schedule: '매일 06:00' },
-      { name: '시즌 상태 업데이트', schedule: '매시간 정각' }
+      { name: '시즌 상태 업데이트', schedule: '매시간 정각' },
+      { name: '미러 매치 체크', schedule: '매시간 15분' },
+      { name: '국민 투표 자동 처리', schedule: '매시간 30분' },
+      { name: '모임 워즈 생성', schedule: '매월 첫째주 월요일' },
+      { name: '모임 워즈 결과', schedule: '매월 첫째주 목요일' },
+      { name: '라이벌 자동 매칭', schedule: '매월 셋째주 월요일' },
+      { name: '라이벌 결과 + 스탯킹', schedule: '매월 셋째주 목요일' },
+      { name: '시즌 MVP 산출', schedule: '시즌 종료 시' }
     ],
     serverUptime: Math.floor(process.uptime()) + '초'
   });

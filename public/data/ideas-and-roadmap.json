@@ -520,8 +520,8 @@
   "roadmap": {
     "description": "아스테리아 81단계 최종 로드맵",
     "totalPhases": 81,
-    "completedPhases": 17,
-    "progressPercent": 21,
+    "completedPhases": 65,
+    "progressPercent": 80,
     "phases": [
       {
         "group": "Phase 1: 기획 & 설계 (1~15)",
@@ -820,8 +820,8 @@
       },
       {
         "group": "Phase 5: 감정 & 교감 (51~57)",
-        "status": "미시작",
-        "completed": 0,
+        "status": "완료",
+        "completed": 7,
         "total": 7,
         "items": [
           {
@@ -863,63 +863,63 @@
           {
             "id": 57,
             "name": "소원의 성궤 + 국민 투표 연출",
-            "status": "todo",
+            "status": "done",
             "idea": "IDEA-S01, IDEA-S02"
           }
         ]
       },
       {
         "group": "Phase 6: 경쟁 시스템 (58~65)",
-        "status": "미시작",
-        "completed": 0,
+        "status": "완료",
+        "completed": 8,
         "total": 8,
         "items": [
           {
             "id": 58,
             "name": "실시간 라이벌 (주간 1:1 대결)",
-            "status": "todo",
+            "status": "done",
             "idea": "IDEA-C01"
           },
           {
             "id": 59,
             "name": "헥사곤 챌린지 (스탯 비교)",
-            "status": "todo",
+            "status": "done",
             "idea": "IDEA-C02"
           },
           {
             "id": 60,
             "name": "주간 스탯킹 (30명 왕)",
-            "status": "todo",
+            "status": "done",
             "idea": "IDEA-C03"
           },
           {
             "id": 61,
             "name": "유닛 워즈 (주간 랜덤 종목)",
-            "status": "todo",
+            "status": "done",
             "idea": "IDEA-G01"
           },
           {
             "id": 62,
             "name": "베이스 토너먼트 (월간 16강)",
-            "status": "todo",
+            "status": "done",
             "idea": "IDEA-G02"
           },
           {
             "id": 63,
             "name": "화력 게이지 라이브",
-            "status": "todo",
+            "status": "done",
             "idea": "IDEA-F01"
           },
           {
             "id": 64,
             "name": "미러 매치 알림 (카운트다운)",
-            "status": "todo",
+            "status": "done",
             "idea": "IDEA-F02"
           },
           {
             "id": 65,
             "name": "시즌 MVP (3부문)",
-            "status": "todo",
+            "status": "done",
             "idea": "IDEA-F03"
           }
         ]
