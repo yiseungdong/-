@@ -598,9 +598,10 @@ function goLeagueMap(key){
 
 function goFromNode(el){
   const fan=el.getAttribute('data-fan');
-  document.getElementById('ltitle').textContent='QUASAR LEAGUE MAP';
-  document.getElementById('lsub2').textContent=`→ ${fan} 팬덤 선택`;
-  flash(()=>{showPage('page-league');centerMap()});
+  const league=document.querySelector('.league-tab.active')?.dataset?.league||'star';
+  flash(()=>{
+    location.href='/fandom.html?fan='+encodeURIComponent(fan)+'&league='+league;
+  });
 }
 
 function flash(cb){
