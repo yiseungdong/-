@@ -809,12 +809,12 @@
           {
             "id": 49,
             "name": "주권자 재판소 (기소→공판→판결)",
-            "status": "todo"
+            "status": "done"
           },
           {
             "id": 50,
             "name": "신고/처벌/갱생 플로우",
-            "status": "todo"
+            "status": "done"
           }
         ]
       },

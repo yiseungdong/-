@@ -830,6 +830,51 @@ async function initDB() {
     await client.query(`CREATE INDEX IF NOT EXISTS idx_audit_table ON audit_log(table_name, created_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_log(changed_by)`);
 
+    // ── 재판소 케이스 (#49) ──
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS court_cases (
+        id              SERIAL PRIMARY KEY,
+        case_number     VARCHAR(20) NOT NULL UNIQUE,
+        track           VARCHAR(20) NOT NULL,
+        status          VARCHAR(20) NOT NULL DEFAULT 'submitted',
+        reported_user_id INTEGER NOT NULL REFERENCES users(id),
+        reporter_id     INTEGER NOT NULL REFERENCES users(id),
+        fandom_id       INTEGER REFERENCES fanclubs(id),
+        league          VARCHAR(20),
+        category        VARCHAR(50) NOT NULL,
+        title           VARCHAR(200) NOT NULL,
+        description     TEXT NOT NULL,
+        evidence        JSONB DEFAULT '[]',
+        verdict         VARCHAR(30),
+        verdict_reason  TEXT,
+        penalty_applied JSONB,
+        jury_members    JSONB DEFAULT '[]',
+        jury_votes      JSONB DEFAULT '[]',
+        jury_required   INTEGER NOT NULL DEFAULT 5,
+        viewer_count    INTEGER NOT NULL DEFAULT 0,
+        is_hot          BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        resolved_at     TIMESTAMP
+      )
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_court_status ON court_cases(status)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_court_reported ON court_cases(reported_user_id)`);
+
+    // ── 신고자 정확도 추적 (#50) ──
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS reporter_accuracy (
+        id              SERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id) UNIQUE,
+        total_reports   INTEGER NOT NULL DEFAULT 0,
+        guilty_verdicts INTEGER NOT NULL DEFAULT 0,
+        accuracy_rate   DECIMAL(5,2) NOT NULL DEFAULT 100.0,
+        is_restricted   BOOLEAN NOT NULL DEFAULT FALSE,
+        restricted_until TIMESTAMP,
+        updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_reporter_user ON reporter_accuracy(user_id)`);
+
     await client.query('COMMIT');
     console.log('✅ 아스테리아 DB 초기화 완료 — 24개 테이블 생성');
   } catch (err) {
@@ -5663,6 +5708,787 @@ app.post('/api/security/encrypt-test', authenticateToken, async (req, res) => {
     match: text === decrypted,
     algorithm: 'AES-256'
   });
+});
+
+// ══════════════════════════════════════════════
+//  #49 주권자 재판소 + #50 신고/처벌/갱생
+// ══════════════════════════════════════════════
+
+// 처벌 피라미드 5단계
+const PENALTY_PYRAMID = {
+  1: { name: '교육 알림', duration: null, statLoss: 0, description: '커뮤니티 가이드 안내' },
+  2: { name: '발언 제한', duration: '24 hours', statLoss: 0, description: '24시간 채팅/게시글 금지' },
+  3: { name: '스탯 감소', duration: '72 hours', statLoss: 15, description: 'SOC -15, 무결성 -10' },
+  4: { name: '활동 정지', duration: '7 days', statLoss: 30, description: '7일 모든 활동 차단' },
+  5: { name: '영구 추방', duration: null, statLoss: 100, description: '영구 밴 (배심원 만장일치 필요)' },
+};
+
+// 카테고리별 기본 처벌 단계
+const CATEGORY_DEFAULT_PENALTY = {
+  harassment: 2,
+  false_info: 3,
+  disruption: 2,
+  leader_abuse: 3,
+  manipulation: 3,
+  obstruction: 2,
+  macro: 4,
+  multi_account: 5,
+  data_tampering: 5,
+};
+
+// 트랙 자동 분류 (플랫폼 vs 커뮤니티)
+const PLATFORM_CATEGORIES = ['macro', 'multi_account', 'data_tampering'];
+
+// 케이스 번호 생성
+async function generateCaseNumber() {
+  const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const countRes = await pool.query(
+    `SELECT COUNT(*) AS cnt FROM court_cases WHERE case_number LIKE $1`,
+    [`CASE-${today}-%`]
+  );
+  const seq = String(parseInt(countRes.rows[0].cnt) + 1).padStart(3, '0');
+  return `CASE-${today}-${seq}`;
+}
+
+// ── 자동 판결 함수 ──
+async function resolveCase(caseId) {
+  try {
+    const caseRes = await pool.query('SELECT * FROM court_cases WHERE id = $1', [caseId]);
+    if (caseRes.rows.length === 0) return;
+    const courtCase = caseRes.rows[0];
+    const votes = courtCase.jury_votes || [];
+    const guiltyCount = votes.filter(v => v.verdict === 'guilty').length;
+    const notGuiltyCount = votes.filter(v => v.verdict === 'not_guilty').length;
+    const totalVotes = votes.length;
+
+    let verdict, verdictReason;
+
+    if (guiltyCount > notGuiltyCount) {
+      verdict = 'guilty';
+      verdictReason = `유죄 ${guiltyCount}표 / 무죄 ${notGuiltyCount}표`;
+    } else if (notGuiltyCount > guiltyCount) {
+      verdict = 'not_guilty';
+      verdictReason = `무죄 ${notGuiltyCount}표 / 유죄 ${guiltyCount}표`;
+    } else {
+      verdict = 'dismissed';
+      verdictReason = `동률 ${guiltyCount}:${notGuiltyCount} — 기각 (무죄 처리)`;
+    }
+
+    let penaltyApplied = null;
+
+    if (verdict === 'guilty') {
+      // 기본 처벌 단계 결정
+      let penaltyLevel = CATEGORY_DEFAULT_PENALTY[courtCase.category] || 2;
+
+      // 영구 추방은 만장일치 필요
+      if (penaltyLevel === 5 && guiltyCount < totalVotes) {
+        penaltyLevel = 4;
+        verdictReason += ' (만장일치 미달 → 4단계 감등)';
+      }
+
+      // 첫 위반 + 더스트 리그면 1단계로 감경
+      const priorPenalties = await pool.query(
+        'SELECT COUNT(*) AS cnt FROM penalties WHERE user_id = $1',
+        [courtCase.reported_user_id]
+      );
+      if (parseInt(priorPenalties.rows[0].cnt) === 0 && courtCase.league === 'dust') {
+        penaltyLevel = 1;
+        verdictReason += ' (첫 위반 + 더스트 → 1단계 감경)';
+      }
+
+      const penalty = PENALTY_PYRAMID[penaltyLevel];
+      penaltyApplied = { level: penaltyLevel, ...penalty };
+
+      // 처벌 집행
+      if (penaltyLevel === 1) {
+        // 교육 알림만
+        await pool.query(
+          `INSERT INTO notifications (user_id, type, title, body, meta)
+           VALUES ($1, 'court_verdict', '재판소 판결: 교육 알림', $2, $3)`,
+          [courtCase.reported_user_id, '커뮤니티 가이드를 확인해 주세요. 반복 시 더 강한 조치가 적용됩니다.',
+           JSON.stringify({ caseId, level: 1 })]
+        );
+      } else if (penaltyLevel === 2) {
+        // 발언 제한 24시간
+        await pool.query(
+          `UPDATE users SET locked_until = NOW() + INTERVAL '24 hours' WHERE id = $1`,
+          [courtCase.reported_user_id]
+        );
+        await pool.query(
+          `INSERT INTO penalties (user_id, penalty_type, reason, issued_by, severity, ends_at)
+           VALUES ($1, 'sovereign_silence', $2, 'court', 'low', NOW() + INTERVAL '24 hours')`,
+          [courtCase.reported_user_id, `재판소 판결: ${courtCase.title}`]
+        );
+      } else if (penaltyLevel === 3) {
+        // 스탯 감소
+        await pool.query(
+          `UPDATE users SET stat_soc = GREATEST(stat_soc - 15, 0), integrity_score = GREATEST(integrity_score - 10, 0) WHERE id = $1`,
+          [courtCase.reported_user_id]
+        );
+        await pool.query(
+          `INSERT INTO penalties (user_id, penalty_type, reason, issued_by, severity, stat_reduction, ends_at, atonement_required)
+           VALUES ($1, 'stat_drain', $2, 'court', 'medium', '{"soc": -15}', NOW() + INTERVAL '72 hours', '정화 퀘스트 완료')`,
+          [courtCase.reported_user_id, `재판소 판결: ${courtCase.title}`]
+        );
+      } else if (penaltyLevel === 4) {
+        // 활동 정지 7일
+        await pool.query(
+          `UPDATE users SET is_banned = TRUE, locked_until = NOW() + INTERVAL '7 days' WHERE id = $1`,
+          [courtCase.reported_user_id]
+        );
+        await pool.query(
+          `INSERT INTO penalties (user_id, penalty_type, reason, issued_by, severity, stat_reduction, ends_at, atonement_required)
+           VALUES ($1, 'void_sarcophagus', $2, 'court', 'high', '{"all": -30}', NOW() + INTERVAL '7 days', '정화 퀘스트 + 사면 투표')`,
+          [courtCase.reported_user_id, `재판소 판결: ${courtCase.title}`]
+        );
+      } else if (penaltyLevel === 5) {
+        // 영구 추방 + HW 밴
+        await pool.query(
+          `UPDATE users SET is_banned = TRUE, ban_reason = $1 WHERE id = $2`,
+          [`재판소 영구 추방: ${courtCase.title}`, courtCase.reported_user_id]
+        );
+        await pool.query(
+          `INSERT INTO penalties (user_id, penalty_type, reason, issued_by, severity)
+           VALUES ($1, 'eternal_exile', $2, 'court', 'critical')`,
+          [courtCase.reported_user_id, `재판소 판결: ${courtCase.title}`]
+        );
+        // HW 밴 연동
+        const devices = await pool.query(
+          'SELECT hw_fingerprint FROM device_registry WHERE user_id = $1',
+          [courtCase.reported_user_id]
+        );
+        for (const d of devices.rows) {
+          await pool.query(
+            `INSERT INTO hw_ban_list (hw_fingerprint, banned_user_id, reason, banned_by)
+             VALUES ($1, $2, $3, 'court') ON CONFLICT (hw_fingerprint) DO NOTHING`,
+            [d.hw_fingerprint, courtCase.reported_user_id, `재판소 영구 추방: ${courtCase.title}`]
+          );
+        }
+      }
+    }
+
+    // not_guilty → 신고자 정확도 하락
+    if (verdict === 'not_guilty' || verdict === 'dismissed') {
+      const accRes = await pool.query(
+        'SELECT * FROM reporter_accuracy WHERE user_id = $1',
+        [courtCase.reporter_id]
+      );
+      if (accRes.rows.length > 0) {
+        const acc = accRes.rows[0];
+        const newRate = acc.total_reports > 0
+          ? Math.round((acc.guilty_verdicts / acc.total_reports) * 10000) / 100
+          : 0;
+        const isRestricted = newRate < 30;
+        await pool.query(
+          `UPDATE reporter_accuracy SET accuracy_rate = $1, is_restricted = $2,
+           restricted_until = CASE WHEN $2 THEN NOW() + INTERVAL '30 days' ELSE NULL END,
+           updated_at = NOW() WHERE user_id = $3`,
+          [newRate, isRestricted, courtCase.reporter_id]
+        );
+      }
+    }
+
+    // guilty → 신고자 정확도 상승
+    if (verdict === 'guilty') {
+      await pool.query(
+        `UPDATE reporter_accuracy SET guilty_verdicts = guilty_verdicts + 1,
+         accuracy_rate = ROUND((guilty_verdicts + 1)::numeric / GREATEST(total_reports, 1) * 100, 2),
+         updated_at = NOW() WHERE user_id = $1`,
+        [courtCase.reporter_id]
+      );
+    }
+
+    // 케이스 해결 처리
+    await pool.query(
+      `UPDATE court_cases SET status = 'resolved', verdict = $1, verdict_reason = $2,
+       penalty_applied = $3, resolved_at = NOW() WHERE id = $4`,
+      [verdict, verdictReason, penaltyApplied ? JSON.stringify(penaltyApplied) : null, caseId]
+    );
+
+    // 알림: 피신고자
+    await pool.query(
+      `INSERT INTO notifications (user_id, type, title, body, meta)
+       VALUES ($1, 'court_verdict', $2, $3, $4)`,
+      [courtCase.reported_user_id,
+       `재판소 판결: ${verdict === 'guilty' ? '유죄' : verdict === 'not_guilty' ? '무죄' : '기각'}`,
+       verdictReason,
+       JSON.stringify({ caseId, verdict, penaltyApplied })]
+    );
+
+    // 알림: 신고자
+    await pool.query(
+      `INSERT INTO notifications (user_id, type, title, body, meta)
+       VALUES ($1, 'court_verdict', $2, $3, $4)`,
+      [courtCase.reporter_id,
+       `신고 결과: ${verdict === 'guilty' ? '유죄 판결' : verdict === 'not_guilty' ? '무죄 판결' : '기각'}`,
+       `사건 ${courtCase.case_number}의 판결이 완료되었습니다. ${verdictReason}`,
+       JSON.stringify({ caseId, verdict })]
+    );
+
+    // 감사 로그
+    if (typeof writeAuditLog === 'function') {
+      await writeAuditLog('court_cases', caseId, 'verdict', null, { verdict, verdictReason, penaltyApplied }, null);
+    }
+
+    console.log(`⚖️ 재판 해결: ${courtCase.case_number} → ${verdict}`);
+  } catch (err) {
+    console.error('자동 판결 오류:', err.message);
+  }
+}
+
+// ── 1) POST /api/court/report — 신고 접수 ──
+app.post('/api/court/report', authenticateToken, async (req, res) => {
+  try {
+    const reporterId = req.user.id;
+    const { reported_user_id, category, title, description, evidence, fandom_id } = req.body;
+
+    if (!reported_user_id || !category || !title || !description) {
+      return res.status(400).json({ error: 'reported_user_id, category, title, description 필수' });
+    }
+
+    // 유효한 카테고리인지 확인
+    if (!CATEGORY_DEFAULT_PENALTY[category]) {
+      return res.status(400).json({ error: '유효하지 않은 카테고리', validCategories: Object.keys(CATEGORY_DEFAULT_PENALTY) });
+    }
+
+    // 자기 자신 신고 불가
+    if (reporterId === reported_user_id) {
+      return res.status(400).json({ error: '자기 자신을 신고할 수 없습니다.' });
+    }
+
+    // 24시간 내 중복 신고 방지
+    const duplicateCheck = await pool.query(
+      `SELECT id FROM court_cases WHERE reporter_id = $1 AND reported_user_id = $2
+       AND created_at > NOW() - INTERVAL '24 hours'`,
+      [reporterId, reported_user_id]
+    );
+    if (duplicateCheck.rows.length > 0) {
+      return res.status(429).json({ error: '같은 대상을 24시간 내에 중복 신고할 수 없습니다.' });
+    }
+
+    // 신고자 정확도/제한 확인
+    const accCheck = await pool.query(
+      'SELECT * FROM reporter_accuracy WHERE user_id = $1',
+      [reporterId]
+    );
+    if (accCheck.rows.length > 0) {
+      const acc = accCheck.rows[0];
+      if (acc.is_restricted && acc.restricted_until && new Date(acc.restricted_until) > new Date()) {
+        return res.status(403).json({
+          error: '신고 권한이 제한되었습니다.',
+          restrictedUntil: acc.restricted_until,
+          reason: '허위 신고 누적으로 30일간 신고 불가'
+        });
+      }
+      if (parseFloat(acc.accuracy_rate) < 30 && acc.total_reports >= 3) {
+        return res.status(403).json({ error: '신고 정확도가 30% 미만입니다. 신고 권한이 제한됩니다.' });
+      }
+    }
+
+    // 트랙 자동 분류
+    const track = PLATFORM_CATEGORIES.includes(category) ? 'platform' : 'community';
+
+    // 피신고자 리그 조회
+    const reportedUser = await pool.query('SELECT league FROM users WHERE id = $1', [reported_user_id]);
+    if (reportedUser.rows.length === 0) {
+      return res.status(404).json({ error: '피신고자를 찾을 수 없습니다.' });
+    }
+    const league = reportedUser.rows[0].league;
+
+    // 케이스 번호 생성
+    const caseNumber = await generateCaseNumber();
+
+    // 리그별 배심원 수 조회
+    const juryConfig = await pool.query('SELECT court_jury_count FROM league_config WHERE league = $1', [league || 'dust']);
+    const juryRequired = juryConfig.rows.length > 0 ? juryConfig.rows[0].court_jury_count : 5;
+
+    // 케이스 생성
+    const result = await pool.query(
+      `INSERT INTO court_cases (case_number, track, reported_user_id, reporter_id, fandom_id, league, category, title, description, evidence, jury_required)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
+      [caseNumber, track, reported_user_id, reporterId, fandom_id || null, league, category, title, description,
+       JSON.stringify(evidence || []), juryRequired]
+    );
+
+    // 신고자 ACT +3
+    await pool.query('UPDATE users SET stat_act = stat_act + 3 WHERE id = $1', [reporterId]);
+
+    // reporter_accuracy 갱신
+    await pool.query(
+      `INSERT INTO reporter_accuracy (user_id, total_reports)
+       VALUES ($1, 1)
+       ON CONFLICT (user_id) DO UPDATE SET total_reports = reporter_accuracy.total_reports + 1, updated_at = NOW()`,
+      [reporterId]
+    );
+
+    res.status(201).json({
+      message: '신고가 접수되었습니다.',
+      caseNumber,
+      track,
+      juryRequired,
+      case: result.rows[0]
+    });
+  } catch (err) {
+    console.error('신고 접수 오류:', err.message);
+    res.status(500).json({ error: '신고 접수 실패' });
+  }
+});
+
+// ── 2) GET /api/court/cases — 재판 목록 ──
+app.get('/api/court/cases', async (req, res) => {
+  try {
+    const { status, track, fandom_id, page = 1 } = req.query;
+    const limit = 20;
+    const offset = (parseInt(page) - 1) * limit;
+    const conditions = [];
+    const params = [];
+    let paramIdx = 1;
+
+    if (status) { conditions.push(`c.status = $${paramIdx++}`); params.push(status); }
+    if (track) { conditions.push(`c.track = $${paramIdx++}`); params.push(track); }
+    if (fandom_id) { conditions.push(`c.fandom_id = $${paramIdx++}`); params.push(parseInt(fandom_id)); }
+
+    const where = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
+
+    const result = await pool.query(
+      `SELECT c.*,
+              r.nickname AS reporter_nickname,
+              u.nickname AS reported_nickname
+       FROM court_cases c
+       LEFT JOIN users r ON r.id = c.reporter_id
+       LEFT JOIN users u ON u.id = c.reported_user_id
+       ${where}
+       ORDER BY c.created_at DESC
+       LIMIT $${paramIdx++} OFFSET $${paramIdx}`,
+      [...params, limit, offset]
+    );
+
+    const countRes = await pool.query(
+      `SELECT COUNT(*) AS cnt FROM court_cases c ${where}`,
+      params
+    );
+    const total = parseInt(countRes.rows[0].cnt);
+
+    res.json({
+      cases: result.rows.map(c => ({
+        ...c,
+        hotTag: c.is_hot ? '🔥 화제' : null
+      })),
+      total,
+      page: parseInt(page),
+      totalPages: Math.ceil(total / limit)
+    });
+  } catch (err) {
+    console.error('재판 목록 조회 오류:', err.message);
+    res.status(500).json({ error: '재판 목록 조회 실패' });
+  }
+});
+
+// ── 3) GET /api/court/case/:id — 재판 상세 + 관전 ──
+app.get('/api/court/case/:id', async (req, res) => {
+  try {
+    const caseId = parseInt(req.params.id);
+
+    // 관전자 수 증가
+    await pool.query('UPDATE court_cases SET viewer_count = viewer_count + 1 WHERE id = $1', [caseId]);
+
+    // 50명 이상 관전 시 화제 태그
+    await pool.query('UPDATE court_cases SET is_hot = TRUE WHERE id = $1 AND viewer_count >= 50', [caseId]);
+
+    const result = await pool.query(
+      `SELECT c.*,
+              r.nickname AS reporter_nickname,
+              u.nickname AS reported_nickname
+       FROM court_cases c
+       LEFT JOIN users r ON r.id = c.reporter_id
+       LEFT JOIN users u ON u.id = c.reported_user_id
+       WHERE c.id = $1`,
+      [caseId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: '재판 케이스를 찾을 수 없습니다.' });
+    }
+
+    const courtCase = result.rows[0];
+
+    // 투표 현황 (배심원 이름 비공개)
+    const juryVotes = courtCase.jury_votes || [];
+    const voteStatus = {
+      guilty: juryVotes.filter(v => v.verdict === 'guilty').length,
+      notGuilty: juryVotes.filter(v => v.verdict === 'not_guilty').length,
+      totalVoted: juryVotes.length,
+      juryRequired: courtCase.jury_required
+    };
+
+    // 플랫폼 트랙이면 관련 어뷰징 증거 표시
+    let abuseEvidence = [];
+    if (courtCase.track === 'platform') {
+      const abuseRes = await pool.query(
+        `SELECT pattern_type, description, detected_at FROM abuse_patterns
+         WHERE user_id = $1 ORDER BY detected_at DESC LIMIT 10`,
+        [courtCase.reported_user_id]
+      );
+      abuseEvidence = abuseRes.rows;
+    }
+
+    res.json({
+      case: {
+        ...courtCase,
+        jury_members: undefined,  // 배심원 명단 비공개
+        jury_votes: undefined,    // 개별 투표 비공개
+        hotTag: courtCase.is_hot ? '🔥 화제' : null
+      },
+      voteStatus,
+      abuseEvidence,
+      viewerCount: courtCase.viewer_count + 1
+    });
+  } catch (err) {
+    console.error('재판 상세 조회 오류:', err.message);
+    res.status(500).json({ error: '재판 상세 조회 실패' });
+  }
+});
+
+// ── 4) POST /api/court/select-jury — 배심원 랜덤 선정 ──
+app.post('/api/court/select-jury', authenticateToken, async (req, res) => {
+  try {
+    const { case_id } = req.body;
+    if (!case_id) return res.status(400).json({ error: 'case_id 필수' });
+
+    const caseRes = await pool.query('SELECT * FROM court_cases WHERE id = $1', [case_id]);
+    if (caseRes.rows.length === 0) {
+      return res.status(404).json({ error: '케이스를 찾을 수 없습니다.' });
+    }
+    const courtCase = caseRes.rows[0];
+
+    if (courtCase.status !== 'submitted') {
+      return res.status(400).json({ error: '배심원 선정은 submitted 상태에서만 가능합니다.' });
+    }
+
+    // 리그별 배심원 자격 레벨 조회
+    const leagueConfig = await pool.query(
+      'SELECT court_jury_level, court_jury_count FROM league_config WHERE league = $1',
+      [courtCase.league || 'dust']
+    );
+    const juryLevel = leagueConfig.rows.length > 0 ? leagueConfig.rows[0].court_jury_level : 15;
+    const juryCount = courtCase.jury_required;
+
+    // 자격 있는 후보 조회 (같은 팬클럽 + 레벨 충족 + 신고자/피신고자 제외)
+    let candidateQuery = `
+      SELECT id FROM users
+      WHERE is_banned = FALSE AND level >= $1
+        AND id != $2 AND id != $3
+    `;
+    const candidateParams = [juryLevel, courtCase.reporter_id, courtCase.reported_user_id];
+
+    if (courtCase.fandom_id) {
+      candidateQuery += ` AND fandom_id = $4`;
+      candidateParams.push(courtCase.fandom_id);
+    }
+
+    candidateQuery += ' ORDER BY RANDOM() LIMIT $' + (candidateParams.length + 1);
+    candidateParams.push(juryCount);
+
+    const candidates = await pool.query(candidateQuery, candidateParams);
+
+    if (candidates.rows.length < Math.min(juryCount, 3)) {
+      return res.status(400).json({
+        error: '배심원 후보가 부족합니다.',
+        required: juryCount,
+        available: candidates.rows.length
+      });
+    }
+
+    const juryMembers = candidates.rows.map(c => c.id);
+
+    // 케이스 업데이트
+    await pool.query(
+      `UPDATE court_cases SET jury_members = $1, status = 'voting' WHERE id = $2`,
+      [JSON.stringify(juryMembers), case_id]
+    );
+
+    // 배심원에게 알림
+    for (const jurorId of juryMembers) {
+      await pool.query(
+        `INSERT INTO notifications (user_id, type, title, body, meta)
+         VALUES ($1, 'jury_selected', '재판 배심원 선정', $2, $3)`,
+        [jurorId,
+         `사건 ${courtCase.case_number}의 배심원으로 선정되었습니다. 48시간 내 투표해주세요.`,
+         JSON.stringify({ caseId: case_id, caseNumber: courtCase.case_number })]
+      );
+    }
+
+    res.json({
+      message: '배심원 선정 완료',
+      caseNumber: courtCase.case_number,
+      juryCount: juryMembers.length,
+      juryRequired: juryCount,
+      status: 'voting'
+    });
+  } catch (err) {
+    console.error('배심원 선정 오류:', err.message);
+    res.status(500).json({ error: '배심원 선정 실패' });
+  }
+});
+
+// ── 5) POST /api/court/jury-vote — 배심원 투표 ──
+app.post('/api/court/jury-vote', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { case_id, verdict, reason } = req.body;
+
+    if (!case_id || !verdict || !reason) {
+      return res.status(400).json({ error: 'case_id, verdict, reason 필수' });
+    }
+    if (!['guilty', 'not_guilty'].includes(verdict)) {
+      return res.status(400).json({ error: 'verdict는 guilty 또는 not_guilty만 가능' });
+    }
+
+    const caseRes = await pool.query('SELECT * FROM court_cases WHERE id = $1', [case_id]);
+    if (caseRes.rows.length === 0) {
+      return res.status(404).json({ error: '케이스를 찾을 수 없습니다.' });
+    }
+    const courtCase = caseRes.rows[0];
+
+    if (courtCase.status !== 'voting') {
+      return res.status(400).json({ error: '투표 진행 중인 케이스가 아닙니다.' });
+    }
+
+    // 배심원 자격 확인
+    const juryMembers = courtCase.jury_members || [];
+    if (!juryMembers.includes(userId)) {
+      return res.status(403).json({ error: '배심원으로 선정되지 않았습니다.' });
+    }
+
+    // 중복 투표 확인
+    const existingVotes = courtCase.jury_votes || [];
+    if (existingVotes.some(v => v.userId === userId)) {
+      return res.status(400).json({ error: '이미 투표하셨습니다.' });
+    }
+
+    // 투표 추가
+    const newVote = { userId, verdict, reason, votedAt: new Date().toISOString() };
+    const updatedVotes = [...existingVotes, newVote];
+
+    await pool.query(
+      'UPDATE court_cases SET jury_votes = $1 WHERE id = $2',
+      [JSON.stringify(updatedVotes), case_id]
+    );
+
+    // 투표 보상: ACT +5, SOC +3
+    await pool.query(
+      'UPDATE users SET stat_act = stat_act + 5, stat_soc = stat_soc + 3 WHERE id = $1',
+      [userId]
+    );
+
+    // 투표수가 jury_required에 도달하면 자동 판결
+    if (updatedVotes.length >= courtCase.jury_required) {
+      await resolveCase(case_id);
+    }
+
+    res.json({
+      message: '투표 완료',
+      votedCount: updatedVotes.length,
+      juryRequired: courtCase.jury_required,
+      autoResolve: updatedVotes.length >= courtCase.jury_required
+    });
+  } catch (err) {
+    console.error('배심원 투표 오류:', err.message);
+    res.status(500).json({ error: '배심원 투표 실패' });
+  }
+});
+
+// ── 7) POST /api/court/atone — 갱생 (정화 퀘스트) ──
+app.post('/api/court/atone', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { penalty_id } = req.body;
+
+    if (!penalty_id) return res.status(400).json({ error: 'penalty_id 필수' });
+
+    // 본인의 활성 처벌인지 확인
+    const penaltyRes = await pool.query(
+      'SELECT * FROM penalties WHERE id = $1 AND user_id = $2 AND is_active = TRUE',
+      [penalty_id, userId]
+    );
+    if (penaltyRes.rows.length === 0) {
+      return res.status(404).json({ error: '활성 처벌을 찾을 수 없거나 본인의 처벌이 아닙니다.' });
+    }
+    const penalty = penaltyRes.rows[0];
+
+    // 영구 추방은 갱생 불가
+    if (penalty.penalty_type === 'eternal_exile') {
+      return res.status(400).json({ error: '영구 추방은 갱생 대상이 아닙니다.' });
+    }
+
+    // 갱생 조건: 처벌 후 7일 경과
+    const daysSince = (Date.now() - new Date(penalty.created_at).getTime()) / (1000 * 60 * 60 * 24);
+    if (daysSince < 7) {
+      return res.status(400).json({
+        error: '처벌 후 7일이 경과해야 갱생 신청이 가능합니다.',
+        daysRemaining: Math.ceil(7 - daysSince)
+      });
+    }
+
+    // integrity_score 50 이상
+    const userRes = await pool.query('SELECT integrity_score FROM users WHERE id = $1', [userId]);
+    if (parseInt(userRes.rows[0].integrity_score) < 50) {
+      return res.status(400).json({
+        error: '무결성 점수가 50 이상이어야 합니다.',
+        currentScore: userRes.rows[0].integrity_score
+      });
+    }
+
+    // 갱생 처리
+    await pool.query(
+      `UPDATE penalties SET atonement_completed = TRUE, is_active = FALSE WHERE id = $1`,
+      [penalty_id]
+    );
+    await pool.query(
+      `UPDATE users SET integrity_score = LEAST(integrity_score + 10, 100), is_banned = FALSE, locked_until = NULL WHERE id = $1`,
+      [userId]
+    );
+
+    // 알림
+    await pool.query(
+      `INSERT INTO notifications (user_id, type, title, body, meta)
+       VALUES ($1, 'atonement', '갱생 완료!', '커뮤니티에 복귀합니다. 환영합니다!', $2)`,
+      [userId, JSON.stringify({ penaltyId: penalty_id })]
+    );
+
+    // 소속 모임에 사면 투표 등록
+    const userFandom = await pool.query('SELECT fandom_id FROM users WHERE id = $1', [userId]);
+    if (userFandom.rows[0].fandom_id) {
+      await pool.query(
+        `INSERT INTO votes (title, description, vote_type, fandom_id, options, starts_at, ends_at, created_by)
+         VALUES ($1, $2, 'governance', $3, $4, NOW(), NOW() + INTERVAL '7 days', $5)`,
+        [`사면 투표: 유저 #${userId} 복귀 승인`,
+         '갱생 퀘스트를 완료한 유저의 커뮤니티 복귀를 승인하시겠습니까?',
+         userFandom.rows[0].fandom_id,
+         JSON.stringify([{ id: 1, label: '승인', votes: 0 }, { id: 2, label: '반대', votes: 0 }]),
+         userId]
+      );
+    }
+
+    res.json({ message: '갱생 완료!', integrityRestored: 10 });
+  } catch (err) {
+    console.error('갱생 처리 오류:', err.message);
+    res.status(500).json({ error: '갱생 처리 실패' });
+  }
+});
+
+// ── 8) GET /api/court/my-history — 내 재판 이력 ──
+app.get('/api/court/my-history', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // 내가 신고한 건
+    const reported = await pool.query(
+      `SELECT c.*, u.nickname AS reported_nickname FROM court_cases c
+       LEFT JOIN users u ON u.id = c.reported_user_id
+       WHERE c.reporter_id = $1 ORDER BY c.created_at DESC LIMIT 20`,
+      [userId]
+    );
+
+    // 내가 신고당한 건
+    const accused = await pool.query(
+      `SELECT c.*, r.nickname AS reporter_nickname FROM court_cases c
+       LEFT JOIN users r ON r.id = c.reporter_id
+       WHERE c.reported_user_id = $1 ORDER BY c.created_at DESC LIMIT 20`,
+      [userId]
+    );
+
+    // 내가 배심원으로 참여한 건
+    const jury = await pool.query(
+      `SELECT c.*, r.nickname AS reporter_nickname, u.nickname AS reported_nickname
+       FROM court_cases c
+       LEFT JOIN users r ON r.id = c.reporter_id
+       LEFT JOIN users u ON u.id = c.reported_user_id
+       WHERE c.jury_members::jsonb @> $1::jsonb
+       ORDER BY c.created_at DESC LIMIT 20`,
+      [JSON.stringify(userId)]
+    );
+
+    res.json({
+      reported: reported.rows,
+      accused: accused.rows,
+      jury: jury.rows,
+      summary: {
+        totalReported: reported.rows.length,
+        totalAccused: accused.rows.length,
+        totalJury: jury.rows.length
+      }
+    });
+  } catch (err) {
+    console.error('내 재판 이력 조회 오류:', err.message);
+    res.status(500).json({ error: '내 재판 이력 조회 실패' });
+  }
+});
+
+// ── 9) GET /api/court/stats — 재판소 통계 (공개) ──
+app.get('/api/court/stats', async (req, res) => {
+  try {
+    // 총 건수
+    const totalRes = await pool.query('SELECT COUNT(*) AS cnt FROM court_cases');
+    const ongoingRes = await pool.query("SELECT COUNT(*) AS cnt FROM court_cases WHERE status != 'resolved'");
+    const resolvedRes = await pool.query("SELECT COUNT(*) AS cnt FROM court_cases WHERE status = 'resolved'");
+
+    // 판결 비율
+    const guiltyRes = await pool.query("SELECT COUNT(*) AS cnt FROM court_cases WHERE verdict = 'guilty'");
+    const notGuiltyRes = await pool.query("SELECT COUNT(*) AS cnt FROM court_cases WHERE verdict = 'not_guilty'");
+    const dismissedRes = await pool.query("SELECT COUNT(*) AS cnt FROM court_cases WHERE verdict = 'dismissed'");
+
+    // 트랙별 건수
+    const trackRes = await pool.query(
+      `SELECT track, COUNT(*) AS cnt FROM court_cases GROUP BY track`
+    );
+
+    // 카테고리별 TOP5
+    const categoryRes = await pool.query(
+      `SELECT category, COUNT(*) AS cnt FROM court_cases GROUP BY category ORDER BY cnt DESC LIMIT 5`
+    );
+
+    // 이번 달 배심원 참여 TOP5 (정의의 수호자)
+    const juryTopRes = await pool.query(
+      `SELECT u.id, u.nickname, COUNT(*) AS jury_count
+       FROM court_cases c, jsonb_array_elements_text(c.jury_votes) AS vote
+       CROSS JOIN LATERAL (SELECT (vote::jsonb)->>'userId' AS uid) parsed
+       JOIN users u ON u.id = parsed.uid::int
+       WHERE c.resolved_at >= date_trunc('month', CURRENT_DATE)
+       GROUP BY u.id, u.nickname
+       ORDER BY jury_count DESC LIMIT 5`
+    );
+
+    // 화제의 재판
+    const hotRes = await pool.query(
+      `SELECT id, case_number, title, category, viewer_count FROM court_cases
+       WHERE is_hot = TRUE ORDER BY viewer_count DESC LIMIT 10`
+    );
+
+    const total = parseInt(totalRes.rows[0].cnt);
+    const resolved = parseInt(resolvedRes.rows[0].cnt);
+
+    res.json({
+      overview: {
+        total,
+        ongoing: parseInt(ongoingRes.rows[0].cnt),
+        resolved
+      },
+      verdicts: {
+        guilty: parseInt(guiltyRes.rows[0].cnt),
+        notGuilty: parseInt(notGuiltyRes.rows[0].cnt),
+        dismissed: parseInt(dismissedRes.rows[0].cnt),
+        guiltyRate: resolved > 0 ? Math.round((parseInt(guiltyRes.rows[0].cnt) / resolved) * 100) : 0
+      },
+      byTrack: trackRes.rows.reduce((acc, r) => { acc[r.track] = parseInt(r.cnt); return acc; }, {}),
+      topCategories: categoryRes.rows.map(r => ({ category: r.category, count: parseInt(r.cnt) })),
+      justiceGuardians: juryTopRes.rows.map(r => ({ id: r.id, nickname: r.nickname, juryCount: parseInt(r.jury_count) })),
+      hotCases: hotRes.rows
+    });
+  } catch (err) {
+    console.error('재판소 통계 오류:', err.message);
+    res.status(500).json({ error: '재판소 통계 조회 실패' });
+  }
 });
 
 // ── SPA fallback ──
