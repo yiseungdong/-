@@ -6,534 +6,601 @@
 <title>스타리움 STARIUM | ASTERIA</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Orbitron:wght@400;700;900&family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box;}
-:root{
-  --void:#030308;--panel:rgba(10,10,22,0.96);--border:rgba(180,150,255,0.13);
-  --gold:#f0c040;--accent:#c084fc;--text:#e8e4f0;--muted:rgba(200,190,220,0.5);
-  /* 리그 동적 변수 */
-  --lp:#fbbf24;--ls:#f59e0b;--lg:rgba(251,191,36,0.3);
-  --sky1:#060612;--sky2:#0c0c24;--ground1:#1a1a2e;--ground2:#12122a;
-  --road1:#2a2540;--road2:#332e4a;--road-border:#3d3660;
-}
-html,body{height:100%;overflow:hidden;background:var(--ground1);color:var(--text);font-family:'Noto Sans KR',sans-serif;-webkit-tap-highlight-color:transparent;user-select:none;}
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--lp:#fbbf24;--ls:#f59e0b;--lg:rgba(251,191,36,.3);--sky1:#060612;--sky2:#0c0c24;--g1:#141828;--g2:#101420;--rd:#2a2540;--rb:#3d3660;--panel:rgba(10,10,22,.96);--border:rgba(180,150,255,.13);--gold:#f0c040;--text:#e8e4f0;--muted:rgba(200,190,220,.5)}
+html,body{height:100%;overflow:hidden;background:var(--g1);color:var(--text);font-family:'Noto Sans KR',sans-serif;-webkit-tap-highlight-color:transparent;user-select:none}
 
-/* ═══ 하늘 ═══ */
-.sky{position:fixed;top:0;left:0;right:0;height:45%;z-index:0;pointer-events:none;background:linear-gradient(180deg,var(--sky1) 0%,var(--sky2) 50%,var(--ground1) 100%);}
-.sky-star{position:absolute;border-radius:50%;background:#fff;animation:tw var(--d,3s) ease-in-out infinite alternate;}
-@keyframes tw{0%{opacity:0.15;transform:scale(.7);}100%{opacity:var(--o,.7);transform:scale(1.1);}}
+.sky{position:fixed;top:0;left:0;right:0;height:50%;z-index:0;pointer-events:none}
+.sky-star{position:absolute;border-radius:50%;background:#fff;animation:tw var(--d,3s) ease-in-out infinite alternate}
+@keyframes tw{0%{opacity:.1;transform:scale(.6)}100%{opacity:var(--o,.7);transform:scale(1.2)}}
+/* 큰 십자별 */
+.sky-cross{position:absolute;pointer-events:none}
+.sky-cross::before,.sky-cross::after{content:'';position:absolute;background:#fff;border-radius:1px}
+.sky-cross::before{width:1px;height:var(--sz,12px);left:50%;top:50%;transform:translate(-50%,-50%)}
+.sky-cross::after{width:var(--sz,12px);height:1px;left:50%;top:50%;transform:translate(-50%,-50%)}
 
-/* ═══ 날씨 ═══ */
-#weatherOv{position:fixed;inset:0;z-index:3;pointer-events:none;transition:all 2s;}
-.w-clear{background:transparent;}.w-fog{background:rgba(60,60,80,0.4);}.w-dark{background:rgba(0,0,0,0.5);}
-.w-aurora{background:linear-gradient(180deg,rgba(56,189,248,0.08) 0%,rgba(192,132,252,0.05) 40%,transparent 80%);}
-.w-fest{background:radial-gradient(ellipse at 50% 20%,rgba(var(--lr,251),var(--lgr,191),var(--lb,36),0.12) 0%,transparent 60%);}
+#weatherOv{position:fixed;inset:0;z-index:3;pointer-events:none;transition:all 2s}
+.w-clear{background:transparent}.w-fog{background:rgba(60,60,80,.4)}.w-dark{background:rgba(0,0,0,.5)}
+.w-aurora{background:linear-gradient(180deg,rgba(56,189,248,.08),rgba(192,132,252,.05) 40%,transparent 80%)}
+.w-fest{background:radial-gradient(ellipse at 50% 20%,rgba(var(--lr,251),var(--lgr,191),var(--lb,36),.12),transparent 60%)}
 
-/* ═══ 헤더 ═══ */
-.hdr{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:linear-gradient(180deg,rgba(6,6,18,.95),rgba(6,6,18,.5) 90%,transparent);backdrop-filter:blur(8px);}
-.hdr-l{display:flex;align-items:center;gap:10px;}
-.hdr-back{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;transition:.3s;}
-.hdr-back:hover{background:rgba(255,255,255,.15);transform:scale(1.1);}
-.hdr-name{font-family:'Orbitron',monospace;font-weight:700;font-size:14px;color:var(--lp);text-shadow:0 0 12px var(--lg);}
-.hdr-sub{font-size:10px;color:var(--muted);display:flex;align-items:center;gap:4px;}
-.hdr-dot{width:7px;height:7px;border-radius:50%;background:var(--lp);box-shadow:0 0 5px var(--lg);}
-.hdr-r{display:flex;align-items:center;gap:10px;}
-.hdr-w{display:flex;align-items:center;gap:3px;font-size:11px;color:var(--muted);padding:3px 8px;border-radius:16px;background:rgba(255,255,255,.05);}
-.hdr-on{font-size:10px;color:#38bdf8;display:flex;align-items:center;gap:3px;}
-.hdr-on-dot{width:5px;height:5px;border-radius:50%;background:#34d399;animation:p 2s infinite;}
-@keyframes p{0%,100%{opacity:1;}50%{opacity:.3;}}
+/* 헤더 */
+.hdr{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:linear-gradient(180deg,rgba(6,6,18,.95),rgba(6,6,18,.4) 90%,transparent);backdrop-filter:blur(8px)}
+.hdr-l{display:flex;align-items:center;gap:10px}
+.hdr-back{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;transition:.3s}
+.hdr-back:hover{background:rgba(255,255,255,.15);transform:scale(1.1)}
+.hdr-name{font-family:'Cinzel',serif;font-weight:700;font-size:14px;color:var(--lp);text-shadow:0 0 12px var(--lg)}
+.hdr-sub{font-size:10px;color:var(--muted);display:flex;align-items:center;gap:4px}
+.hdr-dot{width:7px;height:7px;border-radius:50%;background:var(--lp);box-shadow:0 0 5px var(--lg)}
+.hdr-r{display:flex;align-items:center;gap:10px}
+.hdr-w{display:flex;align-items:center;gap:3px;font-size:11px;color:var(--muted);padding:3px 8px;border-radius:16px;background:rgba(255,255,255,.05)}
+.hdr-on{font-size:10px;color:#38bdf8;display:flex;align-items:center;gap:3px}
+.hdr-on-dot{width:5px;height:5px;border-radius:50%;background:#34d399;animation:p 2s infinite}
+@keyframes p{0%,100%{opacity:1}50%{opacity:.3}}
 
-/* ═══ 마을 컨테이너 ═══ */
-.vc{position:fixed;inset:0;z-index:2;overflow:hidden;cursor:grab;}.vc:active{cursor:grabbing;}
-.vw{position:absolute;width:2400px;height:2000px;}
+/* 마을 */
+.vc{position:fixed;inset:0;z-index:2;overflow:hidden;cursor:grab}.vc:active{cursor:grabbing}
+.vw{position:absolute;width:2600px;height:2200px}
+.ground{position:absolute;inset:0}
 
-/* ═══ 마을 바닥 ═══ */
-.ground{position:absolute;inset:0;background:var(--ground1);}
+/* 건물 클릭 */
+.bld{position:absolute;cursor:pointer;z-index:10;transition:transform .3s cubic-bezier(.34,1.56,.64,1),filter .3s}
+.bld:hover{transform:translateY(-8px) scale(1.04)}
+.bld:active{transform:translateY(-3px) scale(1.01)}
+.bld-label{position:absolute;bottom:-24px;left:50%;transform:translateX(-50%);text-align:center;white-space:nowrap}
+.bld-name{font-size:10px;font-weight:700;color:var(--text);text-shadow:0 1px 4px rgba(0,0,0,.8)}
+.bld-name-en{font-size:8px;color:var(--muted)}
+.bld-badge{position:absolute;top:-6px;right:-6px;min-width:16px;height:16px;border-radius:8px;background:#ef4444;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid var(--g1);z-index:15}
 
-/* ═══ SVG 아이소메트릭 건물 ═══ */
-.bld{position:absolute;cursor:pointer;z-index:10;transition:transform .3s cubic-bezier(.34,1.56,.64,1),filter .3s;filter:drop-shadow(0 6px 16px rgba(0,0,0,.5));}
-.bld:hover{transform:translateY(-8px) scale(1.03);filter:drop-shadow(0 12px 24px rgba(0,0,0,.4)) drop-shadow(0 0 15px var(--lg));}
-.bld:active{transform:translateY(-3px) scale(1.01);}
-.bld-label{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);text-align:center;white-space:nowrap;}
-.bld-name{font-size:10px;font-weight:700;color:var(--text);text-shadow:0 1px 4px rgba(0,0,0,.8);}
-.bld-name-en{font-size:8px;color:var(--muted);}
-.bld-badge{position:absolute;top:-6px;right:-6px;min-width:16px;height:16px;border-radius:8px;background:#ef4444;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid var(--ground1);z-index:15;}
+/* 조형물 */
+.monument{position:absolute;z-index:12;display:flex;flex-direction:column;align-items:center}
+.mon-sym{font-size:48px;animation:monG 3s ease-in-out infinite;filter:drop-shadow(0 0 25px var(--lg))}
+@keyframes monG{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-6px) scale(1.05)}}
+.mon-name{font-family:'Cinzel',serif;font-size:13px;font-weight:700;color:var(--lp);letter-spacing:3px;text-shadow:0 0 12px var(--lg);margin-top:4px}
+.mon-sub{font-size:9px;color:var(--muted)}
+.mon-glow{position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);width:160px;height:40px;background:radial-gradient(ellipse,var(--lg),transparent 70%);opacity:.5;pointer-events:none}
+/* 조형물 파티클 */
+.mon-particle{position:absolute;width:3px;height:3px;border-radius:50%;background:var(--lp);opacity:0;pointer-events:none}
 
-/* ═══ 중앙 조형물 ═══ */
-.monument{position:absolute;z-index:12;display:flex;flex-direction:column;align-items:center;}
-.mon-symbol{font-size:44px;animation:monG 3s ease-in-out infinite;filter:drop-shadow(0 0 20px var(--lg));}
-@keyframes monG{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
-.mon-base{text-align:center;}
-.mon-name{font-family:'Cinzel',serif;font-size:12px;font-weight:700;color:var(--lp);letter-spacing:3px;text-shadow:0 0 10px var(--lg);}
-.mon-sub{font-size:9px;color:var(--muted);}
-.mon-glow{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:140px;height:30px;background:radial-gradient(ellipse,var(--lg),transparent 70%);opacity:.6;pointer-events:none;}
+/* 랜드마크 */
+.lm{position:absolute;display:flex;flex-direction:column;align-items:center;z-index:8;animation:lmF 5s ease-in-out infinite;pointer-events:none}
+.lm-icon{font-size:20px;filter:drop-shadow(0 0 6px var(--lg))}
+.lm-txt{font-size:7px;color:var(--lp);font-weight:500;margin-top:1px;white-space:nowrap}
+@keyframes lmF{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
 
-/* ═══ 랜드마크 ═══ */
-.lm{position:absolute;display:flex;flex-direction:column;align-items:center;z-index:8;animation:lmF 5s ease-in-out infinite;pointer-events:none;}
-.lm-icon{font-size:20px;filter:drop-shadow(0 0 6px var(--lg));}
-.lm-txt{font-size:7px;color:var(--lp);font-weight:500;margin-top:1px;white-space:nowrap;}
-@keyframes lmF{0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);}}
+/* 아바타 */
+.avatar{position:absolute;z-index:20;transition:left .8s ease-in-out,top .8s ease-in-out;display:flex;flex-direction:column;align-items:center;pointer-events:none}
+.av-body{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--lp),var(--ls));border:2px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 0 8px var(--lg),0 3px 8px rgba(0,0,0,.5);animation:avB 3s ease-in-out infinite}
+.av-tag{font-size:7px;font-weight:700;color:var(--text);background:rgba(0,0,0,.6);padding:1px 5px;border-radius:6px;margin-top:1px}
+@keyframes avB{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+.avatar.walk .av-body{animation:avW .3s ease-in-out infinite alternate}
+@keyframes avW{0%{transform:translateY(0) rotate(-3deg)}100%{transform:translateY(-3px) rotate(3deg)}}
+.npc{position:absolute;z-index:14;display:flex;flex-direction:column;align-items:center;pointer-events:none;transition:left 3s ease-in-out,top 3s ease-in-out}
+.npc-b{width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:9px}
+.npc-n{font-size:6px;color:var(--muted);margin-top:1px}
 
-/* ═══ 아바타 ═══ */
-.avatar{position:absolute;z-index:20;transition:left .8s ease-in-out,top .8s ease-in-out;display:flex;flex-direction:column;align-items:center;pointer-events:none;}
-.av-body{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--lp),var(--ls));border:2px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 0 8px var(--lg),0 3px 8px rgba(0,0,0,.5);animation:avB 3s ease-in-out infinite;}
-.av-tag{font-size:7px;font-weight:700;color:var(--text);background:rgba(0,0,0,.6);padding:1px 5px;border-radius:6px;margin-top:1px;}
-@keyframes avB{0%,100%{transform:scale(1);}50%{transform:scale(1.04);}}
-.avatar.walk .av-body{animation:avW .3s ease-in-out infinite alternate;}
-@keyframes avW{0%{transform:translateY(0) rotate(-3deg);}100%{transform:translateY(-3px) rotate(3deg);}}
-/* NPC */
-.npc{position:absolute;z-index:14;display:flex;flex-direction:column;align-items:center;pointer-events:none;transition:left 3s ease-in-out,top 3s ease-in-out;}
-.npc-b{width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:9px;}
-.npc-n{font-size:6px;color:var(--muted);margin-top:1px;}
+/* 하단 */
+.bot{position:fixed;bottom:0;left:0;right:0;z-index:100;padding:8px 14px 12px;background:linear-gradient(0deg,rgba(6,6,18,.95),rgba(6,6,18,.4) 90%,transparent);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:space-between}
+.bot-s{display:flex;gap:12px}
+.bot-sv{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:var(--lp)}
+.bot-sl{font-size:8px;color:var(--muted)}
+.bot-e{display:flex;flex-direction:column;align-items:center;gap:2px}
+.bot-eb{width:100px;height:7px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}
+.bot-ef{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--ls),var(--lp));transition:width 1s;box-shadow:0 0 5px var(--lg)}
+.bot-el{font-size:8px;color:var(--muted)}
+.bot-d{padding:3px 10px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid var(--border);font-size:10px;color:var(--gold);font-family:'Orbitron',monospace}
 
-/* ═══ 하단 바 ═══ */
-.bot{position:fixed;bottom:0;left:0;right:0;z-index:100;padding:8px 14px 12px;background:linear-gradient(0deg,rgba(6,6,18,.95),rgba(6,6,18,.5) 90%,transparent);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:space-between;}
-.bot-s{display:flex;gap:12px;}
-.bot-sv{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:var(--lp);}
-.bot-sl{font-size:8px;color:var(--muted);}
-.bot-e{display:flex;flex-direction:column;align-items:center;gap:2px;}
-.bot-eb{width:100px;height:7px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;}
-.bot-ef{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--ls),var(--lp));transition:width 1s;box-shadow:0 0 5px var(--lg);}
-.bot-el{font-size:8px;color:var(--muted);}
-.bot-d{padding:3px 10px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid var(--border);font-size:10px;color:var(--gold);font-family:'Orbitron',monospace;}
+/* 모달 */
+.mo{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.7);backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;opacity:0;transition:opacity .3s}
+.mo.show{display:flex;opacity:1}
+.mo-c{width:90%;max-width:400px;max-height:78vh;background:var(--panel);border:1px solid var(--border);border-radius:18px;overflow-y:auto;padding:22px 18px;transform:translateY(16px) scale(.96);transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.mo.show .mo-c{transform:translateY(0) scale(1)}
+.mo-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.mo-t{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;color:var(--lp)}
+.mo-x{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;color:var(--muted)}
+.mc{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px}
+.mc-t{font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px}
+.mc-c{font-size:11px;color:var(--muted);line-height:1.6}
+.pb{width:100%;height:5px;border-radius:3px;background:rgba(255,255,255,.08);margin-top:5px;overflow:hidden}
+.pf{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--ls),var(--lp));transition:width 1.5s}
+.org-lv{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;background:rgba(255,255,255,.03);border-left:3px solid var(--lp);font-size:11px;margin-bottom:4px}
+.org-lv.my{background:rgba(var(--lr,251),var(--lgr,191),var(--lb,36),.08);border-left-color:var(--gold)}
 
-/* ═══ 모달 ═══ */
-.mo{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.7);backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;opacity:0;transition:opacity .3s;}
-.mo.show{display:flex;opacity:1;}
-.mo-c{width:90%;max-width:400px;max-height:78vh;background:var(--panel);border:1px solid var(--border);border-radius:18px;overflow-y:auto;padding:22px 18px;transform:translateY(16px) scale(.96);transition:transform .3s cubic-bezier(.34,1.56,.64,1);}
-.mo.show .mo-c{transform:translateY(0) scale(1);}
-.mo-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-.mo-t{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;color:var(--lp);}
-.mo-x{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;color:var(--muted);}
-.mo-x:hover{background:rgba(255,255,255,.15);}
-.mc{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;}
-.mc-t{font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px;}
-.mc-c{font-size:11px;color:var(--muted);line-height:1.6;}
-.pb{width:100%;height:5px;border-radius:3px;background:rgba(255,255,255,.08);margin-top:5px;overflow:hidden;}
-.pf{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--ls),var(--lp));transition:width 1.5s;}
-
-/* 힌트 */
-.hint{position:fixed;bottom:58px;left:50%;transform:translateX(-50%);z-index:50;padding:5px 14px;border-radius:16px;background:rgba(0,0,0,.7);border:1px solid var(--border);font-size:10px;color:var(--muted);opacity:0;transition:opacity 1s;pointer-events:none;}
-.hint.show{opacity:1;}
-/* 토스트 */
-#toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%) translateY(16px);padding:8px 18px;border-radius:18px;background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:12px;opacity:0;transition:all .3s;z-index:300;pointer-events:none;white-space:nowrap;}
-#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-/* 진입 */
-.ent{position:fixed;inset:0;z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 1s;}
-.ent.fo{opacity:0;pointer-events:none;}
-.ent-t{font-family:'Cinzel',serif;font-size:20px;font-weight:700;color:var(--lp);text-shadow:0 0 20px var(--lg);animation:ep 1.5s ease-in-out infinite;}
-.ent-s{font-size:12px;color:var(--muted);margin-top:6px;font-family:'Orbitron',monospace;}
-@keyframes ep{0%,100%{opacity:.5;transform:scale(.98);}50%{opacity:1;transform:scale(1);}}
-
-@media(max-width:600px){.vw{width:2000px;height:1700px;}.hdr-name{font-size:12px;}.bot-eb{width:70px;}}
+.hint{position:fixed;bottom:58px;left:50%;transform:translateX(-50%);z-index:50;padding:5px 14px;border-radius:16px;background:rgba(0,0,0,.7);border:1px solid var(--border);font-size:10px;color:var(--muted);opacity:0;transition:opacity 1s;pointer-events:none}.hint.show{opacity:1}
+#toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%) translateY(16px);padding:8px 18px;border-radius:18px;background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:12px;opacity:0;transition:all .3s;z-index:300;pointer-events:none;white-space:nowrap}#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.ent{position:fixed;inset:0;z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 1s}.ent.fo{opacity:0;pointer-events:none}
+.ent-t{font-family:'Cinzel',serif;font-size:22px;font-weight:700;color:var(--lp);text-shadow:0 0 25px var(--lg);animation:ep 1.5s ease-in-out infinite}
+.ent-s{font-size:12px;color:var(--muted);margin-top:6px;font-family:'Orbitron',monospace}
+@keyframes ep{0%,100%{opacity:.5;transform:scale(.98)}50%{opacity:1;transform:scale(1)}}
+@media(max-width:600px){.vw{width:2200px;height:1900px}.hdr-name{font-size:12px}.bot-eb{width:70px}}
 </style>
 </head>
 <body>
-
 <div class="sky" id="sky"></div>
 <div id="weatherOv" class="w-clear"></div>
-
-<!-- 진입 -->
-<div class="ent" id="ent">
-  <div class="ent-t" id="entT">STARIUM</div>
-  <div class="ent-s" id="entS">entering...</div>
-</div>
-
-<!-- 헤더 -->
+<div class="ent" id="ent"><div class="ent-t" id="entT">STARIUM</div><div class="ent-s" id="entS">entering...</div></div>
 <header class="hdr">
-  <div class="hdr-l">
-    <div class="hdr-back" onclick="goBack()">←</div>
-    <div>
-      <div class="hdr-name" id="hName">BTS ARMY STARIUM</div>
-      <div class="hdr-sub"><span class="hdr-dot"></span><span id="hLeague">스타 리그</span> · <span id="hRank">#3</span></div>
-    </div>
-  </div>
-  <div class="hdr-r">
-    <div class="hdr-w"><span id="wIco">☀️</span><span id="wTxt">맑음</span></div>
-    <div class="hdr-on"><span class="hdr-on-dot"></span><span id="hOn">1,234</span></div>
-  </div>
+  <div class="hdr-l"><div class="hdr-back" onclick="goBack()">←</div><div><div class="hdr-name" id="hName">STARIUM</div><div class="hdr-sub"><span class="hdr-dot"></span><span id="hLeague">스타 리그</span> · <span id="hRank">#3</span></div></div></div>
+  <div class="hdr-r"><div class="hdr-w"><span id="wIco">☀️</span><span id="wTxt">맑음</span></div><div class="hdr-on"><span class="hdr-on-dot"></span><span id="hOn">1,234</span></div></div>
 </header>
-
-<!-- 마을 -->
 <div class="vc" id="vc">
   <div class="vw" id="vw">
     <div class="ground" id="ground"></div>
-    <!-- SVG 레이어 (길/장식/건물 전부 JS로 동적 생성) -->
-    <svg id="villageSvg" width="2400" height="2000" style="position:absolute;inset:0;z-index:5;pointer-events:none;"></svg>
-    <!-- 건물 클릭 영역 (HTML) -->
-    <div id="buildingsLayer"></div>
-    <!-- 중앙 조형물 -->
-    <div class="monument" id="monument"></div>
-    <!-- 랜드마크 -->
-    <div id="landmarksLayer"></div>
-    <!-- 아바타 -->
-    <div class="avatar" id="myAv" style="left:1150px;top:1050px;"><div class="av-body">🧑</div><div class="av-tag">나 Me</div></div>
-    <!-- NPC -->
+    <canvas id="cvs" width="2600" height="2200" style="position:absolute;inset:0;z-index:4;pointer-events:none"></canvas>
+    <div id="bldLayer"></div>
+    <div class="monument" id="mon"></div>
+    <div id="lmLayer"></div>
+    <div class="avatar" id="myAv" style="left:1250px;top:1150px"><div class="av-body">🧑</div><div class="av-tag">나 Me</div></div>
     <div id="npcLayer"></div>
   </div>
 </div>
-
-<!-- 하단 -->
 <div class="bot">
-  <div class="bot-s">
-    <div><div class="bot-sv" id="bMem">98,432</div><div class="bot-sl">멤버</div></div>
-    <div><div class="bot-sv" id="bScr">847</div><div class="bot-sl">점수</div></div>
-  </div>
+  <div class="bot-s"><div><div class="bot-sv" id="bMem">98,432</div><div class="bot-sl">멤버</div></div><div><div class="bot-sv" id="bScr">847</div><div class="bot-sl">점수</div></div></div>
   <div class="bot-e"><div class="bot-eb"><div class="bot-ef" id="bEf" style="width:72%"></div></div><div class="bot-el">에너지 <span id="bEp">72%</span></div></div>
   <div class="bot-d" id="bDd">D-14</div>
 </div>
-
 <div class="hint" id="hint">빈 곳을 클릭하면 아바타가 이동해요!</div>
 <div class="mo" id="mo" onclick="closeMo(event)"><div class="mo-c" id="moC" onclick="event.stopPropagation()"></div></div>
 <div id="toast"></div>
 
 <script>
-/* ═══════════════════════════════════════════════
-   리그별 완전 차별화 데이터
-   ═══════════════════════════════════════════════ */
-const LEAGUES = {
-  dust: {
-    name:'더스트',nameEn:'Dust',
-    lp:'#94a3b8',ls:'#64748b',lg:'rgba(148,163,184,0.25)',lr:148,lgr:163,lb:184,
-    sky1:'#0a0a12',sky2:'#141420',ground1:'#1a1812',ground2:'#14120e',
-    road1:'#2a2418',road2:'#332e20',roadBorder:'#3d3428',
-    starCount:60, starBright:0.4,
-    villageName:'캠프촌',villageNameEn:'Camp',
-    symbol:'🕯️',
-    // 건물 SVG 색상
-    wallLight:'#3a3428',wallDark:'#2a2418',wallSide:'#1e1a10',
-    roofMain:'#5a4a30',roofSide:'#4a3a20',
-    windowLit:'rgba(255,180,80,0.5)',windowDark:'rgba(100,80,50,0.3)',
-    doorColor:'#4a3520',
-    // 건물 아이콘
-    icons:{hq:'⛺',board:'📌',vote:'📝',wish:'🕯️',org:'🏕️',event:'🔥',honor:'📜'},
-    // 장식
-    lampStyle:'torch', // 횃불
-    treeColor1:'#2a4a20',treeColor2:'#1a3a14',
-    decoItems:['🪵','🪨','🏕️','🌿'],
-    pathTexture:'dirt', // 비포장
-  },
-  star: {
-    name:'스타',nameEn:'Star',
-    lp:'#fbbf24',ls:'#f59e0b',lg:'rgba(251,191,36,0.3)',lr:251,lgr:191,lb:36,
-    sky1:'#060612',sky2:'#0c0c24',ground1:'#141828',ground2:'#101420',
-    road1:'#2a2540',road2:'#332e4a',roadBorder:'#3d3660',
-    starCount:100, starBright:0.6,
-    villageName:'작은 마을',villageNameEn:'Town',
-    symbol:'💜',
-    wallLight:'#2a2845',wallDark:'#201e38',wallSide:'#18162a',
-    roofMain:'#c8940a',roofSide:'#a07808',
-    windowLit:'rgba(255,220,100,0.5)',windowDark:'rgba(80,70,120,0.4)',
-    doorColor:'#4a3a28',
-    icons:{hq:'🏰',board:'📋',vote:'🗳️',wish:'⭐',org:'🏗️',event:'🎪',honor:'🏛️'},
-    lampStyle:'metal',
-    treeColor1:'#1a5c30',treeColor2:'#0e3a1e',
-    decoItems:['⛲','🌸','🌷','🪻'],
-    pathTexture:'stone',
-  },
-  planet: {
-    name:'플래닛',nameEn:'Planet',
-    lp:'#34d399',ls:'#10b981',lg:'rgba(52,211,153,0.25)',lr:52,lgr:211,lb:153,
-    sky1:'#040e0a',sky2:'#081a14',ground1:'#0c1a16',ground2:'#0a1410',
-    road1:'#1a2e28',road2:'#243a34',roadBorder:'#2e4a42',
-    starCount:120, starBright:0.5,
-    villageName:'도시',villageNameEn:'City',
-    symbol:'🌍',
-    wallLight:'#1a2e2a',wallDark:'#142420',wallSide:'#0e1a18',
-    roofMain:'#10b981',roofSide:'#0a8a60',
-    windowLit:'rgba(100,255,200,0.4)',windowDark:'rgba(40,80,60,0.4)',
-    doorColor:'#2a4a3a',
-    icons:{hq:'🏢',board:'📊',vote:'🗳️',wish:'💫',org:'🏙️',event:'🎪',honor:'🏛️'},
-    lampStyle:'led',
-    treeColor1:'#1a6838',treeColor2:'#124a28',
-    decoItems:['🌳','🌲','🏞️','🌿'],
-    pathTexture:'paved',
-  },
-  nova: {
-    name:'노바',nameEn:'Nova',
-    lp:'#c084fc',ls:'#a855f7',lg:'rgba(192,132,252,0.3)',lr:192,lgr:132,lb:252,
-    sky1:'#08041a',sky2:'#120830',ground1:'#10082a',ground2:'#0c0620',
-    road1:'#201840',road2:'#2a2050',roadBorder:'#3a2e6a',
-    starCount:140, starBright:0.7,
-    villageName:'메트로폴리스',villageNameEn:'Metropolis',
-    symbol:'💎',
-    wallLight:'#201840',wallDark:'#181030',wallSide:'#100a24',
-    roofMain:'#a855f7',roofSide:'#8a3ad4',
-    windowLit:'rgba(200,160,255,0.5)',windowDark:'rgba(60,40,100,0.4)',
-    doorColor:'#3a2860',
-    icons:{hq:'🏗️',board:'💻',vote:'🗳️',wish:'🌟',org:'🗼',event:'🎆',honor:'🏛️'},
-    lampStyle:'neon',
-    treeColor1:'#3a2060',treeColor2:'#2a1848',
-    decoItems:['🔮','💜','✨','🌙'],
-    pathTexture:'glow',
-  },
-  quasar: {
-    name:'퀘이사',nameEn:'Quasar',
-    lp:'#f0c040',ls:'#e6a800',lg:'rgba(240,192,64,0.35)',lr:240,lgr:192,lb:64,
-    sky1:'#0a0804',sky2:'#14100a',ground1:'#181410',ground2:'#12100c',
-    road1:'#2e281a',road2:'#3a3220',roadBorder:'#4a4028',
-    starCount:160, starBright:0.8,
-    villageName:'제국의 수도',villageNameEn:'Imperial Capital',
-    symbol:'👑',
-    wallLight:'#2e2818',wallDark:'#241e12',wallSide:'#1a160c',
-    roofMain:'#d4a020',roofSide:'#b88a18',
-    windowLit:'rgba(255,220,100,0.6)',windowDark:'rgba(120,100,50,0.4)',
-    doorColor:'#5a4a28',
-    icons:{hq:'👑',board:'📡',vote:'🗳️',wish:'✨',org:'🏯',event:'🎊',honor:'🏛️'},
-    lampStyle:'golden',
-    treeColor1:'#4a6a20',treeColor2:'#3a5418',
-    decoItems:['💎','🏆','⚜️','🌟'],
-    pathTexture:'marble',
-  }
+const L={
+dust:{name:'더스트',lp:'#94a3b8',ls:'#64748b',lg:'rgba(148,163,184,.25)',lr:148,lgr:163,lb:184,
+  sky1:'#0a0a0f',sky2:'#12121a',g1:'#1a1812',g2:'#14120e',rd:'#2a2418',rb:'#3d3428',
+  stars:60,sBright:.4,vName:'캠프촌',symbol:'🕯️',
+  wall:'#3a3428',wallD:'#2a2418',wallS:'#1e1a10',roof:'#6a5a38',roofS:'#5a4a28',
+  winLit:'rgba(255,160,60,.6)',winDark:'rgba(80,60,30,.3)',door:'#4a3520',
+  icons:{hq:'⛺',board:'📌',vote:'📝',wish:'🕯️',org:'🏕️',event:'🔥',honor:'📜'},
+  lamp:'torch',tree1:'#2a4a20',tree2:'#1a3a14',
+  flower:'#8a6a30',flower2:'#6a5020',
+  pondColor:'rgba(60,80,100,.3)',bridgeColor:'#5a4a30',
+  smoke:true,fireflies:true,pathGlow:false,neonSign:false,
+  groundTex:'dirt',decos:['🪵','🪨','🏕️']},
+star:{name:'스타',lp:'#fbbf24',ls:'#f59e0b',lg:'rgba(251,191,36,.3)',lr:251,lgr:191,lb:36,
+  sky1:'#060612',sky2:'#0c0c24',g1:'#141828',g2:'#101420',rd:'#2a2540',rb:'#3d3660',
+  stars:100,sBright:.6,vName:'작은 마을',symbol:'💜',
+  wall:'#2a2845',wallD:'#201e38',wallS:'#18162a',roof:'#c8940a',roofS:'#a07808',
+  winLit:'rgba(255,220,100,.55)',winDark:'rgba(60,50,90,.4)',door:'#4a3a28',
+  icons:{hq:'🏰',board:'📋',vote:'🗳️',wish:'⭐',org:'🏗️',event:'🎪',honor:'🏛️'},
+  lamp:'metal',tree1:'#1a5c30',tree2:'#0e3a1e',
+  flower:'#e8a0c0',flower2:'#c080a0',
+  pondColor:'rgba(40,60,120,.35)',bridgeColor:'#4a4060',
+  smoke:true,fireflies:true,pathGlow:false,neonSign:true,
+  groundTex:'stone',decos:['⛲','🌸','🌷']},
+planet:{name:'플래닛',lp:'#34d399',ls:'#10b981',lg:'rgba(52,211,153,.25)',lr:52,lgr:211,lb:153,
+  sky1:'#040e0a',sky2:'#081a14',g1:'#0c1a16',g2:'#0a1410',rd:'#1a2e28',rb:'#2e4a42',
+  stars:120,sBright:.5,vName:'도시',symbol:'🌍',
+  wall:'#1a2e2a',wallD:'#142420',wallS:'#0e1a18',roof:'#10b981',roofS:'#0a8a60',
+  winLit:'rgba(80,255,180,.45)',winDark:'rgba(30,60,50,.4)',door:'#2a4a3a',
+  icons:{hq:'🏢',board:'📊',vote:'🗳️',wish:'💫',org:'🏙️',event:'🎪',honor:'🏛️'},
+  lamp:'led',tree1:'#1a6838',tree2:'#124a28',
+  flower:'#40e0a0',flower2:'#20c080',
+  pondColor:'rgba(30,100,80,.35)',bridgeColor:'#2a4a3a',
+  smoke:false,fireflies:false,pathGlow:true,neonSign:true,
+  groundTex:'paved',decos:['🌳','🏞️','🌿']},
+nova:{name:'노바',lp:'#c084fc',ls:'#a855f7',lg:'rgba(192,132,252,.3)',lr:192,lgr:132,lb:252,
+  sky1:'#08041a',sky2:'#120830',g1:'#10082a',g2:'#0c0620',rd:'#201840',rb:'#3a2e6a',
+  stars:150,sBright:.7,vName:'메트로폴리스',symbol:'💎',
+  wall:'#201840',wallD:'#181030',wallS:'#100a24',roof:'#a855f7',roofS:'#8a3ad4',
+  winLit:'rgba(200,140,255,.55)',winDark:'rgba(50,30,80,.4)',door:'#3a2860',
+  icons:{hq:'🏗️',board:'💻',vote:'🗳️',wish:'🌟',org:'🗼',event:'🎆',honor:'🏛️'},
+  lamp:'neon',tree1:'#3a2060',tree2:'#2a1848',
+  flower:'#c060ff',flower2:'#a040e0',
+  pondColor:'rgba(80,40,150,.3)',bridgeColor:'#4a3070',
+  smoke:false,fireflies:false,pathGlow:true,neonSign:true,
+  groundTex:'glow',decos:['🔮','💜','✨']},
+quasar:{name:'퀘이사',lp:'#f0c040',ls:'#e6a800',lg:'rgba(240,192,64,.35)',lr:240,lgr:192,lb:64,
+  sky1:'#0a0804',sky2:'#14100a',g1:'#181410',g2:'#12100c',rd:'#2e281a',rb:'#4a4028',
+  stars:180,sBright:.85,vName:'제국의 수도',symbol:'👑',
+  wall:'#2e2818',wallD:'#241e12',wallS:'#1a160c',roof:'#d4a020',roofS:'#b88a18',
+  winLit:'rgba(255,220,80,.65)',winDark:'rgba(100,80,30,.4)',door:'#5a4a28',
+  icons:{hq:'👑',board:'📡',vote:'🗳️',wish:'✨',org:'🏯',event:'🎊',honor:'🏛️'},
+  lamp:'golden',tree1:'#4a6a20',tree2:'#3a5418',
+  flower:'#f0d060',flower2:'#d0b040',
+  pondColor:'rgba(100,80,30,.3)',bridgeColor:'#6a5a30',
+  smoke:true,fireflies:true,pathGlow:true,neonSign:true,
+  groundTex:'marble',decos:['💎','🏆','⚜️']}
 };
-
-/* 건물 배치 (공통) */
-const BUILDINGS = [
-  {id:'hq',  x:1080,y:620, w:180,h:160, key:'hq',  nameK:'팬클럽 본부',nameE:'HQ'},
-  {id:'board',x:700, y:780, w:140,h:120, key:'board',nameK:'게시판 거리',nameE:'Board St.'},
-  {id:'vote', x:1460,y:780, w:130,h:110, key:'vote', nameK:'투표소',nameE:'Vote Center'},
-  {id:'wish', x:1400,y:560, w:150,h:130, key:'wish', nameK:'소원의 신전',nameE:'Wish Temple'},
-  {id:'org',  x:720, y:560, w:120,h:140, key:'org',  nameK:'조직도 타워',nameE:'Org Tower'},
-  {id:'event',x:900, y:1050,w:150,h:110, key:'event',nameK:'이벤트 광장',nameE:'Event Plaza'},
-  {id:'honor',x:1320,y:1050,w:140,h:120, key:'honor',nameK:'명예의 전당',nameE:'Hall of Honor'},
+const BLD=[
+  {id:'hq',x:1120,y:680,w:200,h:170,nK:'팬클럽 본부',nE:'Fanclub HQ'},
+  {id:'board',x:680,y:860,w:160,h:130,nK:'게시판 거리',nE:'Board Street'},
+  {id:'vote',x:1560,y:860,w:150,h:120,nK:'투표소',nE:'Vote Center'},
+  {id:'wish',x:1500,y:600,w:170,h:140,nK:'소원의 신전',nE:'Wish Temple'},
+  {id:'org',x:720,y:600,w:140,h:155,nK:'조직도 타워',nE:'Org Tower'},
+  {id:'event',x:900,y:1150,w:170,h:120,nK:'이벤트 광장',nE:'Event Plaza'},
+  {id:'honor',x:1400,y:1150,w:160,h:130,nK:'명예의 전당',nE:'Hall of Honor'}
 ];
+const DM={name:'BTS ARMY',league:'star',rank:3,members:98432,score:847,energy:72,dday:14,online:1234,
+  ann:['🔥 시즌 종료 D-14!','📢 새로운 소원 제안!'],leader:{n:'StarCommander',lv:78,a:'전략가'}};
 
-const DEMO = {name:'BTS ARMY',league:'star',rank:3,members:98432,score:847,energy:72,dday:14,online:1234,
-  announcements:['🔥 시즌 종료 D-14!','📢 새로운 소원 제안!'],leader:{name:'StarCommander',level:78,arch:'전략가'}};
+/* ═══ Canvas 렌더링 (길+건물+장식+애니메이션) ═══ */
+let ctx,cw=2600,ch=2200,curT,animId;
+const particles=[];
 
-/* ═══════════════════════════════════════════════
-   SVG 아이소메트릭 건물 생성
-   ═══════════════════════════════════════════════ */
-function createIsoBuilding(x,y,w,h,t){
-  const depth=w*0.3, roofH=h*0.2;
-  // 아이소메트릭 면 계산
-  const frontW=w, frontH=h-roofH;
-  const sideW=depth;
-  return `
-    <g transform="translate(${x},${y})">
-      <!-- 건물 그림자 -->
-      <ellipse cx="${w/2}" cy="${h+8}" rx="${w*0.45}" ry="10" fill="rgba(0,0,0,0.35)"/>
-      <!-- 오른쪽 면 (어두운) -->
-      <polygon points="${w},${roofH+sideW*0.3} ${w+sideW},${roofH} ${w+sideW},${h-sideW*0.3} ${w},${h}" fill="${t.wallSide}" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
-      <!-- 정면 (밝은) -->
-      <rect x="0" y="${roofH}" width="${w}" height="${frontH}" rx="2" fill="${t.wallLight}" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
-      <!-- 정면 그라데이션 -->
-      <rect x="0" y="${roofH}" width="${w}" height="${frontH*0.3}" rx="2" fill="rgba(255,255,255,0.04)"/>
-      <!-- 지붕 윗면 -->
-      <polygon points="0,${roofH} ${sideW},${roofH-sideW*0.5} ${w+sideW},${roofH-sideW*0.5} ${w},${roofH}" fill="${t.roofMain}" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
-      <!-- 지붕 정면 -->
-      <rect x="-2" y="${roofH-4}" width="${w+4}" height="6" rx="2" fill="${t.roofMain}" opacity="0.9"/>
-      <!-- 지붕 측면 -->
-      <polygon points="${w},${roofH} ${w+sideW},${roofH-sideW*0.5} ${w+sideW},${roofH-sideW*0.5+6} ${w},${roofH+4}" fill="${t.roofSide}"/>
-      <!-- 창문들 -->
-      ${generateWindows(w,h,roofH,t)}
-      <!-- 문 -->
-      <rect x="${w/2-8}" y="${h-20}" width="16" height="20" rx="8 8 0 0" fill="${t.doorColor}" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
-      <circle cx="${w/2+4}" cy="${h-10}" r="1.5" fill="rgba(255,220,100,0.6)"/>
-    </g>`;
+function initCanvas(){
+  const c=document.getElementById('cvs');ctx=c.getContext('2d');
+  c.width=cw;c.height=ch;
 }
 
-function generateWindows(w,h,roofH,t){
-  let svg='';
-  const winW=12, winH=15, gap=6;
-  const cols=Math.floor((w-20)/(winW+gap));
-  const rows=Math.floor((h-roofH-30)/(winH+gap));
-  const startX=(w-(cols*(winW+gap)-gap))/2;
-  const startY=roofH+12;
-  for(let r=0;r<rows;r++){
-    for(let c=0;c<cols;c++){
-      const wx=startX+c*(winW+gap);
-      const wy=startY+r*(winH+gap);
-      const lit=Math.random()>0.4;
-      svg+=`<rect x="${wx}" y="${wy}" width="${winW}" height="${winH}" rx="1.5" fill="${lit?t.windowLit:t.windowDark}" stroke="rgba(255,255,255,0.06)" stroke-width="0.3"/>`;
-      if(lit) svg+=`<rect x="${wx}" y="${wy}" width="${winW}" height="${winH}" rx="1.5" fill="rgba(255,255,255,0.05)">
-        <animate attributeName="opacity" values="0.8;0.4;0.8" dur="${2+Math.random()*3}s" repeatCount="indefinite"/>
-      </rect>`;
+function drawVillage(t){
+  ctx.clearRect(0,0,cw,ch);
+  drawGround(t);drawPaths(t);drawPond(t);drawBridge(t);
+  drawFlowerBeds(t);drawTrees(t);drawLamps(t);
+  drawBuildingsCanvas(t);drawSmoke(t);
+  drawParticles(t);
+}
+
+function drawGround(t){
+  // 잔디 패치
+  const patches=[[300,400,350,250],[1800,500,400,280],[350,1300,300,220],[1900,1200,300,250],[800,350,600,400]];
+  patches.forEach(([x,y,w,h])=>{
+    const grd=ctx.createRadialGradient(x+w/2,y+h/2,0,x+w/2,y+h/2,w/2);
+    grd.addColorStop(0,t.tree2+'60');grd.addColorStop(1,'transparent');
+    ctx.fillStyle=grd;ctx.fillRect(x,y,w,h);
+  });
+}
+
+function drawPaths(t){
+  ctx.lineWidth=2;ctx.strokeStyle=t.rb;
+  // 메인 도로들
+  const roads=[
+    [280,1020,2040,44],  // 가로 메인
+    [600,780,1200,40],   // 가로 상단
+    [600,1280,1200,40],  // 가로 하단
+    [940,520,44,800],    // 세로 왼쪽
+    [1560,520,44,800],   // 세로 오른쪽
+    [1240,780,44,540],   // 세로 중앙
+  ];
+  roads.forEach(([x,y,w,h])=>{
+    // 도로 본체
+    ctx.fillStyle=t.rd;
+    ctx.beginPath();ctx.roundRect(x,y,w,h,4);ctx.fill();ctx.stroke();
+    // 포장 텍스처
+    if(t.groundTex==='stone'){
+      for(let i=0;i<w*h/200;i++){
+        const sx=x+Math.random()*w,sy=y+Math.random()*h;
+        ctx.fillStyle='rgba(255,255,255,.03)';
+        ctx.fillRect(sx,sy,3+Math.random()*6,2+Math.random()*4);
+      }
+    } else if(t.groundTex==='marble'){
+      ctx.fillStyle='rgba(255,220,100,.03)';
+      for(let i=0;i<w*h/300;i++){
+        const sx=x+Math.random()*w,sy=y+Math.random()*h;
+        ctx.fillRect(sx,sy,4+Math.random()*8,3+Math.random()*6);
+      }
     }
-  }
-  return svg;
-}
-
-/* ═══ 길/바닥 SVG ═══ */
-function createPaths(t,pathType){
-  let svg='';
-  const rc=t.road1, rc2=t.road2, rb=t.roadBorder;
-  const pw=40;
-  // 메인 가로길
-  svg+=`<rect x="250" y="940" width="1900" height="${pw}" rx="4" fill="${rc}" stroke="${rb}" stroke-width="1.5"/>`;
-  // 세로길들
-  svg+=`<rect x="880" y="500" width="${pw}" height="600" rx="4" fill="${rc}" stroke="${rb}" stroke-width="1.5"/>`;
-  svg+=`<rect x="1480" y="500" width="${pw}" height="600" rx="4" fill="${rc}" stroke="${rb}" stroke-width="1.5"/>`;
-  // 보조 가로
-  svg+=`<rect x="600" y="700" width="1000" height="${pw}" rx="4" fill="${rc}" stroke="${rb}" stroke-width="1.5"/>`;
-  svg+=`<rect x="600" y="1180" width="1000" height="${pw}" rx="4" fill="${rc}" stroke="${rb}" stroke-width="1.5"/>`;
+    // 빛나는 도로 (노바/퀘이사)
+    if(t.pathGlow){
+      ctx.shadowColor=t.lp;ctx.shadowBlur=8;
+      ctx.strokeStyle=t.lp+'40';ctx.lineWidth=1;
+      ctx.beginPath();ctx.roundRect(x+2,y+2,w-4,h-4,3);ctx.stroke();
+      ctx.shadowBlur=0;
+    }
+  });
   // 중앙 광장
-  svg+=`<ellipse cx="1170" cy="860" rx="200" ry="150" fill="${rc}" stroke="${rb}" stroke-width="2" opacity="0.7"/>`;
+  ctx.fillStyle=t.rd;
+  ctx.beginPath();ctx.ellipse(1270,960,220,170,0,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle=t.rb;ctx.lineWidth=2;ctx.stroke();
+  if(t.pathGlow){ctx.strokeStyle=t.lp+'30';ctx.lineWidth=1;ctx.stroke();}
+}
 
-  // 텍스처
-  if(pathType==='dirt'){
-    for(let i=0;i<60;i++){
-      const px=300+Math.random()*1800, py=700+Math.random()*600;
-      svg+=`<circle cx="${px}" cy="${py}" r="${1+Math.random()*2}" fill="rgba(255,255,255,0.03)"/>`;
-    }
-  } else if(pathType==='stone'){
-    // 포석 패턴
-    for(let i=0;i<40;i++){
-      const px=300+Math.random()*1800, py=700+Math.random()*600;
-      svg+=`<rect x="${px}" y="${py}" width="${4+Math.random()*8}" height="${3+Math.random()*6}" rx="1" fill="rgba(255,255,255,0.03)" transform="rotate(${Math.random()*30},${px},${py})"/>`;
-    }
-  } else if(pathType==='glow'){
-    svg+=`<rect x="250" y="940" width="1900" height="${pw}" rx="4" fill="none" stroke="${t.lp}" stroke-width="0.5" opacity="0.3"/>`;
-    svg+=`<rect x="880" y="500" width="${pw}" height="600" rx="4" fill="none" stroke="${t.lp}" stroke-width="0.5" opacity="0.3"/>`;
-  } else if(pathType==='marble'){
-    svg+=`<rect x="250" y="940" width="1900" height="${pw}" rx="4" fill="url(#marbleGrad)" opacity="0.15"/>`;
+function drawPond(t){
+  // 연못
+  const px=1850,py=1000,pw=140,ph=90;
+  const grd=ctx.createRadialGradient(px,py,0,px,py,pw/2);
+  grd.addColorStop(0,t.pondColor);grd.addColorStop(1,'transparent');
+  ctx.fillStyle=grd;
+  ctx.beginPath();ctx.ellipse(px,py,pw/2,ph/2,0,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle=t.tree2+'60';ctx.lineWidth=1;ctx.stroke();
+  // 물결 애니메이션 (간접)
+  const time=Date.now()/1000;
+  for(let i=0;i<3;i++){
+    const r=20+i*18+Math.sin(time+i)*5;
+    ctx.strokeStyle='rgba(255,255,255,.06)';ctx.lineWidth=.5;
+    ctx.beginPath();ctx.ellipse(px,py,r,r*0.6,0,0,Math.PI*2);ctx.stroke();
   }
-  return svg;
+  // 연못 옆 수초
+  for(let i=0;i<5;i++){
+    const sx=px-pw/2+Math.random()*pw,sy=py+ph/2-5;
+    ctx.fillStyle=t.tree1;
+    ctx.fillRect(sx,sy-8-Math.random()*6,2,10);
+  }
 }
 
-/* ═══ 장식(나무/가로등/기타) SVG ═══ */
-function createDecorations(t){
-  let svg='';
-  // 나무 배치
-  const treePositions=[[300,450],[380,500],[260,600],[1700,500],[1750,580],[1800,650],[350,1150],[280,1200],[1750,1100],[1700,1150],[500,400],[1600,400]];
-  treePositions.forEach(([tx,ty])=>{
-    const big=Math.random()>0.4;
-    const sz=big?34:22;
-    svg+=`<g transform="translate(${tx},${ty})">
-      <ellipse cx="0" cy="${sz+8}" rx="${sz*0.5}" ry="4" fill="rgba(0,0,0,0.25)"/>
-      <rect x="-3" y="${sz*0.6}" width="6" height="${sz*0.45}" rx="2" fill="#3a2a18"/>
-      <circle cx="0" cy="${sz*0.3}" r="${sz*0.5}" fill="${t.treeColor1}"/>
-      <circle cx="${-sz*0.15}" cy="${sz*0.2}" r="${sz*0.3}" fill="${t.treeColor2}" opacity="0.7"/>
-    </g>`;
-  });
+function drawBridge(t){
+  // 다리 (연못 근처)
+  const bx=1780,by=980,bw=60,bh=16;
+  ctx.fillStyle=t.bridgeColor;
+  ctx.beginPath();ctx.roundRect(bx,by,bw,bh,3);ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.08)';ctx.lineWidth=1;ctx.stroke();
+  // 난간
+  ctx.fillStyle=t.bridgeColor;
+  ctx.fillRect(bx+5,by-6,3,8);ctx.fillRect(bx+bw-8,by-6,3,8);
+  ctx.fillRect(bx+3,by-6,bw-6,2);
+}
 
-  // 가로등
-  const lampPos=[[550,700],[850,700],[1200,700],[1500,700],[750,940],[1100,940],[1450,940],[850,1180],[1200,1180]];
-  lampPos.forEach(([lx,ly])=>{
-    if(t.lampStyle==='torch'){
-      svg+=`<g transform="translate(${lx},${ly-50})">
-        <rect x="-2" y="10" width="4" height="40" rx="2" fill="#5a4a30"/>
-        <circle cx="0" cy="8" r="6" fill="rgba(255,150,50,0.4)"/>
-        <circle cx="0" cy="6" r="3" fill="rgba(255,200,80,0.7)"/>
-        <circle cx="0" cy="8" r="12" fill="rgba(255,150,50,0.08)"/>
-      </g>`;
-    } else if(t.lampStyle==='neon'){
-      svg+=`<g transform="translate(${lx},${ly-55})">
-        <rect x="-2" y="10" width="4" height="45" rx="2" fill="#4a3a6a"/>
-        <rect x="-8" y="0" width="16" height="12" rx="3" fill="#6a5a8a" stroke="${t.lp}" stroke-width="0.5"/>
-        <circle cx="0" cy="6" r="4" fill="${t.lp}" opacity="0.6"/>
-        <ellipse cx="0" cy="55" rx="30" ry="20" fill="${t.lg}" opacity="0.15"/>
-      </g>`;
-    } else if(t.lampStyle==='golden'){
-      svg+=`<g transform="translate(${lx},${ly-55})">
-        <rect x="-3" y="10" width="6" height="45" rx="2" fill="#8a7a40"/>
-        <rect x="-12" y="0" width="24" height="14" rx="4" fill="#b8960a" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
-        <circle cx="0" cy="7" r="5" fill="rgba(255,220,100,0.7)"/>
-        <ellipse cx="0" cy="55" rx="35" ry="25" fill="rgba(255,220,100,0.08)"/>
-      </g>`;
-    } else {
-      svg+=`<g transform="translate(${lx},${ly-50})">
-        <rect x="-2" y="10" width="4" height="40" rx="2" fill="#4a4060"/>
-        <rect x="-8" y="2" width="16" height="10" rx="4" fill="#5a5070"/>
-        <circle cx="0" cy="7" r="3" fill="rgba(255,220,150,0.6)"/>
-        <ellipse cx="0" cy="50" rx="25" ry="18" fill="rgba(255,220,150,0.06)"/>
-      </g>`;
+function drawFlowerBeds(t){
+  const beds=[[580,740,120],[1600,740,100],[850,1120,130],[1350,1120,110],[450,950,80],[1750,700,90]];
+  beds.forEach(([fx,fy,fw])=>{
+    // 꽃밭 바닥
+    ctx.fillStyle=t.tree2+'40';
+    ctx.beginPath();ctx.ellipse(fx,fy,fw/2,fw/4,0,0,Math.PI*2);ctx.fill();
+    // 꽃
+    for(let i=0;i<8;i++){
+      const cx=fx-fw/2+Math.random()*fw,cy=fy-fw/4+Math.random()*fw/2;
+      const sz=2+Math.random()*3;
+      ctx.fillStyle=Math.random()>.5?t.flower:t.flower2;
+      ctx.beginPath();ctx.arc(cx,cy,sz,0,Math.PI*2);ctx.fill();
+      // 줄기
+      ctx.strokeStyle=t.tree1;ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(cx,cy+sz);ctx.lineTo(cx,cy+sz+5);ctx.stroke();
     }
   });
-
-  // 꽃/덤불/벤치
-  const decoPos=[[620,650],[1500,650],[500,1100],[1600,1100],[1000,650],[1350,650]];
-  decoPos.forEach(([dx,dy],i)=>{
-    if(i%3===0) svg+=`<ellipse cx="${dx}" cy="${dy}" rx="18" ry="10" fill="${t.treeColor1}" opacity="0.6"/>`; // 덤불
-    else if(i%3===1) svg+=`<rect x="${dx-14}" y="${dy}" width="28" height="8" rx="3" fill="#4a3a28" stroke="rgba(255,255,255,0.05)" stroke-width="0.5"/>`; // 벤치
-  });
-
-  return svg;
 }
 
-/* ═══════════════════════════════════════════════
-   마을 렌더링
-   ═══════════════════════════════════════════════ */
-function renderVillage(league){
-  const t=LEAGUES[league];
-  // CSS 변수 적용
-  const r=document.documentElement;
-  r.style.setProperty('--lp',t.lp);r.style.setProperty('--ls',t.ls);r.style.setProperty('--lg',t.lg);
-  r.style.setProperty('--lr',t.lr);r.style.setProperty('--lgr',t.lgr);r.style.setProperty('--lb',t.lb);
-  r.style.setProperty('--sky1',t.sky1);r.style.setProperty('--sky2',t.sky2);
-  r.style.setProperty('--ground1',t.ground1);r.style.setProperty('--ground2',t.ground2);
-  document.getElementById('ground').style.background=`radial-gradient(ellipse at 50% 45%,${t.ground2},${t.ground1})`;
-  document.body.style.background=t.ground1;
+function drawTrees(t){
+  const treePos=[[320,480],[400,530],[280,650],[1800,520],[1860,600],[1900,700],
+    [370,1250],[300,1320],[1850,1200],[1800,1280],[520,420],[1700,420],
+    [460,1100],[1700,1100],[350,800],[1900,900]];
+  treePos.forEach(([tx,ty])=>{
+    const big=Math.random()>.35;
+    const sz=big?18:12;
+    // 그림자
+    ctx.fillStyle='rgba(0,0,0,.2)';
+    ctx.beginPath();ctx.ellipse(tx,ty+sz*2+5,sz*1.2,sz*.3,0,0,Math.PI*2);ctx.fill();
+    // 몸통
+    ctx.fillStyle='#3a2a18';
+    ctx.beginPath();ctx.roundRect(tx-3,ty+sz,6,sz*.8,2);ctx.fill();
+    // 잎
+    ctx.fillStyle=t.tree1;
+    ctx.beginPath();ctx.arc(tx,ty+sz*.3,sz,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=t.tree2+'cc';
+    ctx.beginPath();ctx.arc(tx-sz*.3,ty+sz*.1,sz*.6,0,Math.PI*2);ctx.fill();
+    // 하이라이트
+    ctx.fillStyle='rgba(255,255,255,.04)';
+    ctx.beginPath();ctx.arc(tx-sz*.2,ty,sz*.4,0,Math.PI*2);ctx.fill();
+  });
+}
 
-  // 하늘 별
+function drawLamps(t){
+  const lPos=[[620,780],[900,780],[1300,780],[1580,780],[800,1020],[1200,1020],[1500,1020],[900,1280],[1300,1280]];
+  lPos.forEach(([lx,ly])=>{
+    if(t.lamp==='torch'){
+      ctx.fillStyle='#5a4a30';ctx.beginPath();ctx.roundRect(lx-2,ly-40,4,42,2);ctx.fill();
+      // 불꽃
+      const grd=ctx.createRadialGradient(lx,ly-44,0,lx,ly-44,14);
+      grd.addColorStop(0,'rgba(255,200,80,.7)');grd.addColorStop(.5,'rgba(255,140,40,.3)');grd.addColorStop(1,'transparent');
+      ctx.fillStyle=grd;ctx.fillRect(lx-14,ly-58,28,28);
+      ctx.fillStyle='rgba(255,180,60,.8)';ctx.beginPath();ctx.arc(lx,ly-45,4,0,Math.PI*2);ctx.fill();
+      // 빛 확산
+      const lg=ctx.createRadialGradient(lx,ly,0,lx,ly,50);
+      lg.addColorStop(0,'rgba(255,180,60,.08)');lg.addColorStop(1,'transparent');
+      ctx.fillStyle=lg;ctx.fillRect(lx-50,ly-50,100,100);
+    } else if(t.lamp==='neon'){
+      ctx.fillStyle='#4a3a6a';ctx.beginPath();ctx.roundRect(lx-2,ly-45,4,47,2);ctx.fill();
+      ctx.fillStyle='#6a5a8a';ctx.beginPath();ctx.roundRect(lx-10,ly-52,20,10,4);ctx.fill();
+      ctx.shadowColor=t.lp;ctx.shadowBlur=15;
+      ctx.fillStyle=t.lp+'99';ctx.beginPath();ctx.arc(lx,ly-47,5,0,Math.PI*2);ctx.fill();
+      ctx.shadowBlur=0;
+      const lg=ctx.createRadialGradient(lx,ly,0,lx,ly,45);
+      lg.addColorStop(0,t.lg);lg.addColorStop(1,'transparent');
+      ctx.fillStyle=lg;ctx.fillRect(lx-45,ly-45,90,90);
+    } else if(t.lamp==='golden'){
+      ctx.fillStyle='#8a7a40';ctx.beginPath();ctx.roundRect(lx-3,ly-48,6,50,2);ctx.fill();
+      ctx.fillStyle='#b8960a';ctx.beginPath();ctx.roundRect(lx-14,ly-56,28,12,5);ctx.fill();
+      ctx.shadowColor='#ffe080';ctx.shadowBlur=12;
+      ctx.fillStyle='rgba(255,220,100,.8)';ctx.beginPath();ctx.arc(lx,ly-50,5,0,Math.PI*2);ctx.fill();
+      ctx.shadowBlur=0;
+      const lg=ctx.createRadialGradient(lx,ly,0,lx,ly,55);
+      lg.addColorStop(0,'rgba(255,220,100,.08)');lg.addColorStop(1,'transparent');
+      ctx.fillStyle=lg;ctx.fillRect(lx-55,ly-55,110,110);
+    } else if(t.lamp==='led'){
+      ctx.fillStyle='#2a3a35';ctx.beginPath();ctx.roundRect(lx-2,ly-45,4,47,2);ctx.fill();
+      ctx.fillStyle='#3a4a45';ctx.beginPath();ctx.roundRect(lx-8,ly-50,16,8,3);ctx.fill();
+      ctx.fillStyle=t.lp+'88';ctx.beginPath();ctx.arc(lx,ly-46,4,0,Math.PI*2);ctx.fill();
+      const lg=ctx.createRadialGradient(lx,ly,0,lx,ly,40);
+      lg.addColorStop(0,t.lg);lg.addColorStop(1,'transparent');
+      ctx.fillStyle=lg;ctx.fillRect(lx-40,ly-40,80,80);
+    } else {
+      ctx.fillStyle='#4a4060';ctx.beginPath();ctx.roundRect(lx-2,ly-42,4,44,2);ctx.fill();
+      ctx.fillStyle='#5a5070';ctx.beginPath();ctx.roundRect(lx-8,ly-48,16,8,3);ctx.fill();
+      ctx.fillStyle='rgba(255,220,150,.6)';ctx.beginPath();ctx.arc(lx,ly-44,3,0,Math.PI*2);ctx.fill();
+    }
+  });
+}
+
+function drawBuildingsCanvas(t){
+  BLD.forEach(b=>{
+    const{x,y,w,h}=b;
+    const depth=w*.25,roofH=h*.18;
+    // 그림자
+    ctx.fillStyle='rgba(0,0,0,.3)';
+    ctx.beginPath();ctx.ellipse(x+w/2,y+h+10,w*.5,14,0,0,Math.PI*2);ctx.fill();
+    // 오른쪽 면
+    ctx.fillStyle=t.wallS;
+    ctx.beginPath();ctx.moveTo(x+w,y+roofH);ctx.lineTo(x+w+depth,y+roofH-depth*.4);
+    ctx.lineTo(x+w+depth,y+h-depth*.3);ctx.lineTo(x+w,y+h);ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.04)';ctx.lineWidth=.5;ctx.stroke();
+    // 정면
+    ctx.fillStyle=t.wall;
+    ctx.beginPath();ctx.roundRect(x,y+roofH,w,h-roofH,2);ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.06)';ctx.stroke();
+    // 정면 그라데이션
+    const fg=ctx.createLinearGradient(x,y+roofH,x,y+roofH+(h-roofH)*.3);
+    fg.addColorStop(0,'rgba(255,255,255,.06)');fg.addColorStop(1,'transparent');
+    ctx.fillStyle=fg;ctx.fillRect(x,y+roofH,w,(h-roofH)*.3);
+    // 지붕 윗면
+    ctx.fillStyle=t.roof;
+    ctx.beginPath();ctx.moveTo(x-4,y+roofH);ctx.lineTo(x+depth-4,y+roofH-depth*.5);
+    ctx.lineTo(x+w+depth+4,y+roofH-depth*.5);ctx.lineTo(x+w+4,y+roofH);ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.1)';ctx.stroke();
+    // 지붕 측면
+    ctx.fillStyle=t.roofS;
+    ctx.beginPath();ctx.moveTo(x+w+4,y+roofH);ctx.lineTo(x+w+depth+4,y+roofH-depth*.5);
+    ctx.lineTo(x+w+depth+4,y+roofH-depth*.5+6);ctx.lineTo(x+w+4,y+roofH+5);ctx.fill();
+    // 창문
+    const winW=14,winH=17,gap=7;
+    const cols=Math.floor((w-16)/(winW+gap));
+    const rows=Math.floor((h-roofH-28)/(winH+gap));
+    const sx=(w-(cols*(winW+gap)-gap))/2;
+    for(let r=0;r<rows;r++){
+      for(let c=0;c<cols;c++){
+        const wx=x+sx+c*(winW+gap),wy=y+roofH+14+r*(winH+gap);
+        const lit=Math.random()>.35;
+        ctx.fillStyle=lit?t.winLit:t.winDark;
+        ctx.beginPath();ctx.roundRect(wx,wy,winW,winH,2);ctx.fill();
+        ctx.strokeStyle='rgba(255,255,255,.06)';ctx.lineWidth=.3;ctx.stroke();
+        if(lit){
+          // 창문 빛 확산
+          ctx.shadowColor=t.winLit;ctx.shadowBlur=6;
+          ctx.fillStyle=t.winLit.replace(/[\d.]+\)$/,'.15)');
+          ctx.fillRect(wx-2,wy-2,winW+4,winH+4);
+          ctx.shadowBlur=0;
+        }
+        // 창틀
+        ctx.strokeStyle='rgba(255,255,255,.05)';ctx.lineWidth=.3;
+        ctx.beginPath();ctx.moveTo(wx+winW/2,wy);ctx.lineTo(wx+winW/2,wy+winH);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(wx,wy+winH/2);ctx.lineTo(wx+winW,wy+winH/2);ctx.stroke();
+      }
+    }
+    // 문
+    const dw=18,dh=24;
+    ctx.fillStyle=t.door;
+    ctx.beginPath();ctx.roundRect(x+w/2-dw/2,y+h-dh,dw,dh,[9,9,0,0]);ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.08)';ctx.lineWidth=.5;ctx.stroke();
+    ctx.fillStyle='rgba(255,220,100,.5)';ctx.beginPath();ctx.arc(x+w/2+5,y+h-dh/2,2,0,Math.PI*2);ctx.fill();
+    // 간판 (네온사인이 있는 리그만)
+    if(t.neonSign){
+      const ico=t.icons[b.id];
+      ctx.fillStyle=t.lp+'30';
+      ctx.beginPath();ctx.roundRect(x+w/2-20,y+roofH+4,40,14,3);ctx.fill();
+      ctx.strokeStyle=t.lp+'60';ctx.lineWidth=.5;ctx.stroke();
+      ctx.shadowColor=t.lp;ctx.shadowBlur=4;
+      ctx.font='9px "Noto Sans KR"';ctx.fillStyle=t.lp;ctx.textAlign='center';
+      ctx.fillText(b.nK,x+w/2,y+roofH+14);
+      ctx.shadowBlur=0;ctx.textAlign='start';
+    }
+    // 굴뚝 (연기 있는 리그)
+    if(t.smoke&&(b.id==='hq'||b.id==='event')){
+      ctx.fillStyle=t.wallD;
+      ctx.fillRect(x+w*.7,y+roofH-depth*.4-12,10,14);
+      ctx.fillStyle=t.roof;ctx.fillRect(x+w*.7-2,y+roofH-depth*.4-14,14,4);
+    }
+  });
+}
+
+function drawSmoke(t){
+  if(!t.smoke) return;
+  const time=Date.now()/1000;
+  // 굴뚝 연기 파티클
+  [BLD[0],BLD[5]].forEach(b=>{
+    const sx=b.x+b.w*.7+5,sy=b.y+b.h*.18-b.w*.25*.4-14;
+    for(let i=0;i<4;i++){
+      const age=((time*0.5+i*0.7)%3)/3;
+      const px=sx+Math.sin(time+i*2)*8*age;
+      const py=sy-age*40;
+      const sz=3+age*6;
+      const alpha=.15*(1-age);
+      ctx.fillStyle=`rgba(180,180,200,${alpha})`;
+      ctx.beginPath();ctx.arc(px,py,sz,0,Math.PI*2);ctx.fill();
+    }
+  });
+}
+
+function drawParticles(t){
+  const time=Date.now()/1000;
+  if(t.fireflies){
+    for(let i=0;i<15;i++){
+      const px=400+Math.sin(time*.3+i*1.7)*800+i*100;
+      const py=500+Math.cos(time*.4+i*2.1)*400+Math.sin(time+i)*50;
+      const alpha=.3+Math.sin(time*2+i)*0.3;
+      const sz=1.5+Math.sin(time*3+i)*.8;
+      ctx.fillStyle=t.lp;ctx.globalAlpha=alpha;
+      ctx.beginPath();ctx.arc(px,py,sz,0,Math.PI*2);ctx.fill();
+      ctx.globalAlpha=1;
+    }
+  }
+  // 조형물 주변 파티클
+  for(let i=0;i<8;i++){
+    const angle=(time*.5+i*Math.PI/4)%(Math.PI*2);
+    const r=40+Math.sin(time+i)*15;
+    const px=1270+Math.cos(angle)*r;
+    const py=920+Math.sin(angle)*r*.6;
+    const alpha=.3+Math.sin(time*2+i)*.2;
+    ctx.fillStyle=t.lp;ctx.globalAlpha=alpha;
+    ctx.beginPath();ctx.arc(px,py,2,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=1;
+  }
+}
+
+function animLoop(){
+  if(!curT)return;
+  drawVillage(curT);
+  animId=requestAnimationFrame(animLoop);
+}
+
+/* ═══ 렌더링 ═══ */
+function render(league){
+  curT=L[league];if(!curT)return;
+  const r=document.documentElement;
+  r.style.setProperty('--lp',curT.lp);r.style.setProperty('--ls',curT.ls);r.style.setProperty('--lg',curT.lg);
+  r.style.setProperty('--lr',curT.lr);r.style.setProperty('--lgr',curT.lgr);r.style.setProperty('--lb',curT.lb);
+  r.style.setProperty('--g1',curT.g1);r.style.setProperty('--g2',curT.g2);
+  document.getElementById('ground').style.background=`radial-gradient(ellipse at 50% 45%,${curT.g2},${curT.g1})`;
+  document.body.style.background=curT.g1;
+
+  // 하늘
   const sky=document.getElementById('sky');
-  sky.style.background=`linear-gradient(180deg,${t.sky1},${t.sky2} 50%,${t.ground1})`;
+  sky.style.background=`linear-gradient(180deg,${curT.sky1},${curT.sky2} 50%,${curT.g1})`;
   sky.innerHTML='';
-  for(let i=0;i<t.starCount;i++){
+  for(let i=0;i<curT.stars;i++){
     const s=document.createElement('div');s.className='sky-star';
-    s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;width:${1+Math.random()*2}px;height:${1+Math.random()*2}px;--d:${2+Math.random()*4}s;--o:${(0.2+Math.random()*t.starBright).toFixed(2)}`;
+    s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;width:${1+Math.random()*2}px;height:${1+Math.random()*2}px;--d:${2+Math.random()*4}s;--o:${(.2+Math.random()*curT.sBright).toFixed(2)}`;
     sky.appendChild(s);
   }
+  // 큰 십자별
+  for(let i=0;i<4;i++){
+    const c=document.createElement('div');c.className='sky-cross';
+    c.style.cssText=`left:${10+Math.random()*80}%;top:${5+Math.random()*35}%;--sz:${8+Math.random()*10}px;opacity:${(.3+Math.random()*curT.sBright).toFixed(2)}`;
+    sky.appendChild(c);
+  }
 
-  // SVG 렌더링 (길+장식+건물)
-  const svg=document.getElementById('villageSvg');
-  let svgContent='<defs><linearGradient id="marbleGrad"><stop offset="0%" stop-color="rgba(255,255,255,0.1)"/><stop offset="50%" stop-color="rgba(200,180,100,0.05)"/><stop offset="100%" stop-color="rgba(255,255,255,0.1)"/></linearGradient></defs>';
-  svgContent+=createPaths(t,t.pathTexture);
-  svgContent+=createDecorations(t);
-  BUILDINGS.forEach(b=>{
-    svgContent+=createIsoBuilding(b.x,b.y,b.w,b.h,t);
-  });
-  svg.innerHTML=svgContent;
-
-  // 건물 클릭 영역 (HTML)
-  const bl=document.getElementById('buildingsLayer');
-  bl.innerHTML='';
-  BUILDINGS.forEach(b=>{
+  // 건물 클릭 영역
+  const bl=document.getElementById('bldLayer');bl.innerHTML='';
+  BLD.forEach(b=>{
     const d=document.createElement('div');d.className='bld';d.id='bld-'+b.id;
-    d.style.cssText=`left:${b.x-10}px;top:${b.y-10}px;width:${b.w+20}px;height:${b.h+30}px;`;
-    d.onclick=()=>openMo(b.key);
-    const badge=b.key==='board'?'<div class="bld-badge">5</div>':b.key==='vote'?'<div class="bld-badge">2</div>':b.key==='event'?'<div class="bld-badge">1</div>':b.key==='hq'&&DEMO.announcements.length?`<div class="bld-badge">${DEMO.announcements.length}</div>`:'';
-    d.innerHTML=`${badge}<div class="bld-label"><div class="bld-name">${t.icons[b.key]} ${b.nameK}</div><div class="bld-name-en">${b.nameE}</div></div>`;
+    d.style.cssText=`left:${b.x-10}px;top:${b.y-10}px;width:${b.w+40}px;height:${b.h+35}px;`;
+    d.onclick=()=>openMo(b.id);
+    const badge=b.id==='board'?'<div class="bld-badge">5</div>':b.id==='vote'?'<div class="bld-badge">2</div>':b.id==='event'?'<div class="bld-badge">1</div>':b.id==='hq'&&DM.ann.length?`<div class="bld-badge">${DM.ann.length}</div>`:'';
+    d.innerHTML=`${badge}<div class="bld-label"><div class="bld-name">${curT.icons[b.id]} ${b.nK}</div><div class="bld-name-en">${b.nE}</div></div>`;
     bl.appendChild(d);
   });
 
-  // 중앙 조형물
-  document.getElementById('monument').style.cssText='left:1120px;top:800px;';
-  document.getElementById('monument').innerHTML=`
-    <div class="mon-symbol">${t.symbol}</div>
-    <svg width="100" height="70" style="margin-top:-8px;">
-      <polygon points="10,20 50,0 90,20 90,50 50,60 10,50" fill="${t.wallLight}" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
-      <polygon points="50,0 90,20 90,50 50,40" fill="${t.wallSide}" stroke="rgba(255,255,255,0.05)" stroke-width="0.5"/>
-    </svg>
-    <div class="mon-base">
-      <div class="mon-name">${DEMO.name} STARIUM</div>
-      <div class="mon-sub">${t.villageName} ${t.villageNameEn}</div>
-    </div>
-    <div class="mon-glow"></div>`;
+  // 조형물
+  document.getElementById('mon').style.cssText='left:1210px;top:870px;';
+  document.getElementById('mon').innerHTML=`<div class="mon-sym">${curT.symbol}</div><div class="mon-name">${DM.name} STARIUM</div><div class="mon-sub">${curT.vName}</div><div class="mon-glow"></div>`;
 
   // 랜드마크
-  const ll=document.getElementById('landmarksLayer');
-  ll.innerHTML=[
-    {i:'🪨',t:'시즌1 기념비',x:680,y:480},
-    {i:'🗼',t:'승격 탑',x:1500,y:480},
-    {i:'🌳',t:'소원의 나무',x:600,y:1080}
-  ].map(l=>`<div class="lm" style="left:${l.x}px;top:${l.y}px;"><div class="lm-icon">${l.i}</div><div class="lm-txt">${l.t}</div></div>`).join('');
+  document.getElementById('lmLayer').innerHTML=[
+    {i:'🪨',t:'시즌1 기념비',x:680,y:520},{i:'🗼',t:'승격 탑',x:1580,y:520},{i:'🌳',t:'소원의 나무',x:600,y:1180}
+  ].map(l=>`<div class="lm" style="left:${l.x}px;top:${l.y}px"><div class="lm-icon">${l.i}</div><div class="lm-txt">${l.t}</div></div>`).join('');
 
   // NPC
-  const nl=document.getElementById('npcLayer');
-  nl.innerHTML='';
-  const npcNames=['StarFan','MoonChild','ArmyLove','BTS4Ever','PurpleU','ShiningStar'];
-  const npcPos=[[650,920],[1300,750],[950,730],[1400,920],[800,1100],[1250,1100]];
-  npcPos.forEach(([nx,ny],i)=>{
-    const n=document.createElement('div');n.className='npc';n.id='npc'+i;
-    n.style.cssText=`left:${nx}px;top:${ny}px;`;
-    n.innerHTML=`<div class="npc-b">👤</div><div class="npc-n">${npcNames[i]}</div>`;
-    nl.appendChild(n);
+  const nl=document.getElementById('npcLayer');nl.innerHTML='';
+  ['StarFan','MoonChild','ArmyLove','BTS4Ever','PurpleU','ShiningStar'].forEach((n,i)=>{
+    const pos=[[700,1000],[1400,830],[1000,800],[1500,1000],[850,1200],[1350,1200]];
+    const d=document.createElement('div');d.className='npc';d.id='npc'+i;
+    d.style.cssText=`left:${pos[i][0]}px;top:${pos[i][1]}px`;
+    d.innerHTML=`<div class="npc-b">👤</div><div class="npc-n">${n}</div>`;nl.appendChild(d);
   });
+
+  // Canvas 애니메이션 시작
+  if(animId)cancelAnimationFrame(animId);
+  animLoop();
 }
 
-/* ═══ 데이터 표시 ═══ */
 function showData(d){
-  const t=LEAGUES[d.league];
+  const t=L[d.league];
   document.getElementById('hName').textContent=d.name+' STARIUM';
   document.getElementById('hLeague').textContent=t.name+' 리그';
   document.getElementById('hRank').textContent='#'+d.rank;
@@ -545,98 +612,62 @@ function showData(d){
   document.getElementById('bDd').textContent='D-'+d.dday;
 }
 
-/* ═══ 날씨 ═══ */
-function setWeather(e){
-  let c='w-clear';
-  if(e>=150)c='w-fest';else if(e>=60)c='w-clear';else if(e>=30)c='w-fog';else c='w-dark';
+function setWeather(e){let c='w-clear';if(e>=150)c='w-fest';else if(e<30)c='w-dark';else if(e<60)c='w-fog';
   document.getElementById('weatherOv').className=c;
-  const map={['w-clear']:['☀️','맑음'],['w-fog']:['🌫️','안개'],['w-dark']:['🌑','암흑'],['w-fest']:['🎆','축제']};
-  const[ico,txt]=map[c]||['☀️','맑음'];
-  document.getElementById('wIco').textContent=ico;
-  document.getElementById('wTxt').textContent=txt;
+  const m={'w-clear':['☀️','맑음'],'w-fog':['🌫️','안개'],'w-dark':['🌑','암흑'],'w-fest':['🎆','축제']};
+  const[i,t]=m[c]||['☀️','맑음'];document.getElementById('wIco').textContent=i;document.getElementById('wTxt').textContent=t;
 }
 
-/* ═══ 드래그 ═══ */
+/* 드래그 */
 function initDrag(){
   const cont=document.getElementById('vc'),world=document.getElementById('vw');
   let drag=false,sx=0,sy=0,cx=0,cy=0,ox=0,oy=0,moved=false;
   const ww=window.innerWidth,wh=window.innerHeight;
-  cx=-(2400/2-ww/2);cy=-(2000/2-wh/2);
+  cx=-(2600/2-ww/2);cy=-(2200/2-wh/2);
   world.style.transform=`translate(${cx}px,${cy}px)`;
-
-  function st(x,y){drag=true;sx=x;sy=y;ox=cx;oy=cy;moved=false;}
-  function mv(x,y){if(!drag)return;const dx=x-sx,dy=y-sy;if(Math.abs(dx)>3||Math.abs(dy)>3)moved=true;cx=ox+dx;cy=oy+dy;cx=Math.max(-(2400-ww+200),Math.min(200,cx));cy=Math.max(-(2000-wh+200),Math.min(200,cy));world.style.transform=`translate(${cx}px,${cy}px)`;}
-  function en(){drag=false;}
-
-  cont.addEventListener('mousedown',e=>{if(e.target.closest('.bld,.hdr-back,.mo'))return;st(e.clientX,e.clientY);});
+  function st(x,y){drag=true;sx=x;sy=y;ox=cx;oy=cy;moved=false}
+  function mv(x,y){if(!drag)return;const dx=x-sx,dy=y-sy;if(Math.abs(dx)>3||Math.abs(dy)>3)moved=true;cx=ox+dx;cy=oy+dy;cx=Math.max(-(2600-ww+200),Math.min(200,cx));cy=Math.max(-(2200-wh+200),Math.min(200,cy));world.style.transform=`translate(${cx}px,${cy}px)`}
+  function en(){drag=false}
+  cont.addEventListener('mousedown',e=>{if(e.target.closest('.bld,.hdr-back,.mo'))return;st(e.clientX,e.clientY)});
   window.addEventListener('mousemove',e=>mv(e.clientX,e.clientY));
-  window.addEventListener('mouseup',()=>{en();});
-  cont.addEventListener('click',e=>{if(moved||e.target.closest('.bld,.hdr,.bot,.mo'))return;moveAv(e.clientX-cx,e.clientY-cy);});
-  cont.addEventListener('touchstart',e=>{if(e.target.closest('.bld'))return;const tc=e.touches[0];st(tc.clientX,tc.clientY);},{passive:true});
-  cont.addEventListener('touchmove',e=>{const tc=e.touches[0];mv(tc.clientX,tc.clientY);},{passive:true});
-  cont.addEventListener('touchend',e=>{if(!moved){const tc=e.changedTouches[0];moveAv(tc.clientX-cx,tc.clientY-cy);}en();});
+  window.addEventListener('mouseup',en);
+  cont.addEventListener('click',e=>{if(moved||e.target.closest('.bld,.hdr,.bot,.mo'))return;moveAv(e.clientX-cx,e.clientY-cy)});
+  cont.addEventListener('touchstart',e=>{if(e.target.closest('.bld'))return;const tc=e.touches[0];st(tc.clientX,tc.clientY)},{passive:true});
+  cont.addEventListener('touchmove',e=>{const tc=e.touches[0];mv(tc.clientX,tc.clientY)},{passive:true});
+  cont.addEventListener('touchend',e=>{if(!moved){const tc=e.changedTouches[0];moveAv(tc.clientX-cx,tc.clientY-cy)}en()});
 }
 
-/* ═══ 아바타 ═══ */
-function moveAv(x,y){const a=document.getElementById('myAv');a.style.left=(x-13)+'px';a.style.top=(y-13)+'px';a.classList.add('walk');setTimeout(()=>a.classList.remove('walk'),800);}
-function animNPC(){document.querySelectorAll('.npc').forEach(n=>{setInterval(()=>{const cl=parseFloat(n.style.left)||900,ct=parseFloat(n.style.top)||900;n.style.left=Math.max(400,Math.min(1800,cl+(Math.random()-.5)*70))+'px';n.style.top=Math.max(550,Math.min(1200,ct+(Math.random()-.5)*50))+'px';},4000+Math.random()*4000);});}
+function moveAv(x,y){const a=document.getElementById('myAv');a.style.left=(x-13)+'px';a.style.top=(y-13)+'px';a.classList.add('walk');setTimeout(()=>a.classList.remove('walk'),800)}
+function animNPC(){document.querySelectorAll('.npc').forEach(n=>{setInterval(()=>{const cl=parseFloat(n.style.left)||900,ct=parseFloat(n.style.top)||900;n.style.left=Math.max(500,Math.min(1800,cl+(Math.random()-.5)*60))+'px';n.style.top=Math.max(600,Math.min(1300,ct+(Math.random()-.5)*50))+'px'},4000+Math.random()*4000)})}
 
-/* ═══ 진입 ═══ */
 function playEnt(name){
-  const ov=document.getElementById('ent');
-  ov.style.background=LEAGUES[DEMO.league].ground1;
+  const ov=document.getElementById('ent');ov.style.background=L[DM.league].g1;
   document.getElementById('entT').textContent=name+' STARIUM';
   document.getElementById('entS').textContent='entering village...';
-  setTimeout(()=>{document.getElementById('entT').textContent='WELCOME';document.getElementById('entS').textContent=name+' STARIUM';},1200);
-  setTimeout(()=>{ov.classList.add('fo');setTimeout(()=>{ov.style.display='none';showToast('🌟 '+name+' STARIUM에 오신 것을 환영합니다!');setTimeout(()=>{document.getElementById('hint').classList.add('show');setTimeout(()=>document.getElementById('hint').classList.remove('show'),3500);},1200);},800);},2200);
+  setTimeout(()=>{document.getElementById('entT').textContent='WELCOME';document.getElementById('entS').textContent=name+' STARIUM'},1200);
+  setTimeout(()=>{ov.classList.add('fo');setTimeout(()=>{ov.style.display='none';showToast('🌟 '+name+' STARIUM에 오신 것을 환영합니다!');setTimeout(()=>{document.getElementById('hint').classList.add('show');setTimeout(()=>document.getElementById('hint').classList.remove('show'),3500)},1200)},800)},2200);
 }
 
-/* ═══ 모달 ═══ */
+/* 모달 */
 const MO={
-  hq:()=>`<div class="mo-h"><div class="mo-t">${LEAGUES[DEMO.league].icons.hq} 팬클럽 본부</div><div class="mo-x" onclick="closeMo()">✕</div></div>
-    <div class="mc"><div class="mc-t">📊 현황</div><div class="mc-c">
-      <div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span>멤버</span><span style="color:var(--lp);font-family:Orbitron;font-weight:700;">${DEMO.members.toLocaleString()}</span></div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span>순위</span><span style="color:var(--gold);font-family:Orbitron;font-weight:700;">#${DEMO.rank}</span></div>
-      <div style="display:flex;justify-content:space-between;"><span>점수</span><span style="color:var(--lp);font-family:Orbitron;font-weight:700;">${DEMO.score}/850</span></div>
-      <div class="pb"><div class="pf" style="width:${(DEMO.score/850*100)|0}%"></div></div>
-    </div></div>
-    <div class="mc"><div class="mc-t">👑 리더</div><div class="mc-c"><b>${DEMO.leader.name}</b> · Lv.${DEMO.leader.level} · ${DEMO.leader.arch}</div></div>
-    <div class="mc"><div class="mc-t">📢 공지</div><div class="mc-c">${DEMO.announcements.map(a=>'<div style="padding:3px 0;">'+a+'</div>').join('')}</div></div>`,
-  board:()=>`<div class="mo-h"><div class="mo-t">📋 게시판 거리</div><div class="mo-x" onclick="closeMo()">✕</div></div>
-    <div class="mc"><div class="mc-t">🔥 핫 게시물</div><div class="mc-c">${[{t:'컴백 스밍 총공 전략!',a:'StreamQueen',l:234},{t:'팬아트 모음 D-14 기념',a:'ArtStar',l:189},{t:'투표 현황 정리',a:'VoteGuard',l:156}].map(p=>'<div style="padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);"><div style="font-size:11px;font-weight:500;">'+p.t+'</div><div style="font-size:9px;color:var(--muted);">'+p.a+' · ❤️ '+p.l+'</div></div>').join('')}</div></div>`,
-  vote:()=>`<div class="mo-h"><div class="mo-t">🗳️ 투표소</div><div class="mo-x" onclick="closeMo()">✕</div></div>
-    <div class="mc"><div class="mc-t">📌 진행 중</div><div class="mc-c">${[{s:'투표중',c:'#34d399',t:'생일 카페 장소 선정',d:'잔여 18시간'},{s:'공감중',c:'#fbbf24',t:'슬로건 변경 제안',d:'공감 67/200'},{s:'확정',c:'#94a3b8',t:'총공 시간대 결정',d:'찬성 82%'}].map(v=>'<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);"><span style="padding:2px 6px;border-radius:8px;font-size:9px;font-weight:700;background:rgba(255,255,255,.06);color:'+v.c+';">'+v.s+'</span><div><div style="font-size:11px;font-weight:500;">'+v.t+'</div><div style="font-size:9px;color:var(--muted);">'+v.d+'</div></div></div>').join('')}</div></div>`,
-  wish:()=>`<div class="mo-h"><div class="mo-t">⭐ 소원의 신전</div><div class="mo-x" onclick="closeMo()">✕</div></div>
-    <div class="mc"><div class="mc-t">🌟 메인 소원</div><div class="mc-c"><div style="text-align:center;font-size:32px;padding:10px 0;animation:monG 3s ease-in-out infinite;">⭐</div><div style="text-align:center;"><div style="font-size:13px;font-weight:700;color:var(--gold);">팬 생일 카페 이벤트</div><div class="pb" style="margin-top:8px;height:7px;"><div class="pf" style="width:64%"></div></div><div style="font-size:10px;color:var(--lp);margin-top:3px;font-family:Orbitron;">128,000 / 200,000</div></div></div></div>`,
-  org:()=>`<div class="mo-h"><div class="mo-t">🏗️ 조직도 타워</div><div class="mo-x" onclick="closeMo()">✕</div></div>
-    <div class="mc"><div class="mc-t">📊 조직 구조</div><div class="mc-c">${[{i:'🏰',n:'팬클럽',c:'98,432명',m:0},{i:'🏘️',n:'테리토리',c:'~20,000명',m:14},{i:'🏠',n:'베이스',c:'~2,000명',m:28},{i:'👥',n:'유닛 (내 소속)',c:'~200명',m:42,my:1},{i:'⭐',n:'아스트라',c:'나',m:56}].map(o=>'<div class="org-level'+(o.my?' my-org':'')+'" style="margin-left:'+o.m+'px;"><span style="font-size:14px;">'+o.i+'</span><b>'+o.n+'</b><span style="font-size:9px;color:var(--muted);margin-left:auto;">'+o.c+'</span></div>').join('')}</div></div>`,
-  event:()=>`<div class="mo-h"><div class="mo-t">🎪 이벤트 광장</div><div class="mo-x" onclick="closeMo()">✕</div></div>
-    <div class="mc"><div class="mc-t">🔥 진행 중</div><div class="mc-c"><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:22px;">⚔️</span><div style="flex:1;"><div style="font-size:11px;font-weight:700;">라이벌 & 스탯킹</div><div style="font-size:9px;color:var(--muted);">3주차 대결!</div></div><span style="font-family:Orbitron;font-size:10px;color:var(--lp);">D-2</span></div></div></div>
-    <div class="mc"><div class="mc-t">📊 화력 전선</div><div class="mc-c"><div class="pb" style="height:8px;"><div class="pf" style="width:${DEMO.energy}%"></div></div><div style="font-size:10px;color:var(--lp);margin-top:3px;">${DEMO.energy}%</div></div></div>`,
-  honor:()=>`<div class="mo-h"><div class="mo-t">🏛️ 명예의 전당</div><div class="mo-x" onclick="closeMo()">✕</div></div>
-    <div class="mc"><div class="mc-t">🏆 역대 MVP</div><div class="mc-c">${[{m:'🥇',t:'S3 활동왕',n:'StarWarrior'},{m:'🥇',t:'S3 성장왕',n:'RisingStar'},{m:'🌟',t:'S3 신인상',n:'BrightNewbie'}].map(h=>'<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);"><span style="font-size:16px;">'+h.m+'</span><div><div style="font-size:11px;font-weight:700;">'+h.t+'</div><div style="font-size:9px;color:var(--muted);">'+h.n+'</div></div></div>').join('')}</div></div>
-    <div style="text-align:center;font-size:9px;color:var(--muted);margin-top:5px;">방문 보상: INT+1 (일 1회)</div>`
+  hq:()=>`<div class="mo-h"><div class="mo-t">${curT.icons.hq} 팬클럽 본부</div><div class="mo-x" onclick="closeMo()">✕</div></div><div class="mc"><div class="mc-t">📊 현황</div><div class="mc-c"><div style="display:flex;justify-content:space-between;margin-bottom:5px"><span>멤버</span><span style="color:var(--lp);font-family:Orbitron;font-weight:700">${DM.members.toLocaleString()}</span></div><div style="display:flex;justify-content:space-between;margin-bottom:5px"><span>순위</span><span style="color:var(--gold);font-family:Orbitron;font-weight:700">#${DM.rank}</span></div><div style="display:flex;justify-content:space-between"><span>점수</span><span style="color:var(--lp);font-family:Orbitron;font-weight:700">${DM.score}/850</span></div><div class="pb"><div class="pf" style="width:${(DM.score/850*100)|0}%"></div></div></div></div><div class="mc"><div class="mc-t">👑 리더</div><div class="mc-c"><b>${DM.leader.n}</b> · Lv.${DM.leader.lv} · ${DM.leader.a}</div></div><div class="mc"><div class="mc-t">📢 공지</div><div class="mc-c">${DM.ann.map(a=>'<div style="padding:3px 0">'+a+'</div>').join('')}</div></div>`,
+  board:()=>`<div class="mo-h"><div class="mo-t">📋 게시판 거리</div><div class="mo-x" onclick="closeMo()">✕</div></div><div class="mc"><div class="mc-t">🔥 핫 게시물</div><div class="mc-c">${[{t:'컴백 스밍 총공 전략!',a:'StreamQueen',l:234},{t:'팬아트 모음 D-14 기념',a:'ArtStar',l:189},{t:'투표 현황 정리',a:'VoteGuard',l:156}].map(p=>'<div style="padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04)"><div style="font-size:11px;font-weight:500">'+p.t+'</div><div style="font-size:9px;color:var(--muted)">'+p.a+' · ❤️ '+p.l+'</div></div>').join('')}</div></div>`,
+  vote:()=>`<div class="mo-h"><div class="mo-t">🗳️ 투표소</div><div class="mo-x" onclick="closeMo()">✕</div></div><div class="mc"><div class="mc-t">📌 진행 중</div><div class="mc-c">${[{s:'투표중',c:'#34d399',t:'생일 카페 장소 선정',d:'잔여 18시간'},{s:'공감중',c:'#fbbf24',t:'슬로건 변경 제안',d:'공감 67/200'},{s:'확정',c:'#94a3b8',t:'총공 시간대',d:'찬성 82%'}].map(v=>'<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="padding:2px 6px;border-radius:8px;font-size:9px;font-weight:700;background:rgba(255,255,255,.06);color:'+v.c+'">'+v.s+'</span><div><div style="font-size:11px;font-weight:500">'+v.t+'</div><div style="font-size:9px;color:var(--muted)">'+v.d+'</div></div></div>').join('')}</div></div>`,
+  wish:()=>`<div class="mo-h"><div class="mo-t">⭐ 소원의 신전</div><div class="mo-x" onclick="closeMo()">✕</div></div><div class="mc"><div class="mc-t">🌟 메인 소원</div><div class="mc-c"><div style="text-align:center;font-size:32px;padding:10px 0;animation:monG 3s ease-in-out infinite">⭐</div><div style="text-align:center"><div style="font-size:13px;font-weight:700;color:var(--gold)">팬 생일 카페 이벤트</div><div class="pb" style="margin-top:8px;height:7px"><div class="pf" style="width:64%"></div></div><div style="font-size:10px;color:var(--lp);margin-top:3px;font-family:Orbitron">128,000 / 200,000</div></div></div></div>`,
+  org:()=>`<div class="mo-h"><div class="mo-t">🏗️ 조직도 타워</div><div class="mo-x" onclick="closeMo()">✕</div></div><div class="mc"><div class="mc-t">📊 조직 구조</div><div class="mc-c">${[{i:'🏰',n:'팬클럽',c:'98,432명',m:0},{i:'🏘️',n:'테리토리',c:'~20,000명',m:12},{i:'🏠',n:'베이스',c:'~2,000명',m:24},{i:'👥',n:'유닛 (내 소속)',c:'~200명',m:36,my:1},{i:'⭐',n:'아스트라',c:'나',m:48}].map(o=>'<div class="org-lv'+(o.my?' my':'')+'" style="margin-left:'+o.m+'px"><span style="font-size:14px">'+o.i+'</span><b>'+o.n+'</b><span style="font-size:9px;color:var(--muted);margin-left:auto">'+o.c+'</span></div>').join('')}</div></div>`,
+  event:()=>`<div class="mo-h"><div class="mo-t">🎪 이벤트 광장</div><div class="mo-x" onclick="closeMo()">✕</div></div><div class="mc"><div class="mc-t">🔥 진행 중</div><div class="mc-c"><div style="display:flex;align-items:center;gap:10px"><span style="font-size:22px">⚔️</span><div style="flex:1"><div style="font-size:11px;font-weight:700">라이벌 & 스탯킹</div><div style="font-size:9px;color:var(--muted)">3주차 대결!</div></div><span style="font-family:Orbitron;font-size:10px;color:var(--lp)">D-2</span></div></div></div><div class="mc"><div class="mc-t">📊 화력 전선</div><div class="mc-c"><div class="pb" style="height:8px"><div class="pf" style="width:${DM.energy}%"></div></div><div style="font-size:10px;color:var(--lp);margin-top:3px">${DM.energy}%</div></div></div>`,
+  honor:()=>`<div class="mo-h"><div class="mo-t">🏛️ 명예의 전당</div><div class="mo-x" onclick="closeMo()">✕</div></div><div class="mc"><div class="mc-t">🏆 역대 MVP</div><div class="mc-c">${[{m:'🥇',t:'S3 활동왕',n:'StarWarrior'},{m:'🥇',t:'S3 성장왕',n:'RisingStar'},{m:'🌟',t:'S3 신인상',n:'BrightNewbie'}].map(h=>'<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:16px">'+h.m+'</span><div><div style="font-size:11px;font-weight:700">'+h.t+'</div><div style="font-size:9px;color:var(--muted)">'+h.n+'</div></div></div>').join('')}</div></div>`
 };
-function openMo(k){if(!MO[k])return;document.getElementById('moC').innerHTML=MO[k]();document.getElementById('mo').classList.add('show');setTimeout(()=>{document.querySelectorAll('.pf').forEach(el=>{const w=el.style.width;el.style.width='0%';setTimeout(()=>el.style.width=w,50);});},100);}
-function closeMo(e){if(e&&e.target!==e.currentTarget)return;document.getElementById('mo').classList.remove('show');}
+function openMo(k){if(!MO[k])return;document.getElementById('moC').innerHTML=MO[k]();document.getElementById('mo').classList.add('show');setTimeout(()=>{document.querySelectorAll('.pf').forEach(el=>{const w=el.style.width;el.style.width='0%';setTimeout(()=>el.style.width=w,50)})},100)}
+function closeMo(e){if(e&&e.target!==e.currentTarget)return;document.getElementById('mo').classList.remove('show')}
+function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3000)}
+function goBack(){window.history.length>1?window.history.back():window.location.href='/'}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMo()});
 
-/* ═══ 유틸 ═══ */
-function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3000);}
-function goBack(){window.history.length>1?window.history.back():window.location.href='/';}
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMo();});
-
-/* ═══ 초기화 ═══ */
 window.addEventListener('DOMContentLoaded',()=>{
-  renderVillage(DEMO.league);
-  showData(DEMO);
-  setWeather(DEMO.energy);
-  initDrag();
-  playEnt(DEMO.name);
-  animNPC();
+  initCanvas();render(DM.league);showData(DM);setWeather(DM.energy);initDrag();playEnt(DM.name);animNPC();
 });
-
-// 리그 전환 테스트: switchLeague('nova')
-window.switchLeague=function(l){if(!LEAGUES[l])return;DEMO.league=l;renderVillage(l);showData(DEMO);showToast('🌟 '+LEAGUES[l].name+' 리그 - '+LEAGUES[l].villageName);};
+window.switchLeague=function(l){if(!L[l])return;DM.league=l;render(l);showData(DM);showToast('🌟 '+L[l].name+' — '+L[l].vName)};
 </script>
 </body>
 </html>
