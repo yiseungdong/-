@@ -801,14 +801,15 @@ function layoutQuasar(fanclubs) {
   const vpW = vp ? vp.clientWidth : 1200;
   const vpH = vp ? vp.clientHeight : 800;
   const r1 = Math.min(vpW, vpH) * 0.33;
-  const r2 = r1 * 0.45;
+  const r2 = r1 * 0.55;
+  const gap = 2; // 1등과 2~5등 사이 간격
   const positions = [{ x: CX, y: CY, r: r1 }];
 
-  // 2등=북(반 잘림), 3등=남, 4등=서, 5등=동
-  positions.push({ x: CX, y: CY - r1 - r2 + r2 * 0.5, r: r2 });
-  positions.push({ x: CX, y: CY + r1 + r2 - r2 * 0.5, r: r2 });
-  positions.push({ x: CX - r1 - r2 + r2 * 0.5, y: CY, r: r2 });
-  positions.push({ x: CX + r1 + r2 - r2 * 0.5, y: CY, r: r2 });
+  // 2등=북(반 잘림), 3등=남, 4등=서, 5등=동 — 겹치지 않고 접점+2px
+  positions.push({ x: CX, y: CY - r1 - r2 - gap + r2 * 0.5, r: r2 });
+  positions.push({ x: CX, y: CY + r1 + r2 + gap - r2 * 0.5, r: r2 });
+  positions.push({ x: CX - r1 - r2 - gap + r2 * 0.5, y: CY, r: r2 });
+  positions.push({ x: CX + r1 + r2 + gap - r2 * 0.5, y: CY, r: r2 });
   return positions;
 }
 
