@@ -93,11 +93,22 @@ canvas{position:absolute;inset:0;z-index:1}
 .mini-evt-float .et{font-size:8px;color:var(--text)}
 .mini-evt-float .en{color:var(--lp);font-weight:700}
 @keyframes evtFloat{0%{opacity:0;transform:translateY(10px)}10%{opacity:1;transform:translateY(0)}75%{opacity:1;transform:translateY(-8px)}100%{opacity:0;transform:translateY(-20px)}}
+.lg-tabs{position:fixed;top:48px;left:0;right:0;z-index:99;display:flex;justify-content:center;gap:4px;padding:4px 10px;background:rgba(6,6,14,.8);backdrop-filter:blur(6px)}
+.lg-tab{padding:4px 10px;border-radius:14px;font-size:9px;font-weight:700;color:var(--muted);background:rgba(255,255,255,.04);border:1px solid transparent;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:3px}
+.lg-tab:hover{background:rgba(255,255,255,.08)}
+.lg-tab.active{color:#fff;border-color:var(--lp);background:rgba(255,255,255,.08);box-shadow:0 0 8px var(--lg)}
+.lg-tab .tab-dot{width:6px;height:6px;border-radius:50%}
 </style>
 </head>
 <body>
 <div class="ent" id="ent"><div class="ent-t" id="entT">STARIUM</div><div class="ent-s" id="entS">entering...</div></div>
 <header class="hdr"><div class="hdr-l"><div class="hdr-back" onclick="history.length>1?history.back():location='/'">←</div><div><div class="hdr-name" id="hName">STARIUM</div><div class="hdr-sub"><span class="hdr-dot"></span><span id="hLg">스타 리그</span> · <span id="hRk">#3</span></div></div></div><div class="hdr-r"><div class="hdr-w"><span id="wI">☀️</span><span id="wT">맑음</span></div><div class="hdr-on"><span class="hdr-on-dot"></span><span id="hOn">1,234</span></div></div></header>
+<div class="lg-tabs" id="lgTabs">  <div class="lg-tab" onclick="switchLeague('dust')" data-lg="dust"><span class="tab-dot" style="background:#b0bec5"></span>더스트</div>
+  <div class="lg-tab active" onclick="switchLeague('star')" data-lg="star"><span class="tab-dot" style="background:#fbbf24"></span>스타</div>
+  <div class="lg-tab" onclick="switchLeague('planet')" data-lg="planet"><span class="tab-dot" style="background:#34d399"></span>플래닛</div>
+  <div class="lg-tab" onclick="switchLeague('nova')" data-lg="nova"><span class="tab-dot" style="background:#c084fc"></span>노바</div>
+  <div class="lg-tab" onclick="switchLeague('quasar')" data-lg="quasar"><span class="tab-dot" style="background:#f0c040"></span>퀘이사</div>
+</div>
 <div class="vc" id="vc"><div class="vw" id="vw"><canvas id="cv"></canvas><div id="bL"></div><div class="avatar" id="myAv" style="left:960px;top:760px"><div class="av-body">🧑</div><div class="av-tag">나</div></div><div id="nL"></div><div id="miniEvts" style="position:absolute;z-index:25;pointer-events:none"></div></div></div>
 <div class="bot"><div class="bot-s"><div><div class="bot-sv" id="bM">98,432</div><div class="bot-sl">멤버</div></div><div><div class="bot-sv" id="bS">847</div><div class="bot-sl">점수</div></div></div><div class="bot-e"><div class="bot-eb"><div class="bot-ef" id="bE" style="width:72%"></div></div><div class="bot-el">에너지 <span id="bP">72%</span></div></div><div class="bot-d" id="bD">D-14</div></div>
 <div class="hint" id="hint">빈 곳을 클릭하면 이동!</div>
@@ -1393,7 +1404,7 @@ function startMiniEvents(){  const container=document.getElementById('miniEvts')
   miniEvtTimer=setInterval(spawn,6000+Math.random()*4000);
 }
 
-window.switchLeague=function(l){if(!LG[l])return;DM.league=l;render(l);showData(DM);showToast('🌟 '+LG[l].name+' — '+LG[l].vName)};
+window.switchLeague=function(l){if(!LG[l])return;DM.league=l;render(l);showData(DM);showToast('🌟 '+LG[l].name+' — '+LG[l].vName);document.querySelectorAll('.lg-tab').forEach(t=>{t.classList.toggle('active',t.dataset.lg===l)})};
 </script>
 </body>
 </html>
