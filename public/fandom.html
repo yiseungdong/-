@@ -47,7 +47,7 @@ canvas{position:absolute;inset:0;z-index:1}
 .npc-n{font-size:5px;color:var(--muted);margin-top:1px}
 
 /* 하단 */
-.bot{position:fixed;bottom:0;left:0;right:0;z-index:100;padding:6px 14px 10px;background:linear-gradient(0deg,rgba(6,6,14,.96),rgba(6,6,14,.3) 90%,transparent);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:space-between}
+.bot{position:fixed;bottom:52px;left:0;right:0;z-index:100;padding:6px 14px 10px;background:linear-gradient(0deg,rgba(6,6,14,.96),rgba(6,6,14,.3) 90%,transparent);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:space-between}
 .bot-s{display:flex;gap:12px}
 .bot-sv{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--lp)}
 .bot-sl{font-size:7px;color:var(--muted)}
@@ -71,12 +71,22 @@ canvas{position:absolute;inset:0;z-index:1}
 .pb{width:100%;height:4px;border-radius:2px;background:rgba(255,255,255,.08);margin-top:4px;overflow:hidden}
 .pf{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--ls),var(--lp));transition:width 1.5s}
 
-.hint{position:fixed;bottom:50px;left:50%;transform:translateX(-50%);z-index:50;padding:4px 12px;border-radius:12px;background:rgba(0,0,0,.7);border:1px solid var(--border);font-size:9px;color:var(--muted);opacity:0;transition:opacity 1s;pointer-events:none}.hint.show{opacity:1}
-#toast{position:fixed;bottom:68px;left:50%;transform:translateX(-50%) translateY(14px);padding:7px 16px;border-radius:14px;background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:11px;opacity:0;transition:all .3s;z-index:300;pointer-events:none;white-space:nowrap}#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.hint{position:fixed;bottom:110px;left:50%;transform:translateX(-50%);z-index:50;padding:4px 12px;border-radius:12px;background:rgba(0,0,0,.7);border:1px solid var(--border);font-size:9px;color:var(--muted);opacity:0;transition:opacity 1s;pointer-events:none}.hint.show{opacity:1}
+#toast{position:fixed;bottom:120px;left:50%;transform:translateX(-50%) translateY(14px);padding:7px 16px;border-radius:14px;background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:11px;opacity:0;transition:all .3s;z-index:300;pointer-events:none;white-space:nowrap}#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .ent{position:fixed;inset:0;z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 1s}.ent.fo{opacity:0;pointer-events:none}
 .ent-t{font-family:'Cinzel',serif;font-size:24px;font-weight:700;color:var(--lp);text-shadow:0 0 30px var(--lg);animation:ep 1.5s ease-in-out infinite}
 .ent-s{font-size:11px;color:var(--muted);margin-top:5px;font-family:'Orbitron',monospace}
 @keyframes ep{0%,100%{opacity:.4;transform:scale(.97)}50%{opacity:1;transform:scale(1)}}
+
+/* 하단 네비게이션 7개 메뉴 */
+.btm-nav{position:fixed;bottom:0;left:0;right:0;z-index:110;display:flex;justify-content:space-around;align-items:center;height:52px;background:rgba(6,6,14,.98);border-top:1px solid var(--border);backdrop-filter:blur(12px);padding-bottom:env(safe-area-inset-bottom)}
+.btm-nav a{display:flex;flex-direction:column;align-items:center;justify-content:center;text-decoration:none;gap:1px;flex:1;height:100%;color:var(--muted);transition:color .2s}
+.btm-nav a.active{color:var(--lp)}
+.btm-nav a.active .nav-icon{transform:scale(1.15)}
+.nav-icon{font-size:18px;line-height:1;transition:transform .2s}
+.nav-label{font-size:8px;font-weight:500;letter-spacing:-.3px}
+.nav-dot{width:3px;height:3px;border-radius:50%;background:var(--lp);margin-top:1px;opacity:0;transition:opacity .2s}
+.btm-nav a.active .nav-dot{opacity:1}
 </style>
 </head>
 <body>
@@ -87,6 +97,15 @@ canvas{position:absolute;inset:0;z-index:1}
 <div class="hint" id="hint">빈 곳을 클릭하면 이동!</div>
 <div class="mo" id="mo" onclick="closeMo(event)"><div class="mo-c" id="moC" onclick="event.stopPropagation()"></div></div>
 <div id="toast"></div>
+<nav class="btm-nav">
+  <a href="/fandom.html" class="active"><div class="nav-icon">🏘️</div><div class="nav-label">팬덤</div><div class="nav-dot"></div></a>
+  <a href="/"><div class="nav-icon">🏠</div><div class="nav-label">홈</div><div class="nav-dot"></div></a>
+  <a href="/astra.html"><div class="nav-icon">⭐</div><div class="nav-label">아스트라</div><div class="nav-dot"></div></a>
+  <a href="/room3d.html"><div class="nav-icon">🏡</div><div class="nav-label">내 방</div><div class="nav-dot"></div></a>
+  <a href="/nebula.html"><div class="nav-icon">🌌</div><div class="nav-label">성궤</div><div class="nav-dot"></div></a>
+  <a href="/avatar.html"><div class="nav-icon">🎭</div><div class="nav-label">아바타</div><div class="nav-dot"></div></a>
+  <a href="/shop.html"><div class="nav-icon">🛒</div><div class="nav-label">상점</div><div class="nav-dot"></div></a>
+</nav>
 
 <script>
 const W=2000,H=1600;
@@ -230,11 +249,11 @@ function drawSky(){
   ctx.fillStyle=g;ctx.fillRect(0,0,W,H*.45);
   // 별
   const time=Date.now()/1000;
-  for(let i=0;i<t.stars||80;i++){
+  for(let i=0;i<(t.stars||80);i++){
     const sx=(i*137.5)%W,sy=(i*97.3)%(H*.4);
     const a=.15+Math.sin(time*.5+i)*(.2+t.sBright*.3);
     ctx.globalAlpha=Math.max(0,a);ctx.fillStyle='#fff';
-    ctx.beginPath();ctx.arc(sx,sy,Math.random()>.9?1.5:0.8,0,Math.PI*2);ctx.fill();
+    const starR=i%10===0?1.5:0.8; ctx.beginPath();ctx.arc(sx,sy,starR,0,Math.PI*2);ctx.fill();
   }
   ctx.globalAlpha=1;
 }
@@ -320,17 +339,27 @@ function drawBridge(){
   ctx.fillRect(1604,928,42,2);
 }
 
-function drawFlowers(){
+/* 꽃 위치를 미리 생성 (매 프레임 Math.random 호출 방지) */
+let flowerCache=null;
+function initFlowers(){
+  flowerCache=[];
   const beds=[[350,670,80],[1580,670,70],[380,960,60],[1540,960,65],[700,1080,70],[1200,1080,65]];
   beds.forEach(([fx,fy,fw])=>{
     for(let i=0;i<6;i++){
-      const cx=fx-fw/2+Math.random()*fw,cy=fy-10+Math.random()*20;
-      const sz=2+Math.random()*2.5;
-      ctx.fillStyle=Math.random()>.5?t.flower1:t.flower2;
-      ctx.beginPath();ctx.arc(cx,cy,sz,0,Math.PI*2);ctx.fill();
-      ctx.strokeStyle=t.groundAlt;ctx.lineWidth=.8;
-      ctx.beginPath();ctx.moveTo(cx,cy+sz);ctx.lineTo(cx,cy+sz+4);ctx.stroke();
+      flowerCache.push({
+        cx:fx-fw/2+Math.random()*fw,cy:fy-10+Math.random()*20,
+        sz:2+Math.random()*2.5,useColor1:Math.random()>.5
+      });
     }
+  });
+}
+function drawFlowers(){
+  if(!flowerCache)initFlowers();
+  flowerCache.forEach(f=>{
+    ctx.fillStyle=f.useColor1?t.flower1:t.flower2;
+    ctx.beginPath();ctx.arc(f.cx,f.cy,f.sz,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle=t.groundAlt;ctx.lineWidth=.8;
+    ctx.beginPath();ctx.moveTo(f.cx,f.cy+f.sz);ctx.lineTo(f.cx,f.cy+f.sz+4);ctx.stroke();
   });
 }
 
@@ -598,19 +627,34 @@ function showToast(m){const t=document.getElementById('toast');t.textContent=m;t
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMo()});
 
 window.addEventListener('DOMContentLoaded',()=>{
-  init();render(DM.league);showData(DM);setW(DM.energy);initDrag();animNPC();
-  /* 진입 애니메이션: 2초 후 확실히 제거 */
+  init();
+  /* 진입 애니메이션 먼저 처리, Canvas는 나중에 시작 */
   const ent=document.getElementById('ent');
   if(ent){
-    ent.style.background=LG[DM.league].ground;
+    const leagueData=LG[DM.league];
+    ent.style.background=leagueData.ground;
     document.getElementById('entT').textContent=DM.name+' STARIUM';
-    setTimeout(()=>{document.getElementById('entT').textContent='WELCOME';document.getElementById('entS').textContent=DM.name+' STARIUM'},1000);
     setTimeout(()=>{
+      document.getElementById('entT').textContent='WELCOME';
+      document.getElementById('entS').textContent=DM.name+' STARIUM';
+    },1000);
+    setTimeout(()=>{
+      /* 페이드아웃 시작할 때 Canvas 렌더링 시작 */
+      render(DM.league);showData(DM);setW(DM.energy);initDrag();animNPC();
       ent.classList.add('fo');
-      setTimeout(()=>{ent.style.display='none';showToast('🌟 '+DM.name+' STARIUM');
-        setTimeout(()=>{document.getElementById('hint').classList.add('show');setTimeout(()=>document.getElementById('hint').classList.remove('show'),3000)},1000);
+      setTimeout(()=>{
+        ent.style.display='none';
+        ent.remove();
+        showToast('🌟 '+DM.name+' STARIUM');
+        setTimeout(()=>{
+          document.getElementById('hint').classList.add('show');
+          setTimeout(()=>document.getElementById('hint').classList.remove('show'),3000);
+        },1000);
       },800);
     },2000);
+  } else {
+    /* 진입 화면 없으면 바로 렌더링 */
+    render(DM.league);showData(DM);setW(DM.energy);initDrag();animNPC();
   }
 });
 window.switchLeague=function(l){if(!LG[l])return;DM.league=l;render(l);showData(DM);showToast('🌟 '+LG[l].name+' — '+LG[l].vName)};
