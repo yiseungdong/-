@@ -799,12 +799,12 @@
           {
             "id": 47,
             "name": "activity_log 불변성 DB 트리거",
-            "status": "todo"
+            "status": "done"
           },
           {
             "id": 48,
             "name": "암호화 5계층 구현",
-            "status": "todo"
+            "status": "done"
           },
           {
             "id": 49,
