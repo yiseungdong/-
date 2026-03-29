@@ -1165,7 +1165,68 @@ function drawGate(){
     ctx.fillText('STARIUM',gx,gy-ah-7);ctx.textAlign='start';
   }
 }
-function drawProps(){}
+function drawProps(){
+  const league=DM.league;
+  const time=Date.now()/1000;
+  const props=[
+    {type:'bench',x:W*.32,y:H*.46},{type:'bench',x:W*.65,y:H*.46},
+    {type:'pot',x:W*.25,y:H*.38},{type:'pot',x:W*.73,y:H*.38},
+    {type:'pot',x:W*.38,y:H*.62},{type:'pot',x:W*.58,y:H*.62},
+    {type:'post',x:W*.15,y:H*.52},{type:'sign',x:W*.82,y:H*.52},
+  ];
+  if(league==='planet'||league==='nova'||league==='quasar'){
+    props.push({type:'vend',x:W*.28,y:H*.55},{type:'vend',x:W*.7,y:H*.55});
+  }
+  if(league==='nova'||league==='quasar'){
+    props.push({type:'holo',x:W*.4,y:H*.35},{type:'holo',x:W*.58,y:H*.35});
+  }
+  if(league==='quasar'){
+    props.push({type:'banner',x:W*.12,y:H*.42},{type:'banner',x:W*.86,y:H*.42});
+  }
+  props.forEach(p=>{
+    const{type,x,y}=p;
+    if(type==='bench'){
+      ctx.fillStyle=league==='dust'?'#5a4a30':league==='quasar'?'#8a7030':t.roadLine;
+      ctx.beginPath();ctx.roundRect(x-12,y,24,5,1);ctx.fill();
+      ctx.fillRect(x-10,y+5,3,8);ctx.fillRect(x+7,y+5,3,8);
+      ctx.fillRect(x-11,y-6,2,7);ctx.fillRect(x+9,y-6,2,7);
+      ctx.fillRect(x-11,y-7,22,2);
+    } else if(type==='pot'){
+      ctx.fillStyle=league==='dust'?'#6a5030':'#5a3020';
+      ctx.beginPath();ctx.moveTo(x-5,y);ctx.lineTo(x-7,y+10);ctx.lineTo(x+7,y+10);ctx.lineTo(x+5,y);ctx.closePath();ctx.fill();
+      ctx.fillStyle=t.flower1;ctx.beginPath();ctx.arc(x-2,y-3,3,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=t.flower2;ctx.beginPath();ctx.arc(x+2,y-4,2.5,0,Math.PI*2);ctx.fill();
+    } else if(type==='post'){
+      ctx.fillStyle=league==='dust'?'#6a5a40':'#cc3333';
+      ctx.beginPath();ctx.roundRect(x-5,y-14,10,18,[3,3,0,0]);ctx.fill();
+      ctx.fillStyle='rgba(0,0,0,.4)';ctx.fillRect(x-3,y-8,6,2);
+      ctx.fillStyle=league==='dust'?'#5a4a30':'#aa2222';ctx.fillRect(x-2,y+4,4,8);
+    } else if(type==='sign'){
+      ctx.fillStyle=t.roadLine;ctx.fillRect(x-1,y-20,2,24);
+      ctx.fillStyle=t.lp+'40';ctx.beginPath();ctx.roundRect(x+1,y-20,22,8,2);ctx.fill();
+      ctx.fillStyle=t.lp+'30';ctx.beginPath();ctx.roundRect(x-23,y-12,22,8,2);ctx.fill();
+      ctx.font='5px "Noto Sans KR"';ctx.fillStyle=t.lp;ctx.textAlign='center';
+      ctx.fillText('HQ →',x+12,y-14);ctx.fillText('← 상점',x-12,y-6);ctx.textAlign='start';
+    } else if(type==='vend'){
+      ctx.fillStyle=league==='nova'?'#1e1040':league==='quasar'?'#2e2414':'#182e28';
+      ctx.beginPath();ctx.roundRect(x-7,y-16,14,20,2);ctx.fill();
+      ctx.fillStyle=t.lp+'30';ctx.fillRect(x-5,y-14,10,8);
+      ctx.globalAlpha=.3+Math.sin(time*2+x)*.2;ctx.fillStyle=t.lp;
+      ctx.fillRect(x-4,y-13,8,6);ctx.globalAlpha=1;
+    } else if(type==='holo'){
+      ctx.fillStyle=t.plazaLine;ctx.fillRect(x-1,y-5,2,10);
+      ctx.globalAlpha=.15+Math.sin(time*1.5+x)*.08;ctx.fillStyle=t.lp;
+      ctx.beginPath();ctx.roundRect(x-12,y-22,24,18,3);ctx.fill();ctx.globalAlpha=1;
+      ctx.strokeStyle=t.lp+'40';ctx.lineWidth=.5;
+      ctx.beginPath();ctx.roundRect(x-12,y-22,24,18,3);ctx.stroke();
+    } else if(type==='banner'){
+      ctx.fillStyle='#3a3020';ctx.fillRect(x-1,y-30,2,35);
+      const wave=Math.sin(time*2+x)*.08;
+      ctx.fillStyle='#d4a01060';
+      ctx.beginPath();ctx.moveTo(x+1,y-28);ctx.quadraticCurveTo(x+12,y-24+wave*20,x+1,y-14);ctx.closePath();ctx.fill();
+    }
+  });
+}
 
 /* ═══ 렌더 ═══ */
 function render(league){
