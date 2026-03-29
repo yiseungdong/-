@@ -1092,7 +1092,79 @@ function drawParticles(){
 }
 
 // 게이트/소품은 Part 2에서 구현 예정 — 임시 stub
-function drawGate(){}
+function drawGate(){
+  const gx=W/2,gy=H*.82;
+  const league=DM.league;
+  const time=Date.now()/1000;
+  if(league==='dust'){
+    const fw=W*.25;
+    for(let i=0;i<9;i++){
+      const px=gx-fw/2+i*(fw/8);
+      ctx.fillStyle='#4a3a20';
+      ctx.beginPath();ctx.roundRect(px-2,gy-25,4,30,1);ctx.fill();
+      ctx.beginPath();ctx.moveTo(px-3,gy-25);ctx.lineTo(px,gy-32);ctx.lineTo(px+3,gy-25);ctx.closePath();ctx.fill();
+    }
+    ctx.fillStyle='#3a2a18';
+    ctx.fillRect(gx-fw/2,gy-18,fw,3);ctx.fillRect(gx-fw/2,gy-8,fw,3);
+    ctx.fillStyle=t.ground;ctx.fillRect(gx-20,gy-33,40,38);
+    [-28,28].forEach(ox=>{      ctx.fillStyle='#5a4a30';ctx.fillRect(gx+ox-2,gy-40,4,18);
+      for(let j=0;j<3;j++){
+        ctx.globalAlpha=.5+Math.sin(time*4+j+ox)*.3;
+        ctx.fillStyle=j===0?'#ff5500':'#ffaa30';
+        ctx.beginPath();ctx.ellipse(gx+ox+Math.sin(time*3+j)*2,gy-42-j*4,2.5-j*.4,4-j*.8,0,0,Math.PI*2);ctx.fill();
+      }
+      ctx.globalAlpha=1;
+    });
+  } else if(league==='star'){
+    const aw=70,ah=55;
+    ctx.fillStyle='#2a2848';
+    ctx.beginPath();ctx.roundRect(gx-aw/2-8,gy-ah,10,ah+5,2);ctx.fill();
+    ctx.beginPath();ctx.roundRect(gx+aw/2-2,gy-ah,10,ah+5,2);ctx.fill();
+    ctx.beginPath();ctx.moveTo(gx-aw/2-8,gy-ah);ctx.quadraticCurveTo(gx,gy-ah-30,gx+aw/2+8,gy-ah);
+    ctx.lineTo(gx+aw/2,gy-ah);ctx.quadraticCurveTo(gx,gy-ah-20,gx-aw/2,gy-ah);ctx.closePath();ctx.fill();
+    ctx.fillStyle=t.lp;ctx.shadowColor=t.lp;ctx.shadowBlur=8;
+    ctx.beginPath();ctx.arc(gx,gy-ah-18,4,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+    ctx.fillStyle=t.lp+'60';ctx.beginPath();ctx.roundRect(gx-30,gy-ah-8,60,12,3);ctx.fill();
+    ctx.font='bold 7px Orbitron';ctx.fillStyle=t.lp;ctx.textAlign='center';
+    ctx.fillText('STARIUM',gx,gy-ah);ctx.textAlign='start';
+  } else if(league==='planet'){
+    const aw=80,ah=60;
+    ctx.fillStyle='#162a24';ctx.strokeStyle=t.lp+'40';ctx.lineWidth=2;
+    ctx.beginPath();ctx.roundRect(gx-aw/2-6,gy-ah,aw+12,ah+4,[6,6,0,0]);ctx.fill();ctx.stroke();
+    ctx.globalAlpha=.4+Math.sin(time*2)*.3;ctx.fillStyle=t.lp;
+    ctx.beginPath();ctx.arc(gx,gy-ah+3,3,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+    ctx.shadowColor=t.lp;ctx.shadowBlur=10;
+    ctx.font='bold 9px Orbitron';ctx.fillStyle=t.lp;ctx.textAlign='center';
+    ctx.fillText('STARIUM',gx,gy-ah-6);ctx.textAlign='start';ctx.shadowBlur=0;
+  } else if(league==='nova'){
+    const aw=90,ah=65;
+    ctx.fillStyle='#1a1040';
+    ctx.beginPath();ctx.roundRect(gx-aw/2-5,gy-ah,8,ah+4,2);ctx.fill();
+    ctx.beginPath();ctx.roundRect(gx+aw/2-3,gy-ah,8,ah+4,2);ctx.fill();
+    for(let i=0;i<3;i++){
+      const pulse=(time*.6+i*.33)%1;
+      ctx.globalAlpha=.15*(1-pulse);ctx.strokeStyle=t.lp;ctx.lineWidth=2-i*.5;
+      ctx.beginPath();ctx.moveTo(gx-aw/2-5,gy-ah);ctx.quadraticCurveTo(gx,gy-ah-35-pulse*10,gx+aw/2+5,gy-ah);ctx.stroke();
+    }
+    ctx.globalAlpha=1;ctx.shadowColor=t.lp;ctx.shadowBlur=12;
+    ctx.font='bold 10px Orbitron';ctx.fillStyle=t.lp;ctx.textAlign='center';
+    ctx.fillText('STARIUM',gx,gy-ah-20);ctx.textAlign='start';ctx.shadowBlur=0;
+  } else if(league==='quasar'){
+    const aw=110,ah=75;    ctx.fillStyle='#2e2414';
+    ctx.beginPath();ctx.roundRect(gx-aw/2-10,gy-ah,14,ah+6,2);ctx.fill();
+    ctx.beginPath();ctx.roundRect(gx+aw/2-4,gy-ah,14,ah+6,2);ctx.fill();
+    ctx.fillStyle='#2e2414';
+    ctx.beginPath();ctx.moveTo(gx-aw/2-10,gy-ah);ctx.quadraticCurveTo(gx,gy-ah-45,gx+aw/2+10,gy-ah);
+    ctx.lineTo(gx+aw/2,gy-ah);ctx.quadraticCurveTo(gx,gy-ah-32,gx-aw/2,gy-ah);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='#d4a010';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(gx-aw/2-10,gy-ah);ctx.quadraticCurveTo(gx,gy-ah-45,gx+aw/2+10,gy-ah);ctx.stroke();
+    ctx.fillStyle='#f0c040';ctx.shadowColor='#f0c040';ctx.shadowBlur=15;
+    ctx.beginPath();ctx.arc(gx,gy-ah-38,5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+    ctx.fillStyle='#d4a01060';ctx.beginPath();ctx.roundRect(gx-35,gy-ah-16,70,14,4);ctx.fill();
+    ctx.font='bold 9px Orbitron';ctx.fillStyle='#f0c040';ctx.textAlign='center';
+    ctx.fillText('STARIUM',gx,gy-ah-7);ctx.textAlign='start';
+  }
+}
 function drawProps(){}
 
 /* ═══ 렌더 ═══ */
