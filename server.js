@@ -11895,6 +11895,11 @@ app.get('/api/events/unclaimed-count', authenticateToken, async (req, res) => {
   }
 });
 
+// 루트 경로 → 인트로 페이지
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'intro.html'));
+});
+
 // ── SPA fallback ──
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
