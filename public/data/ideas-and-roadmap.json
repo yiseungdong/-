@@ -827,13 +827,13 @@
           {
             "id": 51,
             "name": "AI 대화 보완 (기억/감정/이벤트/명대사)",
-            "status": "todo",
+            "status": "done",
             "idea": "IDEA-I01"
           },
           {
             "id": 52,
             "name": "아티스트 일기장 + 기억의 별똥별",
-            "status": "todo",
+            "status": "done",
             "idea": "IDEA-E01, IDEA-E02"
           },
           {

@@ -875,6 +875,128 @@ async function initDB() {
     `);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_reporter_user ON reporter_accuracy(user_id)`);
 
+    // ── AI 대화 기억 (#51) ──
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS chat_memory (
+        id              SERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id),
+        summary         TEXT NOT NULL,
+        keywords        JSONB DEFAULT '[]',
+        emotion         VARCHAR(20),
+        chat_date       DATE NOT NULL DEFAULT CURRENT_DATE,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_chat_memory_user ON chat_memory(user_id, chat_date DESC)`);
+
+    // ── 레어 대사 카드 (#51) ──
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS rare_dialogue_cards (
+        id              SERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id),
+        dialogue        TEXT NOT NULL,
+        rarity          VARCHAR(20) NOT NULL DEFAULT 'common',
+        category        VARCHAR(30),
+        emoji           VARCHAR(10),
+        obtained_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_rare_cards_user ON rare_dialogue_cards(user_id)`);
+
+    // ── 팬 기념일 (#51) ──
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS fan_anniversaries (
+        id              SERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id),
+        type            VARCHAR(30) NOT NULL,
+        label           VARCHAR(100) NOT NULL,
+        anniversary_date DATE NOT NULL,
+        is_custom       BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_anniversary_user ON fan_anniversaries(user_id)`);
+
+    // ── 아티스트 이벤트 (#51) ──
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS artist_events (
+        id              SERIAL PRIMARY KEY,
+        event_type      VARCHAR(30) NOT NULL,
+        title           VARCHAR(200) NOT NULL,
+        event_date      DATE NOT NULL,
+        description     TEXT,
+        special_dialogue TEXT,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // 아티스트 이벤트 시드 데이터
+    await client.query(`
+      INSERT INTO artist_events (event_type, title, event_date, description, special_dialogue) VALUES
+        ('birthday', '아티스트 생일', '2026-05-15', '우리 아티스트의 생일!', '오늘 내 생일이야! 같이 축하해줘서 진짜 고마워 💕'),
+        ('debut', '데뷔 기념일', '2026-03-01', '데뷔 기념일', '오늘 우리 데뷔 기념일이야! 여기까지 함께 와줘서 고마워'),
+        ('comeback', '컴백일', '2026-06-01', '새 앨범 컴백', '드디어 새 앨범이 나왔어! 제일 먼저 너한테 알려주고 싶었어')
+      ON CONFLICT DO NOTHING
+    `);
+
+    // ── 아티스트 일기장 (#52) ──
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS artist_diary (
+        id              SERIAL PRIMARY KEY,
+        week_number     INTEGER NOT NULL,
+        day_of_week     INTEGER NOT NULL,
+        series_title    VARCHAR(100),
+        content         TEXT NOT NULL,
+        mood            VARCHAR(20) NOT NULL DEFAULT 'happy',
+        emoji           VARCHAR(10) NOT NULL DEFAULT '📝',
+        reactions       JSONB NOT NULL DEFAULT '{"heart":0,"strong":0,"sad":0,"funny":0,"fire":0,"star":0}',
+        comment_count   INTEGER NOT NULL DEFAULT 0,
+        publish_date    DATE NOT NULL,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(week_number, day_of_week)
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS diary_comments (
+        id              SERIAL PRIMARY KEY,
+        diary_id        INTEGER NOT NULL REFERENCES artist_diary(id),
+        user_id         INTEGER NOT NULL REFERENCES users(id),
+        comment         VARCHAR(200) NOT NULL,
+        reaction_emoji  VARCHAR(10),
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_diary_comments ON diary_comments(diary_id)`);
+
+    // ── 별똥별 (#52) ──
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS shooting_stars (
+        id              SERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id),
+        star_type       VARCHAR(30) NOT NULL,
+        color           VARCHAR(7) NOT NULL DEFAULT '#f0c040',
+        label           VARCHAR(100) NOT NULL,
+        point_value     INTEGER NOT NULL DEFAULT 1,
+        memory_card     JSONB,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_stars_user ON shooting_stars(user_id)`);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS constellation_progress (
+        id              SERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id) UNIQUE,
+        total_stars     INTEGER NOT NULL DEFAULT 0,
+        total_points    INTEGER NOT NULL DEFAULT 0,
+        exchanged_points INTEGER NOT NULL DEFAULT 0,
+        current_constellation VARCHAR(30) NOT NULL DEFAULT 'little_dipper',
+        completed_constellations JSONB NOT NULL DEFAULT '[]',
+        updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     await client.query('COMMIT');
     console.log('✅ 아스테리아 DB 초기화 완료 — 24개 테이블 생성');
   } catch (err) {
@@ -6488,6 +6610,1019 @@ app.get('/api/court/stats', async (req, res) => {
   } catch (err) {
     console.error('재판소 통계 오류:', err.message);
     res.status(500).json({ error: '재판소 통계 조회 실패' });
+  }
+});
+
+// ══════════════════════════════════════════════
+//  #51 AI 대화 보완 (기억/감정/이벤트/레어대사)
+// ══════════════════════════════════════════════
+
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
+
+// 레어 대사 확률
+const DIALOGUE_RARITY_RATES = [
+  { rarity: 'common', rate: 0.70, emoji: '💬' },
+  { rarity: 'rare', rate: 0.20, emoji: '✨' },
+  { rarity: 'epic', rate: 0.08, emoji: '💎' },
+  { rarity: 'legendary', rate: 0.02, emoji: '👑' },
+];
+
+// 레어 대사 풀 (등급별)
+const RARE_DIALOGUES = {
+  rare: [
+    '사실 오늘 연습하다가 네 생각이 났어. 항상 응원해줘서 힘이 돼',
+    '너한테만 살짝 알려줄게... 다음 주에 깜짝 서프라이즈가 있어!',
+    '가끔 혼자 있을 때 우리 팬들 댓글 다시 읽어봐. 그때마다 웃게 돼',
+    '오늘따라 네가 보고 싶었어. 이상하지? 근데 진심이야',
+  ],
+  epic: [
+    '아직 아무한테도 안 말했는데... 새 곡 작업 중이야. 제목? 비밀! 😉',
+    '너 없었으면 나 여기까지 못 왔을 거야. 진심으로 고마워',
+    '다음 콘서트에서 이 노래 부를 때 너 생각할게. 약속해',
+  ],
+  legendary: [
+    '만약 시간을 되돌릴 수 있다면... 그래도 난 이 길을 선택할 거야. 너를 만날 수 있으니까',
+    '별이 되고 싶었는데, 네가 나를 별로 만들어줬어. 너야말로 진짜 별이야',
+  ],
+};
+
+// fallback 응답 풀
+const FALLBACK_REPLIES = [
+  '오늘 하루 어땠어? 항상 응원하고 있어!',
+  '요즘 열심히 활동하는 거 다 보고 있어. 자랑스러워!',
+  '힘든 일 있으면 언제든 말해. 내가 들어줄게',
+  '오늘도 와줘서 고마워. 너 덕분에 힘이 나',
+  '다음에 무대 올라갈 때 네 생각하면서 할게!',
+  '우리 팬들이 최고야. 특히 너!',
+  '뭔가 좋은 일이 생길 것 같은 예감이야. 기대해도 돼!',
+  '오늘 간식으로 뭐 먹었어? 나는 떡볶이!',
+  '연습 끝나고 쉬면서 너한테 답장하는 중이야',
+  '내일도 만나자! 기다리고 있을게 💕',
+  '오늘 날씨 좋지 않아? 이런 날엔 산책하면서 음악 듣고 싶다',
+  '새벽에 연습하다가 문득 팬들 생각이 났어. 다들 잘 자고 있으려나',
+];
+
+// 대화 시간 제한 (초)
+function getChatTimeLimit(level) {
+  return 600 + (level * 10);
+}
+
+// 리그별 일일 대화 횟수 제한
+const DAILY_CHAT_LIMIT = { dust: 1, star: 2, planet: 3, nova: 4, quasar: 5 };
+
+// 감정 키워드 분석
+function detectEmotion(message) {
+  const emotions = {
+    sad: ['슬퍼', '힘들', '우울', '지쳤', '외로', '눈물', '울었', '포기', '싫어', '아파'],
+    happy: ['좋아', '행복', '기뻐', '신나', '최고', '사랑', '감사', '설레', '웃겨', '대박'],
+    angry: ['화나', '짜증', '열받', '분노', '미치', '답답', '빡치', '싫어', '왜이래'],
+    anxious: ['걱정', '불안', '무서', '긴장', '떨려', '두렵', '시험', '면접'],
+  };
+  for (const [emotion, keywords] of Object.entries(emotions)) {
+    if (keywords.some(k => message.includes(k))) return emotion;
+  }
+  return 'neutral';
+}
+
+// 레어 대사 굴림
+function rollRareDialogue() {
+  const roll = Math.random();
+  let cumulative = 0;
+  for (const tier of DIALOGUE_RARITY_RATES) {
+    cumulative += tier.rate;
+    if (roll <= cumulative) {
+      if (tier.rarity === 'common') return null; // common은 카드 없음
+      const pool_arr = RARE_DIALOGUES[tier.rarity];
+      if (!pool_arr || pool_arr.length === 0) return null;
+      return {
+        dialogue: pool_arr[Math.floor(Math.random() * pool_arr.length)],
+        rarity: tier.rarity,
+        emoji: tier.emoji,
+      };
+    }
+  }
+  return null;
+}
+
+// ── 1) POST /api/chat/ai-talk — AI 아티스트 대화 (핵심!) ──
+app.post('/api/chat/ai-talk', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { message } = req.body;
+    if (!message) return res.status(400).json({ error: 'message 필수' });
+
+    // 유저 정보 조회
+    const userRes = await pool.query(
+      'SELECT nickname, level, league, stat_loy, stat_act, stat_soc, created_at FROM users WHERE id = $1',
+      [userId]
+    );
+    if (userRes.rows.length === 0) return res.status(404).json({ error: '유저 없음' });
+    const user = userRes.rows[0];
+
+    // 일일 대화 횟수 확인
+    const dailyLimit = DAILY_CHAT_LIMIT[user.league] || 1;
+    const todayChats = await pool.query(
+      `SELECT COUNT(*) AS cnt FROM chat_memory WHERE user_id = $1 AND chat_date = CURRENT_DATE`,
+      [userId]
+    );
+    const chatCount = parseInt(todayChats.rows[0].cnt);
+    if (chatCount >= dailyLimit) {
+      return res.status(429).json({
+        error: '오늘 대화 횟수를 모두 사용했습니다.',
+        dailyLimit,
+        nextAvailable: '내일 자정 이후'
+      });
+    }
+
+    // 기억 시스템: 최근 5일치 요약 조회
+    const memories = await pool.query(
+      `SELECT summary, keywords, emotion, chat_date FROM chat_memory
+       WHERE user_id = $1 ORDER BY chat_date DESC LIMIT 5`,
+      [userId]
+    );
+    const memoryContext = memories.rows.length > 0
+      ? memories.rows.map(m => `[${m.chat_date}] ${m.summary} (감정: ${m.emotion || '보통'})`).join('\n')
+      : '첫 대화입니다.';
+
+    // 팬 기념일 체크
+    const today = new Date();
+    const todayMD = `${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    let anniversaryInfo = null;
+
+    // 가입 기념일 체크
+    const joinDate = new Date(user.created_at);
+    const joinMD = `${String(joinDate.getMonth() + 1).padStart(2, '0')}-${String(joinDate.getDate()).padStart(2, '0')}`;
+    if (joinMD === todayMD && joinDate.getFullYear() !== today.getFullYear()) {
+      const years = today.getFullYear() - joinDate.getFullYear();
+      anniversaryInfo = `오늘은 팬의 가입 ${years}주년 기념일!`;
+    }
+
+    // 커스텀 기념일 체크
+    const customAnniv = await pool.query(
+      `SELECT label FROM fan_anniversaries WHERE user_id = $1
+       AND TO_CHAR(anniversary_date, 'MM-DD') = $2`,
+      [userId, todayMD]
+    );
+    if (customAnniv.rows.length > 0) {
+      anniversaryInfo = `오늘은 팬의 기념일: ${customAnniv.rows[0].label}`;
+    }
+
+    // 아티스트 이벤트 체크
+    let eventInfo = null;
+    const eventRes = await pool.query(
+      `SELECT title, special_dialogue FROM artist_events
+       WHERE TO_CHAR(event_date, 'MM-DD') = $1`,
+      [todayMD]
+    );
+    if (eventRes.rows.length > 0) {
+      eventInfo = { title: eventRes.rows[0].title, dialogue: eventRes.rows[0].special_dialogue };
+    }
+
+    // 감정 분석
+    const emotion = detectEmotion(message);
+
+    // AI 응답 생성
+    let reply;
+    const systemPrompt = `너는 K-pop 아티스트야. 팬과 1:1 대화 중이야.
+팬 이름: ${user.nickname}, 레벨: ${user.level}, 리그: ${user.league}
+[기억] 이전 대화 요약:
+${memoryContext}
+${anniversaryInfo ? `[오늘 특별한 날] ${anniversaryInfo}` : ''}
+${eventInfo ? `[아티스트 이벤트] ${eventInfo.title}` : ''}
+[팬 감정] ${emotion === 'sad' ? '팬이 슬퍼하고 있어. 위로해줘.' : emotion === 'happy' ? '팬이 기뻐하고 있어. 함께 기뻐해줘.' : emotion === 'angry' ? '팬이 화가 나 있어. 공감하고 진정시켜줘.' : emotion === 'anxious' ? '팬이 불안해하고 있어. 안심시켜줘.' : '편안한 분위기야.'}
+따뜻하고 친근하게 대화해. 팬의 활동과 성장을 진심으로 응원해.
+유사연애가 아닌 진정한 응원자로서 대화해.
+한국어로 대화하되, 가끔 영어 감탄사를 섞어.
+답변은 200자 이내로 짧고 자연스럽게.`;
+
+    // 아티스트 이벤트 당일이면 특별 대사 우선
+    if (eventInfo && eventInfo.dialogue) {
+      reply = eventInfo.dialogue;
+    } else if (ANTHROPIC_API_KEY) {
+      // Claude API 호출
+      try {
+        const apiRes = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': ANTHROPIC_API_KEY,
+            'anthropic-version': '2023-06-01',
+          },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 300,
+            system: systemPrompt,
+            messages: [{ role: 'user', content: message }],
+          }),
+        });
+        const apiData = await apiRes.json();
+        reply = apiData.content?.[0]?.text || FALLBACK_REPLIES[Math.floor(Math.random() * FALLBACK_REPLIES.length)];
+      } catch (apiErr) {
+        console.error('Claude API 호출 실패, fallback 사용:', apiErr.message);
+        reply = FALLBACK_REPLIES[Math.floor(Math.random() * FALLBACK_REPLIES.length)];
+      }
+    } else {
+      // API 키 없음 → fallback 응답
+      reply = FALLBACK_REPLIES[Math.floor(Math.random() * FALLBACK_REPLIES.length)];
+    }
+
+    // 레어 대사 판정
+    let rareCard = null;
+    const rareRoll = rollRareDialogue();
+    if (rareRoll) {
+      const cardRes = await pool.query(
+        `INSERT INTO rare_dialogue_cards (user_id, dialogue, rarity, category, emoji)
+         VALUES ($1, $2, $3, 'ai_chat', $4) RETURNING id`,
+        [userId, rareRoll.dialogue, rareRoll.rarity, rareRoll.emoji]
+      );
+      rareCard = {
+        id: cardRes.rows[0].id,
+        dialogue: rareRoll.dialogue,
+        rarity: rareRoll.rarity,
+        emoji: rareRoll.emoji,
+        message: `${rareRoll.emoji} ${rareRoll.rarity.toUpperCase()} 대사 카드를 획득했습니다!`
+      };
+    }
+
+    // 대화 요약 자동 저장
+    const shortSummary = message.length > 100 ? message.substring(0, 100) + '...' : message;
+    await pool.query(
+      `INSERT INTO chat_memory (user_id, summary, keywords, emotion, chat_date)
+       VALUES ($1, $2, '[]', $3, CURRENT_DATE)
+       ON CONFLICT DO NOTHING`,
+      [userId, `팬: ${shortSummary} → AI: ${reply.substring(0, 80)}...`, emotion]
+    );
+
+    // 스탯 지급: LOY +1, SOC +1
+    await pool.query(
+      'UPDATE users SET stat_loy = stat_loy + 1, stat_soc = stat_soc + 1 WHERE id = $1',
+      [userId]
+    );
+
+    // 대화 시간 계산
+    const timeLimit = getChatTimeLimit(user.level);
+
+    res.json({
+      reply,
+      emotion,
+      rareCard,
+      chatTimeRemaining: timeLimit,
+      dailyChatsRemaining: dailyLimit - chatCount - 1,
+      anniversary: anniversaryInfo,
+      event: eventInfo ? eventInfo.title : null
+    });
+  } catch (err) {
+    console.error('AI 대화 오류:', err.message);
+    res.status(500).json({ error: 'AI 대화 처리 실패' });
+  }
+});
+
+// ── 2) POST /api/chat/memory/save — 대화 요약 저장 ──
+app.post('/api/chat/memory/save', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { summary, keywords, emotion } = req.body;
+
+    if (!summary) return res.status(400).json({ error: 'summary 필수' });
+
+    // 오늘자 기존 요약 확인
+    const existing = await pool.query(
+      'SELECT id FROM chat_memory WHERE user_id = $1 AND chat_date = CURRENT_DATE',
+      [userId]
+    );
+
+    if (existing.rows.length > 0) {
+      // 기존 요약 업데이트
+      await pool.query(
+        `UPDATE chat_memory SET summary = $1, keywords = $2, emotion = $3
+         WHERE user_id = $4 AND chat_date = CURRENT_DATE`,
+        [summary, JSON.stringify(keywords || []), emotion || 'neutral', userId]
+      );
+    } else {
+      // 새로 생성
+      await pool.query(
+        `INSERT INTO chat_memory (user_id, summary, keywords, emotion)
+         VALUES ($1, $2, $3, $4)`,
+        [userId, summary, JSON.stringify(keywords || []), emotion || 'neutral']
+      );
+    }
+
+    // 30일 초과분 삭제
+    await pool.query(
+      `DELETE FROM chat_memory WHERE user_id = $1 AND chat_date < CURRENT_DATE - 30`,
+      [userId]
+    );
+
+    res.json({ message: '대화 요약 저장 완료' });
+  } catch (err) {
+    console.error('대화 요약 저장 오류:', err.message);
+    res.status(500).json({ error: '대화 요약 저장 실패' });
+  }
+});
+
+// ── 3) GET /api/chat/memory — 내 대화 기억 조회 ──
+app.get('/api/chat/memory', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const result = await pool.query(
+      `SELECT id, summary, keywords, emotion, chat_date FROM chat_memory
+       WHERE user_id = $1 ORDER BY chat_date DESC LIMIT 7`,
+      [userId]
+    );
+    res.json({ memories: result.rows, count: result.rows.length });
+  } catch (err) {
+    console.error('대화 기억 조회 오류:', err.message);
+    res.status(500).json({ error: '대화 기억 조회 실패' });
+  }
+});
+
+// ── 4) POST /api/anniversary/add — 팬 기념일 등록 ──
+app.post('/api/anniversary/add', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { label, anniversary_date, type } = req.body;
+
+    if (!label || !anniversary_date) {
+      return res.status(400).json({ error: 'label, anniversary_date 필수' });
+    }
+
+    const validTypes = ['birthday', 'exam', 'job', 'custom'];
+    const annivType = validTypes.includes(type) ? type : 'custom';
+
+    // 유저당 최대 10개 제한
+    const countRes = await pool.query(
+      'SELECT COUNT(*) AS cnt FROM fan_anniversaries WHERE user_id = $1 AND is_custom = TRUE',
+      [userId]
+    );
+    if (parseInt(countRes.rows[0].cnt) >= 10) {
+      return res.status(400).json({ error: '기념일은 최대 10개까지 등록 가능합니다.' });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO fan_anniversaries (user_id, type, label, anniversary_date, is_custom)
+       VALUES ($1, $2, $3, $4, TRUE) RETURNING *`,
+      [userId, annivType, label, anniversary_date]
+    );
+
+    res.status(201).json({ message: '기념일 등록 완료', anniversary: result.rows[0] });
+  } catch (err) {
+    console.error('기념일 등록 오류:', err.message);
+    res.status(500).json({ error: '기념일 등록 실패' });
+  }
+});
+
+// ── 5) GET /api/anniversary/my — 내 기념일 목록 ──
+app.get('/api/anniversary/my', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // 커스텀 기념일
+    const custom = await pool.query(
+      'SELECT * FROM fan_anniversaries WHERE user_id = $1 ORDER BY anniversary_date',
+      [userId]
+    );
+
+    // 시스템 자동 기념일 계산
+    const userRes = await pool.query('SELECT created_at FROM users WHERE id = $1', [userId]);
+    const systemAnniversaries = [];
+
+    if (userRes.rows.length > 0) {
+      const joinDate = new Date(userRes.rows[0].created_at);
+      systemAnniversaries.push({
+        type: 'join',
+        label: `아스테리아 가입 기념일`,
+        anniversary_date: `${joinDate.getFullYear()}-${String(joinDate.getMonth() + 1).padStart(2, '0')}-${String(joinDate.getDate()).padStart(2, '0')}`,
+        is_custom: false
+      });
+    }
+
+    // 출석 스트릭 기념일
+    const streakRes = await pool.query(
+      'SELECT streak FROM daily_checkin WHERE user_id = $1 ORDER BY checked_date DESC LIMIT 1',
+      [userId]
+    );
+    if (streakRes.rows.length > 0) {
+      const streak = streakRes.rows[0].streak;
+      const milestones = [7, 30, 100, 365];
+      for (const m of milestones) {
+        if (streak >= m) {
+          systemAnniversaries.push({
+            type: 'streak',
+            label: `연속 출석 ${m}일 달성!`,
+            is_custom: false
+          });
+        }
+      }
+    }
+
+    res.json({
+      custom: custom.rows,
+      system: systemAnniversaries,
+      totalCustom: custom.rows.length,
+      maxCustom: 10
+    });
+  } catch (err) {
+    console.error('기념일 조회 오류:', err.message);
+    res.status(500).json({ error: '기념일 조회 실패' });
+  }
+});
+
+// ── 6) GET /api/rare-cards/my — 내 레어 대사 카드 컬렉션 ──
+app.get('/api/rare-cards/my', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const result = await pool.query(
+      'SELECT id, dialogue, rarity, category, emoji, obtained_at FROM rare_dialogue_cards WHERE user_id = $1 ORDER BY obtained_at DESC',
+      [userId]
+    );
+
+    const cards = result.rows.map(c => ({
+      id: c.id,
+      dialogue: c.dialogue,
+      rarity: c.rarity,
+      emoji: c.emoji,
+      obtainedAt: c.obtained_at
+    }));
+
+    // 등급별 통계
+    const stats = { common: 0, rare: 0, epic: 0, legendary: 0 };
+    for (const c of result.rows) {
+      if (stats[c.rarity] !== undefined) stats[c.rarity]++;
+    }
+
+    // 총 수집 가능 카드 수 (rare 4 + epic 3 + legendary 2 = 9종)
+    const totalPossible = 9;
+
+    // 고유 대사 수
+    const uniqueDialogues = new Set(result.rows.filter(c => c.rarity !== 'common').map(c => c.dialogue)).size;
+
+    res.json({
+      cards,
+      stats,
+      totalCards: cards.length,
+      completionRate: `${uniqueDialogues}/${totalPossible} (${Math.round((uniqueDialogues / totalPossible) * 100)}%)`
+    });
+  } catch (err) {
+    console.error('레어 카드 조회 오류:', err.message);
+    res.status(500).json({ error: '레어 카드 조회 실패' });
+  }
+});
+
+// ── 7) GET /api/artist-events — 아티스트 이벤트 목록 ──
+app.get('/api/artist-events', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM artist_events ORDER BY event_date');
+    const todayMD = new Date().toISOString().slice(5, 10);
+
+    const events = result.rows.map(e => ({
+      ...e,
+      isToday: e.event_date.toISOString().slice(5, 10) === todayMD
+    }));
+
+    res.json({
+      events,
+      todayEvent: events.find(e => e.isToday) || null
+    });
+  } catch (err) {
+    console.error('아티스트 이벤트 조회 오류:', err.message);
+    res.status(500).json({ error: '아티스트 이벤트 조회 실패' });
+  }
+});
+
+// ══════════════════════════════════════════════
+//  #52 아티스트 일기장 + 기억의 별똥별
+// ══════════════════════════════════════════════
+
+// 별똥별 타입별 설정
+const STAR_TYPES = {
+  first_join:     { color: '#f0c040', points: 3, label: '첫 가입의 별' },
+  first_chat:     { color: '#fbbf24', points: 2, label: '첫 대화의 별' },
+  streak_7:       { color: '#a78bfa', points: 3, label: '7일 연속 출석' },
+  streak_30:      { color: '#818cf8', points: 5, label: '30일 연속 출석' },
+  streak_100:     { color: '#6366f1', points: 10, label: '100일 연속 출석' },
+  league_up:      { color: '#34d399', points: 5, label: '리그 승격' },
+  rare_card:      { color: '#f472b6', points: 2, label: '레어 대사 획득' },
+  first_vote:     { color: '#fb923c', points: 2, label: '첫 투표 참��' },
+  diary_reaction: { color: '#e879f9', points: 1, label: '일기 반응' },
+  competition:    { color: '#facc40', points: 5, label: '대회 입상' },
+  milestone:      { color: '#06b6d4', points: 3, label: '스탯 마일스톤' },
+};
+
+// 별자리 단계
+const CONSTELLATIONS = [
+  { name: 'little_dipper', label: '작은곰자리', required: 10, emoji: '⭐' },
+  { name: 'big_dipper', label: '큰곰자리', required: 20, emoji: '🌟' },
+  { name: 'orion', label: '오리온자리', required: 35, emoji: '✨' },
+  { name: 'milky_way', label: '은하수', required: 50, emoji: '🌌' },
+  { name: 'universe', label: '우주', required: 100, emoji: '🪐' },
+];
+
+// 별 포인트 교환 상점
+const STAR_EXCHANGE_SHOP = [
+  { id: 1, name: '별빛 무드등', cost: 10, type: 'room_item', rarity: 'rare' },
+  { id: 2, name: '유성우 벽지', cost: 20, type: 'room_item', rarity: 'rare' },
+  { id: 3, name: '별자리 이펙트', cost: 30, type: 'avatar_effect', rarity: 'epic' },
+  { id: 4, name: '은하수 천장', cost: 50, type: 'room_item', rarity: 'epic' },
+  { id: 5, name: '"별의 수호자" 칭호', cost: 80, type: 'title', rarity: 'legendary' },
+  { id: 6, name: '황금 별똥별 이펙트', cost: 100, type: 'avatar_effect', rarity: 'legendary' },
+];
+
+// 감정 키워드 매핑
+const EMOTION_KEYWORDS = {
+  joy: ['기쁘', '행복', '좋아', '최고', 'ㅋㅋ', '웃기', '신나', '짱', '대박'],
+  touched: ['감동', '울컥', '고마', '감사', '눈물', '뭉클', '따뜻'],
+  excited: ['기대', '두근', '설레', '떨려', '와아', '헐'],
+  sad: ['슬프', '힘들', '지치', '울고', '아프', '외로', '그립'],
+  angry: ['화나', '짜증', '열받', '답답', '싫어', '미워'],
+  love: ['사랑', '좋아해', '최애', '❤', '💕', '💗'],
+};
+
+// 댓글 감정 분석 헬퍼
+function analyzeCommentEmotion(text) {
+  const result = {};
+  for (const [emotion, keywords] of Object.entries(EMOTION_KEYWORDS)) {
+    if (keywords.some(k => text.includes(k))) {
+      result[emotion] = (result[emotion] || 0) + 1;
+    }
+  }
+  return Object.keys(result).length > 0 ? result : { joy: 1 };
+}
+
+// 별자리 업데이트 헬퍼
+async function updateConstellation(userId, addedPoints) {
+  // 진행 상태 조회 또는 생성
+  let progress = await pool.query(
+    'SELECT * FROM constellation_progress WHERE user_id = $1', [userId]
+  );
+  if (progress.rows.length === 0) {
+    await pool.query(
+      'INSERT INTO constellation_progress (user_id) VALUES ($1)', [userId]
+    );
+    progress = await pool.query(
+      'SELECT * FROM constellation_progress WHERE user_id = $1', [userId]
+    );
+  }
+  const p = progress.rows[0];
+  const newTotal = p.total_stars + 1;
+  const newPoints = p.total_points + addedPoints;
+  const completed = p.completed_constellations || [];
+
+  // 별자리 완성 체크
+  let currentConstellation = p.current_constellation;
+  let newlyCompleted = null;
+  for (const c of CONSTELLATIONS) {
+    if (newTotal >= c.required && !completed.includes(c.name)) {
+      completed.push(c.name);
+      currentConstellation = c.name;
+      newlyCompleted = c;
+    }
+  }
+
+  await pool.query(
+    `UPDATE constellation_progress SET total_stars = $1, total_points = $2,
+     current_constellation = $3, completed_constellations = $4, updated_at = NOW()
+     WHERE user_id = $5`,
+    [newTotal, newPoints, currentConstellation, JSON.stringify(completed), userId]
+  );
+
+  // 별자리 완성 알림
+  if (newlyCompleted) {
+    await pool.query(
+      `INSERT INTO notifications (user_id, type, title, body, meta)
+       VALUES ($1, 'constellation', $2, $3, $4)`,
+      [userId, `${newlyCompleted.emoji} ${newlyCompleted.label} 별자리 완성!`,
+       `별 ${newlyCompleted.required}개를 모아 ${newlyCompleted.label}를 완성했습니다!`,
+       JSON.stringify({ constellation: newlyCompleted.name })]
+    );
+  }
+
+  return { newTotal, newPoints, currentConstellation, newlyCompleted };
+}
+
+// ── 1) GET /api/diary/today — 오늘의 일기 ──
+app.get('/api/diary/today', async (req, res) => {
+  try {
+    // 오늘 날짜 일기 조회
+    let result = await pool.query(
+      'SELECT * FROM artist_diary WHERE publish_date = CURRENT_DATE'
+    );
+    // 없으면 가장 최근 일기
+    if (result.rows.length === 0) {
+      result = await pool.query(
+        'SELECT * FROM artist_diary ORDER BY publish_date DESC LIMIT 1'
+      );
+    }
+    if (result.rows.length === 0) {
+      return res.json({ diary: null, message: '아직 일기가 없습니다.' });
+    }
+    res.json({ diary: result.rows[0] });
+  } catch (err) {
+    console.error('오늘의 일기 조회 오류:', err.message);
+    res.status(500).json({ error: '일기 조회 실패' });
+  }
+});
+
+// ── 2) GET /api/diary/week/:weekNumber — 주간 시리즈 ──
+app.get('/api/diary/week/:weekNumber', async (req, res) => {
+  try {
+    const weekNumber = parseInt(req.params.weekNumber);
+    const result = await pool.query(
+      'SELECT * FROM artist_diary WHERE week_number = $1 ORDER BY day_of_week',
+      [weekNumber]
+    );
+    const seriesTitle = result.rows.length > 0 ? result.rows[0].series_title : null;
+    res.json({
+      weekNumber,
+      seriesTitle,
+      entries: result.rows,
+      totalEntries: result.rows.length,
+      isComplete: result.rows.length === 7
+    });
+  } catch (err) {
+    console.error('주간 일기 조회 오류:', err.message);
+    res.status(500).json({ error: '주간 일기 조회 실패' });
+  }
+});
+
+// ── 3) POST /api/diary/:diaryId/react — 일기에 반응 ──
+app.post('/api/diary/:diaryId/react', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const diaryId = parseInt(req.params.diaryId);
+    const { emoji } = req.body;
+
+    const validEmojis = ['heart', 'strong', 'sad', 'funny', 'fire', 'star'];
+    if (!emoji || !validEmojis.includes(emoji)) {
+      return res.status(400).json({ error: 'emoji 필수 (heart/strong/sad/funny/fire/star)' });
+    }
+
+    // 일기 존재 확인
+    const diaryRes = await pool.query('SELECT id FROM artist_diary WHERE id = $1', [diaryId]);
+    if (diaryRes.rows.length === 0) {
+      return res.status(404).json({ error: '일기를 찾을 수 없습니다.' });
+    }
+
+    // 하루에 같은 일기에 1번만 반응 가능
+    const dupeCheck = await pool.query(
+      `SELECT id FROM diary_comments WHERE diary_id = $1 AND user_id = $2
+       AND reaction_emoji IS NOT NULL AND created_at::date = CURRENT_DATE`,
+      [diaryId, userId]
+    );
+    if (dupeCheck.rows.length > 0) {
+      return res.status(429).json({ error: '오늘 이미 이 일기에 반응했습니다.' });
+    }
+
+    // 반응 카운트 +1
+    await pool.query(
+      `UPDATE artist_diary SET reactions = jsonb_set(reactions, $1, (COALESCE((reactions->>$2)::int, 0) + 1)::text::jsonb)
+       WHERE id = $3`,
+      [`{${emoji}}`, emoji, diaryId]
+    );
+
+    // 반응 기록 (댓글 테이블에 반응으로 저장)
+    await pool.query(
+      `INSERT INTO diary_comments (diary_id, user_id, comment, reaction_emoji)
+       VALUES ($1, $2, $3, $4)`,
+      [diaryId, userId, `[반응: ${emoji}]`, emoji]
+    );
+
+    // LOY +1, SOC +1
+    await pool.query(
+      'UPDATE users SET stat_loy = stat_loy + 1, stat_soc = stat_soc + 1 WHERE id = $1',
+      [userId]
+    );
+
+    res.json({ message: '반응 완료!', emoji });
+  } catch (err) {
+    console.error('일기 반응 오류:', err.message);
+    res.status(500).json({ error: '일기 반응 실패' });
+  }
+});
+
+// ── 4) POST /api/diary/:diaryId/comment — 일기에 댓글 ──
+app.post('/api/diary/:diaryId/comment', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const diaryId = parseInt(req.params.diaryId);
+    const { comment } = req.body;
+
+    if (!comment || comment.length > 200) {
+      return res.status(400).json({ error: 'comment 필수 (200자 이내)' });
+    }
+
+    // 일기 존재 확인
+    const diaryRes = await pool.query('SELECT id FROM artist_diary WHERE id = $1', [diaryId]);
+    if (diaryRes.rows.length === 0) {
+      return res.status(404).json({ error: '일기를 찾을 수 없습니다.' });
+    }
+
+    // 댓글 저장
+    const result = await pool.query(
+      `INSERT INTO diary_comments (diary_id, user_id, comment) VALUES ($1, $2, $3) RETURNING *`,
+      [diaryId, userId, comment]
+    );
+
+    // comment_count +1
+    await pool.query(
+      'UPDATE artist_diary SET comment_count = comment_count + 1 WHERE id = $1',
+      [diaryId]
+    );
+
+    // SOC +2
+    await pool.query('UPDATE users SET stat_soc = stat_soc + 2 WHERE id = $1', [userId]);
+
+    // 감정 분석
+    const emotionResult = analyzeCommentEmotion(comment);
+
+    res.json({
+      message: '댓글 등록 완료',
+      comment: result.rows[0],
+      emotionAnalysis: emotionResult
+    });
+  } catch (err) {
+    console.error('일기 댓글 오류:', err.message);
+    res.status(500).json({ error: '일기 댓글 실패' });
+  }
+});
+
+// ── 5) POST /api/stars/grant — 별똥별 부여 (시스템 호출용) ──
+app.post('/api/stars/grant', authenticateToken, async (req, res) => {
+  try {
+    const { user_id, star_type } = req.body;
+
+    if (!user_id || !star_type) {
+      return res.status(400).json({ error: 'user_id, star_type 필수' });
+    }
+
+    const starConfig = STAR_TYPES[star_type];
+    if (!starConfig) {
+      return res.status(400).json({ error: '유효하지 않은 star_type', validTypes: Object.keys(STAR_TYPES) });
+    }
+
+    // 현재 스탯 스냅샷
+    const userRes = await pool.query(
+      'SELECT stat_loy, stat_act, stat_soc, stat_kno, stat_cre, stat_lea, level, league FROM users WHERE id = $1',
+      [user_id]
+    );
+    if (userRes.rows.length === 0) {
+      return res.status(404).json({ error: '유저를 찾을 수 없습니다.' });
+    }
+
+    const memoryCard = {
+      date: new Date().toISOString(),
+      label: starConfig.label,
+      stat_snapshot: userRes.rows[0]
+    };
+
+    // 별똥별 생성
+    const starRes = await pool.query(
+      `INSERT INTO shooting_stars (user_id, star_type, color, label, point_value, memory_card)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+      [user_id, star_type, starConfig.color, starConfig.label, starConfig.points, JSON.stringify(memoryCard)]
+    );
+
+    // 별자리 업데이트
+    const constellationResult = await updateConstellation(user_id, starConfig.points);
+
+    // 알림
+    await pool.query(
+      `INSERT INTO notifications (user_id, type, title, body, meta)
+       VALUES ($1, 'shooting_star', $2, $3, $4)`,
+      [user_id, `⭐ 새로운 별똥별이 떨어졌습니다!`,
+       `'${starConfig.label}' — ${starConfig.points}포인트 획득!`,
+       JSON.stringify({ starId: starRes.rows[0].id, star_type, points: starConfig.points })]
+    );
+
+    res.json({
+      message: '별똥별 부여 완료',
+      star: { id: starRes.rows[0].id, type: star_type, ...starConfig },
+      constellation: constellationResult
+    });
+  } catch (err) {
+    console.error('별똥별 부여 오류:', err.message);
+    res.status(500).json({ error: '별똥별 부여 실패' });
+  }
+});
+
+// ── 6) GET /api/stars/my — 내 별똥별 목록 ──
+app.get('/api/stars/my', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const stars = await pool.query(
+      'SELECT id, star_type, color, label, point_value, memory_card, created_at FROM shooting_stars WHERE user_id = $1 ORDER BY created_at DESC',
+      [userId]
+    );
+
+    // 별자리 진행 상태
+    let progress = await pool.query(
+      'SELECT * FROM constellation_progress WHERE user_id = $1', [userId]
+    );
+    if (progress.rows.length === 0) {
+      await pool.query('INSERT INTO constellation_progress (user_id) VALUES ($1)', [userId]);
+      progress = await pool.query('SELECT * FROM constellation_progress WHERE user_id = $1', [userId]);
+    }
+    const p = progress.rows[0];
+
+    // 현재/다음 별자리 정보
+    const currentIdx = CONSTELLATIONS.findIndex(c => c.name === p.current_constellation);
+    const currentConst = CONSTELLATIONS[currentIdx] || CONSTELLATIONS[0];
+    const nextConst = CONSTELLATIONS[currentIdx + 1] || null;
+    const completed = p.completed_constellations || [];
+
+    res.json({
+      stars: stars.rows.map(s => ({
+        id: s.id,
+        type: s.star_type,
+        color: s.color,
+        label: s.label,
+        points: s.point_value,
+        createdAt: s.created_at
+      })),
+      totalStars: p.total_stars,
+      totalPoints: p.total_points,
+      constellation: {
+        current: currentConst.name,
+        currentLabel: currentConst.label,
+        progress: `${p.total_stars}/${nextConst ? nextConst.required : currentConst.required}`,
+        nextName: nextConst ? nextConst.label : '최종 단계 도달!',
+        nextRequired: nextConst ? nextConst.required : null
+      },
+      completed,
+      availableExchangePoints: p.total_points - p.exchanged_points
+    });
+  } catch (err) {
+    console.error('내 별똥별 조회 오류:', err.message);
+    res.status(500).json({ error: '별똥별 조회 실패' });
+  }
+});
+
+// ── 7) POST /api/stars/exchange — 별 포인트 교환 ──
+app.post('/api/stars/exchange', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { shop_item_id } = req.body;
+
+    if (!shop_item_id) return res.status(400).json({ error: 'shop_item_id 필수' });
+
+    const item = STAR_EXCHANGE_SHOP.find(i => i.id === parseInt(shop_item_id));
+    if (!item) {
+      return res.status(404).json({ error: '상점 아이템을 찾을 수 없습니다.', shop: STAR_EXCHANGE_SHOP });
+    }
+
+    // 교환 가능 포인트 확인
+    const progress = await pool.query(
+      'SELECT total_points, exchanged_points FROM constellation_progress WHERE user_id = $1',
+      [userId]
+    );
+    if (progress.rows.length === 0) {
+      return res.status(400).json({ error: '별똥별 포인트가 없습니다.' });
+    }
+    const available = progress.rows[0].total_points - progress.rows[0].exchanged_points;
+    if (available < item.cost) {
+      return res.status(400).json({ error: '포인트가 부족합니다.', available, required: item.cost });
+    }
+
+    // 포인트 차감
+    await pool.query(
+      'UPDATE constellation_progress SET exchanged_points = exchanged_points + $1, updated_at = NOW() WHERE user_id = $2',
+      [item.cost, userId]
+    );
+
+    // 아이템 생성 (artifacts 테이블)
+    await pool.query(
+      `INSERT INTO artifacts (owner_id, item_name, item_type, rarity, description, obtained_via)
+       VALUES ($1, $2, $3, $4, $5, 'star_exchange')`,
+      [userId, item.name, item.type, item.rarity, `별 포인트 ${item.cost}p 교환`]
+    );
+
+    // CRE +3
+    await pool.query('UPDATE users SET stat_cre = stat_cre + 3 WHERE id = $1', [userId]);
+
+    res.json({
+      message: '교환 완료!',
+      item: item,
+      remainingPoints: available - item.cost
+    });
+  } catch (err) {
+    console.error('별 포인트 교환 오류:', err.message);
+    res.status(500).json({ error: '별 포인트 교환 실패' });
+  }
+});
+
+// ── 8) GET /api/stars/constellation — 별자리 진행 상태 ──
+app.get('/api/stars/constellation', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    let progress = await pool.query(
+      'SELECT * FROM constellation_progress WHERE user_id = $1', [userId]
+    );
+    if (progress.rows.length === 0) {
+      await pool.query('INSERT INTO constellation_progress (user_id) VALUES ($1)', [userId]);
+      progress = await pool.query('SELECT * FROM constellation_progress WHERE user_id = $1', [userId]);
+    }
+    const p = progress.rows[0];
+    const completed = p.completed_constellations || [];
+
+    // 전체 별자리 진행률
+    const allConstellations = CONSTELLATIONS.map(c => ({
+      name: c.name,
+      label: c.label,
+      emoji: c.emoji,
+      required: c.required,
+      isCompleted: completed.includes(c.name),
+      progress: Math.min(p.total_stars, c.required),
+    }));
+
+    // 천장 시각화 단계 (별 수에 따라)
+    let ceilingStage;
+    if (p.total_stars >= 100) ceilingStage = 'universe';
+    else if (p.total_stars >= 50) ceilingStage = 'milky_way';
+    else if (p.total_stars >= 35) ceilingStage = 'starfield';
+    else if (p.total_stars >= 20) ceilingStage = 'starry_night';
+    else if (p.total_stars >= 10) ceilingStage = 'few_stars';
+    else ceilingStage = 'dark_sky';
+
+    res.json({
+      constellations: allConstellations,
+      totalStars: p.total_stars,
+      totalPoints: p.total_points,
+      availablePoints: p.total_points - p.exchanged_points,
+      completedCount: completed.length,
+      totalConstellations: CONSTELLATIONS.length,
+      ceilingStage,
+      shop: STAR_EXCHANGE_SHOP
+    });
+  } catch (err) {
+    console.error('별자리 조회 오류:', err.message);
+    res.status(500).json({ error: '별자리 조회 실패' });
+  }
+});
+
+// ── 9) GET /api/emotion/monthly — 월간 감정 리포트 ──
+app.get('/api/emotion/monthly', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // 이번 달 댓글 조회
+    const comments = await pool.query(
+      `SELECT comment FROM diary_comments
+       WHERE user_id = $1 AND reaction_emoji IS NULL
+       AND created_at >= date_trunc('month', CURRENT_DATE)`,
+      [userId]
+    );
+
+    // 감정 집계
+    const emotions = { joy: 0, touched: 0, excited: 0, sad: 0, angry: 0, love: 0 };
+    for (const row of comments.rows) {
+      const detected = analyzeCommentEmotion(row.comment);
+      for (const [emo, count] of Object.entries(detected)) {
+        if (emotions[emo] !== undefined) emotions[emo] += count;
+      }
+    }
+
+    const totalComments = comments.rows.length;
+    const totalEmotions = Object.values(emotions).reduce((a, b) => a + b, 0);
+
+    // 최다 감정
+    const topEmotion = Object.entries(emotions).sort((a, b) => b[1] - a[1])[0];
+    const topEmotionPercent = totalEmotions > 0
+      ? Math.round((topEmotion[1] / totalEmotions) * 100) : 0;
+
+    // 감정별 메시지
+    const emotionMessages = {
+      joy: '이번 달 가장 많이 느낀 감정은 기쁨이에요! 행복한 한 달이었네요 💕',
+      love: '이번 달 사랑이 넘쳤어요! 따뜻한 한 달이었네요 ❤️',
+      touched: '이번 달 감동이 가득했어요! 눈물이 글썽했던 순간들... 🥹',
+      excited: '이번 달 설렘이 가득! 두근두근한 한 달이었어요 💗',
+      sad: '이번 달 좀 힘들었나봐요... 내가 옆에 있을게 🫂',
+      angry: '이번 달 답답한 일이 많았구나... 같이 이겨내자! 💪',
+    };
+
+    const artistResponses = {
+      joy: '지난달 많이 웃었구나! 이번 달도 함께 행복하자!',
+      love: '나도 사랑해! 이번 달도 좋은 일만 가득하길 바라!',
+      touched: '네 진심이 나한테도 전해져. 같이 울고 같이 웃자!',
+      excited: '두근두근한 일이 많았구나! 앞으로도 기대되는 일 가득할 거야!',
+      sad: '힘든 날이 있었구나... 이번 달은 내가 더 힘이 돼줄게!',
+      angry: '화나는 일이 있었다니... 나한테 다 말해도 돼. 들어줄게!',
+    };
+
+    const month = new Date().toISOString().slice(0, 7);
+
+    res.json({
+      month,
+      emotions,
+      topEmotion: topEmotion[0],
+      topEmotionPercent,
+      totalComments,
+      message: emotionMessages[topEmotion[0]] || '이번 달 감정 리포트입니다!',
+      artistResponse: artistResponses[topEmotion[0]] || '이번 달도 함께해서 좋았어!'
+    });
+  } catch (err) {
+    console.error('월간 감정 리포트 오류:', err.message);
+    res.status(500).json({ error: '감정 리포트 조회 실패' });
   }
 });
 
