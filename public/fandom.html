@@ -294,9 +294,9 @@ function drawGround(){
 function drawRoads(){
   ctx.lineWidth=1.5;
   const roads=[
-    [160,700,1680,32],[160,900,1680,32], // 가로
-    [600,380,32,850],[1360,380,32,850],  // 세로
-    [440,1050,1120,28],                   // 하단 가로
+    [W*.08,H*.44,W*.84,32],[W*.08,H*.56,W*.84,32],
+    [W*.3,H*.24,32,H*.53],[W*.68,H*.24,32,H*.53],
+    [W*.22,H*.66,W*.56,28],
   ];
   roads.forEach(([x,y,w,h])=>{
     ctx.fillStyle=t.roadColor;ctx.strokeStyle=t.roadLine;
@@ -403,7 +403,7 @@ i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
 }
 
 function drawPond(){
-  const px=1650,py=950,pw=100,ph=60;
+  const px=W*.83,py=H*.59,pw=W*.05,ph=H*.038;
   const time=Date.now()/1000;
   // 물
   const g=ctx.createRadialGradient(px,py,0,px,py,pw/2);
@@ -423,18 +423,19 @@ function drawPond(){
 
 function drawBridge(){
   ctx.fillStyle=t.roadColor;
-  ctx.beginPath();ctx.roundRect(1600,935,50,14,3);ctx.fill();
+  const bx=W*.8,by2=H*.585;
+  ctx.beginPath();ctx.roundRect(bx,by2,W*.025,14,3);ctx.fill();
   ctx.strokeStyle=t.roadLine;ctx.lineWidth=1;ctx.stroke();
   // 난간
-  ctx.fillRect(1605,929,3,8);ctx.fillRect(1642,929,3,8);
-  ctx.fillRect(1604,928,42,2);
+  ctx.fillRect(bx+5,by2-6,3,8);ctx.fillRect(bx+W*.025-8,by2-6,3,8);
+  ctx.fillRect(bx+4,by2-7,W*.025-8,2);
 }
 
 /* 꽃 위치를 미리 생성 (매 프레임 Math.random 호출 방지) */
 let flowerCache=null;
 function initFlowers(){
   flowerCache=[];
-  const beds=[[350,670,80],[1580,670,70],[380,960,60],[1540,960,65],[700,1080,70],[1200,1080,65]];
+  const beds=[[W*.18,H*.42,W*.04],[W*.79,H*.42,W*.035],[W*.19,H*.6,W*.03],[W*.77,H*.6,W*.033],[W*.35,H*.68,W*.035],[W*.6,H*.68,W*.033]];
   beds.forEach(([fx,fy,fw])=>{
     for(let i=0;i<6;i++){
       flowerCache.push({
@@ -731,7 +732,7 @@ function drawQuasarBuilding(x,y,w,h,s,b){
 }
 
 function drawLamps(){
-  const lp=[[420,700],[780,700],[1200,700],[1520,700],[420,900],[780,900],[1200,900],[1520,900],[680,1050],[1280,1050]];
+  const lp=[[W*.21,H*.44],[W*.39,H*.44],[W*.6,H*.44],[W*.76,H*.44],[W*.21,H*.56],[W*.39,H*.56],[W*.6,H*.56],[W*.76,H*.56],[W*.34,H*.66],[W*.64,H*.66]];
   const time=Date.now()/1000;
   lp.forEach(([lx,ly])=>{
     // 기둥
@@ -930,6 +931,7 @@ function render(league){
   document.getElementById('vw').style.width=W+'px';
   document.getElementById('vw').style.height=H+'px';
   calcBLD(league);
+  flowerCache=null;
   t.stars=({dust:60,star:100,planet:120,nova:150,quasar:180})[league];
   t.sBright=({dust:.4,star:.6,planet:.5,nova:.7,quasar:.85})[league];
   const r=document.documentElement;
@@ -958,7 +960,7 @@ function render(league){
   // NPC
   const nl=document.getElementById('nL');nl.innerHTML='';
   ['StarFan','MoonChild','ArmyLove','PurpleU','Dreamer'].forEach((n,i)=>{
-    const pos=[[600,850],[1350,750],[850,730],[1400,850],[900,1050]];
+    const pos=[[W*.3,H*.53],[W*.68,H*.47],[W*.43,H*.46],[W*.7,H*.53],[W*.45,H*.66]];
     const d=document.createElement('div');d.className='npc';d.id='npc'+i;
     d.style.cssText=`left:${pos[i][0]}px;top:${pos[i][1]}px`;
     const bgc=`rgba(${t.lr},${t.lgr},${t.lb},.15)`;
@@ -990,7 +992,7 @@ function initDrag(){
   cont.addEventListener('touchmove',e=>{const tc=e.touches[0];mv(tc.clientX,tc.clientY)},{passive:true});
   cont.addEventListener('touchend',e=>{if(!moved){const tc=e.changedTouches[0];const a=document.getElementById('myAv');a.style.left=(tc.clientX-cx-12)+'px';a.style.top=(tc.clientY-cy-12)+'px';a.classList.add('walk');setTimeout(()=>a.classList.remove('walk'),700)}en()});
 }
-function animNPC(){document.querySelectorAll('.npc').forEach(n=>{setInterval(()=>{const cl=parseFloat(n.style.left)||900,ct=parseFloat(n.style.top)||800;n.style.left=Math.max(W*.2,Math.min(W*.8,cl+(Math.random()-.5)*50))+'px';n.style.top=Math.max(H*.3,Math.min(H*.7,ct+(Math.random()-.5)*40))+'px'},5000+Math.random()*4000)})}
+function animNPC(){document.querySelectorAll('.npc').forEach(n=>{setInterval(()=>{const cl=parseFloat(n.style.left)||900,ct=parseFloat(n.style.top)||800;n.style.left=Math.max(W*.2,Math.min(W*.8,cl+(Math.random()-.5)*50))+'px';n.style.top=Math.max(H*.3,Math.min(H*.75,ct+(Math.random()-.5)*40))+'px'},5000+Math.random()*4000)})}
 /* playEnt 로직은 DOMContentLoaded에 통합 */
 
 /* 모달 */
