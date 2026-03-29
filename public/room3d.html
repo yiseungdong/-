@@ -26,9 +26,10 @@ html,body {
 
 
 
-.tni.active { color:var(--accent); border-bottom-color:var(--accent); }
-.tni-icon { font-size:17px; }
-.tni-label { font-size:9px; font-weight:500; white-space:nowrap; }
+.top-nav-item { flex-shrink:0; display:flex; flex-direction:column; align-items:center; padding:10px 14px; cursor:pointer; text-decoration:none; color:var(--muted); border-bottom:2px solid transparent; gap:3px; transition:all .2s; }
+.top-nav-item.active { color:var(--accent); border-bottom-color:var(--accent); }
+.top-nav-icon { font-size:18px; }
+.top-nav-label { font-size:9px; font-weight:500; white-space:nowrap; }
 
 /* ── TOP BAR ── */
 .topbar {
@@ -558,12 +559,13 @@ html,body {
 
 <div id="app">
   <nav class="top-nav">
-    <a class="top-nav-item " href="/"><div class="top-nav-icon">🏠</div><div class="top-nav-label">홈</div></a>
-    <a class="top-nav-item " href="/astra.html"><div class="top-nav-icon">⭐</div><div class="top-nav-label">아스트라</div></a>
+    <a class="top-nav-item" href="/fandom.html"><div class="top-nav-icon">🏘️</div><div class="top-nav-label">팬덤</div></a>
+    <a class="top-nav-item" href="/"><div class="top-nav-icon">🏠</div><div class="top-nav-label">홈</div></a>
+    <a class="top-nav-item" href="/astra.html"><div class="top-nav-icon">⭐</div><div class="top-nav-label">아스트라</div></a>
     <a class="top-nav-item active" href="/room3d.html"><div class="top-nav-icon">🏡</div><div class="top-nav-label">내 방</div></a>
-    <a class="top-nav-item " href="/nebula.html"><div class="top-nav-icon">🌌</div><div class="top-nav-label">성궤</div></a>
-    <a class="top-nav-item " href="/avatar.html"><div class="top-nav-icon">🎭</div><div class="top-nav-label">아바타</div></a>
-    <a class="top-nav-item " href="/shop.html"><div class="top-nav-icon">🛒</div><div class="top-nav-label">상점</div></a>
+    <a class="top-nav-item" href="/nebula.html"><div class="top-nav-icon">🌌</div><div class="top-nav-label">성궤</div></a>
+    <a class="top-nav-item" href="/avatar.html"><div class="top-nav-icon">🎭</div><div class="top-nav-label">아바타</div></a>
+    <a class="top-nav-item" href="/shop.html"><div class="top-nav-icon">🛒</div><div class="top-nav-label">상점</div></a>
   </nav>
   <!-- TOP NAV -->
   
