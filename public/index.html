@@ -674,63 +674,158 @@ function showAvChat(msg){
 async function submitBugReport(){var t=localStorage.getItem('accessToken');if(!t){alert('로그인이 필요합니다.');return}try{var r=await fetch('/api/bugs',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},body:JSON.stringify({page:document.getElementById('bugPage').value,issue_type:document.getElementById('bugType').value,description:document.getElementById('bugDesc').value})});var d=await r.json();if(r.ok){showToast(d.message);document.getElementById('bugModal').classList.remove('open');document.getElementById('bugDesc').value=''}else{alert(d.message||'제출 실패')}}catch(e){alert('네트워크 오류')}}
 
 // ── 리그 전환 ──
+const LEAGUE_COLORS = {dust:'#94a3b8',star:'#fbbf24',planet:'#34d399',nova:'#c084fc',quasar:'#f0c040'};
+const LEAGUE_BG = {dust:'#030308',star:'#0a0700',planet:'#000f08',nova:'#0d0020',quasar:'#0a0700'};
+
 const LEAGUE_DATA = {
   dust: {
-    name:'DUST LEAGUE', subtitle:'모든 별의 시작점 · 신생 팬클럽', color:'#94a3b8',
+    name:'DUST LEAGUE', subtitle:'모든 별의 시작점 · 신생 팬클럽', color:'#94a3b8', bg:'#030308',
     fanclubs:[
-      {name:'STARDUST',score:'12,450',rank:1,icon:'⭐',size:380,fontSize:100,orbClass:'r1'},
-      {name:'MOONLIGHT',score:'9,800',rank:2,icon:'🌙',size:200,fontSize:54,orbClass:'r2'},
-      {name:'TWILIGHT',score:'7,200',rank:3,icon:'🌅',size:200,fontSize:54,orbClass:'r3'},
-      {name:'NEBULA KIDS',score:'5,100',rank:4,icon:'💫',size:200,fontSize:54,orbClass:'r4'},
-      {name:'FIRST LIGHT',score:'3,200',rank:5,icon:'✨',size:200,fontSize:54,orbClass:'r5'}
+      {name:'STARDUST',score:12450,icon:'⭐'},{name:'MOONLIGHT',score:9800,icon:'🌙'},
+      {name:'TWILIGHT',score:7200,icon:'🌅'},{name:'NEBULA KIDS',score:5100,icon:'💫'},
+      {name:'FIRST LIGHT',score:3200,icon:'✨'},{name:'ECHO',score:2800,icon:'🔊'},
+      {name:'MIST',score:2400,icon:'🌫️'},{name:'SPARK',score:2100,icon:'⚡'},
+      {name:'PETAL',score:1800,icon:'🌸'},{name:'SHADE',score:1500,icon:'🌑'},
+      {name:'DRIFT',score:1200,icon:'🍂'},{name:'EMBER',score:900,icon:'🔥'},
+      {name:'HAZE',score:700,icon:'💨'},{name:'GRAIN',score:500,icon:'🌾'},
+      {name:'SPECK',score:300,icon:'✦'}
     ]
   },
   star: {
-    name:'STAR LEAGUE', subtitle:'빛나는 도약 · 성장하는 팬클럽', color:'#fbbf24',
+    name:'STAR LEAGUE', subtitle:'빛나는 도약 · 성장하는 팬클럽', color:'#fbbf24', bg:'#0a0700',
     fanclubs:[
-      {name:'GOLDEN WAVE',score:'45,200',rank:1,icon:'🌊',size:380,fontSize:100,orbClass:'r1'},
-      {name:'SUNFLOWER',score:'38,900',rank:2,icon:'🌻',size:200,fontSize:54,orbClass:'r2'},
-      {name:'LIGHTBEAM',score:'31,500',rank:3,icon:'💡',size:200,fontSize:54,orbClass:'r3'},
-      {name:'HONEY BEE',score:'25,800',rank:4,icon:'🐝',size:200,fontSize:54,orbClass:'r4'},
-      {name:'SUNRISE',score:'19,400',rank:5,icon:'🌅',size:200,fontSize:54,orbClass:'r5'}
+      {name:'GOLDEN WAVE',score:45200,icon:'🌊'},{name:'SUNFLOWER',score:38900,icon:'🌻'},
+      {name:'LIGHTBEAM',score:31500,icon:'💡'},{name:'HONEY BEE',score:25800,icon:'🐝'},
+      {name:'SUNRISE',score:19400,icon:'🌅'},{name:'AMBER',score:17200,icon:'💛'},
+      {name:'TOPAZ',score:15500,icon:'💎'},{name:'CANDLE',score:13800,icon:'🕯️'},
+      {name:'GLEAM',score:12100,icon:'✨'},{name:'FLARE',score:10700,icon:'🌟'}
     ]
   },
   planet: {
-    name:'PLANET LEAGUE', subtitle:'궤도에 오른 힘 · 안정된 팬클럽', color:'#34d399',
+    name:'PLANET LEAGUE', subtitle:'궤도에 오른 힘 · 안정된 팬클럽', color:'#34d399', bg:'#000f08',
     fanclubs:[
-      {name:'EVERGREEN',score:'78,500',rank:1,icon:'🌿',size:380,fontSize:100,orbClass:'r1'},
-      {name:'OCEAN DEEP',score:'65,200',rank:2,icon:'🌊',size:200,fontSize:54,orbClass:'r2'},
-      {name:'EARTH CORE',score:'54,800',rank:3,icon:'🌍',size:200,fontSize:54,orbClass:'r3'},
-      {name:'JADE',score:'43,100',rank:4,icon:'💚',size:200,fontSize:54,orbClass:'r4'},
-      {name:'FOREST',score:'35,600',rank:5,icon:'🌲',size:200,fontSize:54,orbClass:'r5'}
+      {name:'EVERGREEN',score:78500,icon:'🌿'},{name:'OCEAN DEEP',score:65200,icon:'🌊'},
+      {name:'EARTH CORE',score:54800,icon:'🌍'},{name:'JADE',score:43100,icon:'💚'},
+      {name:'FOREST',score:35600,icon:'🌲'},{name:'CORAL',score:30200,icon:'🐚'},
+      {name:'MOSS',score:26800,icon:'🍀'},{name:'FERN',score:23400,icon:'🌱'},
+      {name:'CREEK',score:20100,icon:'💧'},{name:'MEADOW',score:17500,icon:'🏕️'}
     ]
   },
   nova: {
-    name:'NOVA LEAGUE', subtitle:'폭발하는 에너지 · 영향력 있는 팬클럽', color:'#c084fc',
+    name:'NOVA LEAGUE', subtitle:'폭발하는 에너지 · 영향력 있는 팬클럽', color:'#c084fc', bg:'#0d0020',
     fanclubs:[
-      {name:'SUPERNOVA',score:'112,000',rank:1,icon:'💜',size:380,fontSize:100,orbClass:'r1'},
-      {name:'PURPLE RAIN',score:'98,700',rank:2,icon:'🔮',size:200,fontSize:54,orbClass:'r2'},
-      {name:'COSMOS',score:'87,300',rank:3,icon:'🌌',size:200,fontSize:54,orbClass:'r3'},
-      {name:'MYSTIC',score:'76,500',rank:4,icon:'✨',size:200,fontSize:54,orbClass:'r4'},
-      {name:'VIOLET',score:'65,200',rank:5,icon:'💟',size:200,fontSize:54,orbClass:'r5'}
+      {name:'SUPERNOVA',score:112000,icon:'💜'},{name:'PURPLE RAIN',score:98700,icon:'🔮'},
+      {name:'COSMOS',score:87300,icon:'🌌'},{name:'MYSTIC',score:76500,icon:'✨'},
+      {name:'VIOLET',score:65200,icon:'💟'},{name:'PRISM',score:56800,icon:'🌈'},
+      {name:'PHANTOM',score:48400,icon:'👻'},{name:'NEBULA X',score:41200,icon:'🌠'},
+      {name:'AURORA B',score:35600,icon:'🌃'},{name:'VORTEX',score:29800,icon:'🌀'}
     ]
   },
   quasar: {
-    name:'QUASAR LEAGUE', subtitle:'제국의 정점 · 실시간 팬클럽 화력 순위', color:'#f0c040',
+    name:'QUASAR LEAGUE', subtitle:'제국의 정점 · 실시간 팬클럽 화력 순위', color:'#f0c040', bg:'#0a0700',
     fanclubs:[
-      {name:'SERENADE',score:'127,450',rank:1,icon:'🌟',size:380,fontSize:100,orbClass:'r1'},
-      {name:'NOVA CORE',score:'98,320',rank:2,icon:'💜',size:200,fontSize:54,orbClass:'r2'},
-      {name:'ECLIPSE',score:'82,100',rank:3,icon:'🔵',size:200,fontSize:54,orbClass:'r3'},
-      {name:'AURORA',score:'71,880',rank:4,icon:'💚',size:200,fontSize:54,orbClass:'r4'},
-      {name:'SOLARIS',score:'63,240',rank:5,icon:'🔴',size:200,fontSize:54,orbClass:'r5'}
+      {name:'SERENADE',score:127450,icon:'🌟'},{name:'NOVA CORE',score:98320,icon:'💜'},
+      {name:'ECLIPSE',score:82100,icon:'🔵'},{name:'AURORA',score:71880,icon:'💚'},
+      {name:'SOLARIS',score:63240,icon:'🔴'}
     ]
   }
 };
 
-// 노드 위치 (1위 중앙, 2위 북, 3위 남, 4위 서, 5위 동)
-const NODE_POSITIONS = [
-  {left:710,top:410}, {left:800,top:55}, {left:800,top:950}, {left:155,top:500}, {left:1445,top:500}
-];
+// 월드 중심 좌표
+const CX = 900, CY = 600;
+
+// 점수 → 반지름 계산 (점수 비례, 리그별 최대/최소 반지름)
+function calcRadius(score, maxScore, isFirst, totalCount) {
+  if (isFirst) return totalCount <= 5 ? 120 : 100;
+  const minR = totalCount <= 5 ? 70 : totalCount <= 10 ? 50 : 30;
+  const maxR = totalCount <= 5 ? 90 : totalCount <= 10 ? 70 : 50;
+  const ratio = Math.max(0.3, score / maxScore);
+  return Math.round(minR + (maxR - minR) * ratio);
+}
+
+// 퀘이사 배치: 1등 중앙, 2~5등 동서남북 접점
+function layoutQuasar(fanclubs) {
+  const maxScore = fanclubs[0].score;
+  const positions = [];
+  const r1 = 120;
+  positions.push({ x: CX, y: CY, r: r1 });
+
+  // 2등=북, 3등=남, 4등=서, 5등=동
+  const dirs = [{dx:0,dy:-1},{dx:0,dy:1},{dx:-1,dy:0},{dx:1,dy:0}];
+  for (let i = 1; i < fanclubs.length && i <= 4; i++) {
+    const ri = calcRadius(fanclubs[i].score, maxScore, false, 5);
+    const d = dirs[i - 1];
+    positions.push({
+      x: CX + d.dx * (r1 + ri),
+      y: CY + d.dy * (r1 + ri),
+      r: ri
+    });
+  }
+  return positions;
+}
+
+// 나선형 배치: 아르키메데스 나선
+function layoutSpiral(fanclubs) {
+  const maxScore = fanclubs[0].score;
+  const count = fanclubs.length;
+  const positions = [];
+  const r1 = calcRadius(maxScore, maxScore, true, count);
+  positions.push({ x: CX, y: CY, r: r1 });
+
+  const startR = r1 + 60;
+  const spacing = count <= 10 ? 55 : count <= 20 ? 40 : 30;
+  const angleStep = count <= 10 ? 0.85 : count <= 20 ? 0.65 : 0.5;
+
+  for (let i = 1; i < count; i++) {
+    const ri = calcRadius(fanclubs[i].score, maxScore, false, count);
+    const angle = i * angleStep;
+    const dist = startR + i * spacing;
+    positions.push({
+      x: CX + Math.cos(angle) * dist,
+      y: CY + Math.sin(angle) * dist,
+      r: ri
+    });
+  }
+  return positions;
+}
+
+// 노드 생성 헬퍼
+function createNode(fc, pos, rank, leagueColor, isFirst) {
+  const node = document.createElement('div');
+  node.className = 'q-node' + (isFirst ? ' c1' : '');
+  node.setAttribute('data-fan', fc.name);
+  // pos는 원 중심 좌표 → left/top은 중심에서 반지름만큼 빼기
+  node.style.left = (pos.x - pos.r) + 'px';
+  node.style.top = (pos.y - pos.r) + 'px';
+  node.onclick = function() { goFromNode(this); };
+
+  const diam = pos.r * 2;
+  const fontSize = isFirst ? Math.round(pos.r * 0.8) : Math.round(pos.r * 0.6);
+  const scoreStr = fc.score.toLocaleString();
+
+  // 1등: 골드빛 광채, 나머지: 리그색 광채
+  const glowColor = isFirst ? 'rgba(240,192,64' : `rgba(${hexToRgb(leagueColor)}`;
+  const orbStyle = isFirst
+    ? `width:${diam}px;height:${diam}px;background:radial-gradient(circle at 35% 35%,rgba(255,215,0,.7),rgba(192,132,252,.45),rgba(7,7,15,.95));box-shadow:0 0 0 3px ${glowColor},.7),0 0 60px ${glowColor},.6),0 0 140px rgba(192,132,252,.4);animation:op1 3s ease-in-out infinite`
+    : `width:${diam}px;height:${diam}px;background:radial-gradient(circle at 35% 35%,${leagueColor}88,${leagueColor}33,rgba(7,7,15,.95));box-shadow:0 0 0 2px ${leagueColor}88,0 0 30px ${leagueColor}55`;
+
+  node.innerHTML = `
+    <div class="q-orb" style="${orbStyle};border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative">
+      <span style="font-size:${fontSize}px">${fc.icon}</span>
+      <div class="q-rank">${rank}</div>
+    </div>
+    <div class="q-lbl"><div class="q-name" style="font-size:${isFirst ? 18 : 13}px">${fc.name}</div><div class="q-score">${scoreStr} QP</div></div>
+  `;
+  return node;
+}
+
+// hex → rgb 문자열
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return `${r},${g},${b}`;
+}
 
 function switchLeague(league) {
   const data = LEAGUE_DATA[league];
@@ -755,24 +850,27 @@ function switchLeague(league) {
   document.querySelectorAll('.qhdr-gem').forEach(g => g.style.color = data.color);
   document.querySelector('.qhdr-sub').textContent = `— ${data.subtitle} —`;
 
+  // 배경색 변경
+  document.body.style.background = data.bg;
+
   // 별자리 노드 업데이트
   const cw = document.getElementById('cw');
-  // 기존 노드 제거
   cw.querySelectorAll('.q-node').forEach(n => n.remove());
 
-  // 새 노드 생성
+  // 배치 계산 (퀘이사: 동서남북 접점, 나머지: 나선형)
+  const positions = league === 'quasar'
+    ? layoutQuasar(data.fanclubs)
+    : layoutSpiral(data.fanclubs);
+
+  // 월드 크기 동적 조정
+  const maxX = Math.max(...positions.map(p => p.x + p.r)) + 100;
+  const maxY = Math.max(...positions.map(p => p.y + p.r)) + 100;
+  cw.style.width = Math.max(1800, maxX) + 'px';
+  cw.style.height = Math.max(1200, maxY) + 'px';
+
+  // 노드 생성
   data.fanclubs.forEach((fc, i) => {
-    const pos = NODE_POSITIONS[i];
-    const node = document.createElement('div');
-    node.className = 'q-node' + (i === 0 ? ' c1' : '');
-    node.setAttribute('data-fan', fc.name);
-    node.style.left = pos.left + 'px';
-    node.style.top = pos.top + 'px';
-    node.onclick = function() { goFromNode(this); };
-    node.innerHTML = `
-      <div class="q-orb ${fc.orbClass}"><span style="font-size:${fc.fontSize}px">${fc.icon}</span><div class="q-rank">${fc.rank}</div></div>
-      <div class="q-lbl"><div class="q-name">${fc.name}</div><div class="q-score">${fc.score} QP</div></div>
-    `;
+    const node = createNode(fc, positions[i], i + 1, data.color, i === 0);
     cw.appendChild(node);
   });
 
@@ -780,6 +878,15 @@ function switchLeague(league) {
   cw.querySelectorAll('.q-ring').forEach(ring => {
     ring.style.borderColor = `${data.color}20`;
   });
+
+  // 뷰포트를 1등 중심으로 이동
+  const vp = document.getElementById('cv');
+  const vw = vp.clientWidth, vh = vp.clientHeight;
+  const tx = vw / 2 - CX, ty = vh / 2 - CY;
+  const cwW = parseInt(cw.style.width), cwH = parseInt(cw.style.height);
+  const clampedTx = Math.min(0, Math.max(vw - cwW, tx));
+  const clampedTy = Math.min(0, Math.max(vh - cwH, ty));
+  cw.style.transform = `translate(${clampedTx}px,${clampedTy}px)`;
 }
 
 // ══════════════════════════════════════════════
