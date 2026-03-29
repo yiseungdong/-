@@ -367,72 +367,14 @@ function drawBuildings(){
   BLD.forEach((b,i)=>{
     const s=t.buildings[i];
     const{x,y,w,h}=b;
-    const depth=w*.22,roofH=h*.22;
-    // 그림자
+    const league=DM.league;
     ctx.fillStyle='rgba(0,0,0,.25)';
     ctx.beginPath();ctx.ellipse(x+w/2,y+h+8,w*.5,10,0,0,Math.PI*2);ctx.fill();
-    // 오른쪽 면
-    ctx.fillStyle=s.wallD;
-    ctx.beginPath();ctx.moveTo(x+w,y+roofH);ctx.lineTo(x+w+depth,y+roofH-depth*.4);
-    ctx.lineTo(x+w+depth,y+h-depth*.3);ctx.lineTo(x+w,y+h);ctx.fill();
-    // 정면
-    ctx.fillStyle=s.wall;
-    ctx.beginPath();ctx.roundRect(x,y+roofH,w,h-roofH,1);ctx.fill();
-    // 정면 하이라이트
-    const fg=ctx.createLinearGradient(x,y+roofH,x,y+roofH+20);
-    fg.addColorStop(0,'rgba(255,255,255,.06)');fg.addColorStop(1,'transparent');
-    ctx.fillStyle=fg;ctx.fillRect(x,y+roofH,w,20);
-    // 지붕
-    ctx.fillStyle=s.roof;
-    ctx.beginPath();ctx.moveTo(x-6,y+roofH+2);ctx.lineTo(x+w/2,y);ctx.lineTo(x+w+6,y+roofH+2);ctx.closePath();ctx.fill();
-    ctx.fillStyle=s.roofH;
-    ctx.beginPath();ctx.moveTo(x+w+6,y+roofH+2);ctx.lineTo(x+w/2,y);ctx.lineTo(x+w/2+depth,y-depth*.3);ctx.lineTo(x+w+depth+6,y+roofH-depth*.3);ctx.closePath();ctx.fill();
-    // 지붕 라인
-    ctx.strokeStyle='rgba(255,255,255,.08)';ctx.lineWidth=.5;
-    ctx.beginPath();ctx.moveTo(x-6,y+roofH+2);ctx.lineTo(x+w/2,y);ctx.lineTo(x+w+6,y+roofH+2);ctx.stroke();
-    // 창문
-    const winW=11,winH=14,gap=5;
-    const cols=Math.max(2,Math.floor((w-14)/(winW+gap)));
-    const rows=Math.max(1,Math.floor((h-roofH-26)/(winH+gap)));
-    const sx=(w-(cols*(winW+gap)-gap))/2;
-    for(let r=0;r<rows;r++){
-      for(let c=0;c<cols;c++){
-        const wx=x+sx+c*(winW+gap),wy=y+roofH+12+r*(winH+gap);
-        const lit=Math.random()>.3;
-        ctx.fillStyle=lit?s.win:'rgba(30,30,50,.4)';
-        ctx.beginPath();ctx.roundRect(wx,wy,winW,winH,1.5);ctx.fill();
-        if(lit){
-          ctx.shadowColor=s.win;ctx.shadowBlur=8;
-          ctx.fillStyle=s.win.replace(/[\d.]+\)$/,'.08)');
-          ctx.fillRect(wx-3,wy+winH,winW+6,8);
-          ctx.shadowBlur=0;
-        }
-        // 창틀
-        ctx.strokeStyle='rgba(255,255,255,.06)';ctx.lineWidth=.3;
-        ctx.beginPath();ctx.roundRect(wx,wy,winW,winH,1.5);ctx.stroke();
-        ctx.beginPath();ctx.moveTo(wx+winW/2,wy);ctx.lineTo(wx+winW/2,wy+winH);ctx.stroke();
-      }
-    }
-    // 문
-    ctx.fillStyle=s.wall;ctx.fillStyle='rgba(40,30,20,.7)';
-    ctx.beginPath();ctx.roundRect(x+w/2-9,y+h-22,18,22,[8,8,0,0]);ctx.fill();
-    ctx.fillStyle='rgba(255,220,100,.4)';ctx.beginPath();ctx.arc(x+w/2+5,y+h-11,1.5,0,Math.PI*2);ctx.fill();
-    // 굴뚝
-    if(s.chimney){
-      ctx.fillStyle=s.wallD;ctx.fillRect(x+w*.65,y+6,8,roofH-4);
-      ctx.fillStyle=s.roof;ctx.fillRect(x+w*.65-1,y+4,10,3);
-    }
-    // 네온 간판
-    if(s.sign&&t.neon){
-      ctx.shadowColor=s.sign;ctx.shadowBlur=10;
-      ctx.fillStyle=s.sign+'40';
-      ctx.beginPath();ctx.roundRect(x+w/2-22,y+roofH+3,44,13,3);ctx.fill();
-      ctx.strokeStyle=s.sign+'80';ctx.lineWidth=.8;ctx.stroke();
-      ctx.font='bold 7px "Noto Sans KR"';ctx.fillStyle=s.sign;ctx.textAlign='center';
-      ctx.fillText(b.nK,x+w/2,y+roofH+13);ctx.textAlign='start';
-      ctx.shadowBlur=0;
-    }
-    // 건물 아래 빛 반사 (라스베가스 느낌)
+    if(league==='dust') drawDustBuilding(x,y,w,h,s,b);
+    else if(league==='star') drawStarBuilding(x,y,w,h,s,b);
+    else if(league==='planet') drawPlanetBuilding(x,y,w,h,s,b);
+    else if(league==='nova') drawNovaBuilding(x,y,w,h,s,b);
+    else if(league==='quasar') drawQuasarBuilding(x,y,w,h,s,b);
     if(t.extraGlow){
       const bg=ctx.createRadialGradient(x+w/2,y+h+5,0,x+w/2,y+h+5,w*.6);
       bg.addColorStop(0,t.lg);bg.addColorStop(1,'transparent');
@@ -440,6 +382,112 @@ function drawBuildings(){
     }
   });
 }
+
+function drawDustBuilding(x,y,w,h,s,b){
+  const isHQ=b.id==='hq';
+  if(isHQ){
+    ctx.fillStyle=s.wall;
+    ctx.beginPath();ctx.moveTo(x,y+h);ctx.lineTo(x+w/2,y);ctx.lineTo(x+w,y+h);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.06)';ctx.lineWidth=.5;
+    for(let j=1;j<4;j++){
+      const ratio=j/4;
+      ctx.beginPath();
+      ctx.moveTo(x+w*ratio*.5,y+h-h*ratio*.1);
+      ctx.lineTo(x+w/2,y+h*(1-ratio));
+      ctx.lineTo(x+w-w*ratio*.5,y+h-h*ratio*.1);
+      ctx.stroke();
+    }
+    ctx.fillStyle='rgba(0,0,0,.4)';
+    ctx.beginPath();ctx.moveTo(x+w/2-12,y+h);ctx.lineTo(x+w/2,y+h-25);ctx.lineTo(x+w/2+12,y+h);ctx.closePath();ctx.fill();
+    ctx.fillStyle=s.roof;ctx.fillRect(x+w/2-1,y-12,2,14);
+    ctx.fillStyle=s.roofH;ctx.beginPath();ctx.moveTo(x+w/2+1,y-12);ctx.lineTo(x+w/2+12,y-8);ctx.lineTo(x+w/2+1,y-4);ctx.closePath();ctx.fill();
+  } else {
+    const hh=h*.7;
+    ctx.fillStyle=s.wall;
+    ctx.beginPath();ctx.roundRect(x+8,y+h-hh,w-16,hh,2);ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.04)';ctx.lineWidth=.5;
+    for(let j=1;j<4;j++){
+      const ly=y+h-hh+j*(hh/4);
+      ctx.beginPath();ctx.moveTo(x+10,ly);ctx.lineTo(x+w-10,ly);ctx.stroke();
+    }
+    ctx.fillStyle=s.roof;
+    ctx.beginPath();ctx.moveTo(x,y+h-hh+2);ctx.lineTo(x+w/2,y+h-hh-22);ctx.lineTo(x+w,y+h-hh+2);ctx.closePath();ctx.fill();
+    ctx.strokeStyle=s.roofH+'60';ctx.lineWidth=.5;
+    for(let j=0;j<3;j++){      const ry=y+h-hh-18+j*7;
+      ctx.beginPath();ctx.moveTo(x+5+j*8,ry+j*2);ctx.quadraticCurveTo(x+w/2,ry-3,x+w-5-j*8,ry+j*2);ctx.stroke();
+    }
+    ctx.fillStyle=s.win;
+    ctx.beginPath();ctx.roundRect(x+w/2-5,y+h-hh+10,10,10,1);ctx.fill();
+    ctx.fillStyle='rgba(40,30,20,.6)';
+    ctx.beginPath();ctx.roundRect(x+w/2-7,y+h-18,14,18,[4,4,0,0]);ctx.fill();
+  }
+  if(b.id==='event'||b.id==='honor'){
+    const fx=x+w/2,fy=y+h+5;
+    const time=Date.now()/1000;
+    ctx.fillStyle='rgba(60,30,10,.5)';
+    for(let j=0;j<5;j++){ctx.beginPath();ctx.arc(fx-6+j*3,fy+2,2,0,Math.PI*2);ctx.fill();}
+    for(let j=0;j<3;j++){
+      const fa=.4+Math.sin(time*4+j*2)*.3;
+      ctx.globalAlpha=fa;ctx.fillStyle=j===0?'#ff6020':'#ffaa30';
+      ctx.beginPath();ctx.ellipse(fx+Math.sin(time*3+j)*3,fy-2-j*4,3-j*.5,5-j,0,0,Math.PI*2);ctx.fill();
+    }
+    ctx.globalAlpha=1;
+  }
+}
+
+function drawStarBuilding(x,y,w,h,s,b){
+  const depth=w*.2,roofH=h*.25;
+  ctx.fillStyle=s.wallD;
+  ctx.beginPath();ctx.moveTo(x+w,y+roofH);ctx.lineTo(x+w+depth,y+roofH-depth*.4);
+  ctx.lineTo(x+w+depth,y+h-depth*.3);ctx.lineTo(x+w,y+h);ctx.fill();
+  ctx.fillStyle=s.wall;
+  ctx.beginPath();ctx.roundRect(x,y+roofH,w,h-roofH,1);ctx.fill();
+  const fg=ctx.createLinearGradient(x,y+roofH,x,y+roofH+20);
+  fg.addColorStop(0,'rgba(255,255,255,.06)');fg.addColorStop(1,'transparent');
+  ctx.fillStyle=fg;ctx.fillRect(x,y+roofH,w,20);
+  ctx.fillStyle=s.roof;
+  ctx.beginPath();ctx.moveTo(x-6,y+roofH+2);ctx.lineTo(x+w/2,y);ctx.lineTo(x+w+6,y+roofH+2);ctx.closePath();ctx.fill();
+  ctx.fillStyle=s.roofH;
+  ctx.beginPath();ctx.moveTo(x+w+6,y+roofH+2);ctx.lineTo(x+w/2,y);ctx.lineTo(x+w/2+depth,y-depth*.3);ctx.lineTo(x+w+depth+6,y+roofH-depth*.3);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.08)';ctx.lineWidth=.5;  ctx.beginPath();ctx.moveTo(x-6,y+roofH+2);ctx.lineTo(x+w/2,y);ctx.lineTo(x+w+6,y+roofH+2);ctx.stroke();
+  const winW=11,winH=14,gap=5;
+  const cols=Math.max(2,Math.floor((w-14)/(winW+gap)));
+  const rows=Math.max(1,Math.floor((h-roofH-26)/(winH+gap)));
+  const sx=(w-(cols*(winW+gap)-gap))/2;
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const wx=x+sx+c*(winW+gap),wy=y+roofH+12+r*(winH+gap);
+      const lit=((r*cols+c+b.x)%3)!==0;
+      ctx.fillStyle=lit?s.win:'rgba(30,30,50,.4)';
+      ctx.beginPath();ctx.roundRect(wx,wy,winW,winH,1.5);ctx.fill();
+      if(lit){ctx.shadowColor=s.win;ctx.shadowBlur=8;ctx.fillStyle=s.win.replace(/[\d.]+\)$/,'.08)');ctx.fillRect(wx-3,wy+winH,winW+6,8);ctx.shadowBlur=0;}
+      ctx.strokeStyle='rgba(255,255,255,.06)';ctx.lineWidth=.3;
+      ctx.beginPath();ctx.roundRect(wx,wy,winW,winH,1.5);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(wx+winW/2,wy);ctx.lineTo(wx+winW/2,wy+winH);ctx.stroke();
+    }
+  }
+  ctx.fillStyle='rgba(40,30,20,.7)';
+  ctx.beginPath();ctx.roundRect(x+w/2-9,y+h-22,18,22,[8,8,0,0]);ctx.fill();
+  ctx.fillStyle='rgba(255,220,100,.4)';ctx.beginPath();ctx.arc(x+w/2+5,y+h-11,1.5,0,Math.PI*2);ctx.fill();
+  if(s.chimney){
+    ctx.fillStyle=s.wallD;ctx.fillRect(x+w*.65,y+6,8,roofH-4);
+    ctx.fillStyle=s.roof;ctx.fillRect(x+w*.65-1,y+4,10,3);
+  }
+  if(s.sign&&t.neon){
+    ctx.shadowColor=s.sign;ctx.shadowBlur=10;
+    ctx.fillStyle=s.sign+'40';
+    ctx.beginPath();ctx.roundRect(x+w/2-22,y+roofH+3,44,13,3);ctx.fill();
+ctx.strokeStyle=s.sign+'80';ctx.lineWidth=.8;ctx.stroke();
+    ctx.font='bold 7px "Noto Sans KR"';ctx.fillStyle=s.sign;ctx.textAlign='center';
+    ctx.fillText(b.nK,x+w/2,y+roofH+13);ctx.textAlign='start';
+    ctx.shadowBlur=0;
+  }
+}
+
+// 플래닛/노바/퀘이사는 Part 2에서 추가 예정 — 임시 fallback
+function drawPlanetBuilding(x,y,w,h,s,b){drawStarBuilding(x,y,w,h,s,b);}
+function drawNovaBuilding(x,y,w,h,s,b){drawStarBuilding(x,y,w,h,s,b);}
+function drawQuasarBuilding(x,y,w,h,s,b){drawStarBuilding(x,y,w,h,s,b);}
 
 function drawLamps(){
   const lp=[[420,700],[780,700],[1200,700],[1520,700],[420,900],[780,900],[1200,900],[1520,900],[680,1050],[1280,1050]];
