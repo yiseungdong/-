@@ -1512,8 +1512,142 @@ async function initDB() {
     await client.query(`CREATE INDEX IF NOT EXISTS idx_mirror_match_events ON mirror_match_events(created_at DESC)`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_season_mvps_season ON season_mvps(season_id, category)`);
 
+    // ── 고급 기능 테이블 (Phase 7, #66~#72) ──
+
+    // ① 아키타입 변경 기록
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS archetype_history (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        previous_archetype VARCHAR(30),
+        new_archetype VARCHAR(30),
+        trigger_stats JSONB,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // ① 소버린 테이블
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS sovereigns (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        fanclub_id INTEGER REFERENCES fanclubs(id),
+        league VARCHAR(20) NOT NULL,
+        grade VARCHAR(20) DEFAULT 'bronze' CHECK (grade IN ('bronze','silver','gold','diamond')),
+        consecutive_seasons INTEGER DEFAULT 1,
+        status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active','grace','revoked')),
+        grace_deadline TIMESTAMP,
+        achieved_at TIMESTAMP DEFAULT NOW(),
+        revoked_at TIMESTAMP,
+        UNIQUE(user_id, fanclub_id)
+      )
+    `);
+
+    // ② 온보딩 퀘스트 진행 테이블
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS onboarding_quests (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        quest_key VARCHAR(30) NOT NULL,
+        quest_title VARCHAR(100) NOT NULL,
+        completed BOOLEAN DEFAULT false,
+        reward_claimed BOOLEAN DEFAULT false,
+        completed_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(user_id, quest_key)
+      )
+    `);
+
+    // ② 개척자 테이블
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS pioneers (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        orbit_number VARCHAR(20) NOT NULL,
+        pioneer_tier VARCHAR(20) DEFAULT 'standard',
+        joined_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(user_id)
+      )
+    `);
+
+    // ③ 명예의 벽 테이블
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS wall_of_honor (
+        id SERIAL PRIMARY KEY,
+        record_type VARCHAR(20) NOT NULL CHECK (record_type IN ('individual','fanclub','global')),
+        category VARCHAR(50) NOT NULL,
+        record_holder_id INTEGER,
+        fanclub_id INTEGER REFERENCES fanclubs(id),
+        league VARCHAR(20),
+        record_value DECIMAL(12,2),
+        record_description TEXT,
+        previous_holder_id INTEGER,
+        season_id INTEGER,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // ③ 순위 알림 일일 요약
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS ranking_daily_summary (
+        id SERIAL PRIMARY KEY,
+        fanclub_id INTEGER REFERENCES fanclubs(id),
+        record_date DATE NOT NULL DEFAULT CURRENT_DATE,
+        rank_start INTEGER,
+        rank_end INTEGER,
+        rank_change INTEGER DEFAULT 0,
+        league VARCHAR(20),
+        summary_message TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(fanclub_id, record_date)
+      )
+    `);
+
+    // ③ AI 모더레이션 로그
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS ai_moderation_log (
+        id SERIAL PRIMARY KEY,
+        target_type VARCHAR(20) NOT NULL CHECK (target_type IN ('chat','post','comment')),
+        target_id INTEGER,
+        user_id INTEGER REFERENCES users(id),
+        fanclub_id INTEGER REFERENCES fanclubs(id),
+        violation_type VARCHAR(30),
+        severity VARCHAR(10) CHECK (severity IN ('low','medium','high','critical')),
+        content_snippet TEXT,
+        action_taken VARCHAR(30),
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // ③ 팬클럽 감정 온도계
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS fanclub_mood (
+        id SERIAL PRIMARY KEY,
+        fanclub_id INTEGER REFERENCES fanclubs(id),
+        record_date DATE NOT NULL DEFAULT CURRENT_DATE,
+        mood_score DECIMAL(3,2) DEFAULT 0.50,
+        positive_ratio DECIMAL(3,2) DEFAULT 0.50,
+        negative_ratio DECIMAL(3,2) DEFAULT 0.10,
+        neutral_ratio DECIMAL(3,2) DEFAULT 0.40,
+        total_messages INTEGER DEFAULT 0,
+        hot_topics JSONB,
+        peak_hour INTEGER,
+        created_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(fanclub_id, record_date)
+      )
+    `);
+
+    // 고급 기능 인덱스
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_archetype_history_user ON archetype_history(user_id, created_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_sovereigns_fanclub ON sovereigns(fanclub_id, status)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_onboarding_user ON onboarding_quests(user_id, quest_key)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_wall_of_honor_type ON wall_of_honor(record_type, category)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_ranking_summary_fanclub ON ranking_daily_summary(fanclub_id, record_date)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_moderation_fanclub ON ai_moderation_log(fanclub_id, created_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_fanclub_mood ON fanclub_mood(fanclub_id, record_date)`);
+
     await client.query('COMMIT');
-    console.log('✅ 아스테리아 DB 초기화 완료 — 45개 테이블 생성');
+    console.log('✅ 아스테리아 DB 초기화 완료 — 52개 테이블 생성');
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('❌ DB 초기화 실패:', err.message);
@@ -2513,20 +2647,30 @@ app.post('/api/user/checkin', authenticateToken, async (req, res) => {
     }
 
     // 소원 에너지 자동 기부 (출석 +10)
-    const userInfo = await pool.query('SELECT fandom_id FROM users WHERE id = $1', [req.user.id]);
+    const userInfo = await pool.query('SELECT fandom_id, level FROM users WHERE id = $1', [req.user.id]);
     let wishEnergyMsg = null;
     if (userInfo.rows[0]?.fandom_id) {
       const contributed = await autoContributeWishEnergy(req.user.id, userInfo.rows[0].fandom_id, 10);
       if (contributed) wishEnergyMsg = '소원 에너지 +10 자동 기부!';
     }
 
+    // 캐치업 AP 보너스 (Lv.30 미만 1.5배)
+    if (userInfo.rows[0]?.level < 30) {
+      const bonusAp = Math.round(10 * 0.5); // 기본 10에 추가 50%
+      await pool.query('UPDATE users SET ap = ap + $1 WHERE id = $2', [bonusAp, req.user.id]);
+    }
+
+    // 온보딩 퀘스트 자동 완료 (첫 출석)
+    await checkOnboardingQuest(req.user.id, 'first_checkin');
+
     res.json({
       message: `출석 완료! 연속 ${streak}일째`,
       streak,
       loyDelta: 1,
-      apDelta: 10,
+      apDelta: userInfo.rows[0]?.level < 30 ? 15 : 10,
       bonus: bonusMessage,
-      wishEnergy: wishEnergyMsg
+      wishEnergy: wishEnergyMsg,
+      catchupActive: userInfo.rows[0]?.level < 30
     });
   } catch (err) {
     console.error('출석 체크 오류:', err);
@@ -10737,6 +10881,720 @@ app.get('/api/season-mvp/hall-of-fame', async (req, res) => {
   }
 });
 
+// ══════════════════════════════════════════════
+//  고급 기능 API (Phase 7, #66~#72)
+// ══════════════════════════════════════════════
+
+// 소버린 리그별 스탯 기준
+const SOVEREIGN_THRESHOLDS = { dust: 20, star: 40, planet: 60, nova: 80, quasar: 95 };
+
+// 온보딩 퀘스트 정의
+const ONBOARDING_QUESTS = [
+  { key: 'first_checkin', title: '첫 출석 체크', reward: 50 },
+  { key: 'customize_avatar', title: '아바타 꾸미기', reward: 50 },
+  { key: 'first_post', title: '첫 게시글 작성', reward: 50 },
+  { key: 'join_org', title: '소모임 가입', reward: 50 },
+  { key: 'first_vote', title: '첫 투표/공감 참여', reward: 50 },
+  { key: 'place_item', title: '방 아이템 1개 배치', reward: 50 },
+  { key: 'first_chat', title: 'AI 아티스트와 첫 대화', reward: 50 }
+];
+
+// 온보딩 퀘스트 자동 완료 헬퍼 (기존 API에서 호출)
+async function checkOnboardingQuest(userId, questKey) {
+  try {
+    const quest = await pool.query(
+      'SELECT id, completed FROM onboarding_quests WHERE user_id = $1 AND quest_key = $2',
+      [userId, questKey]
+    );
+    if (quest.rows.length === 0 || quest.rows[0].completed) return null;
+
+    // 완료 처리 + 보상
+    await pool.query(
+      `UPDATE onboarding_quests SET completed = true, completed_at = NOW(), reward_claimed = true WHERE id = $1`,
+      [quest.rows[0].id]
+    );
+    const reward = ONBOARDING_QUESTS.find(q => q.key === questKey)?.reward || 50;
+    await pool.query('UPDATE users SET stardust = stardust + $1 WHERE id = $2', [reward, userId]);
+
+    // 7개 전부 완료 체크
+    const allQuests = await pool.query(
+      'SELECT COUNT(*) AS total, COUNT(*) FILTER (WHERE completed = true) AS done FROM onboarding_quests WHERE user_id = $1',
+      [userId]
+    );
+    if (parseInt(allQuests.rows[0].total) === 7 && parseInt(allQuests.rows[0].done) === 7) {
+      // 전체 완료 보너스: 스타더스트 150 + 탐험가 뱃지
+      await pool.query('UPDATE users SET stardust = stardust + 150 WHERE id = $1', [userId]);
+      return { questCompleted: true, allCompleted: true, bonus: 150 };
+    }
+    return { questCompleted: true, allCompleted: false, reward };
+  } catch (err) {
+    console.error('온보딩 퀘스트 체크 오류:', err.message);
+    return null;
+  }
+}
+
+// ── ① 성장 엔진 ──
+
+// POST /api/archetype/recalculate — 아키타입 재계산 (배치/관리자 트리거)
+app.post('/api/archetype/recalculate', authenticateToken, async (req, res) => {
+  try {
+    const users = await pool.query(
+      `SELECT id, stat_loy, stat_act, stat_soc, stat_eco, stat_cre, stat_int, archetype
+       FROM users WHERE last_active >= NOW() - INTERVAL '30 days'`
+    );
+
+    let changed = 0;
+    for (const u of users.rows) {
+      const newArch = determineArchetype({
+        loy: u.stat_loy, act: u.stat_act, soc: u.stat_soc,
+        eco: u.stat_eco, cre: u.stat_cre, int: u.stat_int
+      });
+
+      if (newArch.name !== u.archetype) {
+        await pool.query('UPDATE users SET archetype = $1 WHERE id = $2', [newArch.name, u.id]);
+        await pool.query(
+          `INSERT INTO archetype_history (user_id, previous_archetype, new_archetype, trigger_stats)
+           VALUES ($1, $2, $3, $4)`,
+          [u.id, u.archetype, newArch.name, JSON.stringify({
+            LOY: u.stat_loy, ACT: u.stat_act, SOC: u.stat_soc,
+            ECO: u.stat_eco, CRE: u.stat_cre, INT: u.stat_int
+          })]
+        );
+        changed++;
+      }
+    }
+
+    res.json({ message: `아키타입 재계산 완료: ${users.rows.length}명 검사, ${changed}명 변경` });
+  } catch (err) {
+    console.error('아키타입 재계산 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/archetype/history/:userId — 아키타입 변경 이력
+app.get('/api/archetype/history/:userId', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM archetype_history WHERE user_id = $1 ORDER BY created_at DESC',
+      [req.params.userId]
+    );
+    res.json({ history: result.rows });
+  } catch (err) {
+    console.error('아키타입 이력 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// POST /api/sovereign/check — 소버린 자격 확인 (배치/관리자 트리거)
+app.post('/api/sovereign/check', authenticateToken, async (req, res) => {
+  try {
+    const users = await pool.query(
+      `SELECT u.id, u.stat_loy, u.stat_act, u.stat_soc, u.stat_eco, u.stat_cre, u.stat_int,
+              u.league, u.fandom_id
+       FROM users u WHERE u.fandom_id IS NOT NULL AND u.last_active >= NOW() - INTERVAL '30 days'`
+    );
+
+    let newSovereigns = 0, graced = 0, revoked = 0;
+
+    for (const u of users.rows) {
+      const threshold = SOVEREIGN_THRESHOLDS[u.league] || 20;
+      const meetsAll = u.stat_loy >= threshold && u.stat_act >= threshold &&
+                       u.stat_soc >= threshold && u.stat_eco >= threshold &&
+                       u.stat_cre >= threshold && u.stat_int >= threshold;
+
+      const existing = await pool.query(
+        'SELECT * FROM sovereigns WHERE user_id = $1 AND fanclub_id = $2',
+        [u.id, u.fandom_id]
+      );
+
+      if (meetsAll && existing.rows.length === 0) {
+        // 신규 달성
+        await pool.query(
+          `INSERT INTO sovereigns (user_id, fanclub_id, league) VALUES ($1, $2, $3)
+           ON CONFLICT (user_id, fanclub_id) DO UPDATE SET status = 'active', revoked_at = NULL`,
+          [u.id, u.fandom_id, u.league]
+        );
+        newSovereigns++;
+      } else if (meetsAll && existing.rows[0]?.status === 'grace') {
+        // 유예 중 회복
+        await pool.query(
+          `UPDATE sovereigns SET status = 'active', grace_deadline = NULL WHERE user_id = $1 AND fanclub_id = $2`,
+          [u.id, u.fandom_id]
+        );
+      } else if (!meetsAll && existing.rows[0]?.status === 'active') {
+        // 기준 미달 → 유예
+        await pool.query(
+          `UPDATE sovereigns SET status = 'grace', grace_deadline = NOW() + INTERVAL '14 days' WHERE user_id = $1 AND fanclub_id = $2`,
+          [u.id, u.fandom_id]
+        );
+        graced++;
+      }
+    }
+
+    // 유예 기간 만료 → 박탈
+    const revokeResult = await pool.query(
+      `UPDATE sovereigns SET status = 'revoked', revoked_at = NOW()
+       WHERE status = 'grace' AND grace_deadline < NOW() RETURNING id`
+    );
+    revoked = revokeResult.rowCount;
+
+    res.json({ message: `소버린 체크 완료: 신규 ${newSovereigns}, 유예 ${graced}, 박탈 ${revoked}` });
+  } catch (err) {
+    console.error('소버린 체크 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/sovereign/:fanclubId — 팬클럽 소버린 목록
+app.get('/api/sovereign/:fanclubId', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT s.*, u.nickname, u.level, u.archetype
+       FROM sovereigns s JOIN users u ON s.user_id = u.id
+       WHERE s.fanclub_id = $1 AND s.status = 'active'
+       ORDER BY s.grade DESC, s.consecutive_seasons DESC`,
+      [req.params.fanclubId]
+    );
+    res.json({ sovereigns: result.rows });
+  } catch (err) {
+    console.error('소버린 목록 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/sovereign/my — 내 소버린 상태
+app.get('/api/sovereign/my', authenticateToken, async (req, res) => {
+  try {
+    const user = await pool.query(
+      'SELECT stat_loy, stat_act, stat_soc, stat_eco, stat_cre, stat_int, league, fandom_id FROM users WHERE id = $1',
+      [req.user.id]
+    );
+    if (user.rows.length === 0) return res.status(404).json({ message: '유저를 찾을 수 없습니다.' });
+
+    const u = user.rows[0];
+    const threshold = SOVEREIGN_THRESHOLDS[u.league] || 20;
+
+    const sovereign = await pool.query(
+      'SELECT * FROM sovereigns WHERE user_id = $1 AND fanclub_id = $2',
+      [req.user.id, u.fandom_id]
+    );
+
+    // 각 스탯 달성 현황
+    const statStatus = {
+      LOY: { current: u.stat_loy, required: threshold, met: u.stat_loy >= threshold, gap: Math.max(0, threshold - u.stat_loy) },
+      ACT: { current: u.stat_act, required: threshold, met: u.stat_act >= threshold, gap: Math.max(0, threshold - u.stat_act) },
+      SOC: { current: u.stat_soc, required: threshold, met: u.stat_soc >= threshold, gap: Math.max(0, threshold - u.stat_soc) },
+      ECO: { current: u.stat_eco, required: threshold, met: u.stat_eco >= threshold, gap: Math.max(0, threshold - u.stat_eco) },
+      CRE: { current: u.stat_cre, required: threshold, met: u.stat_cre >= threshold, gap: Math.max(0, threshold - u.stat_cre) },
+      INT: { current: u.stat_int, required: threshold, met: u.stat_int >= threshold, gap: Math.max(0, threshold - u.stat_int) }
+    };
+
+    // 가이드 메시지
+    const unmet = Object.entries(statStatus).filter(([, v]) => !v.met);
+    const guide = unmet.length > 0
+      ? unmet.map(([k, v]) => `${k} ${v.gap} 더 필요!`).join(', ')
+      : '모든 조건 달성! 🎉';
+
+    res.json({
+      isSovereign: sovereign.rows.length > 0 && sovereign.rows[0].status === 'active',
+      sovereign: sovereign.rows[0] || null,
+      statStatus,
+      guide,
+      league: u.league
+    });
+  } catch (err) {
+    console.error('내 소버린 상태 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// ── ② 뉴비 케어 ──
+
+// GET /api/catchup/my — 내 캐치업 상태
+app.get('/api/catchup/my', authenticateToken, async (req, res) => {
+  try {
+    const user = await pool.query('SELECT level, exp, ap FROM users WHERE id = $1', [req.user.id]);
+    if (user.rows.length === 0) return res.status(404).json({ message: '유저를 찾을 수 없습니다.' });
+
+    const u = user.rows[0];
+    const isActive = u.level < 30;
+    const apMultiplier = isActive ? 1.5 : 1.0;
+
+    // 서버 평균 레벨
+    const avgLevel = await pool.query('SELECT AVG(level)::integer AS avg FROM users WHERE last_active >= NOW() - INTERVAL \'30 days\'');
+    const serverAvg = avgLevel.rows[0]?.avg || 1;
+
+    // 다음 레벨까지 필요 AP (레벨 * 100 기본)
+    const nextLevelAp = u.level * 100;
+    const remainingAp = Math.max(0, nextLevelAp - u.exp);
+
+    // 추천 미션
+    const missions = [
+      { action: '출석 체크', ap: Math.round(10 * apMultiplier), description: '매일 출석하면 AP를 얻어요!' },
+      { action: '게시글 작성', ap: Math.round(5 * apMultiplier), description: '커뮤니티에 글을 남겨보세요!' },
+      { action: '소원 공감', ap: Math.round(3 * apMultiplier), description: '소원에 공감을 표현해보세요!' }
+    ];
+
+    res.json({
+      level: u.level,
+      isActive,
+      apMultiplier,
+      remainingAp,
+      serverAvgLevel: serverAvg,
+      levelGap: serverAvg - u.level,
+      recommendedMissions: missions
+    });
+  } catch (err) {
+    console.error('캐치업 상태 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// POST /api/onboarding/init — 온보딩 퀘스트 초기화
+app.post('/api/onboarding/init', authenticateToken, async (req, res) => {
+  try {
+    let created = 0;
+    for (const q of ONBOARDING_QUESTS) {
+      try {
+        await pool.query(
+          `INSERT INTO onboarding_quests (user_id, quest_key, quest_title) VALUES ($1, $2, $3)`,
+          [req.user.id, q.key, q.title]
+        );
+        created++;
+      } catch (dupErr) {
+        if (dupErr.code !== '23505') throw dupErr; // 이미 존재하면 스킵
+      }
+    }
+    res.status(201).json({ message: `온보딩 퀘스트 ${created}개 생성 완료`, total: ONBOARDING_QUESTS.length });
+  } catch (err) {
+    console.error('온보딩 초기화 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/onboarding/my — 내 온보딩 퀘스트 현황
+app.get('/api/onboarding/my', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM onboarding_quests WHERE user_id = $1 ORDER BY created_at',
+      [req.user.id]
+    );
+
+    const completedCount = result.rows.filter(q => q.completed).length;
+    const allDone = completedCount === 7;
+
+    res.json({
+      quests: result.rows,
+      completedCount,
+      totalCount: 7,
+      allCompleted: allDone,
+      bonusInfo: allDone ? '🎉 전체 완료! 탐험가 뱃지 + 스타더스트 150 보너스 획득!' : `${7 - completedCount}개 남았어요!`
+    });
+  } catch (err) {
+    console.error('온보딩 현황 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// POST /api/onboarding/complete/:questKey — 퀘스트 완료 처리
+app.post('/api/onboarding/complete/:questKey', authenticateToken, async (req, res) => {
+  try {
+    const result = await checkOnboardingQuest(req.user.id, req.params.questKey);
+    if (!result) return res.status(400).json({ message: '해당 퀘스트가 없거나 이미 완료되었습니다.' });
+
+    if (result.allCompleted) {
+      res.json({ message: '🎉 온보딩 전체 완료! 탐험가 뱃지 + 스타더스트 150 추가 보너스!', ...result });
+    } else {
+      res.json({ message: `퀘스트 완료! 스타더스트 +${result.reward}`, ...result });
+    }
+  } catch (err) {
+    console.error('퀘스트 완료 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/pioneer/check/:userId — 개척자 여부 확인
+app.get('/api/pioneer/check/:userId', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT p.*, u.nickname FROM pioneers p JOIN users u ON p.user_id = u.id WHERE p.user_id = $1`,
+      [req.params.userId]
+    );
+    if (result.rows.length === 0) {
+      return res.json({ isPioneer: false });
+    }
+    res.json({ isPioneer: true, pioneer: result.rows[0] });
+  } catch (err) {
+    console.error('개척자 확인 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// ── ③ 순위 & 명예의 벽 + AI 모더레이션 ──
+
+// GET /api/ranking/daily/:fanclubId — 오늘의 순위 요약
+app.get('/api/ranking/daily/:fanclubId', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM ranking_daily_summary WHERE fanclub_id = $1 AND record_date = CURRENT_DATE',
+      [req.params.fanclubId]
+    );
+    if (result.rows.length === 0) {
+      return res.json({ summary: null, message: '오늘의 순위 데이터가 아직 없습니다.' });
+    }
+    res.json({ summary: result.rows[0] });
+  } catch (err) {
+    console.error('순위 요약 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/ranking/history/:fanclubId — 순위 변동 히스토리 (30일)
+app.get('/api/ranking/history/:fanclubId', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT record_date, rank_end, rank_change, summary_message
+       FROM ranking_daily_summary WHERE fanclub_id = $1
+       ORDER BY record_date DESC LIMIT 30`,
+      [req.params.fanclubId]
+    );
+    res.json({ history: result.rows });
+  } catch (err) {
+    console.error('순위 히스토리 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/honor-wall — 명예의 벽 전체 조회
+app.get('/api/honor-wall', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT wh.*, u.nickname AS holder_nickname, f.name AS fanclub_name
+       FROM wall_of_honor wh
+       LEFT JOIN users u ON wh.record_holder_id = u.id
+       LEFT JOIN fanclubs f ON wh.fanclub_id = f.id
+       ORDER BY wh.created_at DESC LIMIT 100`
+    );
+    res.json({ records: result.rows });
+  } catch (err) {
+    console.error('명예의 벽 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/honor-wall/:recordType — 명예의 벽 카테고리별 조회
+app.get('/api/honor-wall/:recordType', async (req, res) => {
+  try {
+    const validTypes = ['individual', 'fanclub', 'global'];
+    if (!validTypes.includes(req.params.recordType)) {
+      return res.status(400).json({ message: 'recordType은 individual, fanclub, global 중 하나여야 합니다.' });
+    }
+    const result = await pool.query(
+      `SELECT wh.*, u.nickname AS holder_nickname, f.name AS fanclub_name
+       FROM wall_of_honor wh
+       LEFT JOIN users u ON wh.record_holder_id = u.id
+       LEFT JOIN fanclubs f ON wh.fanclub_id = f.id
+       WHERE wh.record_type = $1
+       ORDER BY wh.created_at DESC`,
+      [req.params.recordType]
+    );
+    res.json({ records: result.rows });
+  } catch (err) {
+    console.error('명예의 벽 카테고리 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// POST /api/honor-wall/check — 기록 갱신 체크 (배치/관리자 트리거)
+app.post('/api/honor-wall/check', authenticateToken, async (req, res) => {
+  try {
+    let newRecords = 0;
+
+    // ── 개인 기록 체크 ──
+    // 최고 레벨
+    const topLevel = await pool.query('SELECT id, level, nickname FROM users ORDER BY level DESC LIMIT 1');
+    if (topLevel.rows[0]) {
+      const existing = await pool.query(
+        `SELECT record_value FROM wall_of_honor WHERE record_type = 'individual' AND category = 'highest_level' ORDER BY record_value DESC LIMIT 1`
+      );
+      if (!existing.rows[0] || topLevel.rows[0].level > parseFloat(existing.rows[0].record_value)) {
+        await pool.query(
+          `INSERT INTO wall_of_honor (record_type, category, record_holder_id, record_value, record_description)
+           VALUES ('individual', 'highest_level', $1, $2, $3)`,
+          [topLevel.rows[0].id, topLevel.rows[0].level, `최고 레벨 Lv.${topLevel.rows[0].level} 달성 — ${topLevel.rows[0].nickname}`]
+        );
+        newRecords++;
+      }
+    }
+
+    // 최다 연속 출석
+    const topStreak = await pool.query(
+      'SELECT user_id, streak FROM daily_checkin ORDER BY streak DESC LIMIT 1'
+    );
+    if (topStreak.rows[0]) {
+      const existing = await pool.query(
+        `SELECT record_value FROM wall_of_honor WHERE record_type = 'individual' AND category = 'longest_streak' ORDER BY record_value DESC LIMIT 1`
+      );
+      if (!existing.rows[0] || topStreak.rows[0].streak > parseFloat(existing.rows[0].record_value)) {
+        await pool.query(
+          `INSERT INTO wall_of_honor (record_type, category, record_holder_id, record_value, record_description)
+           VALUES ('individual', 'longest_streak', $1, $2, $3)`,
+          [topStreak.rows[0].user_id, topStreak.rows[0].streak, `최다 연속 출석 ${topStreak.rows[0].streak}일`]
+        );
+        newRecords++;
+      }
+    }
+
+    // ── 팬클럽 기록 체크 ──
+    // 최고 에너지
+    const topEnergy = await pool.query('SELECT id, name, energy FROM fanclubs ORDER BY energy DESC LIMIT 1');
+    if (topEnergy.rows[0]) {
+      const existing = await pool.query(
+        `SELECT record_value FROM wall_of_honor WHERE record_type = 'fanclub' AND category = 'highest_energy' ORDER BY record_value DESC LIMIT 1`
+      );
+      if (!existing.rows[0] || topEnergy.rows[0].energy > parseFloat(existing.rows[0].record_value)) {
+        await pool.query(
+          `INSERT INTO wall_of_honor (record_type, category, fanclub_id, record_value, record_description)
+           VALUES ('fanclub', 'highest_energy', $1, $2, $3)`,
+          [topEnergy.rows[0].id, topEnergy.rows[0].energy, `최고 에너지 ${topEnergy.rows[0].energy} — ${topEnergy.rows[0].name}`]
+        );
+        newRecords++;
+        if (newRecords > 0) {
+          io.emit('honor_wall_update', { message: '🏆 명예의 벽에 새 기록이 추가되었습니다!' });
+        }
+      }
+    }
+
+    res.json({ message: `명예의 벽 체크 완료: ${newRecords}건 신규 기록` });
+  } catch (err) {
+    console.error('명예의 벽 체크 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// POST /api/moderation/analyze — AI 모더레이션 분석
+app.post('/api/moderation/analyze', authenticateToken, async (req, res) => {
+  try {
+    const { content, target_type, target_id, user_id, fanclub_id } = req.body;
+    if (!content || !target_type) {
+      return res.status(400).json({ message: 'content, target_type은 필수입니다.' });
+    }
+
+    // Anthropic API 호출 (환경변수에 API 키 설정 필요)
+    const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+    if (!ANTHROPIC_API_KEY) {
+      return res.status(503).json({ message: 'AI 모더레이션 API 키가 설정되지 않았습니다.' });
+    }
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 200,
+        messages: [{
+          role: 'user',
+          content: `다음 텍스트가 커뮤니티 규칙을 위반하는지 분석해주세요. JSON으로만 응답하세요.
+{"violation": true/false, "type": "욕설/비방/혐오/스팸/정상", "severity": "low/medium/high/critical", "reason": "이유"}
+
+텍스트: "${content.substring(0, 500)}"`
+        }]
+      })
+    });
+
+    const aiResult = await response.json();
+    const analysis = JSON.parse(aiResult.content?.[0]?.text || '{"violation":false,"type":"정상","severity":"low","reason":""}');
+
+    if (analysis.violation) {
+      // 위반 기록 저장
+      await pool.query(
+        `INSERT INTO ai_moderation_log (target_type, target_id, user_id, fanclub_id, violation_type, severity, content_snippet, action_taken)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [target_type, target_id || null, user_id || req.user.id, fanclub_id || null,
+         analysis.type, analysis.severity, content.substring(0, 200),
+         analysis.severity === 'critical' ? 'blocked' : analysis.severity === 'high' ? 'admin_alert' : analysis.severity === 'medium' ? 'hidden' : 'warned']
+      );
+    }
+
+    res.json({ analysis, violation: analysis.violation });
+  } catch (err) {
+    console.error('AI 모더레이션 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/moderation/log/:fanclubId — 모더레이션 로그 조회 (관리자용)
+app.get('/api/moderation/log/:fanclubId', authenticateToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT aml.*, u.nickname FROM ai_moderation_log aml
+       LEFT JOIN users u ON aml.user_id = u.id
+       WHERE aml.fanclub_id = $1 ORDER BY aml.created_at DESC LIMIT 50`,
+      [req.params.fanclubId]
+    );
+    res.json({ logs: result.rows });
+  } catch (err) {
+    console.error('모더레이션 로그 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/mood/:fanclubId — 팬클럽 감정 온도계
+app.get('/api/mood/:fanclubId', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM fanclub_mood WHERE fanclub_id = $1 ORDER BY record_date DESC LIMIT 7`,
+      [req.params.fanclubId]
+    );
+    res.json({ moods: result.rows });
+  } catch (err) {
+    console.error('감정 온도계 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// POST /api/mood/analyze — 감정 분석 (배치/관리자 트리거)
+app.post('/api/mood/analyze', authenticateToken, async (req, res) => {
+  try {
+    const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+    if (!ANTHROPIC_API_KEY) {
+      return res.status(503).json({ message: 'AI API 키가 설정되지 않았습니다.' });
+    }
+
+    const fanclubs = await pool.query('SELECT id, name FROM fanclubs');
+    let analyzed = 0;
+
+    for (const fc of fanclubs.rows) {
+      // 오늘 채팅 메시지 샘플 (최대 100개)
+      const messages = await pool.query(
+        `SELECT content FROM chat_messages WHERE fanclub_id = $1 AND created_at::date = CURRENT_DATE ORDER BY created_at DESC LIMIT 100`,
+        [fc.id]
+      );
+      if (messages.rows.length === 0) continue;
+
+      const sampleText = messages.rows.map(m => m.content).join('\n').substring(0, 2000);
+
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 300,
+          messages: [{
+            role: 'user',
+            content: `다음 팬클럽 채팅 메시지들의 감정을 분석해주세요. JSON으로만 응답하세요.
+{"mood_score": 0.0~1.0, "positive_ratio": 0~1, "negative_ratio": 0~1, "neutral_ratio": 0~1, "hot_topics": ["주제1","주제2","주제3"], "peak_mood": "긍정/부정/중립"}
+
+메시지들:
+${sampleText}`
+          }]
+        })
+      });
+
+      const aiResult = await response.json();
+      const mood = JSON.parse(aiResult.content?.[0]?.text || '{"mood_score":0.5,"positive_ratio":0.5,"negative_ratio":0.1,"neutral_ratio":0.4,"hot_topics":[],"peak_mood":"중립"}');
+
+      await pool.query(
+        `INSERT INTO fanclub_mood (fanclub_id, mood_score, positive_ratio, negative_ratio, neutral_ratio, total_messages, hot_topics)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         ON CONFLICT (fanclub_id, record_date) DO UPDATE SET
+           mood_score = $2, positive_ratio = $3, negative_ratio = $4, neutral_ratio = $5, total_messages = $6, hot_topics = $7`,
+        [fc.id, mood.mood_score, mood.positive_ratio, mood.negative_ratio, mood.neutral_ratio, messages.rows.length, JSON.stringify(mood.hot_topics)]
+      );
+
+      // 감정 저하 경고
+      if (mood.mood_score < 0.3) {
+        io.emit('mood_warning', { fanclubId: fc.id, fanclubName: fc.name, moodScore: mood.mood_score,
+          message: `⚠️ ${fc.name} 팬클럽 감정 저하 경고! (온도: ${mood.mood_score})` });
+      }
+      analyzed++;
+    }
+
+    res.json({ message: `감정 분석 완료: ${analyzed}개 팬클럽` });
+  } catch (err) {
+    console.error('감정 분석 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/insight/:fanclubId — 주간 인사이트 리포트
+app.get('/api/insight/:fanclubId', async (req, res) => {
+  try {
+    const fcId = req.params.fanclubId;
+
+    // 최근 7일 감정 데이터
+    const moods = await pool.query(
+      'SELECT * FROM fanclub_mood WHERE fanclub_id = $1 ORDER BY record_date DESC LIMIT 7', [fcId]
+    );
+
+    // 최근 7일 활동 데이터
+    const activity = await pool.query(
+      `SELECT record_date, energy_total, active_members, peak_hour
+       FROM firepower_daily WHERE fanclub_id = $1 ORDER BY record_date DESC LIMIT 7`, [fcId]
+    );
+
+    // 전주 대비 활동량 변화
+    const thisWeek = await pool.query(
+      `SELECT COALESCE(SUM(energy_total), 0) AS total FROM firepower_daily
+       WHERE fanclub_id = $1 AND record_date >= CURRENT_DATE - 7`, [fcId]
+    );
+    const lastWeek = await pool.query(
+      `SELECT COALESCE(SUM(energy_total), 0) AS total FROM firepower_daily
+       WHERE fanclub_id = $1 AND record_date >= CURRENT_DATE - 14 AND record_date < CURRENT_DATE - 7`, [fcId]
+    );
+
+    const thisTotal = parseInt(thisWeek.rows[0].total);
+    const lastTotal = parseInt(lastWeek.rows[0].total);
+    const changePercent = lastTotal > 0 ? Math.round(((thisTotal - lastTotal) / lastTotal) * 100) : 0;
+
+    // 신규 멤버
+    const newMembers = await pool.query(
+      `SELECT COUNT(*) AS cnt FROM users WHERE fandom_id = $1 AND created_at >= NOW() - INTERVAL '7 days'`, [fcId]
+    );
+
+    // MVP 후보 (최다 활동 TOP 3)
+    const mvpCandidates = await pool.query(
+      `SELECT u.id, u.nickname, u.ap FROM users u
+       WHERE u.fandom_id = $1 AND u.last_active >= NOW() - INTERVAL '7 days'
+       ORDER BY u.ap DESC LIMIT 3`, [fcId]
+    );
+
+    // 인기 토론 주제 (감정 온도에서 추출)
+    const hotTopics = moods.rows.flatMap(m => {
+      try { return JSON.parse(m.hot_topics || '[]'); } catch { return []; }
+    });
+    const topicCounts = {};
+    hotTopics.forEach(t => { topicCounts[t] = (topicCounts[t] || 0) + 1; });
+    const topTopics = Object.entries(topicCounts).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([t]) => t);
+
+    // 가장 활발한 시간대
+    const peakHours = activity.rows.map(a => a.peak_hour).filter(h => h != null);
+    const avgPeakHour = peakHours.length > 0 ? Math.round(peakHours.reduce((a, b) => a + b, 0) / peakHours.length) : null;
+
+    res.json({
+      report: {
+        peakHour: avgPeakHour !== null ? `${avgPeakHour}시` : '데이터 없음',
+        hotTopics: topTopics,
+        moodTrend: moods.rows.map(m => ({ date: m.record_date, score: m.mood_score })),
+        activityChange: { thisWeek: thisTotal, lastWeek: lastTotal, changePercent: `${changePercent > 0 ? '+' : ''}${changePercent}%` },
+        newMemberCount: parseInt(newMembers.rows[0].cnt),
+        mvpCandidates: mvpCandidates.rows
+      }
+    });
+  } catch (err) {
+    console.error('인사이트 리포트 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
 // ── SPA fallback ──
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
@@ -11452,6 +12310,188 @@ cron.schedule('5 0 * * *', async () => {
   }
 });
 
+// Cron 14. 월/목 자정 — 아키타입 재계산 + 소버린 체크
+cron.schedule('0 0 * * 1,4', async () => {
+  console.log('⏰ [CRON] 아키타입 재계산 + 소버린 체크 시작...');
+  try {
+    // ── 아키타입 재계산 ──
+    const users = await pool.query(
+      `SELECT id, stat_loy, stat_act, stat_soc, stat_eco, stat_cre, stat_int, archetype, league, fandom_id
+       FROM users WHERE last_active >= NOW() - INTERVAL '30 days'`
+    );
+    let archetypeChanged = 0;
+
+    for (const u of users.rows) {
+      const newArch = determineArchetype({
+        loy: u.stat_loy, act: u.stat_act, soc: u.stat_soc,
+        eco: u.stat_eco, cre: u.stat_cre, int: u.stat_int
+      });
+      if (newArch.name !== u.archetype) {
+        await pool.query('UPDATE users SET archetype = $1 WHERE id = $2', [newArch.name, u.id]);
+        await pool.query(
+          `INSERT INTO archetype_history (user_id, previous_archetype, new_archetype, trigger_stats) VALUES ($1, $2, $3, $4)`,
+          [u.id, u.archetype, newArch.name, JSON.stringify({ LOY: u.stat_loy, ACT: u.stat_act, SOC: u.stat_soc, ECO: u.stat_eco, CRE: u.stat_cre, INT: u.stat_int })]
+        );
+        archetypeChanged++;
+      }
+    }
+    console.log(`  🔄 아키타입: ${users.rows.length}명 검사, ${archetypeChanged}명 변경`);
+
+    // ── 소버린 체크 ──
+    let newSov = 0, graced = 0;
+    for (const u of users.rows) {
+      if (!u.fandom_id) continue;
+      const threshold = SOVEREIGN_THRESHOLDS[u.league] || 20;
+      const meetsAll = u.stat_loy >= threshold && u.stat_act >= threshold &&
+                       u.stat_soc >= threshold && u.stat_eco >= threshold &&
+                       u.stat_cre >= threshold && u.stat_int >= threshold;
+
+      const existing = await pool.query('SELECT * FROM sovereigns WHERE user_id = $1 AND fanclub_id = $2', [u.id, u.fandom_id]);
+
+      if (meetsAll && existing.rows.length === 0) {
+        await pool.query(
+          `INSERT INTO sovereigns (user_id, fanclub_id, league) VALUES ($1, $2, $3) ON CONFLICT (user_id, fanclub_id) DO UPDATE SET status = 'active', revoked_at = NULL`,
+          [u.id, u.fandom_id, u.league]
+        );
+        newSov++;
+      } else if (meetsAll && existing.rows[0]?.status === 'grace') {
+        await pool.query(`UPDATE sovereigns SET status = 'active', grace_deadline = NULL WHERE user_id = $1 AND fanclub_id = $2`, [u.id, u.fandom_id]);
+      } else if (!meetsAll && existing.rows[0]?.status === 'active') {
+        await pool.query(`UPDATE sovereigns SET status = 'grace', grace_deadline = NOW() + INTERVAL '14 days' WHERE user_id = $1 AND fanclub_id = $2`, [u.id, u.fandom_id]);
+        graced++;
+      }
+    }
+    const revoked = await pool.query(`UPDATE sovereigns SET status = 'revoked', revoked_at = NOW() WHERE status = 'grace' AND grace_deadline < NOW()`);
+    console.log(`  👑 소버린: 신규 ${newSov}, 유예 ${graced}, 박탈 ${revoked.rowCount}`);
+    console.log('✅ [CRON] 아키타입 + 소버린 완료');
+  } catch (err) {
+    console.error('❌ [CRON] 아키타입/소버린 오류:', err.message);
+  }
+});
+
+// Cron 15. 매일 04:00 — 순위 일일 요약 + 명예의 벽 체크
+cron.schedule('0 4 * * *', async () => {
+  console.log('⏰ [CRON] 순위 요약 + 명예의 벽 체크 시작...');
+  try {
+    // ── 순위 일일 요약 ──
+    const leagues = ['dust', 'star', 'planet', 'nova', 'quasar'];
+    for (const league of leagues) {
+      const clubs = await pool.query(
+        'SELECT id, name, energy FROM fanclubs WHERE league = $1 ORDER BY energy DESC', [league]
+      );
+
+      for (let i = 0; i < clubs.rows.length; i++) {
+        const fc = clubs.rows[i];
+        const rankEnd = i + 1;
+
+        // 어제 순위 조회
+        const yesterday = await pool.query(
+          `SELECT rank_end FROM ranking_daily_summary WHERE fanclub_id = $1 AND record_date = CURRENT_DATE - 1`, [fc.id]
+        );
+        const rankStart = yesterday.rows[0]?.rank_end || rankEnd;
+        const change = rankStart - rankEnd; // 양수 = 상승
+
+        let message = `현재 ${league} 리그 ${rankEnd}위`;
+        if (change > 0) message = `🔺 ${change}칸 상승! ${message}`;
+        else if (change < 0) message = `🔻 ${Math.abs(change)}칸 하락. ${message}`;
+        else message = `➡️ 순위 유지. ${message}`;
+
+        await pool.query(
+          `INSERT INTO ranking_daily_summary (fanclub_id, rank_start, rank_end, rank_change, league, summary_message)
+           VALUES ($1, $2, $3, $4, $5, $6)
+           ON CONFLICT (fanclub_id, record_date) DO UPDATE SET rank_start = $2, rank_end = $3, rank_change = $4, summary_message = $6`,
+          [fc.id, rankStart, rankEnd, change, league, message]
+        );
+
+        // TOP 10 진입/이탈 알림
+        if (rankEnd <= 10 && rankStart > 10) {
+          io.emit('ranking_alert', { fanclubId: fc.id, message: `🎉 ${fc.name}이(가) TOP 10에 진입했습니다! (${rankEnd}위)` });
+        }
+        // 1등 달성 알림
+        if (rankEnd === 1 && rankStart !== 1) {
+          io.emit('ranking_champion', { fanclubId: fc.id, league, message: `🏆 ${fc.name}이(가) ${league} 리그 1등을 달성했습니다!` });
+        }
+      }
+    }
+
+    // ── 명예의 벽 기록 체크 ──
+    let newRecords = 0;
+    const topLevel = await pool.query('SELECT id, level, nickname FROM users ORDER BY level DESC LIMIT 1');
+    if (topLevel.rows[0]) {
+      const existing = await pool.query(`SELECT record_value FROM wall_of_honor WHERE record_type = 'individual' AND category = 'highest_level' ORDER BY record_value DESC LIMIT 1`);
+      if (!existing.rows[0] || topLevel.rows[0].level > parseFloat(existing.rows[0].record_value)) {
+        await pool.query(`INSERT INTO wall_of_honor (record_type, category, record_holder_id, record_value, record_description) VALUES ('individual', 'highest_level', $1, $2, $3)`,
+          [topLevel.rows[0].id, topLevel.rows[0].level, `최고 레벨 Lv.${topLevel.rows[0].level} — ${topLevel.rows[0].nickname}`]);
+        newRecords++;
+      }
+    }
+    const topStreak = await pool.query('SELECT user_id, streak FROM daily_checkin ORDER BY streak DESC LIMIT 1');
+    if (topStreak.rows[0]) {
+      const existing = await pool.query(`SELECT record_value FROM wall_of_honor WHERE record_type = 'individual' AND category = 'longest_streak' ORDER BY record_value DESC LIMIT 1`);
+      if (!existing.rows[0] || topStreak.rows[0].streak > parseFloat(existing.rows[0].record_value)) {
+        await pool.query(`INSERT INTO wall_of_honor (record_type, category, record_holder_id, record_value, record_description) VALUES ('individual', 'longest_streak', $1, $2, $3)`,
+          [topStreak.rows[0].user_id, topStreak.rows[0].streak, `최다 연속 출석 ${topStreak.rows[0].streak}일`]);
+        newRecords++;
+      }
+    }
+    if (newRecords > 0) io.emit('honor_wall_update', { message: `🏆 명예의 벽에 ${newRecords}건 신규 기록!` });
+
+    console.log(`✅ [CRON] 순위 요약 + 명예의 벽 완료 (신규 기록 ${newRecords}건)`);
+  } catch (err) {
+    console.error('❌ [CRON] 순위/명예의벽 오류:', err.message);
+  }
+});
+
+// Cron 16. 매일 05:00 — AI 감정 분석
+cron.schedule('0 5 * * *', async () => {
+  const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+  if (!ANTHROPIC_API_KEY) return; // API 키 없으면 스킵
+  console.log('⏰ [CRON] AI 감정 분석 시작...');
+  try {
+    const fanclubs = await pool.query('SELECT id, name FROM fanclubs');
+    let analyzed = 0;
+
+    for (const fc of fanclubs.rows) {
+      const messages = await pool.query(
+        `SELECT content FROM chat_messages WHERE fanclub_id = $1 AND created_at::date = CURRENT_DATE - 1 ORDER BY created_at DESC LIMIT 100`,
+        [fc.id]
+      );
+      if (messages.rows.length === 0) continue;
+
+      const sampleText = messages.rows.map(m => m.content).join('\n').substring(0, 2000);
+
+      try {
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-20250514', max_tokens: 300,
+            messages: [{ role: 'user', content: `다음 팬클럽 채팅의 감정을 분석. JSON만 응답: {"mood_score":0~1,"positive_ratio":0~1,"negative_ratio":0~1,"neutral_ratio":0~1,"hot_topics":["주제1","주제2"]}\n\n${sampleText}` }]
+          })
+        });
+        const aiResult = await response.json();
+        const mood = JSON.parse(aiResult.content?.[0]?.text || '{"mood_score":0.5,"positive_ratio":0.5,"negative_ratio":0.1,"neutral_ratio":0.4,"hot_topics":[]}');
+
+        await pool.query(
+          `INSERT INTO fanclub_mood (fanclub_id, record_date, mood_score, positive_ratio, negative_ratio, neutral_ratio, total_messages, hot_topics)
+           VALUES ($1, CURRENT_DATE - 1, $2, $3, $4, $5, $6, $7)
+           ON CONFLICT (fanclub_id, record_date) DO UPDATE SET mood_score=$2, positive_ratio=$3, negative_ratio=$4, neutral_ratio=$5, total_messages=$6, hot_topics=$7`,
+          [fc.id, mood.mood_score, mood.positive_ratio, mood.negative_ratio, mood.neutral_ratio, messages.rows.length, JSON.stringify(mood.hot_topics)]
+        );
+        if (mood.mood_score < 0.3) {
+          io.emit('mood_warning', { fanclubId: fc.id, fanclubName: fc.name, moodScore: mood.mood_score });
+        }
+        analyzed++;
+      } catch (apiErr) {
+        console.error(`  ⚠️ ${fc.name} 감정 분석 실패:`, apiErr.message);
+      }
+    }
+    console.log(`✅ [CRON] AI 감정 분석 완료: ${analyzed}개 팬클럽`);
+  } catch (err) {
+    console.error('❌ [CRON] AI 감정 분석 오류:', err.message);
+  }
+});
+
 console.log('📅 스케줄러 등록 완료:');
 console.log('  - 매일 00:00 에너지 파이프라인');
 console.log('  - 매주 월 01:00 주간 소모임 평가');
@@ -11464,6 +12504,9 @@ console.log('  - 매시간 30분 국민 투표 자동 처리');
 console.log('  - 매월 첫째주 월 모임워즈 생성 / 목 결과집계');
 console.log('  - 매월 셋째주 월 라이벌매칭 / 목 결과+스탯킹');
 console.log('  - 시즌종료 시 MVP 산출');
+console.log('  - 월/목 자정 아키타입 재계산 + 소버린 체크');
+console.log('  - 매일 04:00 순위 일일 요약 + 명예의 벽');
+console.log('  - 매일 05:00 AI 감정 분석');
 
 // 스케줄러 상태 API (공개)
 app.get('/api/system/cron-status', (req, res) => {
@@ -11481,7 +12524,10 @@ app.get('/api/system/cron-status', (req, res) => {
       { name: '모임 워즈 결과', schedule: '매월 첫째주 목요일' },
       { name: '라이벌 자동 매칭', schedule: '매월 셋째주 월요일' },
       { name: '라이벌 결과 + 스탯킹', schedule: '매월 셋째주 목요일' },
-      { name: '시즌 MVP 산출', schedule: '시즌 종료 시' }
+      { name: '시즌 MVP 산출', schedule: '시즌 종료 시' },
+      { name: '아키타입 + 소버린 체크', schedule: '월/목 자정' },
+      { name: '순위 요약 + 명예의 벽', schedule: '매일 04:00' },
+      { name: 'AI 감정 분석', schedule: '매일 05:00' }
     ],
     serverUptime: Math.floor(process.uptime()) + '초'
   });

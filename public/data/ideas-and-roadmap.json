@@ -520,8 +520,8 @@
   "roadmap": {
     "description": "아스테리아 81단계 최종 로드맵",
     "totalPhases": 81,
-    "completedPhases": 65,
-    "progressPercent": 80,
+    "completedPhases": 72,
+    "progressPercent": 89,
     "phases": [
       {
         "group": "Phase 1: 기획 & 설계 (1~15)",
@@ -926,46 +926,46 @@
       },
       {
         "group": "Phase 7: 고급 기능 (66~72)",
-        "status": "미시작",
-        "completed": 0,
+        "status": "완료",
+        "completed": 7,
         "total": 7,
         "items": [
           {
             "id": 66,
             "name": "아키타입 실시간 재계산 엔진",
-            "status": "todo"
+            "status": "done"
           },
           {
             "id": 67,
             "name": "캐치업 시스템 + 난이도 동적 조정",
-            "status": "todo"
+            "status": "done"
           },
           {
             "id": 68,
             "name": "개척자 보호 프로그램",
-            "status": "todo"
+            "status": "done"
           },
           {
             "id": 69,
             "name": "소버린 챌린지 시스템",
-            "status": "todo"
+            "status": "done"
           },
           {
             "id": 70,
             "name": "실시간 순위 알림 + 명예의 벽",
-            "status": "todo",
+            "status": "done",
             "idea": "IDEA-X01, IDEA-X02"
           },
           {
             "id": 71,
             "name": "기획사 응답 시스템",
-            "status": "todo",
+            "status": "deferred",
             "idea": "IDEA-S03"
           },
           {
             "id": 72,
             "name": "Anthropic API 연동 (모더레이션/인사이트)",
-            "status": "todo"
+            "status": "done"
           }
         ]
       },
