@@ -19,10 +19,10 @@ canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0}
 /* 플래시 효과 */
 #flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:5;transition:opacity 0.15s}
 
-/* 로고 컨테이너 */
+/* 상단 영역: 로고 + 태그라인 (화면 상단 25%) */
 #logoContainer{
-  position:fixed;top:0;left:0;width:100%;height:100%;z-index:10;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:fixed;top:20%;left:0;width:100%;z-index:10;
+  display:flex;flex-direction:column;align-items:center;
   pointer-events:none;opacity:0;transition:opacity 1.2s ease;
 }
 .logo{
@@ -34,12 +34,13 @@ canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0}
   font-size:clamp(13px,2.2vw,17px);color:#e8e4f0;opacity:0.8;
   margin-top:16px;text-align:center;padding:0 20px;font-weight:300;letter-spacing:1px;
 }
+.tagline-en{font-family:'Orbitron',monospace;font-size:clamp(11px,1.6vw,14px);margin-top:8px;letter-spacing:2px;opacity:0.6}
 
-/* 입장 영역 */
-#entryContainer{
-  position:fixed;bottom:18%;left:0;width:100%;z-index:10;
-  display:flex;flex-direction:column;align-items:center;gap:18px;
-  opacity:0;transition:opacity 1s ease;
+/* 중앙 영역: 성궤번호 (화면 정중앙) */
+#orbitContainer{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  pointer-events:none;opacity:0;transition:opacity 1s ease;
 }
 .orbit-label{font-size:clamp(13px,2vw,16px);color:var(--gold);opacity:0.85;letter-spacing:0.5px}
 .orbit-number{
@@ -47,7 +48,14 @@ canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0}
   color:var(--gold);letter-spacing:5px;
   text-shadow:0 0 30px rgba(240,192,64,0.5),0 0 60px rgba(240,192,64,0.2);
 }
-.orbit-remember{font-size:clamp(11px,1.5vw,13px);color:var(--gold);opacity:0.6;letter-spacing:0.5px;margin-top:2px}
+.orbit-remember{font-size:clamp(11px,1.5vw,13px);color:var(--gold);opacity:0.6;letter-spacing:0.5px}
+
+/* 하단 영역: 입장 버튼 (화면 하단 10%) */
+#entryContainer{
+  position:fixed;bottom:10%;left:0;width:100%;z-index:10;
+  display:flex;flex-direction:column;align-items:center;gap:14px;
+  opacity:0;transition:opacity 1s ease;
+}
 .enter-btn{
   padding:15px 44px;border:2px solid #c084fc;border-radius:30px;
   background:rgba(192,132,252,0.15);color:#c084fc;font-family:'Orbitron',monospace;
@@ -59,6 +67,11 @@ canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0}
   background:#c084fc;color:var(--void);
   box-shadow:0 0 30px rgba(192,132,252,0.5);transform:scale(1.05);
 }
+.tap-hint{
+  font-size:13px;color:#c084fc;opacity:0.5;letter-spacing:1px;
+  animation:blink 1.8s ease-in-out infinite;
+}
+@keyframes blink{0%,100%{opacity:0.3}50%{opacity:1}}
 
 /* 스킵 버튼 */
 .skip-btn{
@@ -67,19 +80,14 @@ canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0}
   font-family:'Noto Sans KR',sans-serif;font-size:13px;
   cursor:pointer;pointer-events:auto;transition:color 0.2s;letter-spacing:1px;
 }
-.tagline-en{font-family:'Orbitron',monospace;font-size:clamp(11px,1.6vw,14px);margin-top:8px;letter-spacing:2px;opacity:0.6}
-.tap-hint{
-  font-size:13px;color:#c084fc;opacity:0.5;letter-spacing:1px;margin-top:4px;
-  animation:blink 1.8s ease-in-out infinite;
-}
-@keyframes blink{0%,100%{opacity:0.3}50%{opacity:1}}
 .skip-btn:hover{color:#fff}
 
 @media(max-width:768px){
+  #logoContainer{top:15%}
   .logo{letter-spacing:4px}
+  #entryContainer{bottom:8%}
   .enter-btn{padding:13px 32px}
   .skip-btn{bottom:16px;right:16px}
-  #entryContainer{bottom:14%}
 }
 </style>
 </head>
@@ -91,18 +99,22 @@ canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0}
 <!-- 플래시 효과 -->
 <div id="flash"></div>
 
-<!-- 로고 + 문구 -->
+<!-- 상단: 로고 + 태그라인 -->
 <div id="logoContainer">
   <h1 class="logo">ASTERIA</h1>
   <p class="tagline">먼지에서 은하로, 팬이 주권을 갖는 우주</p>
   <p class="tagline tagline-en">From Dust to Galaxy — Where Fans Own the Universe</p>
 </div>
 
-<!-- 성궤번호 + 입장 버튼 -->
-<div id="entryContainer">
+<!-- 중앙: 성궤번호 -->
+<div id="orbitContainer">
   <p class="orbit-label">아스테리아가 당신에게 부여한 유일한 별</p>
   <p class="orbit-number">#00,000,001</p>
   <p class="orbit-remember">이 번호를 기억하세요 / Remember your number</p>
+</div>
+
+<!-- 하단: 입장 버튼 -->
+<div id="entryContainer">
   <button class="enter-btn" onclick="goToMain()">은하에 입장하기 / Enter the Galaxy</button>
   <p class="tap-hint" id="tapHint">화면을 터치하세요 / Tap to Enter</p>
 </div>
@@ -232,6 +244,7 @@ if (!isFirstVisit) {
   phase = 'idle';
   stars.forEach(s => { s.born = true; s.opacity = s.maxOpacity; });
   document.getElementById('logoContainer').style.opacity = '1';
+  document.getElementById('orbitContainer').style.opacity = '1';
   document.getElementById('entryContainer').style.opacity = '1';
 }
 
@@ -372,9 +385,10 @@ function animate(now) {
         s.opacity = s.maxOpacity * (0.6 + 0.4 * Math.sin(s.twinklePhase));
       });
 
-      // 로고 페이드인 (7.3초부터)
+      // 로고 + 성궤번호 페이드인 (7.3초부터)
       if (elapsed >= 7300) {
         document.getElementById('logoContainer').style.opacity = '1';
+        document.getElementById('orbitContainer').style.opacity = '1';
       }
 
       if (elapsed >= 8000) {
