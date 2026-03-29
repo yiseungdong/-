@@ -37,7 +37,7 @@ html, body {
 #app {
   max-width:480px;
   margin:0 auto; min-height:100vh;
-  position:relative; overflow:hidden;
+  position:relative; overflow:visible;
 }
 
 /* ── 별빛 캔버스 배경 ── */
@@ -572,12 +572,11 @@ body::-webkit-scrollbar { width:0; }
   display:flex;
   transition:transform .4s cubic-bezier(.4,0,.2,1);
   will-change:transform;
+  align-items:flex-start;
 }
 .tab-panel {
   min-width:100%;
   flex-shrink:0;
-  overflow-y:auto;
-  max-height:calc(100vh - 150px);
 }
 </style>
 </head>
