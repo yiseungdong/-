@@ -102,6 +102,14 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 .qhdr-line{width:60%;height:1px;background:linear-gradient(90deg,transparent,rgba(180,150,255,.2),transparent)}
 .qhdr-sub{font-size:11px;color:var(--muted);letter-spacing:1px}
 
+/* 승격/강등 비교 바 */
+.promotion-bar{position:absolute;left:0;width:100%;padding:6px 16px;background:rgba(3,3,8,0.85);backdrop-filter:blur(5px);z-index:60;display:flex;justify-content:center}
+.top-bar{top:0;border-bottom:1px solid rgba(240,192,64,0.2)}
+.bottom-bar{bottom:0;border-top:1px solid rgba(240,192,64,0.2)}
+.bar-compare{display:flex;align-items:center;gap:12px;font-size:12px;color:#e8e4f0}
+.bar-vs{font-family:'Orbitron',monospace;color:#f87171;font-weight:700;font-size:11px}
+.bar-gap{font-size:11px;margin-left:12px;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,0.05)}
+
 /* 별자리 뷰포트 (홈 리그맵) */
 .cv{flex:1;overflow:hidden;position:relative;cursor:grab;min-height:0}
 .cv:active{cursor:grabbing}
@@ -364,6 +372,22 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
   </div>
   <!-- 별자리 드래그 뷰 -->
   <div class="cv" id="cv">
+    <div class="promotion-bar top-bar" id="topBar">
+      <div class="bar-compare">
+        <span class="bar-team" id="topUpper">🔽 상위리그 꼴등: --</span>
+        <span class="bar-vs">VS</span>
+        <span class="bar-team" id="topCurrent">🔼 현리그 1등: --</span>
+        <span class="bar-gap" id="topGap">격차: --</span>
+      </div>
+    </div>
+    <div class="promotion-bar bottom-bar" id="bottomBar">
+      <div class="bar-compare">
+        <span class="bar-team" id="bottomCurrent">🔽 현리그 꼴등: --</span>
+        <span class="bar-vs">VS</span>
+        <span class="bar-team" id="bottomLower">🔼 하위리그 1등: --</span>
+        <span class="bar-gap" id="bottomGap">격차: --</span>
+      </div>
+    </div>
     <div class="cw" id="cw">
       <div class="q-ring" style="width:520px;height:520px"></div>
       <div class="q-ring" style="width:800px;height:800px"></div>
@@ -688,7 +712,7 @@ function genGradient(from, to, n) {
   });
 }
 const QUASAR_COLORS = ['#f0c040','#c084fc','#818cf8','#34d399','#f87171'];
-const NOVA_COLORS = genGradient('#e879f9','#3b0764',10);
+const NOVA_COLORS = genGradient('#f0abfc','#3b0764',10);
 const PLANET_COLORS = genGradient('#6ee7b7','#064e3b',20);
 const STAR_COLORS = genGradient('#fde68a','#78350f',40);
 const DUST_COLORS = genGradient('#e2e8f0','#1e293b',50);
@@ -935,7 +959,78 @@ function switchLeague(league) {
   const clampedTx = Math.min(0, Math.max(vw - cwW, tx));
   const clampedTy = Math.min(0, Math.max(vh - cwH, ty));
   cw.style.transform = `translate(${clampedTx}px,${clampedTy}px)`;
+
+  // 승격/강등 비교 바 업데이트
+  updatePromotionBars(league);
 }
+
+// 승격/강등 비교 바 업데이트
+function updatePromotionBars(league) {
+  const topBar = document.getElementById('topBar');
+  const bottomBar = document.getElementById('bottomBar');
+  const topUpper = document.getElementById('topUpper');
+  const topCurrent = document.getElementById('topCurrent');
+  const topGap = document.getElementById('topGap');
+  const bottomCurrent = document.getElementById('bottomCurrent');
+  const bottomLower = document.getElementById('bottomLower');
+  const bottomGap = document.getElementById('bottomGap');
+
+  function gapColor(gap) {
+    if (gap >= 100) return '#4ade80';
+    if (gap >= 50) return '#fbbf24';
+    if (gap >= 20) return '#fb923c';
+    return '#f87171';
+  }
+
+  const promoData = {
+    quasar: {
+      top: null,
+      bottom: { current: 'SOLARIS 63,240', lower: 'SUPERNOVA 112,000', gap: 112000 - 63240 }
+    },
+    nova: {
+      top: { upper: 'SOLARIS 63,240', current: 'SUPERNOVA 112,000', gap: 112000 - 63240 },
+      bottom: { current: 'VORTEX 65,200', lower: 'EVERGREEN 78,500', gap: 78500 - 65200 }
+    },
+    planet: {
+      top: { upper: 'VIOLET 65,200', current: 'EVERGREEN 78,500', gap: 78500 - 65200 },
+      bottom: { current: 'SUMMIT 35,600', lower: 'GOLDEN WAVE 45,200', gap: 45200 - 35600 }
+    },
+    star: {
+      top: { upper: 'SUMMIT 35,600', current: 'GOLDEN WAVE 45,200', gap: 45200 - 35600 },
+      bottom: { current: 'DAYBREAK 19,400', lower: 'STARDUST 12,450', gap: 19400 - 12450 }
+    },
+    dust: {
+      top: { upper: 'DAYBREAK 19,400', current: 'STARDUST 12,450', gap: 19400 - 12450 },
+      bottom: null
+    }
+  };
+
+  const info = promoData[league];
+  if (!info) return;
+
+  if (info.top) {
+    topBar.style.display = 'flex';
+    topUpper.textContent = '🔽 상위리그 꼴등: ' + info.top.upper;
+    topCurrent.textContent = '🔼 현리그 1등: ' + info.top.current;
+    topGap.textContent = '격차: ' + info.top.gap.toLocaleString();
+    topGap.style.color = gapColor(info.top.gap);
+  } else {
+    topBar.style.display = 'none';
+  }
+
+  if (info.bottom) {
+    bottomBar.style.display = 'flex';
+    bottomCurrent.textContent = '🔽 현리그 꼴등: ' + info.bottom.current;
+    bottomLower.textContent = '🔼 하위리그 1등: ' + info.bottom.lower;
+    bottomGap.textContent = '격차: ' + info.bottom.gap.toLocaleString();
+    bottomGap.style.color = gapColor(info.bottom.gap);
+  } else {
+    bottomBar.style.display = 'none';
+  }
+}
+
+// 입장 첫화면을 퀘이사로 통일
+window.addEventListener('DOMContentLoaded', () => { switchLeague('quasar'); });
 
 // ══════════════════════════════════════════════
 //  별빛 배경 스크립트
