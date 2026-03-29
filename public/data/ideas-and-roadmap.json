@@ -839,13 +839,13 @@
           {
             "id": 53,
             "name": "별자리 친구 매칭 시스템",
-            "status": "todo",
+            "status": "done",
             "idea": "IDEA-E03"
           },
           {
             "id": 54,
             "name": "캐릭터 꾸미기 보완 (인기투표/한정)",
-            "status": "todo",
+            "status": "done",
             "idea": "IDEA-I02"
           },
           {

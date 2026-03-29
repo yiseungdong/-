@@ -997,6 +997,162 @@ async function initDB() {
       )
     `);
 
+    // ── 별자리 친구 그룹 (#53) ──
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS constellations (
+        id              SERIAL PRIMARY KEY,
+        name            VARCHAR(50) NOT NULL,
+        emoji           VARCHAR(10) NOT NULL DEFAULT '⭐',
+        org_id          INTEGER REFERENCES organizations(id),
+        fandom_id       INTEGER REFERENCES fanclubs(id),
+        league          VARCHAR(20) NOT NULL,
+        max_members     INTEGER NOT NULL DEFAULT 3,
+        level           INTEGER NOT NULL DEFAULT 1,
+        exp             INTEGER NOT NULL DEFAULT 0,
+        season_number   INTEGER NOT NULL DEFAULT 1,
+        consecutive_seasons INTEGER NOT NULL DEFAULT 1,
+        is_eternal      BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_const_org ON constellations(org_id)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_const_fandom ON constellations(fandom_id)`);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS constellation_members (
+        id              SERIAL PRIMARY KEY,
+        constellation_id INTEGER NOT NULL REFERENCES constellations(id) ON DELETE CASCADE,
+        user_id         INTEGER NOT NULL REFERENCES users(id),
+        role            VARCHAR(20) NOT NULL DEFAULT 'member',
+        joined_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(constellation_id, user_id)
+      )
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_const_member ON constellation_members(user_id)`);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS constellation_missions (
+        id              SERIAL PRIMARY KEY,
+        constellation_id INTEGER NOT NULL REFERENCES constellations(id) ON DELETE CASCADE,
+        title           VARCHAR(200) NOT NULL,
+        description     TEXT,
+        mission_type    VARCHAR(30) NOT NULL,
+        target_value    INTEGER NOT NULL,
+        current_value   INTEGER NOT NULL DEFAULT 0,
+        is_completed    BOOLEAN NOT NULL DEFAULT FALSE,
+        reward_exp      INTEGER NOT NULL DEFAULT 10,
+        reward_stardust INTEGER NOT NULL DEFAULT 50,
+        week_number     INTEGER,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS constellation_guestbook (
+        id              SERIAL PRIMARY KEY,
+        constellation_id INTEGER NOT NULL REFERENCES constellations(id) ON DELETE CASCADE,
+        user_id         INTEGER NOT NULL REFERENCES users(id),
+        message         VARCHAR(200) NOT NULL,
+        emoji           VARCHAR(10),
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_const_guest ON constellation_guestbook(constellation_id)`);
+
+    // ── 아바타 아이템 (#54) ──
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS avatar_items (
+        id              SERIAL PRIMARY KEY,
+        name            VARCHAR(100) NOT NULL,
+        category        VARCHAR(30) NOT NULL,
+        rarity          VARCHAR(20) NOT NULL DEFAULT 'common',
+        emoji           VARCHAR(10),
+        description     TEXT,
+        league_required VARCHAR(20),
+        season_only     INTEGER,
+        is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+        price_stardust  INTEGER NOT NULL DEFAULT 0,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS avatar_inventory (
+        id              SERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id),
+        item_id         INTEGER NOT NULL REFERENCES avatar_items(id),
+        is_equipped     BOOLEAN NOT NULL DEFAULT FALSE,
+        obtained_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, item_id)
+      )
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_avatar_inv_user ON avatar_inventory(user_id)`);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS outfit_presets (
+        id              SERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id),
+        preset_name     VARCHAR(50) NOT NULL,
+        slot_number     INTEGER NOT NULL,
+        equipped_items  JSONB NOT NULL DEFAULT '[]',
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, slot_number)
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS avatar_votes (
+        id              SERIAL PRIMARY KEY,
+        fandom_id       INTEGER REFERENCES fanclubs(id),
+        week_number     INTEGER NOT NULL,
+        status          VARCHAR(20) NOT NULL DEFAULT 'active',
+        starts_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        ends_at         TIMESTAMP NOT NULL,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS avatar_vote_entries (
+        id              SERIAL PRIMARY KEY,
+        vote_id         INTEGER NOT NULL REFERENCES avatar_votes(id),
+        user_id         INTEGER NOT NULL REFERENCES users(id),
+        snapshot_data   JSONB NOT NULL,
+        vote_count      INTEGER NOT NULL DEFAULT 0,
+        rank            INTEGER,
+        UNIQUE(vote_id, user_id)
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS avatar_vote_records (
+        id              SERIAL PRIMARY KEY,
+        vote_id         INTEGER NOT NULL REFERENCES avatar_votes(id),
+        voter_id        INTEGER NOT NULL REFERENCES users(id),
+        entry_id        INTEGER NOT NULL REFERENCES avatar_vote_entries(id),
+        voted_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(vote_id, voter_id)
+      )
+    `);
+
+    // 아바타 아이템 시드 데이터
+    await client.query(`
+      INSERT INTO avatar_items (name, category, rarity, emoji, description, league_required, price_stardust) VALUES
+        ('기본 티셔츠', 'outfit', 'common', '👕', '심플한 기본 티셔츠', NULL, 0),
+        ('별빛 후드', 'outfit', 'rare', '🧥', '반짝이는 별빛 후드', NULL, 200),
+        ('은하수 드레스', 'outfit', 'epic', '👗', '은하수가 흐르는 드레스', 'planet', 500),
+        ('퀘이사 갑옷', 'outfit', 'legendary', '🛡️', '퀘이사 리그 전용 갑옷', 'quasar', 1000),
+        ('기본 머리띠', 'accessory', 'common', '🎀', '기본 머리띠', NULL, 0),
+        ('별 왕관', 'accessory', 'epic', '👑', '빛나는 별 왕관', 'nova', 600),
+        ('무지개 날개', 'accessory', 'legendary', '🪽', '무지개빛 날개', 'quasar', 1200),
+        ('봄 꽃잎 이펙트', 'effect', 'rare', '🌸', '봄 시즌 한정 이펙트', NULL, 300),
+        ('별똥별 이펙트', 'effect', 'epic', '⭐', '별똥별이 흩날리는 이펙트', NULL, 700),
+        ('오로라 배경', 'background', 'rare', '🌌', '오로라 배경', NULL, 250),
+        ('우주 배경', 'background', 'epic', '🪐', '우주 공간 배경', 'planet', 550),
+        ('시즌1 기념 뱃지', 'badge', 'legendary', '🏅', '시즌1 한정 뱃지', NULL, 0)
+      ON CONFLICT DO NOTHING
+    `);
+
     await client.query('COMMIT');
     console.log('✅ 아스테리아 DB 초기화 완료 — 24개 테이블 생성');
   } catch (err) {
@@ -7623,6 +7779,1053 @@ app.get('/api/emotion/monthly', authenticateToken, async (req, res) => {
   } catch (err) {
     console.error('월간 감정 리포트 오류:', err.message);
     res.status(500).json({ error: '감정 리포트 조회 실패' });
+  }
+});
+
+// ══════════════════════════════════════════════
+//  #53 별자리 친구 매칭 시스템
+// ══════════════════════════════════════════════
+
+// 리그별 별자리 인원
+const CONSTELLATION_SIZE = { dust: 3, star: 5, planet: 6, nova: 8, quasar: 10 };
+
+// 별자리 레벨 경험치 테이블
+const CONSTELLATION_LEVELS = [
+  { level: 1, expRequired: 0, reward: '기본 별자리' },
+  { level: 2, expRequired: 50, reward: '별자리 전용 이모지 해금' },
+  { level: 3, expRequired: 120, reward: '별자리 채팅방 배경 커스텀' },
+  { level: 4, expRequired: 200, reward: '별자리 전용 뱃지' },
+  { level: 5, expRequired: 350, reward: '별자리 미션 보상 1.2배' },
+  { level: 6, expRequired: 500, reward: '별자리 전용 이펙트' },
+  { level: 7, expRequired: 700, reward: '별자리 미션 보상 1.5배' },
+  { level: 8, expRequired: 1000, reward: '별자리 전용 오라' },
+  { level: 9, expRequired: 1400, reward: '별자리 미션 보상 2배' },
+  { level: 10, expRequired: 2000, reward: '"전설의 별자리" 영구 칭호' },
+];
+
+// 주간 미션 풀
+const WEEKLY_MISSIONS = [
+  { type: 'all_checkin', title: '전원 출석!', description: '이번 주 멤버 전원 출석 달성', targetValue: 7, expReward: 20, stardustReward: 100 },
+  { type: 'total_ap', title: '화력 집중!', description: '멤버 전체 AP 합계 500 달성', targetValue: 500, expReward: 15, stardustReward: 80 },
+  { type: 'all_vote', title: '투표 참여!', description: '멤버 전원 이번 주 투표 1회 이상', targetValue: 1, expReward: 10, stardustReward: 60 },
+  { type: 'comment_count', title: '소통왕!', description: '멤버 전체 댓글 합계 30개 달성', targetValue: 30, expReward: 15, stardustReward: 70 },
+  { type: 'diary_react', title: '일기 반응!', description: '멤버 전원 아티스트 일기에 반응하기', targetValue: 1, expReward: 10, stardustReward: 50 },
+];
+
+// 별자리 레벨 계산 헬퍼
+function getConstellationLevel(exp) {
+  let currentLevel = CONSTELLATION_LEVELS[0];
+  for (const lvl of CONSTELLATION_LEVELS) {
+    if (exp >= lvl.expRequired) currentLevel = lvl;
+    else break;
+  }
+  return currentLevel;
+}
+
+// 랜덤 주간 미션 배정 헬퍼
+async function assignWeeklyMission(constellationId) {
+  const mission = WEEKLY_MISSIONS[Math.floor(Math.random() * WEEKLY_MISSIONS.length)];
+  const weekNumber = Math.ceil((Date.now() - new Date(new Date().getFullYear(), 0, 1).getTime()) / (7 * 24 * 60 * 60 * 1000));
+  await pool.query(
+    `INSERT INTO constellation_missions (constellation_id, title, description, mission_type, target_value, reward_exp, reward_stardust, week_number)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+    [constellationId, mission.title, mission.description, mission.type, mission.targetValue, mission.expReward, mission.stardustReward, weekNumber]
+  );
+}
+
+// ── 1) POST /api/constellation/create — 별자리 생성 ──
+app.post('/api/constellation/create', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { name, emoji } = req.body;
+
+    if (!name || name.length < 2 || name.length > 20) {
+      return res.status(400).json({ error: '이름은 2~20자여야 합니다.' });
+    }
+
+    // 유저 정보 조회
+    const userRes = await pool.query(
+      'SELECT org_id, fandom_id, league FROM users WHERE id = $1', [userId]
+    );
+    const user = userRes.rows[0];
+    if (!user.org_id) {
+      return res.status(400).json({ error: '소모임에 소속되어야 별자리를 생성할 수 있습니다.' });
+    }
+
+    // 이미 별자리에 가입 확인
+    const existing = await pool.query(
+      'SELECT constellation_id FROM constellation_members WHERE user_id = $1', [userId]
+    );
+    if (existing.rows.length > 0) {
+      return res.status(400).json({ error: '이미 별자리에 가입되어 있습니다. (1인 1별자리)' });
+    }
+
+    const maxMembers = CONSTELLATION_SIZE[user.league] || 3;
+
+    // 별자리 생성
+    const constRes = await pool.query(
+      `INSERT INTO constellations (name, emoji, org_id, fandom_id, league, max_members)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [name, emoji || '⭐', user.org_id, user.fandom_id, user.league || 'dust', maxMembers]
+    );
+    const constellation = constRes.rows[0];
+
+    // 생성자를 leader로 등록
+    await pool.query(
+      `INSERT INTO constellation_members (constellation_id, user_id, role)
+       VALUES ($1, $2, 'leader')`,
+      [constellation.id, userId]
+    );
+
+    // 첫 주간 미션 배정
+    await assignWeeklyMission(constellation.id);
+
+    res.status(201).json({
+      message: '별자리 생성 완료!',
+      constellation,
+      maxMembers,
+      yourRole: 'leader'
+    });
+  } catch (err) {
+    console.error('별자리 생성 오류:', err.message);
+    res.status(500).json({ error: '별자리 생성 실패' });
+  }
+});
+
+// ── 2) POST /api/constellation/join/:id — 별자리 가입 ──
+app.post('/api/constellation/join/:id', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const constId = parseInt(req.params.id);
+
+    // 이미 별자리 가입 확인
+    const existing = await pool.query(
+      'SELECT constellation_id FROM constellation_members WHERE user_id = $1', [userId]
+    );
+    if (existing.rows.length > 0) {
+      return res.status(400).json({ error: '이미 별자리에 가입되어 있습니다. (1인 1별자리)' });
+    }
+
+    // 별자리 존재 + 정원 확인
+    const constRes = await pool.query(
+      'SELECT c.*, (SELECT COUNT(*) FROM constellation_members WHERE constellation_id = c.id) AS member_count FROM constellations c WHERE c.id = $1',
+      [constId]
+    );
+    if (constRes.rows.length === 0) {
+      return res.status(404).json({ error: '별자리를 찾을 수 없습니다.' });
+    }
+    const constellation = constRes.rows[0];
+
+    if (parseInt(constellation.member_count) >= constellation.max_members) {
+      return res.status(400).json({ error: '별자리 정원이 가득 찼습니다.' });
+    }
+
+    // 같은 소모임 확인
+    const userRes = await pool.query('SELECT org_id FROM users WHERE id = $1', [userId]);
+    if (userRes.rows[0].org_id !== constellation.org_id) {
+      return res.status(400).json({ error: '같은 소모임의 별자리에만 가입할 수 있습니다.' });
+    }
+
+    // 가입
+    await pool.query(
+      `INSERT INTO constellation_members (constellation_id, user_id, role) VALUES ($1, $2, 'member')`,
+      [constId, userId]
+    );
+
+    // SOC +1
+    await pool.query('UPDATE users SET stat_soc = stat_soc + 1 WHERE id = $1', [userId]);
+
+    res.json({ message: '별자리 가입 완료!', constellationId: constId });
+  } catch (err) {
+    console.error('별자리 가입 오류:', err.message);
+    res.status(500).json({ error: '별자리 가입 실패' });
+  }
+});
+
+// ── 3) POST /api/constellation/leave — 별자리 탈퇴 ──
+app.post('/api/constellation/leave', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // 현재 별자리 확인
+    const memberRes = await pool.query(
+      'SELECT cm.constellation_id, cm.role FROM constellation_members cm WHERE cm.user_id = $1',
+      [userId]
+    );
+    if (memberRes.rows.length === 0) {
+      return res.status(400).json({ error: '가입된 별자리가 없습니다.' });
+    }
+    const { constellation_id, role } = memberRes.rows[0];
+
+    // 탈퇴
+    await pool.query(
+      'DELETE FROM constellation_members WHERE constellation_id = $1 AND user_id = $2',
+      [constellation_id, userId]
+    );
+
+    // 남은 멤버 수 확인
+    const remaining = await pool.query(
+      'SELECT user_id, joined_at FROM constellation_members WHERE constellation_id = $1 ORDER BY joined_at ASC',
+      [constellation_id]
+    );
+
+    if (remaining.rows.length === 0) {
+      // 마지막 멤버 → 별자리 삭제
+      await pool.query('DELETE FROM constellation_missions WHERE constellation_id = $1', [constellation_id]);
+      await pool.query('DELETE FROM constellation_guestbook WHERE constellation_id = $1', [constellation_id]);
+      await pool.query('DELETE FROM constellations WHERE id = $1', [constellation_id]);
+      return res.json({ message: '별자리 탈퇴 완료 (마지막 멤버 — 별자리 해체)' });
+    }
+
+    // leader가 탈퇴하면 다음 가입자에게 승계
+    if (role === 'leader') {
+      const nextLeader = remaining.rows[0];
+      await pool.query(
+        `UPDATE constellation_members SET role = 'leader' WHERE constellation_id = $1 AND user_id = $2`,
+        [constellation_id, nextLeader.user_id]
+      );
+      // 알림
+      await pool.query(
+        `INSERT INTO notifications (user_id, type, title, body, meta)
+         VALUES ($1, 'constellation', '별자리 리더 승계', '기존 리더가 탈퇴하여 새 리더로 지정되었습니다.', $2)`,
+        [nextLeader.user_id, JSON.stringify({ constellationId: constellation_id })]
+      );
+    }
+
+    res.json({ message: '별자리 탈퇴 완료' });
+  } catch (err) {
+    console.error('별자리 탈퇴 오류:', err.message);
+    res.status(500).json({ error: '별자리 탈퇴 실패' });
+  }
+});
+
+// ── 4) GET /api/constellation/my — 내 별자리 정보 ──
+app.get('/api/constellation/my', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // 내 멤버십 확인
+    const memberRes = await pool.query(
+      'SELECT constellation_id, role FROM constellation_members WHERE user_id = $1', [userId]
+    );
+    if (memberRes.rows.length === 0) {
+      return res.json({ constellation: null, message: '가입된 별자리가 없습니다.' });
+    }
+    const constId = memberRes.rows[0].constellation_id;
+
+    // 별자리 정보
+    const constRes = await pool.query('SELECT * FROM constellations WHERE id = $1', [constId]);
+    const constellation = constRes.rows[0];
+
+    // 레벨 정보
+    const levelInfo = getConstellationLevel(constellation.exp);
+    const nextLevel = CONSTELLATION_LEVELS.find(l => l.expRequired > constellation.exp);
+
+    // 멤버 목록
+    const members = await pool.query(
+      `SELECT cm.user_id, cm.role, cm.joined_at, u.nickname, u.level, u.archetype
+       FROM constellation_members cm
+       JOIN users u ON u.id = cm.user_id
+       WHERE cm.constellation_id = $1 ORDER BY cm.joined_at`,
+      [constId]
+    );
+
+    // 현재 미션
+    const mission = await pool.query(
+      `SELECT * FROM constellation_missions WHERE constellation_id = $1 AND is_completed = FALSE
+       ORDER BY created_at DESC LIMIT 1`,
+      [constId]
+    );
+
+    // 방명록 수
+    const guestCount = await pool.query(
+      'SELECT COUNT(*) AS cnt FROM constellation_guestbook WHERE constellation_id = $1', [constId]
+    );
+
+    res.json({
+      constellation: {
+        id: constellation.id,
+        name: constellation.name,
+        emoji: constellation.emoji,
+        level: levelInfo.level,
+        exp: constellation.exp,
+        nextLevelExp: nextLevel ? nextLevel.expRequired : null,
+        maxMembers: constellation.max_members,
+        consecutiveSeasons: constellation.consecutive_seasons,
+        isEternal: constellation.is_eternal
+      },
+      members: members.rows.map(m => ({
+        userId: m.user_id,
+        nickname: m.nickname,
+        role: m.role,
+        level: m.level,
+        archetype: m.archetype
+      })),
+      currentMission: mission.rows.length > 0 ? {
+        id: mission.rows[0].id,
+        title: mission.rows[0].title,
+        progress: `${mission.rows[0].current_value}/${mission.rows[0].target_value}`,
+        isCompleted: mission.rows[0].is_completed
+      } : null,
+      levelRewards: levelInfo.reward,
+      guestbookCount: parseInt(guestCount.rows[0].cnt)
+    });
+  } catch (err) {
+    console.error('내 별자리 조회 오류:', err.message);
+    res.status(500).json({ error: '별자리 조회 실패' });
+  }
+});
+
+// ── 5) PUT /api/constellation/rename — 별자리 이름 변경 ──
+app.put('/api/constellation/rename', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { name, emoji } = req.body;
+
+    if (!name || name.length < 2 || name.length > 20) {
+      return res.status(400).json({ error: '이름은 2~20자여야 합니다.' });
+    }
+
+    // leader 확인
+    const memberRes = await pool.query(
+      `SELECT constellation_id FROM constellation_members WHERE user_id = $1 AND role = 'leader'`,
+      [userId]
+    );
+    if (memberRes.rows.length === 0) {
+      return res.status(403).json({ error: '별자리 리더만 이름을 변경할 수 있습니다.' });
+    }
+    const constId = memberRes.rows[0].constellation_id;
+
+    await pool.query(
+      'UPDATE constellations SET name = $1, emoji = COALESCE($2, emoji) WHERE id = $3',
+      [name, emoji || null, constId]
+    );
+
+    res.json({ message: '별자리 이름 변경 완료', name, emoji });
+  } catch (err) {
+    console.error('별자리 이름 변경 오류:', err.message);
+    res.status(500).json({ error: '별자리 이름 변경 실패' });
+  }
+});
+
+// ── 6) POST /api/constellation/mission/progress — 미션 진행 업데이트 ──
+app.post('/api/constellation/mission/progress', authenticateToken, async (req, res) => {
+  try {
+    const { constellation_id, mission_type, increment } = req.body;
+
+    if (!constellation_id || !mission_type || !increment) {
+      return res.status(400).json({ error: 'constellation_id, mission_type, increment 필수' });
+    }
+
+    // 활성 미션 조회
+    const missionRes = await pool.query(
+      `SELECT * FROM constellation_missions
+       WHERE constellation_id = $1 AND mission_type = $2 AND is_completed = FALSE
+       ORDER BY created_at DESC LIMIT 1`,
+      [constellation_id, mission_type]
+    );
+    if (missionRes.rows.length === 0) {
+      return res.json({ message: '해당 타입의 활성 미션이 없습니다.' });
+    }
+    const mission = missionRes.rows[0];
+    const newValue = Math.min(mission.current_value + parseInt(increment), mission.target_value);
+    const completed = newValue >= mission.target_value;
+
+    await pool.query(
+      'UPDATE constellation_missions SET current_value = $1, is_completed = $2 WHERE id = $3',
+      [newValue, completed, mission.id]
+    );
+
+    if (completed) {
+      // 별자리 레벨 보상 배율 계산
+      const constRes = await pool.query('SELECT exp, level FROM constellations WHERE id = $1', [constellation_id]);
+      const constLevel = constRes.rows[0].level;
+      let multiplier = 1;
+      if (constLevel >= 9) multiplier = 2;
+      else if (constLevel >= 7) multiplier = 1.5;
+      else if (constLevel >= 5) multiplier = 1.2;
+
+      const expReward = Math.floor(mission.reward_exp * multiplier);
+      const stardustReward = Math.floor(mission.reward_stardust * multiplier);
+
+      // 별자리 EXP 증가 + 레벨 업데이트
+      const newExp = constRes.rows[0].exp + expReward;
+      const newLevel = getConstellationLevel(newExp);
+      await pool.query(
+        'UPDATE constellations SET exp = $1, level = $2 WHERE id = $3',
+        [newExp, newLevel.level, constellation_id]
+      );
+
+      // 멤버 전원에게 스타더스트 보상 + 알림
+      const members = await pool.query(
+        'SELECT user_id FROM constellation_members WHERE constellation_id = $1', [constellation_id]
+      );
+      for (const m of members.rows) {
+        await pool.query(
+          'UPDATE users SET stardust = stardust + $1 WHERE id = $2',
+          [stardustReward, m.user_id]
+        );
+        await pool.query(
+          `INSERT INTO notifications (user_id, type, title, body, meta)
+           VALUES ($1, 'constellation_mission', '별자리 미션 완료!', $2, $3)`,
+          [m.user_id, `"${mission.title}" 미션 달성! 스타더스트 ${stardustReward} 획득!`,
+           JSON.stringify({ missionId: mission.id, stardust: stardustReward, exp: expReward })]
+        );
+      }
+    }
+
+    res.json({
+      message: completed ? '미션 완료!' : '미션 진행 업데이트',
+      progress: `${newValue}/${mission.target_value}`,
+      isCompleted: completed
+    });
+  } catch (err) {
+    console.error('미션 진행 오류:', err.message);
+    res.status(500).json({ error: '미션 진행 업데이트 실패' });
+  }
+});
+
+// ── 7) GET /api/constellation/guestbook/:id — 별자리 방명록 조회 ──
+app.get('/api/constellation/guestbook/:id', async (req, res) => {
+  try {
+    const constId = parseInt(req.params.id);
+    const result = await pool.query(
+      `SELECT g.*, u.nickname FROM constellation_guestbook g
+       JOIN users u ON u.id = g.user_id
+       WHERE g.constellation_id = $1 ORDER BY g.created_at DESC LIMIT 50`,
+      [constId]
+    );
+    res.json({ guestbook: result.rows, count: result.rows.length });
+  } catch (err) {
+    console.error('방명록 조회 오류:', err.message);
+    res.status(500).json({ error: '방명록 조회 실패' });
+  }
+});
+
+// ── 8) POST /api/constellation/guestbook/:id — 별자리 방명록 쓰기 ──
+app.post('/api/constellation/guestbook/:id', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const constId = parseInt(req.params.id);
+    const { message, emoji } = req.body;
+
+    if (!message || message.length > 200) {
+      return res.status(400).json({ error: 'message 필수 (200자 이내)' });
+    }
+
+    // 해당 별자리 멤버인지 확인
+    const memberCheck = await pool.query(
+      'SELECT id FROM constellation_members WHERE constellation_id = $1 AND user_id = $2',
+      [constId, userId]
+    );
+    if (memberCheck.rows.length === 0) {
+      return res.status(403).json({ error: '별자리 멤버만 방명록에 글을 쓸 수 있습니다.' });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO constellation_guestbook (constellation_id, user_id, message, emoji)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [constId, userId, message, emoji || null]
+    );
+
+    // SOC +1
+    await pool.query('UPDATE users SET stat_soc = stat_soc + 1 WHERE id = $1', [userId]);
+
+    res.status(201).json({ message: '방명록 작성 완료', entry: result.rows[0] });
+  } catch (err) {
+    console.error('방명록 쓰기 오류:', err.message);
+    res.status(500).json({ error: '방명록 쓰기 실패' });
+  }
+});
+
+// ── 9) POST /api/constellation/season-reset — 시즌 재편성 ──
+app.post('/api/constellation/season-reset', authenticateToken, async (req, res) => {
+  try {
+    const { constellation_id, maintain } = req.body;
+
+    if (!constellation_id || maintain === undefined) {
+      return res.status(400).json({ error: 'constellation_id, maintain(boolean) 필수' });
+    }
+
+    const constRes = await pool.query('SELECT * FROM constellations WHERE id = $1', [constellation_id]);
+    if (constRes.rows.length === 0) {
+      return res.status(404).json({ error: '별자리를 찾을 수 없습니다.' });
+    }
+    const constellation = constRes.rows[0];
+
+    if (maintain) {
+      // 유지 → 연속 시즌 +1, 새 미션 배정
+      const newConsecutive = constellation.consecutive_seasons + 1;
+      const isEternal = newConsecutive >= 3;
+
+      await pool.query(
+        `UPDATE constellations SET season_number = season_number + 1,
+         consecutive_seasons = $1, is_eternal = $2 WHERE id = $3`,
+        [newConsecutive, isEternal, constellation_id]
+      );
+
+      // 새 주간 미션 배정
+      await assignWeeklyMission(constellation_id);
+
+      // 3시즌 연속 유지 → 영원의 별자리 뱃지
+      if (isEternal && !constellation.is_eternal) {
+        const members = await pool.query(
+          'SELECT user_id FROM constellation_members WHERE constellation_id = $1',
+          [constellation_id]
+        );
+        for (const m of members.rows) {
+          await pool.query(
+            `INSERT INTO notifications (user_id, type, title, body, meta)
+             VALUES ($1, 'constellation', '🌌 영원의 별자리 달성!', '3시즌 연속 유지로 "영원의 별자리" 칭호를 획득했습니다!', $2)`,
+            [m.user_id, JSON.stringify({ constellationId: constellation_id, badge: 'eternal_constellation' })]
+          );
+        }
+      }
+
+      res.json({
+        message: '시즌 유지 완료!',
+        newSeason: constellation.season_number + 1,
+        consecutiveSeasons: newConsecutive,
+        isEternal
+      });
+    } else {
+      // 해체 → 기록 보존, 멤버 해방
+      await pool.query('DELETE FROM constellation_members WHERE constellation_id = $1', [constellation_id]);
+      await pool.query('DELETE FROM constellation_missions WHERE constellation_id = $1', [constellation_id]);
+
+      res.json({
+        message: '별자리 해체 완료 (기록은 보존됩니다)',
+        constellationId: constellation_id,
+        note: '멤버들은 이제 새 별자리에 가입할 수 있습니다.'
+      });
+    }
+  } catch (err) {
+    console.error('시즌 재편성 오류:', err.message);
+    res.status(500).json({ error: '시즌 재편성 실패' });
+  }
+});
+
+// ══════════════════════════════════════════════
+//  #54 캐릭터 꾸미기 보완 (인기투표/한정)
+// ══════════════════════════════════════════════
+
+const AVATAR_CATEGORIES = ['outfit', 'accessory', 'effect', 'background', 'badge'];
+const MAX_PRESET_SLOTS = 5;
+const LEAGUE_ORDER = ['dust', 'star', 'planet', 'nova', 'quasar'];
+
+// 리그 체크 헬퍼 (유저 리그가 요구 리그 이상인지)
+function meetsLeagueRequirement(userLeague, requiredLeague) {
+  if (!requiredLeague) return true;
+  return LEAGUE_ORDER.indexOf(userLeague || 'dust') >= LEAGUE_ORDER.indexOf(requiredLeague);
+}
+
+// ── 1) GET /api/avatar/shop — 아바타 상점 아이템 목록 ──
+app.get('/api/avatar/shop', async (req, res) => {
+  try {
+    const { category, rarity } = req.query;
+    let query = 'SELECT * FROM avatar_items WHERE is_active = TRUE';
+    const params = [];
+    let idx = 1;
+
+    if (category) { query += ` AND category = $${idx++}`; params.push(category); }
+    if (rarity) { query += ` AND rarity = $${idx++}`; params.push(rarity); }
+
+    query += ' ORDER BY category, rarity, price_stardust';
+    const result = await pool.query(query, params);
+
+    res.json({
+      items: result.rows,
+      totalItems: result.rows.length,
+      categories: AVATAR_CATEGORIES
+    });
+  } catch (err) {
+    console.error('아바타 상점 조회 오류:', err.message);
+    res.status(500).json({ error: '상점 조회 실패' });
+  }
+});
+
+// ── 2) POST /api/avatar/buy — 아이템 구매 ──
+app.post('/api/avatar/buy', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { item_id } = req.body;
+
+    if (!item_id) return res.status(400).json({ error: 'item_id 필수' });
+
+    // 아이템 조회
+    const itemRes = await pool.query('SELECT * FROM avatar_items WHERE id = $1 AND is_active = TRUE', [item_id]);
+    if (itemRes.rows.length === 0) {
+      return res.status(404).json({ error: '아이템을 찾을 수 없습니다.' });
+    }
+    const item = itemRes.rows[0];
+
+    // 이미 보유 확인
+    const owned = await pool.query(
+      'SELECT id FROM avatar_inventory WHERE user_id = $1 AND item_id = $2', [userId, item_id]
+    );
+    if (owned.rows.length > 0) {
+      return res.status(400).json({ error: '이미 보유한 아이템입니다.' });
+    }
+
+    // 유저 정보 (리그, 스타더스트)
+    const userRes = await pool.query('SELECT league, stardust FROM users WHERE id = $1', [userId]);
+    const user = userRes.rows[0];
+
+    // 리그 요구 확인
+    if (!meetsLeagueRequirement(user.league, item.league_required)) {
+      return res.status(403).json({ error: `${item.league_required} 리그 이상만 구매 가능합니다.` });
+    }
+
+    // 스타더스트 확인
+    if (item.price_stardust > 0 && user.stardust < item.price_stardust) {
+      return res.status(400).json({ error: '스타더스트가 부족합니다.', required: item.price_stardust, current: user.stardust });
+    }
+
+    // 스타더스트 차감
+    if (item.price_stardust > 0) {
+      await pool.query('UPDATE users SET stardust = stardust - $1 WHERE id = $2', [item.price_stardust, userId]);
+      await pool.query(
+        `INSERT INTO stardust_ledger (user_id, amount, balance_after, reason, source)
+         VALUES ($1, $2, $3, $4, 'avatar_shop')`,
+        [userId, -item.price_stardust, user.stardust - item.price_stardust, `아바타 아이템 구매: ${item.name}`]
+      );
+    }
+
+    // 인벤토리에 추가
+    await pool.query(
+      'INSERT INTO avatar_inventory (user_id, item_id) VALUES ($1, $2)',
+      [userId, item_id]
+    );
+
+    // CRE +2
+    await pool.query('UPDATE users SET stat_cre = stat_cre + 2 WHERE id = $1', [userId]);
+
+    res.json({ message: '아이템 구매 완료!', item: item });
+  } catch (err) {
+    console.error('아이템 구매 오류:', err.message);
+    res.status(500).json({ error: '아이템 구매 실패' });
+  }
+});
+
+// ── 3) GET /api/avatar/inventory — 내 인벤토리 ──
+app.get('/api/avatar/inventory', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const result = await pool.query(
+      `SELECT ai.*, av.is_equipped, av.obtained_at
+       FROM avatar_items ai
+       JOIN avatar_inventory av ON av.item_id = ai.id
+       WHERE av.user_id = $1 ORDER BY ai.category, ai.rarity`,
+      [userId]
+    );
+
+    // 카테고리별 분류
+    const byCategory = {};
+    for (const cat of AVATAR_CATEGORIES) {
+      byCategory[cat] = result.rows.filter(i => i.category === cat);
+    }
+
+    const equipped = result.rows.filter(i => i.is_equipped);
+
+    res.json({
+      items: result.rows,
+      byCategory,
+      equipped,
+      totalItems: result.rows.length,
+      equippedCount: equipped.length
+    });
+  } catch (err) {
+    console.error('인벤토리 조회 오류:', err.message);
+    res.status(500).json({ error: '인벤토리 조회 실패' });
+  }
+});
+
+// ── 4) POST /api/avatar/equip — 아이템 착용/해제 ──
+app.post('/api/avatar/equip', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { item_id, equip } = req.body;
+
+    if (!item_id || equip === undefined) {
+      return res.status(400).json({ error: 'item_id, equip(boolean) 필수' });
+    }
+
+    // 보유 확인
+    const owned = await pool.query(
+      'SELECT av.id, ai.category FROM avatar_inventory av JOIN avatar_items ai ON ai.id = av.item_id WHERE av.user_id = $1 AND av.item_id = $2',
+      [userId, item_id]
+    );
+    if (owned.rows.length === 0) {
+      return res.status(404).json({ error: '보유하지 않은 아이템입니다.' });
+    }
+
+    if (equip) {
+      // 같은 카테고리 기존 착용 해제
+      const category = owned.rows[0].category;
+      await pool.query(
+        `UPDATE avatar_inventory SET is_equipped = FALSE
+         WHERE user_id = $1 AND item_id IN (SELECT id FROM avatar_items WHERE category = $2)`,
+        [userId, category]
+      );
+    }
+
+    // 착용/해제
+    await pool.query(
+      'UPDATE avatar_inventory SET is_equipped = $1 WHERE user_id = $2 AND item_id = $3',
+      [equip, userId, item_id]
+    );
+
+    res.json({ message: equip ? '아이템 착용 완료' : '아이템 해제 완료', itemId: item_id });
+  } catch (err) {
+    console.error('아이템 착용 오류:', err.message);
+    res.status(500).json({ error: '아이템 착용/해제 실패' });
+  }
+});
+
+// ── 5) POST /api/avatar/preset/save — 코디 프리셋 저장 ──
+app.post('/api/avatar/preset/save', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { preset_name, slot_number } = req.body;
+
+    if (!preset_name || !slot_number || slot_number < 1 || slot_number > MAX_PRESET_SLOTS) {
+      return res.status(400).json({ error: `preset_name 필수, slot_number는 1~${MAX_PRESET_SLOTS}` });
+    }
+
+    // 현재 착용 아이템 조회
+    const equipped = await pool.query(
+      'SELECT item_id FROM avatar_inventory WHERE user_id = $1 AND is_equipped = TRUE',
+      [userId]
+    );
+    const equippedItems = equipped.rows.map(r => r.item_id);
+
+    // 프리셋 저장 (UPSERT)
+    await pool.query(
+      `INSERT INTO outfit_presets (user_id, preset_name, slot_number, equipped_items)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (user_id, slot_number)
+       DO UPDATE SET preset_name = $2, equipped_items = $4`,
+      [userId, preset_name, slot_number, JSON.stringify(equippedItems)]
+    );
+
+    res.json({ message: '프리셋 저장 완료', slotNumber: slot_number, itemCount: equippedItems.length });
+  } catch (err) {
+    console.error('프리셋 저장 오류:', err.message);
+    res.status(500).json({ error: '프리셋 저장 실패' });
+  }
+});
+
+// ── 6) POST /api/avatar/preset/load — 코디 프리셋 불러오기 ──
+app.post('/api/avatar/preset/load', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { slot_number } = req.body;
+
+    if (!slot_number) return res.status(400).json({ error: 'slot_number 필수' });
+
+    const preset = await pool.query(
+      'SELECT * FROM outfit_presets WHERE user_id = $1 AND slot_number = $2',
+      [userId, slot_number]
+    );
+    if (preset.rows.length === 0) {
+      return res.status(404).json({ error: '저장된 프리셋이 없습니다.' });
+    }
+
+    const itemIds = preset.rows[0].equipped_items || [];
+
+    // 전체 착용 해제
+    await pool.query('UPDATE avatar_inventory SET is_equipped = FALSE WHERE user_id = $1', [userId]);
+
+    // 프리셋 아이템 착용
+    if (itemIds.length > 0) {
+      await pool.query(
+        `UPDATE avatar_inventory SET is_equipped = TRUE WHERE user_id = $1 AND item_id = ANY($2::int[])`,
+        [userId, itemIds]
+      );
+    }
+
+    res.json({ message: '프리셋 적용 완료', presetName: preset.rows[0].preset_name, equippedItems: itemIds.length });
+  } catch (err) {
+    console.error('프리셋 불러오기 오류:', err.message);
+    res.status(500).json({ error: '프리셋 불러오기 실패' });
+  }
+});
+
+// ── 7) GET /api/avatar/presets — 내 프리셋 목록 ──
+app.get('/api/avatar/presets', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const result = await pool.query(
+      'SELECT * FROM outfit_presets WHERE user_id = $1 ORDER BY slot_number',
+      [userId]
+    );
+    res.json({ presets: result.rows, maxSlots: MAX_PRESET_SLOTS });
+  } catch (err) {
+    console.error('프리셋 목록 조회 오류:', err.message);
+    res.status(500).json({ error: '프리셋 목록 조회 실패' });
+  }
+});
+
+// ── 8) POST /api/avatar/vote/create — 인기 투표 생성 (주간) ──
+app.post('/api/avatar/vote/create', authenticateToken, async (req, res) => {
+  try {
+    const { fandom_id } = req.body;
+    const weekNumber = Math.ceil((Date.now() - new Date(new Date().getFullYear(), 0, 1).getTime()) / (7 * 24 * 60 * 60 * 1000));
+
+    // 이번 주 이미 존재하는지 확인
+    const existing = await pool.query(
+      'SELECT id FROM avatar_votes WHERE week_number = $1 AND (fandom_id = $2 OR ($2 IS NULL AND fandom_id IS NULL))',
+      [weekNumber, fandom_id || null]
+    );
+    if (existing.rows.length > 0) {
+      return res.status(400).json({ error: '이번 주 투표가 이미 존재합니다.', voteId: existing.rows[0].id });
+    }
+
+    const endsAt = new Date();
+    endsAt.setDate(endsAt.getDate() + (7 - endsAt.getDay())); // 이번 주 일요일
+    endsAt.setHours(23, 59, 59, 0);
+
+    const result = await pool.query(
+      `INSERT INTO avatar_votes (fandom_id, week_number, ends_at) VALUES ($1, $2, $3) RETURNING *`,
+      [fandom_id || null, weekNumber, endsAt]
+    );
+
+    res.status(201).json({ message: '인기 투표 생성 완료', vote: result.rows[0] });
+  } catch (err) {
+    console.error('인기 투표 생성 오류:', err.message);
+    res.status(500).json({ error: '투표 생성 실패' });
+  }
+});
+
+// ── 9) POST /api/avatar/vote/enter — 인기 투표 참가 (내 아바타 등록) ──
+app.post('/api/avatar/vote/enter', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { vote_id } = req.body;
+
+    if (!vote_id) return res.status(400).json({ error: 'vote_id 필수' });
+
+    // 투표 존재 + 활성 확인
+    const voteRes = await pool.query(
+      "SELECT * FROM avatar_votes WHERE id = $1 AND status = 'active'", [vote_id]
+    );
+    if (voteRes.rows.length === 0) {
+      return res.status(404).json({ error: '활성 투표를 찾을 수 없습니다.' });
+    }
+
+    // 이미 참가 확인
+    const existing = await pool.query(
+      'SELECT id FROM avatar_vote_entries WHERE vote_id = $1 AND user_id = $2', [vote_id, userId]
+    );
+    if (existing.rows.length > 0) {
+      return res.status(400).json({ error: '이미 참가한 투표입니다.' });
+    }
+
+    // 현재 착용 스냅샷 생성
+    const equipped = await pool.query(
+      `SELECT ai.id, ai.name, ai.category, ai.rarity, ai.emoji
+       FROM avatar_items ai JOIN avatar_inventory av ON av.item_id = ai.id
+       WHERE av.user_id = $1 AND av.is_equipped = TRUE`,
+      [userId]
+    );
+    const userRes = await pool.query('SELECT nickname, level, league, archetype FROM users WHERE id = $1', [userId]);
+    const snapshotData = {
+      user: userRes.rows[0],
+      equippedItems: equipped.rows,
+      timestamp: new Date().toISOString()
+    };
+
+    const result = await pool.query(
+      `INSERT INTO avatar_vote_entries (vote_id, user_id, snapshot_data) VALUES ($1, $2, $3) RETURNING *`,
+      [vote_id, userId, JSON.stringify(snapshotData)]
+    );
+
+    // CRE +2
+    await pool.query('UPDATE users SET stat_cre = stat_cre + 2 WHERE id = $1', [userId]);
+
+    res.json({ message: '투표 참가 완료!', entry: result.rows[0] });
+  } catch (err) {
+    console.error('투표 참가 오류:', err.message);
+    res.status(500).json({ error: '투표 참가 실패' });
+  }
+});
+
+// ── 10) POST /api/avatar/vote/cast — 투표하기 ──
+app.post('/api/avatar/vote/cast', authenticateToken, async (req, res) => {
+  try {
+    const voterId = req.user.id;
+    const { vote_id, entry_id } = req.body;
+
+    if (!vote_id || !entry_id) {
+      return res.status(400).json({ error: 'vote_id, entry_id 필수' });
+    }
+
+    // 활성 투표 확인
+    const voteRes = await pool.query(
+      "SELECT * FROM avatar_votes WHERE id = $1 AND status = 'active'", [vote_id]
+    );
+    if (voteRes.rows.length === 0) {
+      return res.status(404).json({ error: '활성 투표를 찾을 수 없습니다.' });
+    }
+
+    // 자기 자신에게 투표 불가
+    const entryRes = await pool.query('SELECT user_id FROM avatar_vote_entries WHERE id = $1', [entry_id]);
+    if (entryRes.rows.length === 0) {
+      return res.status(404).json({ error: '참가 항목을 찾을 수 없습니다.' });
+    }
+    if (entryRes.rows[0].user_id === voterId) {
+      return res.status(400).json({ error: '자신에게 투표할 수 없습니다.' });
+    }
+
+    // 중복 투표 확인 (1인 1표)
+    const dupeCheck = await pool.query(
+      'SELECT id FROM avatar_vote_records WHERE vote_id = $1 AND voter_id = $2', [vote_id, voterId]
+    );
+    if (dupeCheck.rows.length > 0) {
+      return res.status(400).json({ error: '이미 이번 투표에 참여했습니다.' });
+    }
+
+    // 투표 기록
+    await pool.query(
+      'INSERT INTO avatar_vote_records (vote_id, voter_id, entry_id) VALUES ($1, $2, $3)',
+      [vote_id, voterId, entry_id]
+    );
+
+    // 득표수 증가
+    await pool.query(
+      'UPDATE avatar_vote_entries SET vote_count = vote_count + 1 WHERE id = $1', [entry_id]
+    );
+
+    // SOC +2
+    await pool.query('UPDATE users SET stat_soc = stat_soc + 2 WHERE id = $1', [voterId]);
+
+    res.json({ message: '투표 완료!' });
+  } catch (err) {
+    console.error('투표 오류:', err.message);
+    res.status(500).json({ error: '투표 실패' });
+  }
+});
+
+// ── 11) GET /api/avatar/vote/:voteId/ranking — 투표 랭킹 ──
+app.get('/api/avatar/vote/:voteId/ranking', async (req, res) => {
+  try {
+    const voteId = parseInt(req.params.voteId);
+
+    const voteRes = await pool.query('SELECT * FROM avatar_votes WHERE id = $1', [voteId]);
+    if (voteRes.rows.length === 0) {
+      return res.status(404).json({ error: '투표를 찾을 수 없습니다.' });
+    }
+
+    const entries = await pool.query(
+      `SELECT e.*, u.nickname, u.level, u.league
+       FROM avatar_vote_entries e
+       JOIN users u ON u.id = e.user_id
+       WHERE e.vote_id = $1
+       ORDER BY e.vote_count DESC`,
+      [voteId]
+    );
+
+    // 순위 매기기
+    const ranked = entries.rows.map((e, i) => ({
+      rank: i + 1,
+      userId: e.user_id,
+      nickname: e.nickname,
+      level: e.level,
+      league: e.league,
+      voteCount: e.vote_count,
+      snapshotData: e.snapshot_data
+    }));
+
+    res.json({
+      vote: voteRes.rows[0],
+      ranking: ranked,
+      totalEntries: ranked.length,
+      top10: ranked.slice(0, 10)
+    });
+  } catch (err) {
+    console.error('투표 랭킹 조회 오류:', err.message);
+    res.status(500).json({ error: '랭킹 조회 실패' });
+  }
+});
+
+// ── 12) POST /api/avatar/vote/:voteId/finalize — 투표 종료 (결과 확정) ──
+app.post('/api/avatar/vote/:voteId/finalize', authenticateToken, async (req, res) => {
+  try {
+    const voteId = parseInt(req.params.voteId);
+
+    const voteRes = await pool.query(
+      "SELECT * FROM avatar_votes WHERE id = $1 AND status = 'active'", [voteId]
+    );
+    if (voteRes.rows.length === 0) {
+      return res.status(404).json({ error: '활성 투표를 찾을 수 없습니다.' });
+    }
+
+    // 순위 확정
+    const entries = await pool.query(
+      'SELECT id, user_id, vote_count FROM avatar_vote_entries WHERE vote_id = $1 ORDER BY vote_count DESC',
+      [voteId]
+    );
+    for (let i = 0; i < entries.rows.length; i++) {
+      await pool.query('UPDATE avatar_vote_entries SET rank = $1 WHERE id = $2', [i + 1, entries.rows[i].id]);
+    }
+
+    // 투표 종료
+    await pool.query("UPDATE avatar_votes SET status = 'ended' WHERE id = $1", [voteId]);
+
+    // TOP3 보상
+    const top3 = entries.rows.slice(0, 3);
+    const rewards = [500, 300, 150]; // 스타더스트 보상
+    for (let i = 0; i < top3.length; i++) {
+      await pool.query('UPDATE users SET stardust = stardust + $1, stat_cre = stat_cre + 5 WHERE id = $2',
+        [rewards[i], top3[i].user_id]);
+      await pool.query(
+        `INSERT INTO notifications (user_id, type, title, body, meta)
+         VALUES ($1, 'avatar_vote', $2, $3, $4)`,
+        [top3[i].user_id, `🏆 인기 투표 ${i + 1}위!`,
+         `주간 아바타 인기 투표에서 ${i + 1}위를 달성했습니다! 스타더스트 ${rewards[i]} 획득!`,
+         JSON.stringify({ voteId, rank: i + 1, reward: rewards[i] })]
+      );
+    }
+
+    res.json({
+      message: '투표 종료 및 결과 확정',
+      top3: top3.map((e, i) => ({ rank: i + 1, userId: e.user_id, voteCount: e.vote_count, reward: rewards[i] }))
+    });
+  } catch (err) {
+    console.error('투표 종료 오류:', err.message);
+    res.status(500).json({ error: '투표 종료 실패' });
+  }
+});
+
+// ── 13) POST /api/avatar/snapshot — 스냅샷 데이터 생성 ──
+app.post('/api/avatar/snapshot', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const equipped = await pool.query(
+      `SELECT ai.id, ai.name, ai.category, ai.rarity, ai.emoji, ai.description
+       FROM avatar_items ai JOIN avatar_inventory av ON av.item_id = ai.id
+       WHERE av.user_id = $1 AND av.is_equipped = TRUE`,
+      [userId]
+    );
+    const userRes = await pool.query(
+      'SELECT nickname, level, league, archetype, stat_loy, stat_act, stat_soc, stat_kno, stat_cre, stat_lea FROM users WHERE id = $1',
+      [userId]
+    );
+
+    const snapshot = {
+      user: userRes.rows[0],
+      equippedItems: equipped.rows,
+      timestamp: new Date().toISOString()
+    };
+
+    // ACT +1, CRE +1
+    await pool.query('UPDATE users SET stat_act = stat_act + 1, stat_cre = stat_cre + 1 WHERE id = $1', [userId]);
+
+    res.json({ snapshot });
+  } catch (err) {
+    console.error('스냅샷 생성 오류:', err.message);
+    res.status(500).json({ error: '스냅샷 생성 실패' });
   }
 });
 
