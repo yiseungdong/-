@@ -1221,8 +1221,42 @@ async function initDB() {
       ON CONFLICT DO NOTHING
     `);
 
+    // ── 팬덤 타임캡슐 (#56) ──
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS timecapsules (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        type VARCHAR(20) NOT NULL DEFAULT 'personal',
+        fandom_id INTEGER REFERENCES fanclubs(id),
+        title VARCHAR(200) NOT NULL,
+        message TEXT NOT NULL,
+        stat_snapshot JSONB,
+        open_date DATE NOT NULL,
+        is_opened BOOLEAN DEFAULT FALSE,
+        opened_at TIMESTAMP,
+        is_shared BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_capsule_user ON timecapsules(user_id)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_capsule_open ON timecapsules(open_date, is_opened)`);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS auto_memories (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        memory_type VARCHAR(30) NOT NULL,
+        title VARCHAR(200) NOT NULL,
+        description TEXT,
+        stat_snapshot JSONB,
+        meta JSONB DEFAULT '{}',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_memory_user ON auto_memories(user_id, created_at DESC)`);
+
     await client.query('COMMIT');
-    console.log('✅ 아스테리아 DB 초기화 완료 — 28개 테이블 생성');
+    console.log('✅ 아스테리아 DB 초기화 완료 — 30개 테이블 생성');
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('❌ DB 초기화 실패:', err.message);
@@ -9070,6 +9104,464 @@ app.get('/api/resonance/ranking', async (req, res) => {
   } catch (err) {
     console.error('공명 랭킹 조회 오류:', err.message);
     res.status(500).json({ error: '공명 랭킹 조회 실패' });
+  }
+});
+
+// ══════════════════════════════════════════════
+//  팬덤 타임캡슐 (#56) — 과거의 나에게 보내는 메시지
+// ══════════════════════════════════════════════
+
+// API 1. 개인 타임캡슐 작성
+app.post('/api/timecapsule/create', authenticateToken, async (req, res) => {
+  const userId = req.user.id;
+  const { title, message, open_date } = req.body;
+  try {
+    if (!title || !message || !open_date) {
+      return res.status(400).json({ error: 'title, message, open_date는 필수입니다' });
+    }
+
+    // 날짜 검증: 최소 30일 후 ~ 최대 365일 후
+    const now = new Date();
+    const openDate = new Date(open_date);
+    const diffDays = Math.floor((openDate - now) / (1000 * 60 * 60 * 24));
+    if (diffDays < 30) return res.status(400).json({ error: '최소 30일 후부터 설정할 수 있습니다' });
+    if (diffDays > 365) return res.status(400).json({ error: '최대 365일 후까지 설정할 수 있습니다' });
+
+    // 유저당 최대 10개 활성 타임캡슐
+    const countRes = await pool.query(
+      'SELECT COUNT(*) as cnt FROM timecapsules WHERE user_id = $1 AND is_opened = false',
+      [userId]
+    );
+    if (parseInt(countRes.rows[0].cnt) >= 10) {
+      return res.status(400).json({ error: '활성 타임캡슐은 최대 10개까지 만들 수 있습니다' });
+    }
+
+    // 현재 스탯 스냅샷 저장
+    const userRes = await pool.query(
+      `SELECT level, league, ap, stat_loy, stat_act, stat_soc, stat_eco, stat_cre, stat_int FROM users WHERE id = $1`,
+      [userId]
+    );
+    const u = userRes.rows[0];
+    const statSnapshot = {
+      level: u.level, league: u.league, ap: u.ap,
+      loy: u.stat_loy, act: u.stat_act, soc: u.stat_soc,
+      eco: u.stat_eco, cre: u.stat_cre, int: u.stat_int
+    };
+
+    await pool.query(
+      `INSERT INTO timecapsules (user_id, type, title, message, stat_snapshot, open_date)
+       VALUES ($1, 'personal', $2, $3, $4, $5)`,
+      [userId, title, message, JSON.stringify(statSnapshot), open_date]
+    );
+
+    // CRE +2 지급
+    await pool.query('UPDATE users SET stat_cre = stat_cre + 2 WHERE id = $1', [userId]);
+
+    res.json({ message: '타임캡슐이 묻혔습니다!', openDate: open_date, daysUntilOpen: diffDays });
+  } catch (err) {
+    console.error('타임캡슐 생성 오류:', err.message);
+    res.status(500).json({ error: '타임캡슐 생성 실패' });
+  }
+});
+
+// API 2. 내 타임캡슐 목록
+app.get('/api/timecapsule/my', authenticateToken, async (req, res) => {
+  const userId = req.user.id;
+  try {
+    const { rows } = await pool.query(
+      'SELECT * FROM timecapsules WHERE user_id = $1 ORDER BY created_at DESC',
+      [userId]
+    );
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const ready = [];   // 열림 가능
+    const waiting = []; // 대기중
+    const opened = [];  // 이미 열림
+
+    for (const c of rows) {
+      const openDate = new Date(c.open_date);
+      openDate.setHours(0, 0, 0, 0);
+
+      if (c.is_opened) {
+        opened.push({ ...c, status: '이미 열림' });
+      } else if (openDate <= today) {
+        ready.push({ ...c, status: '열어볼 수 있어요!' });
+      } else {
+        const daysLeft = Math.ceil((openDate - today) / (1000 * 60 * 60 * 24));
+        waiting.push({ ...c, status: `${daysLeft}일 남음` });
+      }
+    }
+
+    res.json({ ready, waiting, opened });
+  } catch (err) {
+    console.error('타임캡슐 목록 조회 오류:', err.message);
+    res.status(500).json({ error: '타임캡슐 목록 조회 실패' });
+  }
+});
+
+// API 3. 타임캡슐 열기
+app.post('/api/timecapsule/open/:id', authenticateToken, async (req, res) => {
+  const userId = req.user.id;
+  const capsuleId = req.params.id;
+  try {
+    // 본인 캡슐 확인
+    const capRes = await pool.query(
+      'SELECT * FROM timecapsules WHERE id = $1 AND user_id = $2',
+      [capsuleId, userId]
+    );
+    if (capRes.rows.length === 0) return res.status(404).json({ error: '타임캡슐을 찾을 수 없습니다' });
+
+    const capsule = capRes.rows[0];
+    if (capsule.is_opened) return res.status(400).json({ error: '이미 열린 타임캡슐입니다' });
+
+    // open_date 확인
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const openDate = new Date(capsule.open_date);
+    openDate.setHours(0, 0, 0, 0);
+    if (openDate > today) return res.status(400).json({ error: '아직 열 수 없습니다. 더 기다려주세요!' });
+
+    // 열기 처리
+    await pool.query(
+      'UPDATE timecapsules SET is_opened = true, opened_at = NOW() WHERE id = $1',
+      [capsuleId]
+    );
+
+    // 현재 스탯 조회 & 성장 비교
+    const userRes = await pool.query(
+      `SELECT level, league, ap, stat_loy, stat_act, stat_soc, stat_eco, stat_cre, stat_int FROM users WHERE id = $1`,
+      [userId]
+    );
+    const u = userRes.rows[0];
+    const now = {
+      level: u.level, league: u.league, ap: u.ap,
+      loy: u.stat_loy, act: u.stat_act, soc: u.stat_soc,
+      eco: u.stat_eco, cre: u.stat_cre, int: u.stat_int
+    };
+
+    const then = capsule.stat_snapshot || {};
+    const changes = {};
+    for (const key of Object.keys(now)) {
+      if (typeof now[key] === 'number' && typeof then[key] === 'number') {
+        changes[key] = now[key] - then[key];
+      }
+    }
+
+    // LOY +3 지급
+    await pool.query('UPDATE users SET stat_loy = stat_loy + 3 WHERE id = $1', [userId]);
+
+    res.json({
+      capsule: { title: capsule.title, message: capsule.message, createdAt: capsule.created_at },
+      growth: { then, now, changes }
+    });
+  } catch (err) {
+    console.error('타임캡슐 열기 오류:', err.message);
+    res.status(500).json({ error: '타임캡슐 열기 실패' });
+  }
+});
+
+// API 4. 타임캡슐 공유
+app.post('/api/timecapsule/share/:id', authenticateToken, async (req, res) => {
+  const userId = req.user.id;
+  const capsuleId = req.params.id;
+  try {
+    const capRes = await pool.query(
+      'SELECT * FROM timecapsules WHERE id = $1 AND user_id = $2',
+      [capsuleId, userId]
+    );
+    if (capRes.rows.length === 0) return res.status(404).json({ error: '타임캡슐을 찾을 수 없습니다' });
+
+    const capsule = capRes.rows[0];
+    if (!capsule.is_opened) return res.status(400).json({ error: '열린 타임캡슐만 공유할 수 있습니다' });
+    if (capsule.is_shared) return res.status(400).json({ error: '이미 공유된 타임캡슐입니다' });
+
+    await pool.query('UPDATE timecapsules SET is_shared = true WHERE id = $1', [capsuleId]);
+
+    // SOC +1 지급
+    await pool.query('UPDATE users SET stat_soc = stat_soc + 1 WHERE id = $1', [userId]);
+
+    res.json({ message: '타임캡슐이 공유되었습니다!' });
+  } catch (err) {
+    console.error('타임캡슐 공유 오류:', err.message);
+    res.status(500).json({ error: '타임캡슐 공유 실패' });
+  }
+});
+
+// API 5. 공유된 타임캡슐 피드
+app.get('/api/timecapsule/shared', async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT tc.id, tc.title, tc.created_at, tc.opened_at, tc.stat_snapshot,
+              u.nickname, u.emoji,
+              LEFT(tc.message, 50) AS preview
+       FROM timecapsules tc
+       JOIN users u ON u.id = tc.user_id
+       WHERE tc.is_shared = true AND tc.is_opened = true
+       ORDER BY tc.opened_at DESC
+       LIMIT 20`
+    );
+
+    // 성장 리포트 요약 생성
+    const feed = await Promise.all(rows.map(async (tc) => {
+      const then = tc.stat_snapshot || {};
+      const userRes = await pool.query(
+        'SELECT level, stat_loy, stat_act, stat_soc, stat_eco, stat_cre, stat_int FROM users WHERE nickname = $1',
+        [tc.nickname]
+      );
+      const now = userRes.rows[0] || {};
+      const levelGrowth = (now.level || 0) - (then.level || 0);
+
+      return {
+        id: tc.id,
+        nickname: tc.nickname,
+        emoji: tc.emoji,
+        title: tc.title,
+        preview: tc.preview,
+        createdAt: tc.created_at,
+        openedAt: tc.opened_at,
+        growthSummary: { levelGrowth }
+      };
+    }));
+
+    res.json({ feed });
+  } catch (err) {
+    console.error('공유 타임캡슐 피드 오류:', err.message);
+    res.status(500).json({ error: '공유 피드 조회 실패' });
+  }
+});
+
+// ══════════════════════════════════════════════
+//  팬덤 타임캡슐 Part 2 (#56) — 공동 캡슐 & 추억 시스템
+// ══════════════════════════════════════════════
+
+// API 6. 팬클럽 공동 타임캡슐 작성
+app.post('/api/timecapsule/fandom/create', authenticateToken, async (req, res) => {
+  const userId = req.user.id;
+  const { title, message, open_date, fandom_id } = req.body;
+  try {
+    if (!title || !message || !open_date || !fandom_id) {
+      return res.status(400).json({ error: 'title, message, open_date, fandom_id는 필수입니다' });
+    }
+
+    // 본인이 해당 팬클럽 소속인지 확인
+    const userRes = await pool.query('SELECT fandom_id FROM users WHERE id = $1', [userId]);
+    if (!userRes.rows[0] || userRes.rows[0].fandom_id !== parseInt(fandom_id)) {
+      return res.status(403).json({ error: '해당 팬클럽 소속이 아닙니다' });
+    }
+
+    // 날짜 검증: 최소 30일 후 ~ 최대 365일 후
+    const now = new Date();
+    const openDate = new Date(open_date);
+    const diffDays = Math.floor((openDate - now) / (1000 * 60 * 60 * 24));
+    if (diffDays < 30) return res.status(400).json({ error: '최소 30일 후부터 설정할 수 있습니다' });
+    if (diffDays > 365) return res.status(400).json({ error: '최대 365일 후까지 설정할 수 있습니다' });
+
+    // 팬클럽당 시즌별 최대 3개
+    const fandomRes = await pool.query('SELECT season FROM fanclubs WHERE id = $1', [fandom_id]);
+    if (fandomRes.rows.length === 0) return res.status(404).json({ error: '존재하지 않는 팬클럽입니다' });
+    const currentSeason = fandomRes.rows[0].season;
+
+    const countRes = await pool.query(
+      `SELECT COUNT(*) as cnt FROM timecapsules
+       WHERE fandom_id = $1 AND type = 'fandom' AND is_opened = false`,
+      [fandom_id]
+    );
+    if (parseInt(countRes.rows[0].cnt) >= 3) {
+      return res.status(400).json({ error: '팬클럽당 시즌별 공동 타임캡슐은 최대 3개입니다' });
+    }
+
+    // 팬클럽 정보 스냅샷 저장
+    const clubRes = await pool.query(
+      'SELECT league, score_total, member_count, rank FROM fanclubs WHERE id = $1',
+      [fandom_id]
+    );
+    const club = clubRes.rows[0];
+    const statSnapshot = {
+      league: club.league,
+      score_total: parseFloat(club.score_total),
+      member_count: club.member_count,
+      rank: club.rank,
+      season: currentSeason
+    };
+
+    await pool.query(
+      `INSERT INTO timecapsules (user_id, type, fandom_id, title, message, stat_snapshot, open_date)
+       VALUES ($1, 'fandom', $2, $3, $4, $5, $6)`,
+      [userId, fandom_id, title, message, JSON.stringify(statSnapshot), open_date]
+    );
+
+    res.json({ message: '팬클럽 공동 타임캡슐이 묻혔습니다!', openDate: open_date });
+  } catch (err) {
+    console.error('팬클럽 타임캡슐 생성 오류:', err.message);
+    res.status(500).json({ error: '팬클럽 타임캡슐 생성 실패' });
+  }
+});
+
+// API 7. 팬클럽 타임캡슐 목록
+app.get('/api/timecapsule/fandom/:fandomId', async (req, res) => {
+  const fandomId = req.params.fandomId;
+  try {
+    const { rows } = await pool.query(
+      `SELECT tc.*, u.nickname, u.emoji
+       FROM timecapsules tc
+       JOIN users u ON u.id = tc.user_id
+       WHERE tc.fandom_id = $1 AND tc.type = 'fandom'
+       ORDER BY tc.created_at DESC`,
+      [fandomId]
+    );
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const ready = [];
+    const waiting = [];
+    const opened = [];
+
+    for (const c of rows) {
+      const openDate = new Date(c.open_date);
+      openDate.setHours(0, 0, 0, 0);
+
+      const item = { ...c, author: { nickname: c.nickname, emoji: c.emoji } };
+      delete item.nickname;
+      delete item.emoji;
+
+      if (c.is_opened) {
+        opened.push({ ...item, status: '이미 열림' });
+      } else if (openDate <= today) {
+        ready.push({ ...item, status: '열어볼 수 있어요!' });
+      } else {
+        const daysLeft = Math.ceil((openDate - today) / (1000 * 60 * 60 * 24));
+        waiting.push({ ...item, status: `${daysLeft}일 남음` });
+      }
+    }
+
+    res.json({ ready, waiting, opened });
+  } catch (err) {
+    console.error('팬클럽 타임캡슐 목록 오류:', err.message);
+    res.status(500).json({ error: '팬클럽 타임캡슐 목록 조회 실패' });
+  }
+});
+
+// API 8. 추억 자동 저장 (시스템 호출용)
+app.post('/api/memory/auto-save', authenticateToken, async (req, res) => {
+  const { user_id, memory_type, title, description, meta } = req.body;
+  try {
+    if (!user_id || !memory_type || !title) {
+      return res.status(400).json({ error: 'user_id, memory_type, title은 필수입니다' });
+    }
+
+    // 유효한 memory_type인지 확인
+    const validTypes = [
+      'first_join', 'first_promote', 'first_trade',
+      'first_constellation', 'first_chat',
+      'level_milestone', 'streak_milestone'
+    ];
+    if (!validTypes.includes(memory_type)) {
+      return res.status(400).json({ error: '유효하지 않은 memory_type입니다' });
+    }
+
+    // 같은 유저에게 같은 memory_type은 1번만 저장 (중복 방지)
+    const existRes = await pool.query(
+      'SELECT id FROM auto_memories WHERE user_id = $1 AND memory_type = $2',
+      [user_id, memory_type]
+    );
+    if (existRes.rows.length > 0) {
+      return res.status(409).json({ error: '이미 저장된 추억입니다', existing: true });
+    }
+
+    // 현재 스탯 스냅샷 자동 저장
+    const userRes = await pool.query(
+      `SELECT level, league, ap, stat_loy, stat_act, stat_soc, stat_eco, stat_cre, stat_int FROM users WHERE id = $1`,
+      [user_id]
+    );
+    if (userRes.rows.length === 0) return res.status(404).json({ error: '존재하지 않는 유저입니다' });
+
+    const u = userRes.rows[0];
+    const statSnapshot = {
+      level: u.level, league: u.league, ap: u.ap,
+      loy: u.stat_loy, act: u.stat_act, soc: u.stat_soc,
+      eco: u.stat_eco, cre: u.stat_cre, int: u.stat_int
+    };
+
+    await pool.query(
+      `INSERT INTO auto_memories (user_id, memory_type, title, description, stat_snapshot, meta)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [user_id, memory_type, title, description || null, JSON.stringify(statSnapshot), JSON.stringify(meta || {})]
+    );
+
+    res.json({ saved: true, memoryType: memory_type, title });
+  } catch (err) {
+    console.error('추억 자동 저장 오류:', err.message);
+    res.status(500).json({ error: '추억 자동 저장 실패' });
+  }
+});
+
+// API 9. 올해의 추억 (연간 리포트)
+app.get('/api/memory/my-year', authenticateToken, async (req, res) => {
+  const userId = req.user.id;
+  try {
+    const currentYear = new Date().getFullYear();
+
+    // 올해 자동 추억 조회
+    const memoriesRes = await pool.query(
+      `SELECT memory_type, title, description, stat_snapshot, meta, created_at
+       FROM auto_memories
+       WHERE user_id = $1 AND EXTRACT(YEAR FROM created_at) = $2
+       ORDER BY created_at ASC`,
+      [userId, currentYear]
+    );
+
+    const memories = memoriesRes.rows.map(m => ({
+      type: m.memory_type,
+      title: m.title,
+      description: m.description,
+      date: m.created_at,
+      statSnapshot: m.stat_snapshot
+    }));
+
+    // 올해 열린 타임캡슐 조회
+    const capsulesRes = await pool.query(
+      `SELECT title, created_at, opened_at, stat_snapshot
+       FROM timecapsules
+       WHERE user_id = $1 AND is_opened = true AND EXTRACT(YEAR FROM opened_at) = $2
+       ORDER BY opened_at ASC`,
+      [userId, currentYear]
+    );
+
+    const openedCapsules = capsulesRes.rows.map(c => ({
+      title: c.title,
+      createdAt: c.created_at,
+      openedAt: c.opened_at
+    }));
+
+    // 성장 리포트: 올해 첫 추억의 레벨 vs 현재 레벨
+    const userRes = await pool.query('SELECT level FROM users WHERE id = $1', [userId]);
+    const currentLevel = userRes.rows[0].level;
+
+    let levelThen = currentLevel;
+    if (memories.length > 0 && memories[0].statSnapshot && memories[0].statSnapshot.level) {
+      levelThen = memories[0].statSnapshot.level;
+    }
+    const levelGrowth = currentLevel - levelThen;
+
+    res.json({
+      year: currentYear,
+      memories,
+      openedCapsules,
+      totalMemories: memories.length + openedCapsules.length,
+      growth: {
+        levelThen,
+        levelNow: currentLevel,
+        message: levelGrowth > 0
+          ? `올해 ${levelGrowth}레벨이나 성장했어요!`
+          : '올해도 꾸준히 활동 중이에요!'
+      }
+    });
+  } catch (err) {
+    console.error('연간 추억 조회 오류:', err.message);
+    res.status(500).json({ error: '연간 추억 조회 실패' });
   }
 });
 
