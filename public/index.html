@@ -674,45 +674,98 @@ function showAvChat(msg){
 async function submitBugReport(){var t=localStorage.getItem('accessToken');if(!t){alert('로그인이 필요합니다.');return}try{var r=await fetch('/api/bugs',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},body:JSON.stringify({page:document.getElementById('bugPage').value,issue_type:document.getElementById('bugType').value,description:document.getElementById('bugDesc').value})});var d=await r.json();if(r.ok){showToast(d.message);document.getElementById('bugModal').classList.remove('open');document.getElementById('bugDesc').value=''}else{alert(d.message||'제출 실패')}}catch(e){alert('네트워크 오류')}}
 
 // ── 리그 전환 ──
-const LEAGUE_COLORS = {dust:'#94a3b8',star:'#fbbf24',planet:'#34d399',nova:'#c084fc',quasar:'#f0c040'};
-const LEAGUE_BG = {dust:'#030308',star:'#0a0700',planet:'#000f08',nova:'#0d0020',quasar:'#0a0700'};
+// ── 리그 전환 ──
+
+// 리그별 팬클럽 개별 색상 (순위순 그라데이션)
+function genGradient(from, to, n) {
+  const f = [parseInt(from.slice(1,3),16),parseInt(from.slice(3,5),16),parseInt(from.slice(5,7),16)];
+  const t = [parseInt(to.slice(1,3),16),parseInt(to.slice(3,5),16),parseInt(to.slice(5,7),16)];
+  return Array.from({length:n},(_,i)=>{
+    const r = Math.round(f[0]+(t[0]-f[0])*i/(n-1));
+    const g = Math.round(f[1]+(t[1]-f[1])*i/(n-1));
+    const b = Math.round(f[2]+(t[2]-f[2])*i/(n-1));
+    return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
+  });
+}
+const QUASAR_COLORS = ['#f0c040','#c084fc','#818cf8','#34d399','#f87171'];
+const NOVA_COLORS = genGradient('#e879f9','#3b0764',10);
+const PLANET_COLORS = genGradient('#6ee7b7','#064e3b',20);
+const STAR_COLORS = genGradient('#fde68a','#78350f',40);
+const DUST_COLORS = genGradient('#e2e8f0','#1e293b',50);
 
 const LEAGUE_DATA = {
   dust: {
-    name:'DUST LEAGUE', subtitle:'모든 별의 시작점 · 신생 팬클럽', color:'#94a3b8', bg:'#030308',
+    name:'DUST LEAGUE', subtitle:'모든 별의 시작점 · 신생 팬클럽', color:'#94a3b8', bg:'#030308', colors:DUST_COLORS,
     fanclubs:[
-      {name:'STARDUST',score:12450,icon:'⭐'},{name:'MOONLIGHT',score:9800,icon:'🌙'},
-      {name:'TWILIGHT',score:7200,icon:'🌅'},{name:'NEBULA KIDS',score:5100,icon:'💫'},
-      {name:'FIRST LIGHT',score:3200,icon:'✨'},{name:'ECHO',score:2800,icon:'🔊'},
-      {name:'MIST',score:2400,icon:'🌫️'},{name:'SPARK',score:2100,icon:'⚡'},
-      {name:'PETAL',score:1800,icon:'🌸'},{name:'SHADE',score:1500,icon:'🌑'},
-      {name:'DRIFT',score:1200,icon:'🍂'},{name:'EMBER',score:900,icon:'🔥'},
-      {name:'HAZE',score:700,icon:'💨'},{name:'GRAIN',score:500,icon:'🌾'},
-      {name:'SPECK',score:300,icon:'✦'}
+      {name:'STARDUST',score:12450,icon:'⭐'},{name:'MOONLIGHT',score:11200,icon:'🌙'},
+      {name:'TWILIGHT',score:10100,icon:'🌅'},{name:'NEBULA KIDS',score:9200,icon:'💫'},
+      {name:'FIRST LIGHT',score:8500,icon:'✨'},{name:'ECHO',score:7900,icon:'🔊'},
+      {name:'MIST',score:7300,icon:'🌫️'},{name:'SPARK',score:6800,icon:'⚡'},
+      {name:'PETAL',score:6300,icon:'🌸'},{name:'SHADE',score:5900,icon:'🌑'},
+      {name:'DRIFT',score:5500,icon:'🍂'},{name:'EMBER',score:5100,icon:'🔥'},
+      {name:'HAZE',score:4800,icon:'💨'},{name:'GRAIN',score:4500,icon:'🌾'},
+      {name:'SPECK',score:4200,icon:'✦'},{name:'SEEDLING',score:3900,icon:'🌱'},
+      {name:'FLICKER',score:3600,icon:'🕯️'},{name:'PEBBLE',score:3400,icon:'🪨'},
+      {name:'WISP',score:3100,icon:'💭'},{name:'DEW',score:2900,icon:'💧'},
+      {name:'ASH',score:2700,icon:'🌑'},{name:'BREEZE',score:2500,icon:'🍃'},
+      {name:'GLOW',score:2300,icon:'🔆'},{name:'CRUMB',score:2100,icon:'🍞'},
+      {name:'RIPPLE',score:1950,icon:'🌊'},{name:'BLOOM',score:1800,icon:'🌺'},
+      {name:'FOSSIL',score:1650,icon:'🦴'},{name:'MOSS',score:1500,icon:'🍀'},
+      {name:'CLAY',score:1380,icon:'🏺'},{name:'SOOT',score:1260,icon:'⬛'},
+      {name:'TWIG',score:1150,icon:'🪵'},{name:'CHALK',score:1050,icon:'🤍'},
+      {name:'RUIN',score:960,icon:'🏚️'},{name:'SHELL',score:880,icon:'🐚'},
+      {name:'SMOKE',score:800,icon:'💨'},{name:'POND',score:730,icon:'🐸'},
+      {name:'RUST',score:660,icon:'🔩'},{name:'LEAF',score:600,icon:'🍁'},
+      {name:'SAND',score:540,icon:'🏝️'},{name:'BONE',score:490,icon:'🦷'},
+      {name:'DRIP',score:440,icon:'💦'},{name:'MOTH',score:400,icon:'🦋'},
+      {name:'ROOT',score:360,icon:'🌿'},{name:'WORM',score:320,icon:'🪱'},
+      {name:'DUST',score:290,icon:'🌫️'},{name:'FROST',score:260,icon:'❄️'},
+      {name:'SHARD',score:230,icon:'💎'},{name:'VOID',score:200,icon:'⚫'},
+      {name:'ATOM',score:170,icon:'⚛️'},{name:'ZERO',score:150,icon:'0️⃣'}
     ]
   },
   star: {
-    name:'STAR LEAGUE', subtitle:'빛나는 도약 · 성장하는 팬클럽', color:'#fbbf24', bg:'#0a0700',
+    name:'STAR LEAGUE', subtitle:'빛나는 도약 · 성장하는 팬클럽', color:'#fbbf24', bg:'#0a0700', colors:STAR_COLORS,
     fanclubs:[
-      {name:'GOLDEN WAVE',score:45200,icon:'🌊'},{name:'SUNFLOWER',score:38900,icon:'🌻'},
-      {name:'LIGHTBEAM',score:31500,icon:'💡'},{name:'HONEY BEE',score:25800,icon:'🐝'},
-      {name:'SUNRISE',score:19400,icon:'🌅'},{name:'AMBER',score:17200,icon:'💛'},
-      {name:'TOPAZ',score:15500,icon:'💎'},{name:'CANDLE',score:13800,icon:'🕯️'},
-      {name:'GLEAM',score:12100,icon:'✨'},{name:'FLARE',score:10700,icon:'🌟'}
+      {name:'GOLDEN WAVE',score:45200,icon:'🌊'},{name:'SUNFLOWER',score:42100,icon:'🌻'},
+      {name:'LIGHTBEAM',score:39500,icon:'💡'},{name:'HONEY BEE',score:37200,icon:'🐝'},
+      {name:'SUNRISE',score:34800,icon:'🌅'},{name:'AMBER',score:32600,icon:'💛'},
+      {name:'TOPAZ',score:30500,icon:'💎'},{name:'CANDLE',score:28700,icon:'🕯️'},
+      {name:'GLEAM',score:27000,icon:'✨'},{name:'FLARE',score:25400,icon:'🌟'},
+      {name:'BEACON',score:24000,icon:'🔦'},{name:'CORONA',score:22600,icon:'👑'},
+      {name:'BLAZE',score:21300,icon:'🔥'},{name:'PRISM',score:20100,icon:'🌈'},
+      {name:'SHIMMER',score:19000,icon:'💫'},{name:'LUMEN',score:17900,icon:'💡'},
+      {name:'RADIANT',score:16900,icon:'☀️'},{name:'SPARK',score:16000,icon:'⚡'},
+      {name:'GLITTER',score:15100,icon:'✨'},{name:'HALO',score:14300,icon:'😇'},
+      {name:'TORCH',score:13500,icon:'🔥'},{name:'RAY',score:12800,icon:'☀️'},
+      {name:'FLASH',score:12100,icon:'📸'},{name:'BRILLIANCE',score:11500,icon:'💎'},
+      {name:'GLOW BUG',score:10900,icon:'🐛'},{name:'PHOTON',score:10300,icon:'⚛️'},
+      {name:'NOVA LITE',score:9800,icon:'🌠'},{name:'TWINKLE',score:9300,icon:'⭐'},
+      {name:'FIREFLY',score:8800,icon:'🪲'},{name:'LANTERN',score:8400,icon:'🏮'},
+      {name:'KINDLE',score:8000,icon:'📖'},{name:'EMBER',score:7600,icon:'🔥'},
+      {name:'IGNIS',score:7200,icon:'🌋'},{name:'PIXEL',score:6900,icon:'🟡'},
+      {name:'AURA',score:6600,icon:'🌟'},{name:'GLINT',score:6300,icon:'✨'},
+      {name:'STREAK',score:6000,icon:'☄️'},{name:'FLICKER',score:5700,icon:'🕯️'},
+      {name:'WARMTH',score:5400,icon:'🧣'},{name:'DAYBREAK',score:5200,icon:'🌅'}
     ]
   },
   planet: {
-    name:'PLANET LEAGUE', subtitle:'궤도에 오른 힘 · 안정된 팬클럽', color:'#34d399', bg:'#000f08',
+    name:'PLANET LEAGUE', subtitle:'궤도에 오른 힘 · 안정된 팬클럽', color:'#34d399', bg:'#000f08', colors:PLANET_COLORS,
     fanclubs:[
-      {name:'EVERGREEN',score:78500,icon:'🌿'},{name:'OCEAN DEEP',score:65200,icon:'🌊'},
-      {name:'EARTH CORE',score:54800,icon:'🌍'},{name:'JADE',score:43100,icon:'💚'},
-      {name:'FOREST',score:35600,icon:'🌲'},{name:'CORAL',score:30200,icon:'🐚'},
-      {name:'MOSS',score:26800,icon:'🍀'},{name:'FERN',score:23400,icon:'🌱'},
-      {name:'CREEK',score:20100,icon:'💧'},{name:'MEADOW',score:17500,icon:'🏕️'}
+      {name:'EVERGREEN',score:78500,icon:'🌿'},{name:'OCEAN DEEP',score:72400,icon:'🌊'},
+      {name:'EARTH CORE',score:67200,icon:'🌍'},{name:'JADE',score:62500,icon:'💚'},
+      {name:'FOREST',score:58100,icon:'🌲'},{name:'CORAL',score:54000,icon:'🐚'},
+      {name:'MOSS',score:50200,icon:'🍀'},{name:'FERN',score:46800,icon:'🌱'},
+      {name:'CREEK',score:43500,icon:'💧'},{name:'MEADOW',score:40600,icon:'🏕️'},
+      {name:'TUNDRA',score:37900,icon:'❄️'},{name:'GROVE',score:35400,icon:'🌳'},
+      {name:'DELTA',score:33100,icon:'🏞️'},{name:'REEF',score:31000,icon:'🐠'},
+      {name:'VALLEY',score:29000,icon:'⛰️'},{name:'OASIS',score:27200,icon:'🏝️'},
+      {name:'MARSH',score:25500,icon:'🐸'},{name:'TIDE',score:24000,icon:'🌊'},
+      {name:'CANYON',score:22600,icon:'🏜️'},{name:'SUMMIT',score:21300,icon:'🗻'}
     ]
   },
   nova: {
-    name:'NOVA LEAGUE', subtitle:'폭발하는 에너지 · 영향력 있는 팬클럽', color:'#c084fc', bg:'#0d0020',
+    name:'NOVA LEAGUE', subtitle:'폭발하는 에너지 · 영향력 있는 팬클럽', color:'#c084fc', bg:'#0d0020', colors:NOVA_COLORS,
     fanclubs:[
       {name:'SUPERNOVA',score:112000,icon:'💜'},{name:'PURPLE RAIN',score:98700,icon:'🔮'},
       {name:'COSMOS',score:87300,icon:'🌌'},{name:'MYSTIC',score:76500,icon:'✨'},
@@ -722,7 +775,7 @@ const LEAGUE_DATA = {
     ]
   },
   quasar: {
-    name:'QUASAR LEAGUE', subtitle:'제국의 정점 · 실시간 팬클럽 화력 순위', color:'#f0c040', bg:'#0a0700',
+    name:'QUASAR LEAGUE', subtitle:'제국의 정점 · 실시간 팬클럽 화력 순위', color:'#f0c040', bg:'#0a0700', colors:QUASAR_COLORS,
     fanclubs:[
       {name:'SERENADE',score:127450,icon:'🌟'},{name:'NOVA CORE',score:98320,icon:'💜'},
       {name:'ECLIPSE',score:82100,icon:'🔵'},{name:'AURORA',score:71880,icon:'💚'},
@@ -734,50 +787,50 @@ const LEAGUE_DATA = {
 // 월드 중심 좌표
 const CX = 900, CY = 600;
 
-// 점수 → 반지름 계산 (점수 비례, 리그별 최대/최소 반지름)
-function calcRadius(score, maxScore, isFirst, totalCount) {
-  if (isFirst) return totalCount <= 5 ? 120 : 100;
-  const minR = totalCount <= 5 ? 70 : totalCount <= 10 ? 50 : 30;
-  const maxR = totalCount <= 5 ? 90 : totalCount <= 10 ? 70 : 50;
-  const ratio = Math.max(0.3, score / maxScore);
-  return Math.round(minR + (maxR - minR) * ratio);
+// hex → rgb 문자열
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return `${r},${g},${b}`;
 }
 
-// 퀘이사 배치: 1등 중앙, 2~5등 동서남북 접점
+// 퀘이사 배치: 1등 거대 중앙, 2~5등 가장자리 접점 (절반만 보임)
 function layoutQuasar(fanclubs) {
-  const maxScore = fanclubs[0].score;
-  const positions = [];
-  const r1 = 120;
-  positions.push({ x: CX, y: CY, r: r1 });
+  const vp = document.getElementById('cv');
+  const vpW = vp ? vp.clientWidth : 1200;
+  const vpH = vp ? vp.clientHeight : 800;
+  const r1 = Math.min(vpW, vpH) * 0.33;
+  const r2 = r1 * 0.45;
+  const positions = [{ x: CX, y: CY, r: r1 }];
 
-  // 2등=북, 3등=남, 4등=서, 5등=동
-  const dirs = [{dx:0,dy:-1},{dx:0,dy:1},{dx:-1,dy:0},{dx:1,dy:0}];
-  for (let i = 1; i < fanclubs.length && i <= 4; i++) {
-    const ri = calcRadius(fanclubs[i].score, maxScore, false, 5);
-    const d = dirs[i - 1];
-    positions.push({
-      x: CX + d.dx * (r1 + ri),
-      y: CY + d.dy * (r1 + ri),
-      r: ri
-    });
-  }
+  // 2등=북(반 잘림), 3등=남, 4등=서, 5등=동
+  positions.push({ x: CX, y: CY - r1 - r2 + r2 * 0.5, r: r2 });
+  positions.push({ x: CX, y: CY + r1 + r2 - r2 * 0.5, r: r2 });
+  positions.push({ x: CX - r1 - r2 + r2 * 0.5, y: CY, r: r2 });
+  positions.push({ x: CX + r1 + r2 - r2 * 0.5, y: CY, r: r2 });
   return positions;
 }
 
-// 나선형 배치: 아르키메데스 나선
+// 나선형 배치: 아르키메데스 나선 (팬클럽 수에 따라 자동 조절)
 function layoutSpiral(fanclubs) {
   const maxScore = fanclubs[0].score;
   const count = fanclubs.length;
   const positions = [];
-  const r1 = calcRadius(maxScore, maxScore, true, count);
+
+  // 1등 반지름 (팬클럽 수 많을수록 작게)
+  const r1 = count <= 10 ? 100 : count <= 20 ? 80 : count <= 40 ? 60 : 50;
   positions.push({ x: CX, y: CY, r: r1 });
 
-  const startR = r1 + 60;
-  const spacing = count <= 10 ? 55 : count <= 20 ? 40 : 30;
-  const angleStep = count <= 10 ? 0.85 : count <= 20 ? 0.65 : 0.5;
+  const startR = r1 + (count <= 10 ? 60 : count <= 20 ? 50 : 35);
+  const spacing = count <= 10 ? 55 : count <= 20 ? 38 : count <= 40 ? 26 : 22;
+  const angleStep = count <= 10 ? 0.85 : count <= 20 ? 0.65 : count <= 40 ? 0.48 : 0.42;
 
   for (let i = 1; i < count; i++) {
-    const ri = calcRadius(fanclubs[i].score, maxScore, false, count);
+    const ratio = Math.max(0.3, fanclubs[i].score / maxScore);
+    const minR = count <= 10 ? 50 : count <= 20 ? 35 : count <= 40 ? 22 : 18;
+    const maxR = count <= 10 ? 70 : count <= 20 ? 50 : count <= 40 ? 35 : 28;
+    const ri = Math.round(minR + (maxR - minR) * ratio);
     const angle = i * angleStep;
     const dist = startR + i * spacing;
     positions.push({
@@ -789,49 +842,40 @@ function layoutSpiral(fanclubs) {
   return positions;
 }
 
-// 노드 생성 헬퍼
-function createNode(fc, pos, rank, leagueColor, isFirst) {
+// 노드 생성 (개별 색상 적용)
+function createNode(fc, pos, rank, fcColor, isFirst) {
   const node = document.createElement('div');
   node.className = 'q-node' + (isFirst ? ' c1' : '');
   node.setAttribute('data-fan', fc.name);
-  // pos는 원 중심 좌표 → left/top은 중심에서 반지름만큼 빼기
   node.style.left = (pos.x - pos.r) + 'px';
   node.style.top = (pos.y - pos.r) + 'px';
   node.onclick = function() { goFromNode(this); };
 
   const diam = pos.r * 2;
-  const fontSize = isFirst ? Math.round(pos.r * 0.8) : Math.round(pos.r * 0.6);
+  const fontSize = isFirst ? Math.round(pos.r * 0.35) : Math.round(pos.r * 0.55);
   const scoreStr = fc.score.toLocaleString();
+  const rgb = hexToRgb(fcColor);
 
-  // 1등: 골드빛 광채, 나머지: 리그색 광채
-  const glowColor = isFirst ? 'rgba(240,192,64' : `rgba(${hexToRgb(leagueColor)}`;
+  // 1등: 골드 광채 + 파티클 애니메이션
   const orbStyle = isFirst
-    ? `width:${diam}px;height:${diam}px;background:radial-gradient(circle at 35% 35%,rgba(255,215,0,.7),rgba(192,132,252,.45),rgba(7,7,15,.95));box-shadow:0 0 0 3px ${glowColor},.7),0 0 60px ${glowColor},.6),0 0 140px rgba(192,132,252,.4);animation:op1 3s ease-in-out infinite`
-    : `width:${diam}px;height:${diam}px;background:radial-gradient(circle at 35% 35%,${leagueColor}88,${leagueColor}33,rgba(7,7,15,.95));box-shadow:0 0 0 2px ${leagueColor}88,0 0 30px ${leagueColor}55`;
+    ? `width:${diam}px;height:${diam}px;background:radial-gradient(circle at 35% 35%,rgba(255,215,0,.6),rgba(${rgb},.3),rgba(7,7,15,.95));box-shadow:0 0 0 4px rgba(240,192,64,.7),0 0 80px rgba(240,192,64,.5),0 0 200px rgba(192,132,252,.3);animation:op1 3s ease-in-out infinite`
+    : `width:${diam}px;height:${diam}px;background:radial-gradient(circle at 35% 35%,rgba(${rgb},.15),rgba(7,7,15,.95));box-shadow:0 0 0 2px rgba(${rgb},.7),0 0 30px rgba(${rgb},.4)`;
 
   node.innerHTML = `
     <div class="q-orb" style="${orbStyle};border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative">
       <span style="font-size:${fontSize}px">${fc.icon}</span>
       <div class="q-rank">${rank}</div>
     </div>
-    <div class="q-lbl"><div class="q-name" style="font-size:${isFirst ? 18 : 13}px">${fc.name}</div><div class="q-score">${scoreStr} QP</div></div>
+    <div class="q-lbl"><div class="q-name" style="font-size:${isFirst?18:13}px;color:${fcColor}">${fc.name}</div><div class="q-score" style="color:${fcColor}">${scoreStr} QP</div></div>
   `;
   return node;
-}
-
-// hex → rgb 문자열
-function hexToRgb(hex) {
-  const r = parseInt(hex.slice(1,3),16);
-  const g = parseInt(hex.slice(3,5),16);
-  const b = parseInt(hex.slice(5,7),16);
-  return `${r},${g},${b}`;
 }
 
 function switchLeague(league) {
   const data = LEAGUE_DATA[league];
   if (!data) return;
 
-  // 탭 active 변경 + 리그 색상 적용
+  // 탭 active 변경
   document.querySelectorAll('.league-tab').forEach(tab => {
     tab.classList.remove('active');
     tab.style.borderColor = '';
@@ -857,7 +901,7 @@ function switchLeague(league) {
   const cw = document.getElementById('cw');
   cw.querySelectorAll('.q-node').forEach(n => n.remove());
 
-  // 배치 계산 (퀘이사: 동서남북 접점, 나머지: 나선형)
+  // 배치 계산
   const positions = league === 'quasar'
     ? layoutQuasar(data.fanclubs)
     : layoutSpiral(data.fanclubs);
@@ -865,12 +909,15 @@ function switchLeague(league) {
   // 월드 크기 동적 조정
   const maxX = Math.max(...positions.map(p => p.x + p.r)) + 100;
   const maxY = Math.max(...positions.map(p => p.y + p.r)) + 100;
-  cw.style.width = Math.max(1800, maxX) + 'px';
-  cw.style.height = Math.max(1200, maxY) + 'px';
+  const minX = Math.min(...positions.map(p => p.x - p.r)) - 100;
+  const minY = Math.min(...positions.map(p => p.y - p.r)) - 100;
+  cw.style.width = Math.max(1800, maxX - Math.min(0, minX)) + 'px';
+  cw.style.height = Math.max(1200, maxY - Math.min(0, minY)) + 'px';
 
-  // 노드 생성
+  // 노드 생성 (개별 색상 적용)
   data.fanclubs.forEach((fc, i) => {
-    const node = createNode(fc, positions[i], i + 1, data.color, i === 0);
+    const fcColor = data.colors[i] || data.color;
+    const node = createNode(fc, positions[i], i + 1, fcColor, i === 0);
     cw.appendChild(node);
   });
 
