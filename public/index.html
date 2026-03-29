@@ -712,10 +712,33 @@ function genGradient(from, to, n) {
   });
 }
 const QUASAR_COLORS = ['#f0c040','#c084fc','#818cf8','#34d399','#f87171'];
-const NOVA_COLORS = genGradient('#f0abfc','#3b0764',10);
-const PLANET_COLORS = genGradient('#6ee7b7','#064e3b',20);
-const STAR_COLORS = genGradient('#fde68a','#78350f',40);
-const DUST_COLORS = genGradient('#e2e8f0','#1e293b',50);
+const NOVA_COLORS = ['#ff6b9d','#c084fc','#818cf8','#38bdf8','#34d399','#fbbf24','#fb923c','#f87171','#a78bfa','#94a3b8'];
+const PLANET_COLORS = ['#6ee7b7','#34d399','#2dd4bf','#22d3ee','#38bdf8','#60a5fa','#818cf8','#a78bfa','#c084fc','#e879f9','#f472b6','#fb7185','#f87171','#fb923c','#fbbf24','#facc15','#a3e635','#4ade80','#2dd4bf','#94a3b8'];
+
+// 밝기 조절 함수: hex 색상의 밝기를 factor(0~1)로 조절
+function dimColor(hex, factor) {
+  const r = Math.round(parseInt(hex.slice(1,3),16) * factor);
+  const g = Math.round(parseInt(hex.slice(3,5),16) * factor);
+  const b = Math.round(parseInt(hex.slice(5,7),16) * factor);
+  return '#'+[r,g,b].map(v=>Math.min(255,v).toString(16).padStart(2,'0')).join('');
+}
+
+const STAR_BASE = ['#fde68a','#fbbf24','#f59e0b','#fb923c','#f87171','#e879f9','#c084fc','#818cf8','#38bdf8','#34d399'];
+const STAR_COLORS = [
+  ...STAR_BASE.map(c=>dimColor(c,1.0)),
+  ...STAR_BASE.map(c=>dimColor(c,0.8)),
+  ...STAR_BASE.map(c=>dimColor(c,0.6)),
+  ...STAR_BASE.map(c=>dimColor(c,0.4))
+];
+
+const DUST_BASE = ['#e2e8f0','#94a3b8','#38bdf8','#818cf8','#a78bfa','#c084fc','#f472b6','#fb923c','#fbbf24','#4ade80'];
+const DUST_COLORS = [
+  ...DUST_BASE.map(c=>dimColor(c,1.0)),
+  ...DUST_BASE.map(c=>dimColor(c,0.8)),
+  ...DUST_BASE.map(c=>dimColor(c,0.6)),
+  ...DUST_BASE.map(c=>dimColor(c,0.45)),
+  ...DUST_BASE.map(c=>dimColor(c,0.3))
+];
 
 const LEAGUE_DATA = {
   dust: {
