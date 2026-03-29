@@ -557,15 +557,14 @@ body::-webkit-scrollbar { width:0; }
 <div id="app">
 
   <!-- 상단 네비게이션 (7개 메뉴) -->
-  <nav class="top-nav">
-    <a class="top-nav-item" href="/fandom.html"><div class="top-nav-icon">🏘️</div><div class="top-nav-label">팬덤</div></a>
-    <a class="top-nav-item" href="/"><div class="top-nav-icon">🏠</div><div class="top-nav-label">홈</div></a>
-    <a class="top-nav-item active" href="/astra.html"><div class="top-nav-icon">⭐</div><div class="top-nav-label">아스트라</div></a>
-    <a class="top-nav-item" href="/room3d.html"><div class="top-nav-icon">🏡</div><div class="top-nav-label">내 방</div></a>
-    <a class="top-nav-item" href="/nebula.html"><div class="top-nav-icon">🌌</div><div class="top-nav-label">성궤</div></a>
-    <a class="top-nav-item" href="/avatar.html"><div class="top-nav-icon">🎭</div><div class="top-nav-label">아바타</div></a>
-    <a class="top-nav-item" href="/shop.html"><div class="top-nav-icon">🛒</div><div class="top-nav-label">상점</div></a>
-  </nav>
+<nav class="top-nav">
+  <a class="top-nav-item" href="/fandom.html"><div class="top-nav-icon">🏘️</div><div class="top-nav-label">팬덤</div></a>
+  <a class="top-nav-item" href="/index.html"><div class="top-nav-icon">🏠</div><div class="top-nav-label">홈</div></a>
+  <a class="top-nav-item active" href="/astra.html"><div class="top-nav-icon">⭐</div><div class="top-nav-label">아스트라</div></a>
+  <a class="top-nav-item" href="/room3d.html"><div class="top-nav-icon">🏡</div><div class="top-nav-label">내 방</div></a>
+  <a class="top-nav-item" href="/avatar.html"><div class="top-nav-icon">🎭</div><div class="top-nav-label">아바타</div></a>
+  <a class="top-nav-item" href="/shop.html"><div class="top-nav-icon">🛒</div><div class="top-nav-label">상점</div></a>
+</nav>
 
   <!-- 1. 상단 바 — 로고 + 스타더스트 + 알림 -->
   <div class="topbar">
@@ -742,1295 +741,543 @@ body::-webkit-scrollbar { width:0; }
 </div>
 
 <script>
-/* ══════════════════════════════
-   1. 데이터 상수
-══════════════════════════════ */
+// ═══ 데이터 상수 ═══
 
-/* 5개 리그 정보 */
 const LEAGUES = {
-  dust: {
-    name:'더스트', nameEn:'DUST', icon:'✨', color:'#94a3b8', color2:'#64748b',
-    bg:'radial-gradient(ellipse at center 60%, rgba(148,163,184,.1) 0%, transparent 70%)',
-    orbitColor:'rgba(148,163,184,.12)', expColor:'linear-gradient(90deg,#64748b,#94a3b8)',
-    aura:{ name:'먼지의 잔상', emoji:'✨', color:'rgba(148,163,184,0.4)', desc:'은은한 먼지 파티클이 캐릭터 주변을 감싼다', effect:'dust' },
-    gradeColor:'#94a3b8', unlockMsg:null
-  },
-  star: {
-    name:'스타', nameEn:'STAR', icon:'🌟', color:'#fbbf24', color2:'#f59e0b',
-    bg:'radial-gradient(ellipse at center 60%, rgba(251,191,36,.1) 0%, transparent 70%)',
-    orbitColor:'rgba(251,191,36,.12)', expColor:'linear-gradient(90deg,#f59e0b,#fbbf24)',
-    aura:{ name:'별빛 오라', emoji:'🌟', color:'rgba(251,191,36,0.4)', desc:'따뜻한 별빛이 캐릭터를 감싸는 황금 오라', effect:'star' },
-    gradeColor:'#fbbf24', unlockMsg:'10만 멤버 + 클린활동지수 달성'
-  },
-  planet: {
-    name:'플래닛', nameEn:'PLANET', icon:'🪐', color:'#34d399', color2:'#10b981',
-    bg:'radial-gradient(ellipse at center 60%, rgba(52,211,153,.1) 0%, transparent 70%)',
-    orbitColor:'rgba(52,211,153,.12)', expColor:'linear-gradient(90deg,#10b981,#34d399)',
-    aura:{ name:'행성 오라', emoji:'🪐', color:'rgba(52,211,153,0.4)', desc:'행성의 중력장이 궤도를 형성한다', effect:'planet' },
-    gradeColor:'#34d399', unlockMsg:'50만 멤버 + 3개월 우상향'
-  },
-  nova: {
-    name:'노바', nameEn:'NOVA', icon:'💥', color:'#c084fc', color2:'#a855f7',
-    bg:'radial-gradient(ellipse at center 60%, rgba(192,132,252,.12) 0%, transparent 70%)',
-    orbitColor:'rgba(192,132,252,.12)', expColor:'linear-gradient(90deg,#a855f7,#c084fc)',
-    aura:{ name:'초신성 오라', emoji:'💥', color:'rgba(192,132,252,0.4)', desc:'초신성의 에너지가 폭발적으로 방출된다', effect:'nova' },
-    gradeColor:'#c084fc', unlockMsg:'500만 멤버 + 글로벌 활동'
-  },
-  quasar: {
-    name:'퀘이사', nameEn:'QUASAR', icon:'⚡', color:'#f0c040', color2:'#e6a800',
-    bg:'radial-gradient(ellipse at center 60%, rgba(240,192,64,.12) 0%, transparent 70%)',
-    orbitColor:'rgba(240,192,64,.15)', expColor:'linear-gradient(90deg,#e6a800,#f0c040)',
-    aura:{ name:'퀘이사 광채', emoji:'⚡', color:'rgba(240,192,64,0.5)', desc:'우주 최강의 광채가 만물을 압도한다', effect:'quasar' },
-    gradeColor:'#f0c040', unlockMsg:'1000만 멤버 + 8단계 조직'
-  }
+  dust:{name:'더스트 리그',nameEn:'DUST',icon:'✨',color:'#94a3b8',color2:'#64748b',
+    bg:'radial-gradient(ellipse at 50% 30%,rgba(100,100,120,.25) 0%,transparent 65%)',
+    orbitColor:'rgba(148,163,184,.15)',expColor:'linear-gradient(90deg,#64748b,#94a3b8)',
+    gradeColor:'#94a3b8',unlockMsg:null,
+    aura:{name:'먼지의 잔상',emoji:'💨',color:'rgba(148,163,184,.3)',desc:'희미하게 빛나는 먼지 입자들이 주변을 맴돕니다.',effect:'dust'}},
+  star:{name:'스타 리그',nameEn:'STAR',icon:'🌟',color:'#fbbf24',color2:'#f59e0b',
+    bg:'radial-gradient(ellipse at 50% 30%,rgba(251,191,36,.2) 0%,rgba(192,132,252,.1) 50%,transparent 70%)',
+    orbitColor:'rgba(251,191,36,.2)',expColor:'linear-gradient(90deg,#f59e0b,#fbbf24)',
+    gradeColor:'#fbbf24',unlockMsg:'10만 멤버+클린활동지수',
+    aura:{name:'별빛 오라',emoji:'⭐',color:'rgba(251,191,36,.5)',desc:'열정이 빛이 되었습니다.',effect:'star'}},
+  planet:{name:'플래닛 리그',nameEn:'PLANET',icon:'🪐',color:'#34d399',color2:'#10b981',
+    bg:'radial-gradient(ellipse at 40% 40%,rgba(52,211,153,.18) 0%,rgba(56,189,248,.1) 50%,transparent 70%)',
+    orbitColor:'rgba(52,211,153,.2)',expColor:'linear-gradient(90deg,#10b981,#34d399)',
+    gradeColor:'#34d399',unlockMsg:'50만+3개월우상향',
+    aura:{name:'행성 오라',emoji:'🪐',color:'rgba(52,211,153,.5)',desc:'단단한 구체의 중력이 느껴집니다.',effect:'planet'}},
+  nova:{name:'노바 리그',nameEn:'NOVA',icon:'💥',color:'#c084fc',color2:'#a855f7',
+    bg:'radial-gradient(ellipse at 50% 25%,rgba(192,132,252,.3) 0%,rgba(239,68,68,.1) 40%,transparent 70%)',
+    orbitColor:'rgba(192,132,252,.25)',expColor:'linear-gradient(90deg,#a855f7,#c084fc)',
+    gradeColor:'#c084fc',unlockMsg:'500만+글로벌활동',
+    aura:{name:'초신성 오라',emoji:'💫',color:'rgba(192,132,252,.7)',desc:'폭발하듯 퍼져나가는 에너지.',effect:'nova'}},
+  quasar:{name:'퀘이사 리그',nameEn:'QUASAR',icon:'⚡',color:'#f0c040',color2:'#e6a800',
+    bg:'radial-gradient(ellipse at 50% 20%,rgba(240,192,64,.35) 0%,rgba(192,132,252,.2) 35%,rgba(56,189,248,.1) 60%,transparent 80%)',
+    orbitColor:'rgba(240,192,64,.3)',expColor:'linear-gradient(90deg,#f0c040,#ffd700)',
+    gradeColor:'#f0c040',unlockMsg:'1000만+8단계조직',
+    aura:{name:'퀘이사 광채',emoji:'🌌',color:'rgba(240,192,64,.9)',desc:'우주를 관통하는 빛. 제국 그 자체.',effect:'quasar'}},
 };
 
-/* 10단계 등급 */
-const GRADES = [
-  { min:1,  max:10,  key:'seongjin',  label:'성진 Star Seeker',     sub:'첫 발걸음',       color:'#94a3b8' },
-  { min:11, max:20,  key:'seonga',    label:'성아 Star Child',      sub:'빛의 자각',       color:'#a8b4c4' },
-  { min:21, max:30,  key:'seongryeong',label:'성령 Star Spirit',    sub:'정체성의 확립',    color:'#fbbf24' },
-  { min:31, max:40,  key:'seongmin',  label:'성민 Star Citizen',    sub:'공동체의 일원',    color:'#f59e0b' },
-  { min:41, max:50,  key:'seonggisa', label:'성기사 Star Knight',   sub:'수호의 맹세',     color:'#34d399' },
-  { min:51, max:60,  key:'seongju',   label:'성주 Star Lord',       sub:'영역의 확장',     color:'#10b981' },
-  { min:61, max:70,  key:'seongryeongju',label:'성령주 Star Archon',sub:'초월의 시작',     color:'#c084fc' },
-  { min:71, max:80,  key:'seonghyeon',label:'성현 Star Sage',       sub:'지혜와 힘의 조화', color:'#a855f7' },
-  { min:81, max:90,  key:'seongjon',  label:'성존 Star Sovereign',  sub:'절대적 존재',     color:'#f0c040' },
-  { min:91, max:100, key:'seongsin',  label:'성신 Star Divine',     sub:'우주의 의지',     color:'#ffd700' }
+const GRADES=[
+  {min:1,max:10,key:'stardust',label:'성진',sub:'우주의 부름',color:'#94a3b8'},
+  {min:11,max:20,key:'seed',label:'성아',sub:'자아의 각성',color:'#86efac'},
+  {min:21,max:30,key:'spirit',label:'성령',sub:'정체성의 확립',color:'#a5b4fc'},
+  {min:31,max:40,key:'citizen',label:'성민',sub:'공적 목소리',color:'#c084fc'},
+  {min:41,max:50,key:'knight',label:'성기사',sub:'용맹한 수호',color:'#fbbf24'},
+  {min:51,max:60,key:'baron',label:'성주',sub:'전략의 중심',color:'#f0c040'},
+  {min:61,max:70,key:'earl',label:'성령주',sub:'영향력의 확산',color:'#fb923c'},
+  {min:71,max:80,key:'sage',label:'성현',sub:'지혜의 통치',color:'#38bdf8'},
+  {min:81,max:90,key:'highlord',label:'성존',sub:'절대적 권위',color:'#e879f9'},
+  {min:91,max:100,key:'celestial',label:'성신',sub:'신성의 완성',color:'#ffd700'},
 ];
 
-/* 6대 스탯 */
-const STAT_CONFIG = [
-  { key:'loy', name:'성실 LOY',  color:'#fbbf24' },
-  { key:'act', name:'행동 ACT',  color:'#f97316' },
-  { key:'soc', name:'사회 SOC',  color:'#34d399' },
-  { key:'eco', name:'경제 ECO',  color:'#38bdf8' },
-  { key:'cre', name:'창의 CRE',  color:'#c084fc' },
-  { key:'int', name:'지성 INT',  color:'#f472b6' }
+const STAT_CONFIG=[
+  {key:'loy',label:'LOY',icon:'🌟',color:'#f0c040',name:'성실'},
+  {key:'act',label:'ACT',icon:'⚡',color:'#ef4444',name:'행동'},
+  {key:'soc',label:'SOC',icon:'💬',color:'#38bdf8',name:'사회'},
+  {key:'eco',label:'ECO',icon:'💰',color:'#10b981',name:'경제'},
+  {key:'cre',label:'CRE',icon:'🎨',color:'#a78bfa',name:'창의'},
+  {key:'int',label:'INT',icon:'📚',color:'#fbbf24',name:'지성'},
 ];
 
-/* 6개 미션 */
-const MISSIONS = [
-  { id:'stream', icon:'🎵', name:'스트리밍 30분', desc:'음원 스트리밍하기', ap:20, stat:'loy', done:false },
-  { id:'vote',   icon:'🗳️', name:'투표 참여', desc:'진행 중인 투표에 참여', ap:100, stat:'act', done:false },
-  { id:'post',   icon:'📝', name:'게시물 작성', desc:'팬 커뮤니티에 글쓰기', ap:5, stat:'soc', done:false },
-  { id:'hash',   icon:'#️⃣', name:'해시태그 트윗', desc:'공식 해시태그 달기', ap:50, stat:'act', done:true },
-  { id:'quiz',   icon:'🧠', name:'퀴즈 풀기', desc:'팬 지식 퀴즈 도전', ap:50, stat:'int', done:false },
-  { id:'deco',   icon:'🎨', name:'방 꾸미기', desc:'내 방 인테리어 변경', ap:30, stat:'cre', done:false }
+const MISSIONS=[
+  {id:'stream',icon:'🎵',name:'스트리밍 총공',desc:'음원 15분 이상 청취',ap:20,stat:'loy',completed:false},
+  {id:'vote',icon:'🗳️',name:'음방 투표',desc:'오늘의 음악방송 투표',ap:100,stat:'act',completed:false},
+  {id:'post',icon:'✍️',name:'응원 게시물',desc:'팬클럽 게시판에 글 작성',ap:5,stat:'soc',completed:false},
+  {id:'share',icon:'📢',name:'SNS 해시태그',desc:'#아스테리아 게시물 공유',ap:50,stat:'act',completed:true},
+  {id:'quiz',icon:'🔮',name:'아티스트 퀴즈',desc:'오라클 아카데미 1문제',ap:50,stat:'int',completed:false},
+  {id:'decor',icon:'🪑',name:'성궤 꾸미기',desc:'아이템 1개 배치',ap:30,stat:'cre',completed:false},
 ];
 
-/* TOP 5 팬덤 순위 */
-const RANKING = [
-  { rank:1, name:'SERENADE', icon:'🎵', score:98420, me:false },
-  { rank:2, name:'NOVA CORE', icon:'💫', score:87350, me:false },
-  { rank:3, name:'ECLIPSE', icon:'🌑', score:76200, me:false },
-  { rank:4, name:'AURORA', icon:'🌌', score:65180, me:true },
-  { rank:5, name:'SOLARIS', icon:'☀️', score:54900, me:false }
+const RANKING=[
+  {rank:1,name:'SERENADE',emoji:'🌟',qp:'127,450',delta:'+1,200',up:true,me:false},
+  {rank:2,name:'NOVA CORE',emoji:'💜',qp:'98,320',delta:'+890',up:true,me:false},
+  {rank:3,name:'ECLIPSE',emoji:'🔵',qp:'82,100',delta:'-320',up:false,me:false},
+  {rank:4,name:'AURORA',emoji:'💚',qp:'71,880',delta:'+2,100',up:true,me:true},
+  {rank:5,name:'SOLARIS',emoji:'🔴',qp:'63,240',delta:'-180',up:false,me:false},
 ];
 
-/* 리그 성장 로드맵 */
-const LEAGUE_ROAD = [
-  { key:'dust',   icon:'✨', name:'더스트 DUST',     req:'가입 즉시' },
-  { key:'star',   icon:'🌟', name:'스타 STAR',       req:'10만 멤버 달성' },
-  { key:'planet', icon:'🪐', name:'플래닛 PLANET',   req:'50만 멤버 달성' },
-  { key:'nova',   icon:'💥', name:'노바 NOVA',       req:'500만 멤버 달성' },
-  { key:'quasar', icon:'⚡', name:'퀘이사 QUASAR',   req:'1000만 멤버 달성' }
+const LEAGUE_ROAD=[
+  {key:'dust',label:'더스트',req:'가입 즉시',current:true},
+  {key:'star',label:'스타',req:'10만 멤버+활동지수',current:false},
+  {key:'planet',label:'플래닛',req:'50만+3개월 유지',current:false},
+  {key:'nova',label:'노바',req:'500만+글로벌',current:false},
+  {key:'quasar',label:'퀘이사',req:'1000만+8단계 조직',current:false},
 ];
 
-/* ══════════════════════════════
-   2. 상태 (STATE)
-══════════════════════════════ */
-let state = {
-  name:'별빛 탐험가', emoji:'🌟', level:23, ap:4820, league:'dust',
-  stats:{ loy:145, act:89, soc:67, eco:34, cre:112, int:78 },
-  tapCount:0, archetype:'수호자 Guardian', title:'먼지 속의 별 Star in Dust',
-  fandom:'ARMY', joinDate:'2024.03.15'
+// ═══ STATE ═══
+let state={
+  name:'별빛 탐험가',emoji:'🌟',level:23,ap:4820,league:'dust',
+  stats:{loy:145,act:89,soc:67,eco:34,cre:112,int:78},
+  tapCount:0,archetype:'수호자 Guardian',title:'먼지 속의 별 Star in Dust',
+  fandom:'ARMY',joinDate:'2024.03.15',
+  serial:'#00,000,042',cp:380,stardust:2150,
 };
+let currentTab='character';
 
-/* ══════════════════════════════
-   3. 유틸 함수
-══════════════════════════════ */
-function apToLevel(ap) {
-  if(ap < 100) return 1;
-  return Math.min(100, Math.floor(Math.log(ap / 50) * 8) + 1);
+// ═══ 탭 전환 ═══
+function switchTab(tabId){
+  currentTab=tabId;
+  const tabs=['character','orbit','record'];
+  const idx=tabs.indexOf(tabId);
+  document.getElementById('tabSlider').style.transform='translateX(-'+idx*100+'%)';
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===tabId));
+  document.getElementById('tabIndicator').style.transform='translateX('+idx*100+'%)';
+  localStorage.setItem('asteria_lastTab',tabId);
+  if(tabId==='orbit') renderOrbitTab();  if(tabId==='record') renderRecordTab();
 }
-function levelToExpNeeded(lv) {
-  return Math.floor(50 * Math.pow(lv, 1.5));
-}
-function getGrade(level) {
-  return GRADES.find(g => level >= g.min && level <= g.max) || GRADES[0];
-}
-function hexToRGB(hex) {
-  const r = parseInt(hex.slice(1,3),16);
-  const g = parseInt(hex.slice(3,5),16);
-  const b = parseInt(hex.slice(5,7),16);
-  return r+','+g+','+b;
+function restoreTab(){
+  const s=localStorage.getItem('asteria_lastTab');
+  if(s&&['character','orbit','record'].includes(s)) switchTab(s);
 }
 
-/* ══════════════════════════════
-   4. 아바타 캔버스 렌더러
-══════════════════════════════ */
-const avCanvas = document.getElementById('avatarCanvas');
-const avCtx = avCanvas.getContext('2d');
-let animFrame = 0;
+// ═══ 유틸 ═══
+function apToLevel(ap){if(ap<100)return 1;return Math.min(100,Math.floor(Math.log(ap/50)*8)+1);}
+function levelToExpNeeded(lv){return Math.floor(50*Math.pow(lv,1.5));}
+function getGrade(level){return GRADES.find(g=>level>=g.min&&level<=g.max)||GRADES[0];}
+function hexToRGB(hex){const h=hex.replace('#','');return parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16);}
 
-/* 아우라 파티클 */
-class AuraParticle {
-  constructor(cx, cy, color, range) {
-    this.cx = cx; this.cy = cy;
-    this.color = color; this.range = range;
-    this.reset();
-  }
-  reset() {
-    this.angle = Math.random() * Math.PI * 2;
-    this.dist = this.range * (0.5 + Math.random() * 0.5);
-    this.size = 0.5 + Math.random() * 2;
-    this.speed = 0.003 + Math.random() * 0.008;
-    this.alpha = 0.2 + Math.random() * 0.5;
-    this.drift = (Math.random() - 0.5) * 0.3;
-  }
-  update() {
-    this.angle += this.speed;
-    this.dist += this.drift * 0.1;
-    if(this.dist < 10 || this.dist > this.range * 1.5) this.reset();
-  }
-  draw(ctx) {
-    const x = this.cx + Math.cos(this.angle) * this.dist;
-    const y = this.cy + Math.sin(this.angle) * this.dist;
-    ctx.globalAlpha = this.alpha * (0.5 + Math.sin(animFrame * 0.05 + this.angle) * 0.5);
-    ctx.fillStyle = this.color;
-    ctx.beginPath(); ctx.arc(x, y, this.size, 0, Math.PI * 2); ctx.fill();
-    ctx.globalAlpha = 1;
-  }
+// Part 2-A 끝. Part 2-B에서 이어집니다.
+
+// ═══ 아바타 캔버스 ═══
+const ac=document.getElementById('avatarCanvas');
+const ax=ac?ac.getContext('2d'):null;
+let animFrame=0;
+let auraParticles=[];
+
+class AuraParticle{
+  constructor(e,cx,cy){this.effect=e;this.reset(cx,cy);}
+  reset(cx,cy){const a=Math.random()*Math.PI*2,r=60+Math.random()*30;
+    this.x=cx+Math.cos(a)*r;this.y=cy+Math.sin(a)*r;
+    this.vx=(Math.random()-.5)*.8;this.vy=(Math.random()-.5)*.8-.3;
+    this.life=1;this.decay=Math.random()*.02+.008;this.size=Math.random()*3+1;}
+  update(){this.x+=this.vx;this.y+=this.vy;this.life-=this.decay;}
+  dead(){return this.life<=0;}
 }
 
-/* 리그별 파티클 풀 */
-let auraParticles = [];
-function initParticles(league) {
-  const lg = LEAGUES[league];
-  const counts = { dust:8, star:12, planet:15, nova:20, quasar:25 };
-  auraParticles = [];
-  for(let i = 0; i < (counts[league]||12); i++) {
-    auraParticles.push(new AuraParticle(140, 130, lg.aura.color, 60 + Math.random()*40));
-  }
-}
+function getAuraColor(e,a){a=a||1;
+  const m={dust:'rgba(148,163,184,'+a+')',star:'rgba(251,191,36,'+a+')',
+    planet:'rgba(52,211,153,'+a+')',nova:'rgba(192,132,252,'+a+')',
+    quasar:'rgba(240,192,64,'+a+')'};return m[e]||m.dust;}
 
-/* 레벨별 성장 단계 */
-function getBodyScale(lv) {
-  if(lv <= 10) return 0.8;   // SD 2등신
-  if(lv <= 30) return 0.9;   // 옷 착용
-  if(lv <= 60) return 1.0;   // 사람 비율
-  return 1.1;                 // 완전체
-}
-
-/* 메인 드로잉 */
-function drawAvatar() {
-  animFrame++;
-  const ctx = avCtx;
-  const W = 280, H = 280, cx = 140, cy = 130;
-  ctx.clearRect(0, 0, W, H);
-
-  const league = state.league;
-  const lg = LEAGUES[league];
-  const lv = state.level;
-  const t = animFrame;
-
-  /* 아우라 파티클 그리기 (뒤쪽) */
-  auraParticles.forEach(p => { p.update(); p.draw(ctx); });
-
-  /* 리그별 캐릭터 */
-  if(league === 'dust') drawDust(ctx, cx, cy, t, lv, lg);
-  else if(league === 'star') drawStar(ctx, cx, cy, t, lv, lg);
-  else if(league === 'planet') drawPlanet(ctx, cx, cy, t, lv, lg);
-  else if(league === 'nova') drawNova(ctx, cx, cy, t, lv, lg);
-  else if(league === 'quasar') drawQuasar(ctx, cx, cy, t, lv, lg);
-
-  /* 레벨 장식 */
-  drawLevelDecorations(ctx, cx, cy, lv, lg);
-  /* 스탯 효과 */
-  drawStatEffect(ctx, cx, cy);
-
+function drawAvatar(){
+  if(!ax)return;const cx=140,cy=130;ax.clearRect(0,0,280,280);animFrame++;
+  const league=LEAGUES[state.league]||LEAGUES.dust;const effect=league.aura.effect;
+  // 아우라 배경
+  const g=ax.createRadialGradient(cx,cy,5,cx,cy,70);
+  g.addColorStop(0,getAuraColor(effect,.5));g.addColorStop(.6,getAuraColor(effect,.15));g.addColorStop(1,'transparent');
+  ax.fillStyle=g;ax.beginPath();ax.arc(cx,cy,70,0,Math.PI*2);ax.fill();
+  // 리그별 이펙트
+  if(effect==='quasar'){for(let i=0;i<4;i++){ax.save();ax.translate(cx,cy);ax.rotate(i*Math.PI/2+animFrame*.005);
+    const g2=ax.createLinearGradient(0,-90,0,0);g2.addColorStop(0,'transparent');g2.addColorStop(1,getAuraColor(effect,.4));
+    ax.fillStyle=g2;ax.fillRect(-2,-90,4,90);ax.restore();}}
+  else if(effect==='nova'){const w=Math.sin(animFrame*.04)*5;
+    for(let r=50;r<90;r+=15){ax.beginPath();ax.arc(cx,cy,r+w,0,Math.PI*2);
+    ax.strokeStyle='rgba(192,132,252,'+(0.12-(r-50)*.002)+')';ax.lineWidth=1.5;ax.stroke();}}
+  else if(effect==='planet'){for(let i=0;i<3;i++){ax.save();ax.translate(cx,cy);
+    ax.rotate(animFrame*.008*(i%2===0?1:-1)+i*Math.PI/3);ax.beginPath();
+    ax.ellipse(0,0,65+i*8,(30+i*5)*Math.abs(Math.sin(animFrame*.01+i)),0,0,Math.PI*2);
+    ax.strokeStyle='rgba(52,211,153,'+(0.18-i*.04)+')';ax.lineWidth=1;ax.stroke();ax.restore();}}
+  else if(effect==='star'){for(let i=0;i<8;i++){const a2=i*Math.PI/4+animFrame*.01,r2=60+Math.sin(animFrame*.05+i)*5;
+    ax.beginPath();ax.arc(cx+Math.cos(a2)*r2,cy+Math.sin(a2)*r2,2,0,Math.PI*2);
+    ax.fillStyle='rgba(251,191,36,'+(0.5+Math.sin(animFrame*.08+i)*.4)+')';ax.fill();}}
+  // 파티클
+  if(Math.random()<.12)auraParticles.push(new AuraParticle(effect,cx,cy));
+  auraParticles=auraParticles.filter(p=>!p.dead());
+  auraParticles.forEach(p=>{p.update();ax.save();ax.globalAlpha=p.life*.6;
+    ax.fillStyle=getAuraColor(effect);ax.beginPath();ax.arc(p.x,p.y,p.size,0,Math.PI*2);ax.fill();ax.restore();});
+  // 캐릭터 몸체
+  const by=cy+Math.sin(animFrame*.02)*5;
+  const bg=ax.createRadialGradient(cx-10,by-10,5,cx,by,48);
+  bg.addColorStop(0,getAuraColor(effect,.7));bg.addColorStop(.5,getAuraColor(effect,.3));bg.addColorStop(1,'rgba(7,7,15,.9)');
+  ax.fillStyle=bg;ax.beginPath();ax.arc(cx,by,48,0,Math.PI*2);ax.fill();
+  ax.beginPath();ax.arc(cx,by,49,0,Math.PI*2);ax.strokeStyle=getAuraColor(effect,.6);ax.lineWidth=1.5;ax.stroke();
+  ax.font='42px serif';ax.textAlign='center';ax.textBaseline='middle';ax.fillText(state.emoji,cx,by);
+  if(state.level>=50){for(let i=0;i<3;i++){ax.save();ax.translate(cx,by);ax.rotate(animFrame*.012+i*(Math.PI*2/3));
+    ax.beginPath();ax.arc(50,0,3,0,Math.PI*2);ax.fillStyle=getAuraColor(effect,.8);ax.fill();ax.restore();}}
+  if(state.level>=91){ax.font='20px serif';ax.fillText('👑',cx,by-58+Math.sin(animFrame*.03)*3);}
   requestAnimationFrame(drawAvatar);
 }
 
-/* ── 더스트: 별의 먼지 (초보자) ── */
-function drawDust(ctx, cx, cy, t, lv, lg) {
-  const by = cy + Math.sin(t * 0.02) * 6;
-  const r = lv >= 31 ? 40 : 35;
-  const scale = getBodyScale(lv);
-
-  /* 먼지 입자 공전 */
-  for(let i = 0; i < 10; i++) {
-    const a = (t * 0.008 + i * 0.628);
-    const d = 50 + Math.sin(t * 0.015 + i) * 10;
-    const px = cx + Math.cos(a) * d * scale;
-    const py = by + Math.sin(a) * d * 0.5 * scale;
-    ctx.globalAlpha = 0.3 + Math.sin(t * 0.03 + i) * 0.2;
-    ctx.fillStyle = lg.color;
-    ctx.beginPath(); ctx.arc(px, py, 1.5, 0, Math.PI * 2); ctx.fill();
-  }
-  ctx.globalAlpha = 1;
-
-  /* 몸체 — 둥근 구체 */
-  const bodyGrad = ctx.createRadialGradient(cx - r*0.3, by - r*0.3, r*0.1, cx, by, r);
-  bodyGrad.addColorStop(0, '#c8d6e5');
-  bodyGrad.addColorStop(0.5, lg.color);
-  bodyGrad.addColorStop(1, lg.color2);
-  ctx.fillStyle = bodyGrad;
-  ctx.beginPath(); ctx.arc(cx, by, r * scale, 0, Math.PI * 2); ctx.fill();
-
-  /* Lv31+: 팔 */
-  if(lv >= 31) {
-    ctx.strokeStyle = lg.color;
-    ctx.lineWidth = 3;
-    ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(cx - r*scale, by + 5); ctx.lineTo(cx - r*scale - 12, by + 18); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx + r*scale, by + 5); ctx.lineTo(cx + r*scale + 12, by + 18); ctx.stroke();
-  }
-
-  /* Lv11+: 스카프 장식 */
-  if(lv >= 11) {
-    ctx.fillStyle = '#e6a800';
-    ctx.beginPath();
-    ctx.moveTo(cx - 8, by + r*scale - 5);
-    ctx.quadraticCurveTo(cx, by + r*scale + 8, cx + 8, by + r*scale - 5);
-    ctx.fill();
-  }
-
-  /* 눈 — 점 2개 (깜빡임) */
-  const blink = (t % 120) < 8;
-  ctx.fillStyle = '#1e293b';
-  if(blink) {
-    ctx.fillRect(cx - 9, by - 3, 6, 2);
-    ctx.fillRect(cx + 3, by - 3, 6, 2);
-  } else {
-    ctx.beginPath(); ctx.arc(cx - 6, by - 2, 3, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(cx + 6, by - 2, 3, 0, Math.PI * 2); ctx.fill();
-    /* 눈 하이라이트 */
-    ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.arc(cx - 5, by - 3, 1, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(cx + 7, by - 3, 1, 0, Math.PI * 2); ctx.fill();
-  }
-
-  /* Lv61+: 은색 오라 */
-  if(lv >= 61) {
-    ctx.globalAlpha = 0.12 + Math.sin(t * 0.03) * 0.06;
-    ctx.strokeStyle = '#e2e8f0';
-    ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.arc(cx, by, r * scale + 15, 0, Math.PI * 2); ctx.stroke();
-    ctx.globalAlpha = 1;
-  }
+// ═══ 헥사곤 스탯 차트 ═══
+const hc=document.getElementById('hexCanvas');
+const hx=hc?hc.getContext('2d'):null;
+function drawHex(){
+  if(!hx)return;const cx=90,cy=90,maxR=65;
+  const vals=STAT_CONFIG.map(s=>state.stats[s.key]||0);const maxVal=Math.max(200,...vals);
+  hx.clearRect(0,0,180,180);
+  for(let r of[.33,.66,1]){hx.beginPath();
+    STAT_CONFIG.forEach((_,i)=>{const a=(i*60-90)*Math.PI/180;const x=cx+maxR*r*Math.cos(a),y=cy+maxR*r*Math.sin(a);
+    i===0?hx.moveTo(x,y):hx.lineTo(x,y);});hx.closePath();
+    hx.strokeStyle='rgba(180,150,255,'+(0.06+r*.04)+')';hx.lineWidth=1;hx.stroke();}
+  STAT_CONFIG.forEach((_,i)=>{const a=(i*60-90)*Math.PI/180;hx.beginPath();hx.moveTo(cx,cy);
+    hx.lineTo(cx+maxR*Math.cos(a),cy+maxR*Math.sin(a));hx.strokeStyle='rgba(180,150,255,.1)';hx.stroke();});
+  hx.beginPath();vals.forEach((v,i)=>{const a=(i*60-90)*Math.PI/180,r=maxR*(v/maxVal);
+    i===0?hx.moveTo(cx+r*Math.cos(a),cy+r*Math.sin(a)):hx.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a));});hx.closePath();
+  const lg=LEAGUES[state.league]||LEAGUES.dust;
+  hx.fillStyle='rgba('+hexToRGB(lg.color)+',.25)';hx.strokeStyle=lg.color;hx.lineWidth=1.5;hx.fill();hx.stroke();
+  vals.forEach((v,i)=>{const a=(i*60-90)*Math.PI/180,r=maxR*(v/maxVal);hx.beginPath();
+    hx.arc(cx+r*Math.cos(a),cy+r*Math.sin(a),3,0,Math.PI*2);hx.fillStyle=STAT_CONFIG[i].color;hx.fill();});
+  STAT_CONFIG.forEach((s,i)=>{const a=(i*60-90)*Math.PI/180,r=maxR+14;
+    hx.font='bold 9px Orbitron,monospace';hx.textAlign='center';hx.textBaseline='middle';
+    hx.fillStyle=s.color;hx.fillText(s.label,cx+r*Math.cos(a),cy+r*Math.sin(a));});
 }
 
-/* ── 스타: 빛나는 별 (성장 중) ── */
-function drawStar(ctx, cx, cy, t, lv, lg) {
-  const by = cy + Math.sin(t * 0.025) * 5;
-  const rot = t * 0.005;
-  const coreR = 30;
-
-  /* 8방향 광선 */
-  const rayLen = lv >= 31 ? 55 : 40;
-  for(let i = 0; i < 8; i++) {
-    const a = rot + i * Math.PI / 4;
-    const len = rayLen + Math.sin(t * 0.04 + i) * 12;
-    const grad = ctx.createLinearGradient(cx, by, cx + Math.cos(a)*len, by + Math.sin(a)*len);
-    grad.addColorStop(0, lg.color);
-    grad.addColorStop(1, 'transparent');
-    ctx.globalAlpha = 0.4;
-    ctx.strokeStyle = grad;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(cx + Math.cos(a)*coreR*0.5, by + Math.sin(a)*coreR*0.5);
-    ctx.lineTo(cx + Math.cos(a)*len, by + Math.sin(a)*len);
-    ctx.stroke();
-  }
-  ctx.globalAlpha = 1;
-
-  /* 5각별 외곽 */
-  ctx.fillStyle = lg.color2;
-  ctx.beginPath();
-  for(let i = 0; i < 5; i++) {
-    const outerA = rot + i * Math.PI * 2 / 5 - Math.PI / 2;
-    const innerA = outerA + Math.PI / 5;
-    const ox = cx + Math.cos(outerA) * 42;
-    const oy = by + Math.sin(outerA) * 42;
-    const ix = cx + Math.cos(innerA) * 20;
-    const iy = by + Math.sin(innerA) * 20;
-    if(i === 0) ctx.moveTo(ox, oy);
-    else ctx.lineTo(ox, oy);
-    ctx.lineTo(ix, iy);
-  }
-  ctx.closePath();
-  ctx.globalAlpha = 0.25;
-  ctx.fill();
-  ctx.globalAlpha = 1;
-
-  /* 코어 구체 */
-  const coreGrad = ctx.createRadialGradient(cx - 8, by - 8, 3, cx, by, coreR);
-  coreGrad.addColorStop(0, '#fff8e1');
-  coreGrad.addColorStop(0.4, lg.color);
-  coreGrad.addColorStop(1, lg.color2);
-  ctx.fillStyle = coreGrad;
-  ctx.beginPath(); ctx.arc(cx, by, coreR, 0, Math.PI * 2); ctx.fill();
-
-  /* 눈 — 반짝이는 원형 */
-  ctx.fillStyle = '#78350f';
-  ctx.beginPath(); ctx.arc(cx - 8, by - 4, 4, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(cx + 8, by - 4, 4, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#fef3c7';
-  ctx.beginPath(); ctx.arc(cx - 7, by - 5, 1.5, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(cx + 9, by - 5, 1.5, 0, Math.PI * 2); ctx.fill();
-
-  /* Lv61+: 별 궤도 3개 */
-  if(lv >= 61) {
-    for(let i = 0; i < 3; i++) {
-      const sa = t * 0.02 + i * 2.094;
-      const sd = 55 + i * 8;
-      const sx = cx + Math.cos(sa) * sd;
-      const sy = by + Math.sin(sa) * sd * 0.4;
-      ctx.fillStyle = lg.color;
-      ctx.globalAlpha = 0.7;
-      ctx.beginPath(); ctx.arc(sx, sy, 3, 0, Math.PI * 2); ctx.fill();
-      ctx.globalAlpha = 1;
-    }
-  }
+// ═══ renderAll ═══
+function renderAll(){
+  const level=apToLevel(state.ap);const grade=getGrade(level);
+  const league=LEAGUES[state.league]||LEAGUES.dust;
+  const prev=state.level;state.level=level;
+  if(level>prev&&prev>0)triggerLevelup(level,grade);
+  const sb=document.getElementById('stageBg');if(sb)sb.style.background=league.bg;
+  renderOrbits(league);
+  const an=document.getElementById('avName');if(an)an.textContent=state.name;
+  const ag=document.getElementById('avGrade');
+  if(ag){ag.textContent=grade.key.toUpperCase()+' · '+grade.sub;ag.style.color=grade.color;
+    ag.style.border='1px solid '+grade.color+'40';ag.style.padding='3px 12px';
+    ag.style.borderRadius='20px';ag.style.display='inline-block';ag.style.background=grade.color+'12';}
+  const li=document.getElementById('leagueIcon');if(li)li.textContent=league.icon;
+  const ln=document.getElementById('leagueName');if(ln){ln.textContent=league.name;ln.style.color=league.color;}
+  const le=document.getElementById('levelNum');if(le)le.textContent=level;
+  const expCur=state.ap-levelToExpNeeded(level-1);
+  const expNeed=levelToExpNeeded(level)-levelToExpNeeded(level-1);
+  const pct=Math.min(100,Math.max(0,expCur/expNeed*100));
+  const ec=document.getElementById('expCurrent');if(ec)ec.textContent=state.ap.toLocaleString();
+  const en=document.getElementById('expNext');if(en)en.textContent=levelToExpNeeded(level).toLocaleString();
+  const ef=document.getElementById('expFill');if(ef){ef.style.width=pct+'%';ef.style.background=league.expColor;}
+  const av=document.getElementById('auraVisual');
+  if(av){av.textContent=league.aura.emoji;av.style.background=league.aura.color;av.style.boxShadow='0 0 20px '+league.aura.color;}
+  const aN=document.getElementById('auraName');if(aN)aN.textContent=league.aura.name;
+  const aD=document.getElementById('auraDesc');if(aD)aD.textContent=league.aura.desc;
+  const aU=document.getElementById('auraUnlock');
+  if(aU&&league.unlockMsg){aU.textContent='🔓 '+league.unlockMsg;aU.style.color=league.color;}
+  renderStatList(league);drawHex();renderRanking();renderMissions();
+  renderLeagueRoad(league);renderLeagueTabs();renderSummary();
 }
 
-/* ── 플래닛: 행성의 수호자 (중견) ── */
-function drawPlanet(ctx, cx, cy, t, lv, lg) {
-  const coreR = 50;
+// ═══ 서브 렌더 함수들 ═══
 
-  /* 궤도 링 (3D 타원) */
-  const ringCount = lv >= 61 ? 3 : 2;
-  for(let i = 0; i < ringCount; i++) {
-    const ra = t * (0.008 + i * 0.003) * (i % 2 === 0 ? 1 : -1);
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(ra + i * 0.5);
-    ctx.scale(1, 0.35);
-    ctx.strokeStyle = lg.color;
-    ctx.globalAlpha = 0.2 + i * 0.08;
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(0, 0, coreR + 15 + i * 15, 0, Math.PI * 2); ctx.stroke();
-    ctx.restore();
-  }
-  ctx.globalAlpha = 1;
-
-  /* 코어 */
-  const coreGrad = ctx.createRadialGradient(cx - 12, cy - 12, 5, cx, cy, coreR);
-  coreGrad.addColorStop(0, '#a7f3d0');
-  coreGrad.addColorStop(0.5, lg.color);
-  coreGrad.addColorStop(1, lg.color2);
-  ctx.fillStyle = coreGrad;
-  ctx.beginPath(); ctx.arc(cx, cy, coreR, 0, Math.PI * 2); ctx.fill();
-
-  /* 대기 효과 */
-  ctx.globalAlpha = 0.08;
-  ctx.strokeStyle = '#6ee7b7';
-  ctx.lineWidth = 4;
-  ctx.beginPath(); ctx.arc(cx, cy, coreR + 3, 0, Math.PI * 2); ctx.stroke();
-  ctx.globalAlpha = 1;
-
-  /* 눈 — 각진 눈매 */
-  ctx.fillStyle = '#064e3b';
-  /* 왼쪽 눈 */
-  ctx.beginPath();
-  ctx.moveTo(cx - 16, cy - 5);
-  ctx.bezierCurveTo(cx - 14, cy - 12, cx - 6, cy - 12, cx - 4, cy - 5);
-  ctx.bezierCurveTo(cx - 6, cy - 2, cx - 14, cy - 2, cx - 16, cy - 5);
-  ctx.fill();
-  /* 오른쪽 눈 */
-  ctx.beginPath();
-  ctx.moveTo(cx + 4, cy - 5);
-  ctx.bezierCurveTo(cx + 6, cy - 12, cx + 14, cy - 12, cx + 16, cy - 5);
-  ctx.bezierCurveTo(cx + 14, cy - 2, cx + 6, cy - 2, cx + 4, cy - 5);
-  ctx.fill();
-  /* 눈 하이라이트 */
-  ctx.fillStyle = '#d1fae5';
-  ctx.beginPath(); ctx.arc(cx - 8, cy - 8, 2, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(cx + 12, cy - 8, 2, 0, Math.PI * 2); ctx.fill();
-
-  /* 위성 공전 */
-  const satCount = lv >= 61 ? 3 : 2;
-  for(let i = 0; i < satCount; i++) {
-    const sa = t * (0.015 + i * 0.005) + i * 2.094;
-    const sd = coreR + 25 + i * 12;
-    const sx = cx + Math.cos(sa) * sd;
-    const sy = cy + Math.sin(sa) * sd * 0.4;
-    const sr = lv >= 61 ? 5 : 4;
-    const sGrad = ctx.createRadialGradient(sx - 1, sy - 1, 1, sx, sy, sr);
-    sGrad.addColorStop(0, '#d1fae5');
-    sGrad.addColorStop(1, lg.color2);
-    ctx.fillStyle = sGrad;
-    ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI * 2); ctx.fill();
-  }
+function renderOrbits(league){
+  const w=document.getElementById('orbitRings');if(!w)return;w.innerHTML='';
+  [130,170,210].forEach((s,i)=>{const d=document.createElement('div');d.className='orbit';
+    d.style.cssText='width:'+s+'px;height:'+s+'px;border-color:'+league.orbitColor+';animation-duration:'+(20+i*12)+'s;'+(i%2?'animation-direction:reverse':'');
+    d.style.top='calc(50% - '+s/2+'px)';d.style.left='calc(50% - '+s/2+'px)';
+    const dot=document.createElement('div');
+    dot.style.cssText='position:absolute;top:-3px;left:50%;width:6px;height:6px;border-radius:50%;background:'+league.color+';box-shadow:0 0 8px '+league.color+';transform:translateX(-50%)';
+    d.appendChild(dot);w.appendChild(d);});
 }
 
-/* ── 노바: 초신성 전사 (강자) ── */
-function drawNova(ctx, cx, cy, t, lv, lg) {
-  /* 파동 동심원 */
-  for(let i = 0; i < 3; i++) {
-    const pulse = ((t * 0.02 + i * 0.33) % 1);
-    ctx.globalAlpha = 0.15 * (1 - pulse);
-    ctx.strokeStyle = lg.color;
-    ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.arc(cx, cy, 40 + pulse * 60, 0, Math.PI * 2); ctx.stroke();
-  }
-  ctx.globalAlpha = 1;
-
-  /* 에너지 날개 */
-  const wingFlap = Math.sin(t * 0.04) * 0.15;
-  const wingAlpha = lv >= 80 ? 0.35 : 0.2;
-  ctx.globalAlpha = wingAlpha;
-  /* 왼쪽 날개 */
-  ctx.fillStyle = lg.color;
-  ctx.beginPath();
-  ctx.moveTo(cx - 15, cy - 10);
-  ctx.bezierCurveTo(cx - 55 - wingFlap*30, cy - 50, cx - 65, cy - 20, cx - 15, cy + 20);
-  ctx.closePath(); ctx.fill();
-  /* 오른쪽 날개 */
-  ctx.beginPath();
-  ctx.moveTo(cx + 15, cy - 10);
-  ctx.bezierCurveTo(cx + 55 + wingFlap*30, cy - 50, cx + 65, cy - 20, cx + 15, cy + 20);
-  ctx.closePath(); ctx.fill();
-  ctx.globalAlpha = 1;
-
-  /* 인간형 상체 */
-  /* 머리 */
-  const headGrad = ctx.createRadialGradient(cx - 5, cy - 30, 3, cx, cy - 22, 22);
-  headGrad.addColorStop(0, '#e9d5ff');
-  headGrad.addColorStop(0.6, lg.color);
-  headGrad.addColorStop(1, lg.color2);
-  ctx.fillStyle = headGrad;
-  ctx.beginPath(); ctx.arc(cx, cy - 22, 22, 0, Math.PI * 2); ctx.fill();
-
-  /* 어깨 + 몸통 */
-  ctx.fillStyle = lg.color2;
-  ctx.beginPath();
-  ctx.moveTo(cx - 25, cy + 5);
-  ctx.bezierCurveTo(cx - 30, cy - 10, cx - 22, cy - 18, cx, cy - 2);
-  ctx.bezierCurveTo(cx + 22, cy - 18, cx + 30, cy - 10, cx + 25, cy + 5);
-  ctx.quadraticCurveTo(cx + 20, cy + 35, cx, cy + 40);
-  ctx.quadraticCurveTo(cx - 20, cy + 35, cx - 25, cy + 5);
-  ctx.closePath(); ctx.fill();
-
-  /* 팔 */
-  ctx.strokeStyle = lg.color2;
-  ctx.lineWidth = 5;
-  ctx.lineCap = 'round';
-  ctx.beginPath(); ctx.moveTo(cx - 25, cy + 2); ctx.quadraticCurveTo(cx - 38, cy + 15, cx - 32, cy + 30); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(cx + 25, cy + 2); ctx.quadraticCurveTo(cx + 38, cy + 15, cx + 32, cy + 30); ctx.stroke();
-
-  /* 빛나는 눈 */
-  ctx.fillStyle = '#fff';
-  ctx.shadowColor = lg.color;
-  ctx.shadowBlur = 12;
-  ctx.beginPath(); ctx.arc(cx - 7, cy - 25, 3, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(cx + 7, cy - 25, 3, 0, Math.PI * 2); ctx.fill();
-  ctx.shadowBlur = 0;
-
-  /* 눈에서 빛줄기 */
-  ctx.globalAlpha = 0.3;
-  ctx.strokeStyle = lg.color;
-  ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(cx - 7, cy - 25); ctx.lineTo(cx - 18, cy - 35); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(cx + 7, cy - 25); ctx.lineTo(cx + 18, cy - 35); ctx.stroke();
-  ctx.globalAlpha = 1;
-
-  /* Lv80+: 전신 오라 */
-  if(lv >= 80) {
-    ctx.globalAlpha = 0.08 + Math.sin(t * 0.025) * 0.04;
-    const oraGrad = ctx.createRadialGradient(cx, cy, 20, cx, cy, 80);
-    oraGrad.addColorStop(0, lg.color);
-    oraGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = oraGrad;
-    ctx.beginPath(); ctx.arc(cx, cy, 80, 0, Math.PI * 2); ctx.fill();
-    ctx.globalAlpha = 1;
-  }
+function renderStatList(league){
+  const l=document.getElementById('statList');if(!l)return;
+  l.innerHTML=STAT_CONFIG.map(s=>{const v=state.stats[s.key]||0;const p=Math.min(100,v/200*100);
+    return '<div class="stat-row"><div class="stat-icon">'+s.icon+'</div><div class="stat-label">'+s.name+
+    '</div><div class="stat-bar-bg"><div class="stat-bar-fill" style="width:'+p+'%;background:'+s.color+
+    '"></div></div><div class="stat-val" style="color:'+s.color+'">'+v+'</div></div>';}).join('');
 }
 
-/* ── 퀘이사: 우주의 제왕 (최고) ── */
-function drawQuasar(ctx, cx, cy, t, lv, lg) {
-  /* 거대 후광 (만다라) */
-  ctx.save();
-  ctx.translate(cx, cy);
-  ctx.rotate(t * 0.003);
-  const mandR = lv >= 91 ? 120 : 100;
-  for(let i = 0; i < 12; i++) {
-    const a = i * Math.PI / 6;
-    ctx.globalAlpha = 0.06;
-    ctx.strokeStyle = lg.color;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(Math.cos(a) * 40, Math.sin(a) * 40);
-    ctx.lineTo(Math.cos(a) * mandR, Math.sin(a) * mandR);
-    ctx.stroke();
-  }
-  /* 기하학 동심원 */
-  for(let i = 0; i < 3; i++) {
-    ctx.globalAlpha = 0.04 + i * 0.02;
-    ctx.strokeStyle = lg.color;
-    ctx.lineWidth = 0.5;
-    ctx.beginPath(); ctx.arc(0, 0, 50 + i * 25, 0, Math.PI * 2); ctx.stroke();
-  }
-  ctx.restore();
-  ctx.globalAlpha = 1;
-
-  /* 4방향 십자 광선 */
-  for(let i = 0; i < 4; i++) {
-    const a = i * Math.PI / 2;
-    const len = 90 + Math.sin(t * 0.03 + i) * 15;
-    const grad = ctx.createLinearGradient(cx, cy, cx + Math.cos(a)*len, cy + Math.sin(a)*len);
-    grad.addColorStop(0, 'rgba(240,192,64,0.5)');
-    grad.addColorStop(1, 'transparent');
-    ctx.strokeStyle = grad;
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(cx + Math.cos(a)*20, cy + Math.sin(a)*20);
-    ctx.lineTo(cx + Math.cos(a)*len, cy + Math.sin(a)*len);
-    ctx.stroke();
-  }
-
-  /* 망토 실루엣 */
-  ctx.globalAlpha = 0.3;
-  ctx.fillStyle = '#92400e';
-  ctx.beginPath();
-  ctx.moveTo(cx - 20, cy - 5);
-  ctx.bezierCurveTo(cx - 45, cy + 20, cx - 35, cy + 70, cx - 15, cy + 75);
-  ctx.lineTo(cx + 15, cy + 75);
-  ctx.bezierCurveTo(cx + 35, cy + 70, cx + 45, cy + 20, cx + 20, cy - 5);
-  ctx.closePath(); ctx.fill();
-  ctx.globalAlpha = 1;
-
-  /* 인간형 상체 */
-  const headGrad = ctx.createRadialGradient(cx - 5, cy - 32, 3, cx, cy - 24, 24);
-  headGrad.addColorStop(0, '#fef3c7');
-  headGrad.addColorStop(0.5, lg.color);
-  headGrad.addColorStop(1, lg.color2);
-  ctx.fillStyle = headGrad;
-  ctx.beginPath(); ctx.arc(cx, cy - 24, 24, 0, Math.PI * 2); ctx.fill();
-
-  /* 몸통 */
-  ctx.fillStyle = lg.color2;
-  ctx.beginPath();
-  ctx.moveTo(cx - 28, cy + 5);
-  ctx.bezierCurveTo(cx - 32, cy - 10, cx - 24, cy - 20, cx, cy - 2);
-  ctx.bezierCurveTo(cx + 24, cy - 20, cx + 32, cy - 10, cx + 28, cy + 5);
-  ctx.quadraticCurveTo(cx + 22, cy + 38, cx, cy + 45);
-  ctx.quadraticCurveTo(cx - 22, cy + 38, cx - 28, cy + 5);
-  ctx.closePath(); ctx.fill();
-
-  /* 팔 */
-  ctx.strokeStyle = lg.color2;
-  ctx.lineWidth = 6;
-  ctx.lineCap = 'round';
-  ctx.beginPath(); ctx.moveTo(cx - 28, cy + 2); ctx.quadraticCurveTo(cx - 42, cy + 18, cx - 35, cy + 35); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(cx + 28, cy + 2); ctx.quadraticCurveTo(cx + 42, cy + 18, cx + 35, cy + 35); ctx.stroke();
-
-  /* 왕관 */
-  const crownY = cy - 48;
-  ctx.fillStyle = '#ffd700';
-  ctx.shadowColor = '#ffd700';
-  ctx.shadowBlur = lv >= 91 ? 20 : 10;
-  ctx.beginPath();
-  ctx.moveTo(cx - 18, crownY + 8);
-  ctx.lineTo(cx - 18, crownY);
-  ctx.lineTo(cx - 10, crownY + 5);
-  ctx.lineTo(cx, crownY - 5);
-  ctx.lineTo(cx + 10, crownY + 5);
-  ctx.lineTo(cx + 18, crownY);
-  ctx.lineTo(cx + 18, crownY + 8);
-  ctx.closePath(); ctx.fill();
-  ctx.shadowBlur = 0;
-
-  /* 왕관 보석 */
-  ctx.fillStyle = '#ef4444';
-  ctx.beginPath(); ctx.arc(cx, crownY, 3, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#3b82f6';
-  ctx.beginPath(); ctx.arc(cx - 10, crownY + 3, 2, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(cx + 10, crownY + 3, 2, 0, Math.PI * 2); ctx.fill();
-
-  /* 십자형 동공 */
-  ctx.fillStyle = '#fff';
-  ctx.shadowColor = lg.color;
-  ctx.shadowBlur = 15;
-  ctx.beginPath(); ctx.arc(cx - 8, cy - 27, 4, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(cx + 8, cy - 27, 4, 0, Math.PI * 2); ctx.fill();
-  ctx.shadowBlur = 0;
-  /* 십자 */
-  ctx.strokeStyle = lg.color2;
-  ctx.lineWidth = 1.5;
-  [-8, 8].forEach(ox => {
-    ctx.beginPath(); ctx.moveTo(cx + ox, cy - 30); ctx.lineTo(cx + ox, cy - 24); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx + ox - 3, cy - 27); ctx.lineTo(cx + ox + 3, cy - 27); ctx.stroke();
-  });
-
-  /* 에너지 기둥 */
-  ctx.globalAlpha = 0.06 + Math.sin(t * 0.02) * 0.03;
-  const pillarGrad = ctx.createLinearGradient(cx, cy - 100, cx, cy + 100);
-  pillarGrad.addColorStop(0, 'transparent');
-  pillarGrad.addColorStop(0.5, lg.color);
-  pillarGrad.addColorStop(1, 'transparent');
-  ctx.fillStyle = pillarGrad;
-  ctx.fillRect(cx - 15, cy - 120, 30, 240);
-  ctx.globalAlpha = 1;
+function renderRanking(){
+  const el=document.getElementById('compRows');if(!el)return;
+  el.innerHTML=RANKING.map(r=>{
+    return '<div class="comp-row '+(r.me?'comp-me':'')+'">'+
+      '<div class="comp-rank" style="color:'+(r.rank===1?'var(--gold)':r.rank<=3?'var(--accent)':'var(--muted)')+'">'+r.rank+'</div>'+
+      '<div class="comp-av" style="background:radial-gradient(circle,rgba(192,132,252,.3),rgba(7,7,15,.9))">'+r.emoji+'</div>'+
+      '<div class="comp-info"><div class="comp-name">'+r.name+(r.me?' (나)':'')+'</div>'+
+      '<div class="comp-score">'+r.qp+' QP</div></div>'+
+      '<div class="comp-delta '+(r.up?'up':'down')+'">'+r.delta+'</div></div>';
+  }).join('');
 }
 
-/* 레벨 장식 */
-function drawLevelDecorations(ctx, cx, cy, lv, lg) {
-  const t = animFrame;
-  /* Lv50+: 궤도 빛 3개 */
-  if(lv >= 50) {
-    for(let i = 0; i < 3; i++) {
-      const a = t * 0.012 + i * 2.094;
-      const d = 70;
-      ctx.fillStyle = lg.color;
-      ctx.globalAlpha = 0.5;
-      ctx.beginPath(); ctx.arc(cx + Math.cos(a)*d, cy + Math.sin(a)*d*0.4, 2.5, 0, Math.PI * 2); ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-  }
-  /* Lv80+: 추가 오라 */
-  if(lv >= 80) {
-    ctx.globalAlpha = 0.05 + Math.sin(t * 0.02) * 0.03;
-    ctx.strokeStyle = lg.color;
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(cx, cy, 85, 0, Math.PI * 2); ctx.stroke();
-    ctx.globalAlpha = 1;
-  }
-  /* Lv91+: 왕관 (퀘이사가 아닌 리그에서도) */
-  if(lv >= 91 && state.league !== 'quasar') {
-    ctx.fillStyle = '#ffd700';
-    ctx.globalAlpha = 0.6;
-    ctx.font = '20px serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('👑', cx, cy - 65);
-    ctx.textAlign = 'start';
-    ctx.globalAlpha = 1;
-  }
+function renderMissions(){
+  const l=document.getElementById('missionList');if(!l)return;
+  l.innerHTML=MISSIONS.map(m=>{
+    return '<div class="mission-card '+(m.completed?'completed':'')+'" onclick="completeMission(\''+m.id+'\')">'+
+      '<div class="mission-icon">'+m.icon+'</div><div class="mission-info">'+
+      '<div class="mission-name">'+m.name+'</div><div class="mission-desc">'+m.desc+'</div>'+
+      '<div class="mission-reward"><span class="reward-chip" style="background:rgba(240,192,64,.15);border:1px solid rgba(240,192,64,.3);color:var(--gold)">+'+m.ap+' AP</span></div>'+
+      '</div><div class="mission-check '+(m.completed?'done':'')+'">'+(m.completed?'✓':'')+'</div></div>';
+  }).join('');
 }
 
-/* 스탯 효과 */
-function drawStatEffect(ctx, cx, cy) {
-  const s = state.stats;
-  const t = animFrame;
-  const entries = Object.entries(s);
-  const max = entries.reduce((a, b) => b[1] > a[1] ? b : a);
-  const topStat = max[0];
+function renderLeagueRoad(league){
+  const el=document.getElementById('leagueRoad');if(!el)return;
+  const order=['dust','star','planet','nova','quasar'];
+  el.innerHTML=LEAGUE_ROAD.map(step=>{
+    const lg=LEAGUES[step.key];const isCur=step.key===state.league;
+    const isDone=order.indexOf(step.key)<order.indexOf(state.league);
+    return '<div class="league-step" style="--step-color:'+lg.color+'40">'+
+      '<div class="step-orb '+(isCur?'current':'')+'" style="background:'+(isDone?lg.color:isCur?lg.color+'30':'rgba(255,255,255,.04)')+
+      ';border:2px solid '+(isCur||isDone?lg.color:'rgba(180,150,255,.15)')+'">'+
+      (isDone?'✓':lg.icon)+'</div><div class="step-info"><div class="step-name" style="color:'+
+      (isCur||isDone?lg.color:'var(--muted)')+'">'+lg.name+'</div><div class="step-req">'+step.req+
+      '</div></div><div class="step-status" style="background:'+(isCur?lg.color+'20':isDone?'rgba(16,185,129,.15)':'rgba(255,255,255,.04)')+
+      ';color:'+(isCur?lg.color:isDone?'#10b981':'var(--muted)')+'">'+
+      (isCur?'현재':isDone?'달성':'잠김')+'</div></div>';
+  }).join('');}
 
-  if(topStat === 'loy') {
-    /* 금빛 방사 오라 */
-    ctx.globalAlpha = 0.06 + Math.sin(t * 0.03) * 0.03;
-    const grad = ctx.createRadialGradient(cx, cy, 20, cx, cy, 90);
-    grad.addColorStop(0, '#fbbf24');
-    grad.addColorStop(1, 'transparent');
-    ctx.fillStyle = grad;
-    ctx.beginPath(); ctx.arc(cx, cy, 90, 0, Math.PI * 2); ctx.fill();
-    ctx.globalAlpha = 1;
-  } else if(topStat === 'act') {
-    /* 속도선 */
-    ctx.globalAlpha = 0.15;
-    ctx.strokeStyle = '#f97316';
-    ctx.lineWidth = 1;
-    for(let i = 0; i < 5; i++) {
-      const ly = cy - 30 + i * 15;
-      ctx.beginPath(); ctx.moveTo(cx + 40, ly); ctx.lineTo(cx + 70 + Math.random()*10, ly); ctx.stroke();
-    }
-    ctx.globalAlpha = 1;
-  } else if(topStat === 'soc') {
-    /* 하트 파티클 */
-    for(let i = 0; i < 4; i++) {
-      const ha = t * 0.02 + i * 1.57;
-      const hd = 55 + Math.sin(t * 0.03 + i) * 10;
-      const hx = cx + Math.cos(ha) * hd;
-      const hy = cy + Math.sin(ha) * hd * 0.5;
-      ctx.globalAlpha = 0.4 + Math.sin(t * 0.05 + i) * 0.2;
-      ctx.fillStyle = '#f472b6';
-      ctx.font = '10px serif';
-      ctx.fillText('♥', hx, hy);
-    }
-    ctx.globalAlpha = 1;
-  } else if(topStat === 'cre') {
-    /* 무지개 외곽 */
-    const colors = ['#ef4444','#f97316','#fbbf24','#34d399','#38bdf8','#c084fc'];
-    ctx.globalAlpha = 0.1;
-    colors.forEach((c, i) => {
-      ctx.strokeStyle = c;
-      ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.arc(cx, cy, 62 + i * 3, 0, Math.PI * 2); ctx.stroke();
-    });
-    ctx.globalAlpha = 1;
-  } else if(topStat === 'int') {
-    /* 안경 */
-    ctx.globalAlpha = 0.5;
-    ctx.strokeStyle = '#38bdf8';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.arc(cx - 8, cy - 25, 6, 0, Math.PI * 2); ctx.stroke();
-    ctx.beginPath(); ctx.arc(cx + 8, cy - 25, 6, 0, Math.PI * 2); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx - 2, cy - 25); ctx.lineTo(cx + 2, cy - 25); ctx.stroke();
-    /* 작은 책 */
-    ctx.fillStyle = '#38bdf8';
-    ctx.globalAlpha = 0.3 + Math.sin(t * 0.04) * 0.15;
-    ctx.fillRect(cx + 45, cy - 5, 10, 14);
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 0.5;
-    ctx.strokeRect(cx + 45, cy - 5, 10, 14);
-    ctx.globalAlpha = 1;
-  }
+function renderLeagueTabs(){
+  const el=document.getElementById('leagueTabBar');if(!el)return;
+  el.innerHTML=['dust','star','planet','nova','quasar'].map(key=>{
+    const lg=LEAGUES[key];const a=key===state.league;
+    return '<button class="league-tab '+(a?'active':'')+'" style="'+(a?'border-color:'+lg.color+';color:'+lg.color+';background:'+lg.color+'18;box-shadow:0 0 12px '+lg.color+'40':'')+
+    '" onclick="state.league=\''+key+'\';renderAll();drawHex();">'+lg.icon+' '+lg.name+'</button>';
+  }).join('');
 }
 
-/* ══════════════════════════════
-   5. 헥사곤 스탯 차트
-══════════════════════════════ */
-function drawHex() {
-  const canvas = document.getElementById('hexCanvas');
-  const ctx = canvas.getContext('2d');
-  const W = 180, H = 180, cx = 90, cy = 90, maxR = 70;
-  ctx.clearRect(0, 0, W, H);
-
-  const lg = LEAGUES[state.league];
-  const stats = STAT_CONFIG.map(s => state.stats[s.key]);
-  const maxVal = 200;
-
-  /* 배경 격자 3단계 */
-  [0.33, 0.66, 1].forEach(scale => {
-    ctx.strokeStyle = 'rgba(255,255,255,.06)';
-    ctx.lineWidth = 0.5;
-    ctx.beginPath();
-    for(let i = 0; i < 6; i++) {
-      const a = i * Math.PI / 3 - Math.PI / 2;
-      const x = cx + Math.cos(a) * maxR * scale;
-      const y = cy + Math.sin(a) * maxR * scale;
-      if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    }
-    ctx.closePath(); ctx.stroke();
-  });
-
-  /* 축선 6개 */
-  for(let i = 0; i < 6; i++) {
-    const a = i * Math.PI / 3 - Math.PI / 2;
-    ctx.strokeStyle = 'rgba(255,255,255,.04)';
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx + Math.cos(a) * maxR, cy + Math.sin(a) * maxR);
-    ctx.stroke();
-  }
-
-  /* 데이터 영역 */
-  ctx.fillStyle = lg.color + '20';
-  ctx.strokeStyle = lg.color;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  for(let i = 0; i < 6; i++) {
-    const a = i * Math.PI / 3 - Math.PI / 2;
-    const r = (stats[i] / maxVal) * maxR;
-    const x = cx + Math.cos(a) * r;
-    const y = cy + Math.sin(a) * r;
-    if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-  }
-  ctx.closePath(); ctx.fill(); ctx.stroke();
-
-  /* 꼭짓점 + 라벨 */
-  for(let i = 0; i < 6; i++) {
-    const a = i * Math.PI / 3 - Math.PI / 2;
-    const r = (stats[i] / maxVal) * maxR;
-    const x = cx + Math.cos(a) * r;
-    const y = cy + Math.sin(a) * r;
-    ctx.fillStyle = STAT_CONFIG[i].color;
-    ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
-
-    /* 라벨 */
-    const lx = cx + Math.cos(a) * (maxR + 14);
-    const ly = cy + Math.sin(a) * (maxR + 14);
-    ctx.fillStyle = 'rgba(255,255,255,.5)';
-    ctx.font = '8px "Noto Sans KR"';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(STAT_CONFIG[i].name.split(' ')[1], lx, ly);
-  }
-  ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
+function renderSummary(){
+  const el=document.getElementById('summaryGrid');if(!el)return;
+  const league=LEAGUES[state.league];  const done=MISSIONS.filter(m=>m.completed).length;
+  const topStat=STAT_CONFIG.reduce((a,b)=>(state.stats[b.key]||0)>(state.stats[a.key]||0)?b:a);
+  const myRank=RANKING.find(r=>r.me);
+  const items=[
+    {icon:'🎯',value:done+'/'+MISSIONS.length,label:'미션 Mission'},
+    {icon:'⚡',value:state.ap.toLocaleString(),label:'AP'},
+    {icon:'📊',value:topStat.name+' '+state.stats[topStat.key],label:'최고스탯 Top'},
+    {icon:'🏆',value:(myRank?myRank.rank:'—')+'위',label:'랭킹 Rank'},
+  ];
+  el.innerHTML=items.map(c=>
+    '<div class="summary-card"><div class="summary-icon">'+c.icon+'</div>'+
+    '<div class="summary-value" style="color:'+league.color+'">'+c.value+'</div>'+
+    '<div class="summary-label">'+c.label+'</div></div>'
+  ).join('');
 }
 
-/* ══════════════════════════════
-   6. UI 전체 렌더링
-══════════════════════════════ */
-function renderAll() {
-  const lg = LEAGUES[state.league];
-  state.level = apToLevel(state.ap);
-  const grade = getGrade(state.level);
-
-  /* 상단 바 */
-  document.getElementById('dustCount').textContent = state.ap.toLocaleString();
-
-  /* 아바타 정보 */
-  document.getElementById('avName').textContent = state.name;
-  document.getElementById('avGrade').textContent = grade.label + ' · ' + grade.sub;
-  document.getElementById('avName').style.color = lg.color;
-  document.getElementById('leagueIcon').textContent = lg.icon;
-  document.getElementById('leagueName').textContent = lg.name + ' 리그 ' + lg.nameEn;
-  document.getElementById('leagueName').style.color = lg.color;
-
-  /* 스테이지 배경 */
-  document.getElementById('stageBg').style.background = lg.bg;
-
-  /* 레벨 바 */
-  const expNeeded = levelToExpNeeded(state.level);
-  const prevExp = state.level > 1 ? levelToExpNeeded(state.level - 1) : 0;
-  const curExp = state.ap - prevExp;
-  const expRange = expNeeded - prevExp;
-  const pct = Math.min(100, (curExp / expRange) * 100);
-  document.getElementById('levelText').textContent = 'Lv. ' + state.level;
-  document.getElementById('expText').textContent = curExp.toLocaleString() + ' / ' + expRange.toLocaleString() + ' EXP';
-  document.getElementById('levelFill').style.width = pct + '%';
-  document.getElementById('levelFill').style.background = lg.expColor;
-
-  /* 궤도 링 */
-  renderOrbits(lg);
-
-  /* 리그 탭 */
-  renderLeagueTabs();
-
-  /* 오늘의 활동 */
-  renderSummary(lg);
-
-  /* 헥사곤 스탯 */
-  drawHex();
-  renderStatList(lg);
-
-  /* 아우라 */
-  document.getElementById('auraPreview').textContent = lg.aura.emoji;
-  document.getElementById('auraPreview').style.background = 'radial-gradient(circle,' + lg.aura.color + ', transparent 70%)';
-  document.getElementById('auraName').textContent = lg.aura.name;
-  document.getElementById('auraName').style.color = lg.color;
-  document.getElementById('auraDesc').textContent = lg.aura.desc;
-
-  /* 프로필 */
-  renderProfile();
-
-  /* 순위 */
-  renderRanking();
-
-  /* 미션 */
-  renderMissions();
-
-  /* 로드맵 */
-  renderLeagueRoad(state.league);
-
-  /* 파티클 재초기화 */
-  initParticles(state.league);
+// ═══ 성궤 탭 렌더링 ═══
+function renderOrbitTab(){
+  const league=LEAGUES[state.league];const grade=getGrade(state.level);
+  const o1=document.getElementById('occOrb');if(o1)o1.textContent=state.emoji;
+  const o2=document.getElementById('occName');if(o2)o2.textContent=state.name;
+  const o3=document.getElementById('occGrade');if(o3)o3.textContent='Lv.'+state.level+' '+grade.label+' — '+grade.key.toUpperCase();
+  const o4=document.getElementById('occArchetype');if(o4)o4.textContent=state.archetype;
+  const o5=document.getElementById('oscNumber');if(o5)o5.textContent=state.serial;
+  // 스탯
+  const os=document.getElementById('orbitStats');
+  if(os){const cn={loy:'#f0c040',act:'#ef4444',soc:'#38bdf8',eco:'#10b981',cre:'#a78bfa',int:'#fbbf24'};
+    const nm={loy:'LOY',act:'ACT',soc:'SOC',eco:'ECO',cre:'CRE',int:'INT'};
+    os.innerHTML=Object.entries(state.stats).map(([k,v])=>
+      '<div class="orbit-stat-box"><div class="os-label">'+nm[k]+'</div><div class="os-val" style="color:'+cn[k]+'">'+v+'</div></div>'
+    ).join('');}
+  // 리소스
+  const ra=document.getElementById('resAP');if(ra)ra.textContent=state.ap.toLocaleString();
+  const rc=document.getElementById('resCP');if(rc)rc.textContent=state.cp.toLocaleString();
+  const rs=document.getElementById('resSD');if(rs)rs.textContent=state.stardust.toLocaleString();
+  // 메뉴
+  const mg=document.getElementById('orbitMenuGrid');
+  if(mg){mg.innerHTML=[
+    {icon:'🌐',name:'리그 맵 League Map',desc:'5대 리그 순위와 미러 랭킹 확인',href:'/index.html'},
+    {icon:'✦',name:'성궤 관리 Orbit Management',desc:'성궤 슬롯과 문화력 지수 관리',href:'#'},
+    {icon:'💬',name:'AI 대화 AI Chat',desc:'아티스트 캐릭터와 1:1 대화',href:'/chat.html'},
+    {icon:'🏡',name:'내 방 My Room',desc:'3D 방 꾸미기와 추억 관리',href:'/room3d.html'},
+  ].map(m=>'<a class="orbit-menu-card" href="'+m.href+'"><div class="om-icon">'+m.icon+'</div><div class="om-info"><div class="om-name">'+m.name+'</div><div class="om-desc">'+m.desc+'</div></div></a>').join('');}
+  // 소버린
+  const sv=document.getElementById('sovereignCard');
+  if(sv){const req={dust:20,star:40,planet:60,nova:80,quasar:95}[state.league]||20;
+    const all=Object.values(state.stats).every(v=>v>=req);
+    sv.innerHTML='<div style="font-size:12px;font-weight:700;margin-bottom:12px;color:'+(all?'var(--gold)':'var(--text)')+'">'+(all?'👑 소버린 자격 달성! Sovereign Qualified!':'🎯 목표: 모든 스탯 '+req+' 이상')+'</div>'+
+    STAT_CONFIG.map(s=>{const v=state.stats[s.key]||0;const p=Math.min(100,v/req*100);const met=v>=req;
+      return '<div class="sov-row"><div class="sov-label" style="color:'+s.color+'">'+s.label+'</div><div class="sov-bar-bg"><div class="sov-bar-fill" style="width:'+p+'%;background:'+(met?s.color:'rgba(255,255,255,.15)')+'"></div></div><div class="sov-val" style="color:'+(met?s.color:'var(--muted)')+'">'+v+'/'+req+'</div></div>';}).join('');}
 }
 
-/* 리그 전환 탭 */
-function renderLeagueTabs() {
-  const bar = document.getElementById('leagueTabBar');
-  bar.innerHTML = '';
-  Object.entries(LEAGUES).forEach(([key, lg]) => {
-    const tab = document.createElement('div');
-    tab.className = 'league-tab' + (key === state.league ? ' active' : '');
-    tab.innerHTML = '<span>' + lg.icon + '</span> ' + lg.name;
-    if(key === state.league) {
-      tab.style.borderColor = lg.color;
-      tab.style.color = lg.color;
-      tab.style.boxShadow = '0 0 12px ' + lg.color + '30';
-    }
-    tab.onclick = () => {
-      state.league = key;
-      renderAll();
-    };
-    bar.appendChild(tab);
-  });
+// ═══ 전적 탭 렌더링 ═══
+function renderRecordTab(){
+  // 프로필
+  const pc=document.getElementById('profileCard');
+  if(pc){pc.innerHTML=[
+    {label:'ARCHETYPE 아키타입',value:state.archetype},
+    {label:'TITLE 칭호',value:state.title},
+    {label:'FANDOM 팬덤',value:state.fandom},
+    {label:'JOINED 가입일',value:state.joinDate},
+  ].map(p=>'<div class="profile-item"><div class="profile-label">'+p.label+'</div><div class="profile-value">'+p.value+'</div></div>').join('');}
+  // 히트맵
+  drawHeatmap();
+  // 마일스톤
+  const mt=document.getElementById('milestoneTimeline');
+  if(mt){mt.innerHTML=[
+    {date:'2024.03.15',text:'아스테리아 가입 Joined',achieved:true},
+    {date:'2024.03.22',text:'Lv.10 성아 달성 Seed',achieved:true},
+    {date:'2024.04.05',text:'첫 뱃지 획득 First Badge',achieved:true},
+    {date:'2024.05.12',text:'Lv.20 성령 달성 Spirit',achieved:true},
+    {date:'???',text:'Lv.30 성민 달성 Citizen',achieved:false},
+    {date:'???',text:'스타 리그 승격 Star League',achieved:false},
+  ].map(m=>'<div class="ms-item"><div class="ms-dot '+(m.achieved?'achieved':'')+'"></div><div class="ms-date">'+m.date+'</div><div class="ms-text" style="color:'+(m.achieved?'var(--text)':'var(--muted)')+'">'+m.text+'</div></div>').join('');}
+  // 시즌
+  const sc=document.getElementById('seasonCard');
+  if(sc){sc.innerHTML='<div class="season-header">SEASON 1 — 2024</div><div class="season-stats">'+
+    '<div class="season-stat"><div class="ss-val" style="color:var(--gold)">23</div><div class="ss-label">레벨 Level</div></div>'+
+    '<div class="season-stat"><div class="ss-val" style="color:var(--accent)">4,820</div><div class="ss-label">AP 획득</div></div>'+
+    '<div class="season-stat"><div class="ss-val" style="color:var(--accent3)">12</div><div class="ss-label">미션 완료</div></div></div>';}
+  // 뱃지
+  const bg=document.getElementById('badgeGrid');
+  if(bg){bg.innerHTML=[
+    {emoji:'🌟',name:'탐험가',locked:false},{emoji:'🔥',name:'열정',locked:false},
+    {emoji:'💜',name:'팬심',locked:false},{emoji:'🏆',name:'우승',locked:true},
+    {emoji:'👑',name:'소버린',locked:true},{emoji:'💎',name:'제네시스',locked:true},
+    {emoji:'⚡',name:'퀘이사',locked:true},{emoji:'🌌',name:'은하',locked:true},
+  ].map(b=>'<div class="badge-item '+(b.locked?'locked':'')+'"><div class="badge-emoji">'+b.emoji+'</div><div class="badge-name">'+b.name+'</div></div>').join('');}
 }
 
-/* 오늘의 활동 */
-function renderSummary(lg) {
-  const doneCount = MISSIONS.filter(m => m.done).length;
-  const topStat = STAT_CONFIG.reduce((a, b) => state.stats[b.key] > state.stats[a.key] ? b : a, STAT_CONFIG[0]);
-  const myRank = RANKING.findIndex(r => r.me) + 1;
-
-  document.getElementById('sumMission').textContent = doneCount + '/' + MISSIONS.length;
-  document.getElementById('sumMission').style.color = lg.color;
-  document.getElementById('sumAP').textContent = '+' + state.ap.toLocaleString();
-  document.getElementById('sumAP').style.color = lg.color;
-  document.getElementById('sumStat').textContent = topStat.name.split(' ')[0] + ' ' + state.stats[topStat.key];
-  document.getElementById('sumStat').style.color = lg.color;
-  document.getElementById('sumRank').textContent = myRank + '위';
-  document.getElementById('sumRank').style.color = lg.color;
+// 히트맵 (잔디)
+function drawHeatmap(){
+  const cv=document.getElementById('heatmapCanvas');if(!cv)return;
+  const ctx=cv.getContext('2d');const cs=9,gap=2,cols=30,rows=7;
+  cv.width=cols*(cs+gap)+20;cv.height=rows*(cs+gap)+10;
+  ctx.clearRect(0,0,cv.width,cv.height);
+  const data=Array.from({length:cols*rows},()=>Math.floor(Math.random()*5));
+  const lg=LEAGUES[state.league];
+  for(let c=0;c<cols;c++){for(let r=0;r<rows;r++){
+    const lv=data[c*rows+r];const x=c*(cs+gap)+10,y=r*(cs+gap)+5;
+    ctx.fillStyle=lv===0?'rgba(255,255,255,0.06)':lg.color;
+    ctx.globalAlpha=lv===0?1:0.15+lv*0.2;
+    ctx.beginPath();ctx.rect(x,y,cs,cs);ctx.fill();}}
+  ctx.globalAlpha=1;
 }
 
-/* 궤도 링 색상 */
-function renderOrbits(lg) {
-  document.querySelectorAll('.orbit-ring').forEach(ring => {
-    ring.style.borderColor = lg.orbitColor;
-  });
-}
-
-/* 스탯 목록 */
-function renderStatList(lg) {
-  const list = document.getElementById('statList');
-  list.innerHTML = '';
-  STAT_CONFIG.forEach(s => {
-    const row = document.createElement('div');
-    row.className = 'stat-row';
-    row.innerHTML =
-      '<div class="stat-dot" style="background:' + s.color + '"></div>' +
-      '<div class="stat-name">' + s.name + '</div>' +
-      '<div class="stat-val" style="color:' + lg.color + '">' + state.stats[s.key] + '</div>';
-    list.appendChild(row);
-  });
-}
-
-/* 프로필 */
-function renderProfile() {
-  document.getElementById('profArchetype').textContent = state.archetype;
-  document.getElementById('profTitle').textContent = state.title;
-  document.getElementById('profFandom').textContent = state.fandom;
-  document.getElementById('profJoined').textContent = state.joinDate;
-}
-
-/* 순위 */
-function renderRanking() {
-  const list = document.getElementById('compList');
-  list.innerHTML = '';
-  RANKING.forEach(r => {
-    const row = document.createElement('div');
-    row.className = 'comp-row';
-    if(r.me) row.style.background = 'rgba(192,132,252,.06)';
-    const rankClass = r.rank <= 3 ? ' comp-rank-' + r.rank : '';
-    row.innerHTML =
-      '<div class="comp-rank' + rankClass + '">' + r.rank + '</div>' +
-      '<div class="comp-fandom-icon">' + r.icon + '</div>' +
-      '<div class="comp-name">' + r.name + (r.me ? ' <span style="font-size:9px;color:var(--gold)">(나)</span>' : '') + '</div>' +
-      '<div class="comp-score">' + r.score.toLocaleString() + 'pt</div>';
-    list.appendChild(row);
-  });
-}
-
-/* 미션 */
-function renderMissions() {
-  const list = document.getElementById('missionList');
-  list.innerHTML = '';
-  MISSIONS.forEach(m => {
-    const card = document.createElement('div');
-    card.className = 'mission-card' + (m.done ? ' done' : '');
-    card.innerHTML =
-      '<div class="mission-icon">' + m.icon + '</div>' +
-      '<div class="mission-body">' +
-        '<div class="mission-title">' + m.name + '</div>' +
-        '<div class="mission-desc">' + m.desc + '</div>' +
-        '<div class="mission-reward">+' + m.ap + ' AP · ' + m.stat.toUpperCase() + '</div>' +
-      '</div>' +
-      '<div class="mission-check">' + (m.done ? '✓' : '') + '</div>';
-    if(!m.done) card.onclick = () => completeMission(m.id);
-    list.appendChild(card);
-  });
-}
-
-/* 로드맵 */
-function renderLeagueRoad(curLeague) {
-  const track = document.getElementById('progressTrack');
-  track.innerHTML = '';
-  const keys = LEAGUE_ROAD.map(r => r.key);
-  const curIdx = keys.indexOf(curLeague);
-
-  LEAGUE_ROAD.forEach((r, i) => {
-    const node = document.createElement('div');
-    node.className = 'progress-node';
-    let dotClass = '';
-    if(i < curIdx) dotClass = 'done';
-    else if(i === curIdx) dotClass = 'current';
-    node.innerHTML =
-      '<div class="progress-dot ' + dotClass + '"></div>' +
-      '<div class="progress-badge">' + r.icon + '</div>' +
-      '<div class="progress-info">' +
-        '<div class="progress-league" style="color:' + LEAGUES[r.key].color + '">' + r.name + '</div>' +
-        '<div class="progress-req">' + r.req + '</div>' +
-      '</div>';
-    track.appendChild(node);
-  });
-}
-
-/* ══════════════════════════════
-   7. 인터랙션
-══════════════════════════════ */
-function onAvatarTap() {
-  if(state.tapCount >= 10) {
-    showToast('오늘의 탭 보너스를 모두 받았습니다!');
-    return;
-  }
+// ═══ 인터랙션 ═══
+function onAvatarTap(){
   state.tapCount++;
-  addAP(5);
-  showToast('✦ +5 AP! (' + state.tapCount + '/10)');
-  /* 파티클 버스트 */
-  const rect = avCanvas.getBoundingClientRect();
-  burstParticles(rect);
+  if(state.tapCount<=10){addAP(5);showToast('✨ +5 AP ('+state.tapCount+'/10)');
+    burstParticles(document.getElementById('avatarCanvas').getBoundingClientRect());
+  }else{showToast('오늘 탭 보너스를 모두 사용했어요!');}
 }
-avCanvas.addEventListener('click', onAvatarTap);
-
-function completeMission(id) {
-  const m = MISSIONS.find(x => x.id === id);
-  if(!m || m.done) return;
-  m.done = true;
-  addAP(m.ap);
-  if(m.stat && state.stats[m.stat] !== undefined) {
-    state.stats[m.stat] += Math.floor(m.ap * 0.3);
-  }
-  showToast('✅ ' + m.name + ' 완료! +' + m.ap + ' AP');
-  renderAll();
+function completeMission(id){
+  const m=MISSIONS.find(x=>x.id===id);if(!m||m.completed)return;
+  m.completed=true;addAP(m.ap);
+  state.stats[m.stat]=(state.stats[m.stat]||0)+(m.stat==='cre'?5:m.stat==='int'?4:m.stat==='act'?3:1);
+  showToast(m.icon+' '+m.name+' 완료! +'+m.ap+' AP');renderAll();
 }
+function doMission(){addAP(100);showToast('⚔️ 반격 성공! +100 AP');renderAll();}
+function addAP(n){state.ap+=n;renderAll();drawHex();}
 
-function doMission() {
-  addAP(100);
-  showToast('⚡ 반격 성공! +100 AP');
+// ═══ 레벨업 모달 ═══
+function triggerLevelup(level,grade){  const m=document.getElementById('levelupModal');if(!m)return;
+  const e=document.getElementById('luEmoji');if(e)e.textContent=state.emoji;
+  const g=document.getElementById('luGrade');if(g)g.textContent='Lv.'+level+' — '+grade.label+' ('+grade.sub+')';
+  const b=document.getElementById('luBonuses');
+  if(b){const list=['스탯 포인트 +14','성궤 슬롯 확장','주권 가중치 +0.09x'];
+    if(level%10===0)list.push('🔓 새 기능 해금!');
+    b.innerHTML=list.map(x=>'<div class="lu-bonus">'+x+'</div>').join('');}
+  m.classList.add('show');
 }
+function closeLevelup(){const m=document.getElementById('levelupModal');if(m)m.classList.remove('show');}
 
-function addAP(amount) {
-  const prevLevel = state.level;
-  state.ap += amount;
-  state.level = apToLevel(state.ap);
-  if(state.level > prevLevel) {
-    const grade = getGrade(state.level);
-    triggerLevelup(state.level, grade);
-  }
-  renderAll();
-}
-
-/* ══════════════════════════════
-   8. 레벨업 모달
-══════════════════════════════ */
-function triggerLevelup(level, grade) {
-  const modal = document.getElementById('levelupModal');
-  document.getElementById('lvupIcon').textContent = level >= 91 ? '👑' : level >= 61 ? '🌟' : '🎉';
-  document.getElementById('lvupTitle').textContent = 'LEVEL ' + level + '!';
-  document.getElementById('lvupSub').textContent = grade.label + ' — ' + grade.sub;
-
-  const rewards = document.getElementById('lvupRewards');
-  rewards.innerHTML = '';
-  const bonuses = [
-    '✦ 칭호 해금: ' + grade.label,
-    '✦ 스타더스트 +' + (level * 10),
-    level >= 50 ? '✦ 궤도 장식 해금!' : null,
-    level >= 80 ? '✦ 오라 이펙트 강화!' : null,
-    level >= 91 ? '✦ 왕관 장식 해금!' : null
-  ].filter(Boolean);
-  bonuses.forEach(b => {
-    const div = document.createElement('div');
-    div.className = 'levelup-reward';
-    div.textContent = b;
-    rewards.appendChild(div);
-  });
-
-  modal.classList.add('show');
-}
-function closeLevelup() {
-  document.getElementById('levelupModal').classList.remove('show');
+// ═══ 파티클 버스트 ═══
+function burstParticles(rect){
+  const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
+  for(let i=0;i<15;i++){const p=document.createElement('div');
+    const colors=['#f0c040','#c084fc','#38bdf8','#fff'];
+    const col=colors[Math.floor(Math.random()*colors.length)];
+    const sz=Math.random()*5+2;const angle=Math.random()*Math.PI*2;const dist=Math.random()*60+20;
+    p.style.cssText='position:fixed;left:'+cx+'px;top:'+cy+'px;width:'+sz+'px;height:'+sz+'px;border-radius:50%;background:'+col+';z-index:9998;pointer-events:none;transition:all '+(0.3+Math.random()*0.3)+'s ease-out;transform:translate(-50%,-50%)';
+    document.body.appendChild(p);    requestAnimationFrame(()=>{p.style.transform='translate(calc(-50% + '+Math.cos(angle)*dist+'px),calc(-50% + '+Math.sin(angle)*dist+'px))';p.style.opacity='0';});
+    setTimeout(()=>p.remove(),700);}
 }
 
-/* ══════════════════════════════
-   9. 파티클 버스트
-══════════════════════════════ */
-function burstParticles(rect) {
-  const lg = LEAGUES[state.league];
-  for(let i = 0; i < 20; i++) {
-    const p = document.createElement('div');
-    p.style.cssText =
-      'position:fixed;width:4px;height:4px;border-radius:50%;pointer-events:none;z-index:9999;' +
-      'background:' + lg.color + ';' +
-      'left:' + (rect.left + rect.width/2) + 'px;' +
-      'top:' + (rect.top + rect.height/2) + 'px;' +
-      'transition:all .6s ease-out;opacity:1;';
-    document.body.appendChild(p);
-    requestAnimationFrame(() => {
-      p.style.left = (rect.left + rect.width/2 + (Math.random()-0.5)*120) + 'px';
-      p.style.top = (rect.top + rect.height/2 + (Math.random()-0.5)*120) + 'px';
-      p.style.opacity = '0';
-      p.style.transform = 'scale(0)';
-    });
-    setTimeout(() => p.remove(), 700);
-  }
+// ═══ 토스트 ═══
+function showToast(msg){
+  const t=document.getElementById('toast');if(!t)return;
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500);
 }
 
-/* ══════════════════════════════
-   10. 경쟁 알림 로테이션
-══════════════════════════════ */
-const COMP_ALERTS = [
-  { icon:'⚔️', title:'심연에서 별이 올라오고 있습니다!', sub:'화력전에 참여하세요' },
-  { icon:'🏆', title:'저 별의 자리가 머지않았습니다!', sub:'2위까지 1,240pt 남음' },
-  { icon:'⚡', title:'총공 시간! 지금이 기회입니다!', sub:'다함께 스트리밍 GO' }
+// ═══ 경쟁 알림 로테이션 ═══
+const alerts=[
+  {title:'⚔️ 심연에서 별이 올라오고 있습니다!',body:'EclipseKing이 단 120 AP 차이로 추격 중!',color:'rgba(239,68,68,.08)',border:'rgba(239,68,68,.3)',btn:'반격하기',btnColor:'#ef4444'},
+  {title:'🏆 저 별의 자리가 머지않았습니다!',body:'AURORA가 3위를 500 QP 차이로 추격 중!',color:'rgba(240,192,64,.08)',border:'rgba(240,192,64,.3)',btn:'화력 집중!',btnColor:'#f0c040'},
+  {title:'⚡ 총공 시간! 지금이 기회입니다!',body:'3위 팀이 흔들리고 있어요!',color:'rgba(192,132,252,.08)',border:'rgba(192,132,252,.3)',btn:'참여하기',btnColor:'#c084fc'},
 ];
-let alertIdx = 0;
-setInterval(() => {
-  alertIdx = (alertIdx + 1) % COMP_ALERTS.length;
-  const a = COMP_ALERTS[alertIdx];
-  const el = document.getElementById('compAlert');
-  if(!el) return;
-  el.querySelector('.comp-alert-icon').textContent = a.icon;
-  el.querySelector('.comp-alert-title').textContent = a.title;
-  el.querySelector('.comp-alert-sub').textContent = a.sub;
-}, 5000);
-
-/* ══════════════════════════════
-   11. 토스트
-══════════════════════════════ */
-function showToast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 2500);
+let alertIdx=0;
+function rotateAlert(){
+  const a=alerts[alertIdx%alerts.length];
+  const el=document.getElementById('compAlert');if(!el)return;
+  el.style.background=a.color;el.style.border='1px solid '+a.border;
+  const at=document.getElementById('alertTitle');if(at)at.textContent=a.title;
+  const ab=document.getElementById('alertBody');if(ab)ab.textContent=a.body;
+  const btn=document.getElementById('alertBtn');if(btn){btn.style.background=a.btnColor;btn.textContent=a.btn;}
+  alertIdx++;
 }
+setInterval(rotateAlert,5000);
 
-/* ══════════════════════════════
-   12. 랭킹 실시간 시뮬
-══════════════════════════════ */
-setInterval(() => {
-  RANKING.forEach(r => {
-    if(!r.me) r.score += Math.floor(Math.random() * 30 - 10);
-  });
-  renderRanking();
-}, 3000);
-
-/* ══════════════════════════════
-   13. 별빛 배경
-══════════════════════════════ */
-(function() {
-  const canvas = document.getElementById('starCanvas');
-  if(!canvas) return;
-  const ctx = canvas.getContext('2d');
-
-  function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  }
-  resize();
-  window.addEventListener('resize', resize);
-
-  /* 별 280개 생성 */
-  const stars = [];
-  for(let i = 0; i < 280; i++) {
-    const rnd = Math.random();
-    let r, type;
-    if(rnd < 0.7) { r = 0.3 + Math.random() * 0.8; type = 'small'; }
-    else if(rnd < 0.9) { r = 1.0 + Math.random() * 1.2; type = 'medium'; }
-    else { r = 2.0 + Math.random() * 2.0; type = 'large'; }
-
-    const colorRnd = Math.random();
-    let color = '#ffffff';
-    if(colorRnd < 0.08) color = '#f0c040';
-    else if(colorRnd < 0.14) color = '#c084fc';
-    else if(colorRnd < 0.18) color = '#38bdf8';
-
-    stars.push({
-      x: Math.random() * 2000,
-      y: Math.random() * 2000,
-      r: r, type: type, color: color,
-      twinkle: Math.random() * Math.PI * 2,
-      speed: 0.005 + Math.random() * 0.02
-    });
-  }
-
-  /* 유성 3개 */
-  const meteors = [];
-  for(let i = 0; i < 3; i++) {
-    meteors.push({ active: false, x:0, y:0, vx:0, vy:0, life:0, maxLife:0, delay: Math.random()*300+100 });
-  }
-
-  function activateMeteor(m) {
-    m.active = true;
-    m.x = Math.random() * canvas.width;
-    m.y = Math.random() * canvas.height * 0.3;
-    m.vx = 3 + Math.random() * 4;
-    m.vy = 2 + Math.random() * 3;
-    m.life = 0;
-    m.maxLife = 40 + Math.random() * 30;
-  }
-
-  let frame = 0;
-  function draw() {
-    frame++;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    /* 별 그리기 */
-    stars.forEach(s => {
-      const sx = s.x % canvas.width;
-      const sy = s.y % canvas.height;
-      const alpha = 0.4 + Math.sin(frame * s.speed + s.twinkle) * 0.4;
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle = s.color;
-      ctx.beginPath(); ctx.arc(sx, sy, s.r, 0, Math.PI * 2); ctx.fill();
-
-      /* 큰별: 십자 광채 */
-      if(s.type === 'large') {
-        ctx.globalAlpha = alpha * 0.3;
-        ctx.strokeStyle = s.color;
-        ctx.lineWidth = 0.5;
-        ctx.beginPath(); ctx.moveTo(sx - s.r*3, sy); ctx.lineTo(sx + s.r*3, sy); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(sx, sy - s.r*3); ctx.lineTo(sx, sy + s.r*3); ctx.stroke();
-      }
-    });
-    ctx.globalAlpha = 1;
-
-    /* 유성 */
-    meteors.forEach(m => {
-      if(!m.active) {
-        m.delay--;
-        if(m.delay <= 0) activateMeteor(m);
-        return;
-      }
-      m.x += m.vx;
-      m.y += m.vy;
-      m.life++;
-      if(m.life >= m.maxLife) {
-        m.active = false;
-        m.delay = Math.random() * 400 + 200;
-        return;
-      }
-      const progress = m.life / m.maxLife;
-      const tailLen = 40;
-      const grad = ctx.createLinearGradient(m.x, m.y, m.x - m.vx*tailLen/5, m.y - m.vy*tailLen/5);
-      grad.addColorStop(0, 'rgba(255,255,255,' + (1 - progress) * 0.8 + ')');
-      grad.addColorStop(1, 'transparent');
-      ctx.strokeStyle = grad;
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(m.x, m.y);
-      ctx.lineTo(m.x - m.vx * tailLen / 5, m.y - m.vy * tailLen / 5);
-      ctx.stroke();
-    });
-
-    requestAnimationFrame(draw);
-  }
-  draw();
+// ═══ 별빛 배경 ═══
+(function(){
+  const cv=document.getElementById('starCanvas');if(!cv)return;
+  const ctx=cv.getContext('2d');let W,H;
+  function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight;}
+  resize();addEventListener('resize',resize);
+  const stars=Array.from({length:280},()=>{const s=Math.random();
+    return{x:Math.random()*2000,y:Math.random()*2000,
+      r:s<0.7?Math.random()*0.8+0.3:s<0.9?Math.random()*1.2+1:Math.random()*2+2,
+      br:Math.random()*0.5+0.3,ph:Math.random()*Math.PI*2,
+      sp:Math.random()*0.008+0.002,
+      col:Math.random()<0.08?'#f0c040':Math.random()<0.06?'#c084fc':Math.random()<0.04?'#38bdf8':'#fff',
+      big:s>=0.9};});
+  const meteors=Array.from({length:3},()=>({active:false,x:0,y:0,vx:0,vy:0,len:0,op:0,timer:Math.random()*300}));
+  function loop(){ctx.clearRect(0,0,W,H);    stars.forEach(st=>{st.ph+=st.sp;const a=st.br*(0.5+0.5*Math.sin(st.ph));
+      ctx.save();ctx.globalAlpha=a;const x=st.x%W,y=st.y%H;
+      if(st.big){const g=ctx.createRadialGradient(x,y,0,x,y,st.r*3);
+        g.addColorStop(0,st.col);g.addColorStop(1,'transparent');
+        ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,st.r*3,0,Math.PI*2);ctx.fill();
+        ctx.strokeStyle=st.col;ctx.lineWidth=0.5;ctx.globalAlpha=a*0.6;
+        ctx.beginPath();ctx.moveTo(x-st.r*6,y);ctx.lineTo(x+st.r*6,y);
+        ctx.moveTo(x,y-st.r*6);ctx.lineTo(x,y+st.r*6);ctx.stroke();
+      }else{if(st.r>1){const g=ctx.createRadialGradient(x,y,0,x,y,st.r*2.5);
+        g.addColorStop(0,st.col);g.addColorStop(1,'transparent');
+        ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,st.r*2.5,0,Math.PI*2);ctx.fill();ctx.globalAlpha=a;}
+        ctx.fillStyle=st.col;ctx.beginPath();ctx.arc(x,y,st.r,0,Math.PI*2);ctx.fill();}
+      ctx.restore();});
+    meteors.forEach(m=>{if(!m.active){m.timer--;
+      if(m.timer<=0){m.active=true;m.x=Math.random()*W*1.2;m.y=Math.random()*H*0.4;
+        const ang=Math.PI/4+(Math.random()-0.5)*0.3,spd=8+Math.random()*6;
+        m.vx=Math.cos(ang)*spd;m.vy=Math.sin(ang)*spd;m.len=12+Math.random()*10;m.op=0.9;}}
+      else{m.x+=m.vx;m.y+=m.vy;m.op-=0.015;
+        if(m.op>0){ctx.save();const g=ctx.createLinearGradient(m.x,m.y,m.x-m.vx*m.len,m.y-m.vy*m.len);
+          g.addColorStop(0,'rgba(255,255,255,'+m.op+')');g.addColorStop(1,'transparent');
+          ctx.strokeStyle=g;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(m.x,m.y);
+          ctx.lineTo(m.x-m.vx*m.len,m.y-m.vy*m.len);ctx.stroke();ctx.restore();}
+        if(m.op<=0||m.x>W+100||m.y>H+100){m.active=false;m.timer=200+Math.random()*400;}}});
+    requestAnimationFrame(loop);}
+  loop();
 })();
 
-/* ══════════════════════════════
-   14. 버그 리포트
-══════════════════════════════ */
-async function submitBug() {
-  const text = document.getElementById('bugText').value.trim();
-  if(!text) { showToast('내용을 입력해주세요'); return; }
-  try {
-    const token = localStorage.getItem('accessToken');
-    if(!token) { showToast('로그인이 필요합니다'); return; }
-    const res = await fetch('/api/bugs', {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+token },
-      body: JSON.stringify({ page:'astra', content:text })
-    });
-    if(res.ok) {
-      showToast('버그 리포트가 전송되었습니다!');
-      document.getElementById('bugText').value = '';
-      document.getElementById('bugModal').classList.remove('show');
-    } else {
-      showToast('전송 실패 — 다시 시도해주세요');
-    }
-  } catch(e) {
-    showToast('네트워크 오류');
-  }
+// ═══ 버그 리포트 ═══
+async function submitBugReport(){
+  var t=localStorage.getItem('accessToken');
+  if(!t){alert('로그인이 필요합니다.');return;}
+  try{var r=await fetch('/api/bugs',{method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},
+    body:JSON.stringify({page:document.getElementById('bugPage').value,
+      issue_type:document.getElementById('bugType').value,
+      description:document.getElementById('bugDesc').value})});
+    var d=await r.json();
+    if(r.ok){showToast(d.message||'버그 신고 완료!');
+      document.getElementById('bugModal').classList.remove('open');
+      document.getElementById('bugDesc').value='';}
+    else{alert(d.message||'제출 실패');}
+  }catch(e){alert('네트워크 오류');}
 }
 
-/* ══════════════════════════════
-   15. 초기화
-══════════════════════════════ */
+// ═══ 초기화 ═══
 renderAll();
 drawAvatar();
+rotateAlert();
+restoreTab();
+
+setInterval(()=>{
+  RANKING.forEach(r=>{const d=Math.floor(Math.random()*50)-20;
+    r.delta=(d>0?'+':'')+d.toLocaleString();r.up=d>0;});
+  renderRanking();
+},3000);
 </script>
 </body>
 </html>
