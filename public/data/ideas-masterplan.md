@@ -1238,3 +1238,37 @@ bcrypt, JWT, 최소수집(이메일+닉네임), 소셜로그인2FA, 욕설필터
 - 내방(room3d.html) 말풍선 대화 시스템
   - 초대된 방문자와 말풍선으로 대화
   - 아티스트 캐릭터도 말풍선
+
+## 2026.03.30 작업 내용
+
+### ✅ 완료
+- 모든 페이지 상단 네비게이션 fandom.html 기준으로 통일
+  (index, astra, room3d, avatar, shop, chat)
+- astra.html 탭 겹침 버그 수정
+- avatar.html 뒤로가기 버튼 제거
+- avatar.html 아이템 카드 가시성 개선 (배경색 밝게)
+- avatar.html 캔버스 → SVG 레이어 방식으로 전면 교체
+- public/js/avatar-svgs.js 공용 SVG 파일 생성 (6개 캐릭터)
+- avatar-select.html 신규 생성 (가입 시 아바타 선택 화면)
+- astra.html 캐릭터탭 SVG 아바타 동기화 완료
+- astra.html 성궤탭 occOrb 썸네일 SVG 교체 완료
+
+### 🔄 미완료/버그
+- astra.html 성궤탭 occOrb: 아바타가 원 안에 안 들어옴
+  (SVG 크기/transform 조정 필요)
+- index.html avbody 썸네일 미확인
+- fandom.html 마을 아바타 → 나중에 따로 논의
+- room3d.html 아바타 → 나중에 따로 논의
+
+### 📋 다음 순서
+1. astra.html occOrb 아바타 원 안에 맞게 수정
+2. index.html avbody 썸네일 SVG 교체 확인
+3. avatar-select.html 이름 작명 단계 추가
+4. 리그별 아바타 차별화 (방식C: 아우라이펙트 + 전용아이템 해금)
+5. 아티스트 캐릭터 시스템
+
+### 📌 확정된 설계 사항
+- 아바타 이름: 가입 시 직접 작명, 변경은 리그승격 시 1회 무료 / 스타더스트 소모 / 미션 보상
+- 리그별 아바타 방식C: 아우라 이펙트 변화 + 리그 전용 아이템 해금
+- SVG 공용파일: public/js/avatar-svgs.js (모든 페이지에서 공유)
+- 6개 기본 아바타: 루카(m1)/제이(m2)/코코(m3)/아리(f1)/세나(f2)/루나(f3)
