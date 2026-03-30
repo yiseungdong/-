@@ -670,6 +670,100 @@ const LEAGUE_COLORS = {
 let currentChatRoom = 'all';
 let chatMsgTimer = null;
 
+/* ═══ 미니채팅창 관리 ═══ */
+const CHAT_COLORS = {
+  'all':  'var(--lp)',
+  'org0': '#38bdf8',
+  'org1': '#34d399',
+  'org2': '#fb923c',
+  'org3': '#a78bfa',
+  'org4': '#f472b6'
+};
+const CHAT_MOCK_NAMES = [
+  'StarFan','MoonChild','ArmyLove','PurpleU',
+  'GalaxyHeart','NovaRider','LunarFox','StarDust99'
+];
+let miniChatWindows = [];
+let miniChatZIndex = 500;
+
+/* ═══ 미니채팅창 생성 ═══ */
+function openMiniChatWindow(roomId, roomName, color) {
+  const existing = miniChatWindows.find(w => w.roomId === roomId);
+  if (existing) {
+    existing.el.style.zIndex = ++miniChatZIndex;
+    existing.el.classList.remove('minimized');
+    return;
+  }
+  if (miniChatWindows.length >= 5) {
+    const oldest = miniChatWindows.shift();
+    oldest.el.remove();
+  }
+  const offset = miniChatWindows.length * 28;
+  const startX = Math.min(window.innerWidth - 280, 80 + offset);
+  const startY = Math.min(window.innerHeight - 320, 80 + offset);
+
+  const win = document.createElement('div');
+  win.className = 'mini-chat-window';
+  win.style.cssText = `left:${startX}px;top:${startY}px;border-color:${color}44;`;
+  win.style.zIndex = ++miniChatZIndex;
+  win.innerHTML = `
+    <div class="mcw-hdr" style="background:${color}18">
+      <div class="mcw-dot" style="background:${color}"></div>
+      <div class="mcw-title">💬 ${roomName}</div>
+      <div class="mcw-btns">
+        <div class="mcw-btn" onclick="minimizeMcw(this)">_</div>
+        <div class="mcw-btn" onclick="closeMcw(this)">✕</div>
+      </div>    </div>
+    <div class="mcw-body" id="mcwBody_${roomId}"></div>
+    <div class="mcw-footer">
+      <input class="mcw-input" id="mcwInput_${roomId}"
+        placeholder="메시지 입력..." maxlength="200"
+        onkeydown="if(event.key==='Enter')sendMcwMsg('${roomId}','${color}')">
+      <button class="mcw-send" style="background:${color}"
+        onclick="sendMcwMsg('${roomId}','${color}')">➤</button>
+    </div>`;
+  document.body.appendChild(win);
+  miniChatWindows.push({ roomId, el: win });
+  loadMcwMsgs(roomId, color);
+  initMcwDrag(win);
+  win.addEventListener('mousedown', () => {
+    win.style.zIndex = ++miniChatZIndex;
+  });
+}
+
+/* ═══ 목업 메시지 로드 ═══ */
+function loadMcwMsgs(roomId, color) {
+  const body = document.getElementById('mcwBody_' + roomId);
+  if (!body) return;
+  body.innerHTML = '';
+  const count = 4 + Math.floor(Math.random() * 3);
+  const names = [...CHAT_MOCK_NAMES]
+    .sort(() => Math.random() - 0.5).slice(0, count);
+  const msgs = [
+    '안녕하세요! 💜','오늘 미션 같이해요!','화이팅!! 🔥',
+    '스밍 고고~','반가워요 👋','우리 팬클럽 최고 ✨',
+    '오늘도 열심히!','레벨업 했어요 🎉'
+  ];
+  names.forEach((name, i) => {
+    const isMe = i === names.length - 1;
+    const time = new Date(Date.now() - (names.length - i) * 120000);
+    const timeStr = time.getHours() + ':' +
+      String(time.getMinutes()).padStart(2, '0');
+    const msg = isMe ? '안녕하세요! 👋' :
+      msgs[Math.floor(Math.random() * msgs.length)];
+    const el = document.createElement('div');
+    el.className = 'mcw-msg ' + (isMe ? 'me' : 'other');
+    el.innerHTML = `
+      ${!isMe ? `<div class="mcw-msg-name"
+        style="color:${color}">${name}</div>` : ''}
+      <div class="mcw-msg-bubble">${msg}</div>
+      <div style="font-size:7px;color:var(--muted);margin-top:1px;
+        ${isMe ? 'text-align:right' : ''}">${timeStr}</div>`;
+    body.appendChild(el);
+  });
+  body.scrollTop = body.scrollHeight;
+}
+
 /* ═══ 리그 데이터 ═══ */
 const LG={
 dust:{name:'더스트',lp:'#b0bec5',ls:'#78909c',lg:'rgba(176,190,197,.3)',lr:176,lgr:190,lb:197,
