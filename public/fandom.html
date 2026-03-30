@@ -179,41 +179,7 @@ canvas{position:absolute;inset:0;z-index:1}
 @keyframes evtFloat{0%{opacity:0;transform:translateY(10px)}10%{opacity:1;transform:translateY(0)}75%{opacity:1;transform:translateY(-8px)}100%{opacity:0;transform:translateY(-20px)}}
 /* 리그 탭 제거됨 */
 /* 미니 채팅창 */
-.mini-chat{position:fixed;bottom:70px;left:50%;transform:translateX(-50%) translateY(20px);z-index:250;width:88%;max-width:360px;height:320px;background:var(--panel);border:1px solid var(--border);border-radius:16px;display:none;flex-direction:column;overflow:hidden;opacity:0;transition:opacity .3s,transform .3s}
-.mini-chat.show{display:flex;opacity:1;transform:translateX(-50%) translateY(0)}
-.mc-hdr{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(255,255,255,.03);border-bottom:1px solid var(--border)}
-.mc-profile{display:flex;align-items:center;gap:8px}
-.mc-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--lp),var(--ls));display:flex;align-items:center;justify-content:center;font-size:14px}
-.mc-info{display:flex;flex-direction:column}
-.mc-name{font-size:11px;font-weight:700;color:var(--text)}
-.mc-status{font-size:8px;color:var(--lp);display:flex;align-items:center;gap:3px}
-.mc-status-dot{width:4px;height:4px;border-radius:50%;background:#34d399}
-.mc-btns{display:flex;gap:6px}
-.mc-btn{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer;color:var(--muted);transition:.2s}
-.mc-btn:hover{background:rgba(255,255,255,.12)}
-.mc-body{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
-.mc-msg{max-width:80%;padding:7px 10px;border-radius:12px;font-size:10px;line-height:1.5}
-.mc-msg.ai{align-self:flex-start;background:rgba(255,255,255,.06);color:var(--text);border-bottom-left-radius:2px}
-.mc-msg.me{align-self:flex-end;background:var(--lp);color:#000;font-weight:500;border-bottom-right-radius:2px}
-.mc-msg .mc-time{font-size:7px;opacity:.5;margin-top:2px}
-.mc-footer{display:flex;align-items:center;gap:6px;padding:8px 10px;border-top:1px solid var(--border)}
-.mc-input{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:20px;padding:6px 12px;font-size:10px;color:var(--text);outline:none;font-family:'Noto Sans KR',sans-serif}
-.mc-input::placeholder{color:var(--muted)}
-.mc-send{width:28px;height:28px;border-radius:50%;background:var(--lp);border:none;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;transition:.2s}
-.mc-send:hover{transform:scale(1.1)}
-.mc-timer{font-size:7px;color:var(--muted);text-align:center;padding:2px;font-family:Orbitron,monospace}
-@media(min-width:768px){
-  .mini-chat{width:220px;max-width:220px;height:200px;bottom:70px;border-radius:12px}
-  .mc-hdr{padding:4px 8px}
-  .mc-avatar{width:18px;height:18px;font-size:9px}
-  .mc-name{font-size:9px}
-  .mc-status{font-size:7px}
-  .mc-btn{width:22px;height:22px;font-size:9px}  .mc-body{padding:6px 8px;gap:5px}
-  .mc-msg{padding:4px 6px;border-radius:8px;font-size:8px;line-height:1.3}
-  .mc-footer{padding:5px 6px;gap:4px}
-  .mc-input{padding:4px 8px;font-size:9px;border-radius:14px}
-  .mc-send{width:22px;height:22px;font-size:10px}
-  .mc-timer{font-size:6px;padding:1px}}
+/* 미니 채팅창 제거됨 */
 
 /* 팬클럽 전체채팅 하단 고정바 */
 .fc-chat-bar {
@@ -450,34 +416,12 @@ canvas{position:absolute;inset:0;z-index:1}
     <button class="chat-send" onclick="sendChatMsg()">➤</button>
   </div>
 </div>
-<div class="vc" id="vc"><div class="vw" id="vw"><canvas id="cv"></canvas><div id="bL"></div><div class="avatar" id="myAv" style="left:960px;top:760px"><div class="av-body" style="pointer-events:auto;cursor:pointer" onclick="openMiniChat()">🧑</div><div class="av-tag">나</div></div><div id="nL"></div><div id="miniEvts" style="position:absolute;z-index:25;pointer-events:none"></div></div></div>
+<div class="vc" id="vc"><div class="vw" id="vw"><canvas id="cv"></canvas><div id="bL"></div><div class="avatar" id="myAv" style="left:960px;top:760px"><div class="av-body" style="pointer-events:auto;cursor:pointer" onclick="openFcChat('all')">🧑</div><div class="av-tag">나</div></div><div id="nL"></div><div id="miniEvts" style="position:absolute;z-index:25;pointer-events:none"></div></div></div>
 <div class="bot"><div class="bot-e"><div class="bot-eb"><div class="bot-ef" id="bE" style="width:72%"></div></div><div class="bot-el">에너지 <span id="bP">72%</span></div></div><div class="bot-d" id="bD">D-14</div></div>
 <div class="hint" id="hint">빈 곳을 클릭하면 이동!</div>
 <div class="mo" id="mo" onclick="closeMo(event)"><div class="mo-c" id="moC" onclick="event.stopPropagation()"></div></div>
 <div id="toast"></div>
-<div class="mini-chat" id="miniChat">
-  <div class="mc-hdr">
-    <div class="mc-profile">
-      <div class="mc-avatar">🎤</div>
-      <div class="mc-info">
-        <div class="mc-name">AI 아티스트</div>
-        <div class="mc-status"><span class="mc-status-dot"></span>대화 가능</div>
-      </div>
-    </div>
-    <div class="mc-btns">
-      <div class="mc-btn" onclick="location.href='/chat.html'" title="전체화면">↗</div>
-      <div class="mc-btn" onclick="closeMiniChat()" title="닫기">✕</div>
-    </div>
-  </div>
-  <div class="mc-timer" id="mcTimer">남은 대화 시간: 10:00</div>
-  <div class="mc-body" id="mcBody">
-    <div class="mc-msg ai">안녕! 오늘 마을은 어때? 무슨 이야기 하고 싶어? 💫</div>
-  </div>
-  <div class="mc-footer">
-    <input class="mc-input" id="mcInput" placeholder="메시지를 입력하세요..." maxlength="200">
-    <button class="mc-send" id="mcSend" onclick="sendMiniChat()">➤</button>
-  </div>
-</div>
+<!-- 미니 채팅창 제거됨 -->
 <div class="fc-chat-bar" onclick="openFcChat('all')">
   <span class="fc-chat-bar-icon">💬</span>
   <span class="fc-chat-bar-label">팬클럽 전체 채팅</span>
@@ -506,6 +450,44 @@ const MAP_SIZE={
 };
 const DM={name:'BTS ARMY',league:'star',rank:3,members:98432,score:847,energy:72,dday:14,online:1234,
 ann:['🔥 시즌 종료 D-14!','📢 새로운 소원 제안!'],ld:{n:'StarCommander',lv:78,a:'전략가'}};
+
+/* 내 소속 경로 (리그별) */
+const MY_ORG = {
+  dust:    ['게더링1', '포인트1'],
+  star:    ['테리토리1', '베이스1', '유닛1'],
+  planet:  ['테리토리1', '베이스1', '유닛1'],
+  nova:    ['프로빈스1', '디스트릭트1', '스퀘어1', '라운지1'],
+  quasar:  ['엠파이어1', '도미니언1', '섹터1', '클러스터1', '오빗1']
+};
+
+/* 리그별 모임 건물 이름 */
+const ORG_BUILDING = {
+  dust:   '게더링 하우스',
+  star:   '테리토리 타워',
+  planet: '테리토리 타워',
+  nova:   '프로빈스 센터',
+  quasar: '엠파이어 홀'
+};
+
+/* 목업 채팅 메시지 */
+const MOCK_MSGS = [
+  {name:'StarFan',    msg:'안녕하세요! 오늘도 화이팅 💜',  league:'star'},
+  {name:'MoonChild',  msg:'오늘 미션 같이 하실 분!',        league:'nova'},
+  {name:'ArmyLove',   msg:'스밍 시작합니다 🔥🔥',          league:'quasar'},
+  {name:'PurpleU',    msg:'여기 분위기 너무 좋아요 ✨',     league:'planet'},
+  {name:'GalaxyHeart',msg:'새로 가입했어요 잘 부탁드려요!', league:'dust'},
+  {name:'NovaRider',  msg:'오늘 에너지 목표 달성했어요!',   league:'nova'},
+  {name:'StarDust99', msg:'다들 수고하셨어요 💫',           league:'star'},
+  {name:'LunarFox',   msg:'내일 컴백 기대되는 분?? 🎵',    league:'planet'},
+];
+
+const LEAGUE_COLORS = {
+  dust:'#94a3b8', star:'#fbbf24',
+  planet:'#34d399', nova:'#c084fc', quasar:'#f0c040'
+};
+
+let currentChatRoom = 'all';
+let chatMsgTimer = null;
 
 /* ═══ 리그 데이터 ═══ */
 const LG={
@@ -607,7 +589,7 @@ quasar:{name:'퀘이사',lp:'#f0c040',ls:'#e6a800',lg:'rgba(240,192,64,.4)',lr:2
 };
 
 /* 건물 위치 (광장 둘레에 넓게 분포한 단독주택) */
-const icons={dust:{hq:'⛺',board:'📌',vote:'📝',wish:'🕯️',org:'🏕️',event:'🔥',honor:'📜'},star:{hq:'🏰',board:'📋',vote:'🗳️',wish:'⭐',org:'🏗️',event:'🎪',honor:'🏛️'},planet:{hq:'🏢',board:'📊',vote:'🗳️',wish:'💫',org:'🏙️',event:'🎪',honor:'🏛️'},nova:{hq:'🏗️',board:'💻',vote:'🗳️',wish:'🌟',org:'🗼',event:'🎆',honor:'🏛️'},quasar:{hq:'👑',board:'📡',vote:'🗳️',wish:'✨',org:'🏯',event:'🎊',honor:'🏛️'}};
+const icons={dust:{hq:'⛺',board:'📌',vote:'📝',wish:'🕯️',org:'🏕️',event:'🔥',honor:'📜',org_chat:'🏕️'},star:{hq:'🏰',board:'📋',vote:'🗳️',wish:'⭐',org:'🏗️',event:'🎪',honor:'🏛️',org_chat:'🏰'},planet:{hq:'🏢',board:'📊',vote:'🗳️',wish:'💫',org:'🏙️',event:'🎪',honor:'🏛️',org_chat:'🏢'},nova:{hq:'🏗️',board:'💻',vote:'🗳️',wish:'🌟',org:'🗼',event:'🎆',honor:'🏛️',org_chat:'🗼'},quasar:{hq:'👑',board:'📡',vote:'🗳️',wish:'✨',org:'🏯',event:'🎊',honor:'🏛️',org_chat:'🏯'}};
 const BLD_BASE=[
   {id:'hq',rx:.43,ry:.24,rw:.07,rh:.075,nK:'팬클럽 본부',nE:'HQ'},
   {id:'org',rx:.21,ry:.30,rw:.055,rh:.075,nK:'조직도 타워',nE:'Org Tower'},
@@ -616,6 +598,7 @@ const BLD_BASE=[
   {id:'vote',rx:.72,ry:.49,rw:.055,rh:.063,nK:'투표소',nE:'Vote Center'},
   {id:'event',rx:.24,ry:.69,rw:.065,rh:.063,nK:'이벤트 광장',nE:'Event Plaza'},
   {id:'honor',rx:.64,ry:.69,rw:.06,rh:.066,nK:'명예의 전당',nE:'Hall of Honor'},
+  {id:'org_chat',rx:.44,ry:.88,rw:.07,rh:.075,nK:'모임 채팅',nE:'Org Chat'},
 ];
 let BLD=[];
 const SCALE={dust:.8,star:.9,planet:1,nova:1.1,quasar:1.2};
@@ -1694,10 +1677,15 @@ org:()=>`<div class="mo-h"><div class="mo-t">🏗️ 조직도</div><div class="
 event:()=>`<div class="mo-h"><div class="mo-t">🎪 이벤트</div><div class="mo-x" onclick="closeMo()">✕</div></div><div class="mc"><div class="mc-t">🔥 진행 중</div><div class="mc-c"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:20px">⚔️</span><div style="flex:1"><div style="font-weight:700">라이벌 & 스탯킹</div><div style="font-size:8px;color:var(--muted)">3주차!</div></div><span style="font-family:Orbitron;font-size:9px;color:var(--lp)">D-2</span></div></div></div><div class="mc"><div class="mc-t">📊 화력</div><div class="mc-c"><div class="pb" style="height:6px"><div class="pf" style="width:${DM.energy}%"></div></div><div style="font-size:9px;color:var(--lp);margin-top:2px">${DM.energy}%</div></div></div>`,
 honor:()=>`<div class="mo-h"><div class="mo-t">🏛️ 명예의 전당</div><div class="mo-x" onclick="closeMo()">✕</div></div><div class="mc"><div class="mc-t">🏆 MVP</div><div class="mc-c">${[{m:'🥇',t:'S3 활동왕',n:'StarWarrior'},{m:'🥇',t:'S3 성장왕',n:'RisingStar'},{m:'🌟',t:'S3 신인상',n:'BrightNewbie'}].map(h=>'<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:14px">'+h.m+'</span><div><div style="font-weight:700;font-size:10px">'+h.t+'</div><div style="font-size:8px;color:var(--muted)">'+h.n+'</div></div></div>').join('')}</div></div>`
 };
-function openMo(k){if(!MO[k])return;document.getElementById('moC').innerHTML=MO[k]();document.getElementById('mo').classList.add('show');setTimeout(()=>{document.querySelectorAll('.pf').forEach(el=>{const w=el.style.width;el.style.width='0%';setTimeout(()=>el.style.width=w,50)})},100)}
+function openMo(k){
+  if(k==='org_chat'){openFcChat('org',0);return;}
+  if(!MO[k])return;document.getElementById('moC').innerHTML=MO[k]();document.getElementById('mo').classList.add('show');setTimeout(()=>{document.querySelectorAll('.pf').forEach(el=>{const w=el.style.width;el.style.width='0%';setTimeout(()=>el.style.width=w,50)})},100)}
 function closeMo(e){if(e&&e.target!==e.currentTarget)return;document.getElementById('mo').classList.remove('show')}
 function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3000)}
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMo()});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closeMo();closeChatPanel();}
+  if(e.key==='Enter'&&document.activeElement===document.getElementById('chatInput')){sendChatMsg();}
+});
 
 window.addEventListener('DOMContentLoaded',()=>{
   init();
@@ -1718,7 +1706,7 @@ window.addEventListener('DOMContentLoaded',()=>{
       setTimeout(()=>{
         ent.style.display='none';
         ent.remove();
-        startMiniEvents();
+        startMiniEvents();startNpcChat();
         showToast('🌟 '+DM.name+' STARIUM');
         setTimeout(()=>{
           document.getElementById('hint').classList.add('show');
@@ -1775,109 +1763,185 @@ function startMiniEvents(){  const container=document.getElementById('miniEvts')
   miniEvtTimer=setInterval(spawn,6000+Math.random()*4000);
 }
 
-/* 미니 채팅창 */
-function openMiniChat(){
-  document.getElementById('miniChat').classList.add('show');
-  document.getElementById('mcInput').focus();
-}
-function closeMiniChat(){
-  document.getElementById('miniChat').classList.remove('show');
-}
-function sendMiniChat(){
-  const input=document.getElementById('mcInput');
-  const msg=input.value.trim();
-  if(!msg)return;
-  const body=document.getElementById('mcBody');
-  // 내 메시지
-  const myEl=document.createElement('div');
-  myEl.className='mc-msg me';
-  myEl.textContent=msg;
-  body.appendChild(myEl);
-  input.value='';
-  body.scrollTop=body.scrollHeight;
-  // AI 응답 (간단한 목업)
-  setTimeout(()=>{
-    const replies=[
-      '오~ 그렇구나! 더 얘기해줘 💜',
-      '너의 마음이 느껴져! 고마워 ✨',
-      '재밌다! 오늘도 열심히 하는 모습이 멋져 🔥',
-      '그 이야기 좋아! 우리 팬클럽 최고야 💫',
-      '힘들 때는 나한테 말해줘. 항상 응원해 🌟',
-      '와~ 대단하다! 역시 우리 팬 😊',
-      '그런 생각을 하다니 센스 있어! 👏',
-      '오늘 기분 어때? 좋은 일 있었으면 좋겠다 💕',
-    ];
-    const aiEl=document.createElement('div');
-    aiEl.className='mc-msg ai';
-    aiEl.textContent=replies[Math.floor(Math.random()*replies.length)];
-    body.appendChild(aiEl);
-    body.scrollTop=body.scrollHeight;
-  },800+Math.random()*500);
-}
-document.addEventListener('keydown',e=>{
-  if(e.key==='Enter'&&document.getElementById('miniChat').classList.contains('show')){
-    sendMiniChat();
-  }
-});
+/* ═══ 채팅 시스템 ═══ */
+function openFcChat(type, orgPath) {
+  const panel = document.getElementById('chatPanel');
+  const title = document.getElementById('chatPanelTitle');
+  const breadcrumb = document.getElementById('chatBreadcrumb');
+  const body = document.getElementById('chatBody');
 
-/* 미니 채팅창 드래그 이동 */
-(function(){
-  let isDrag=false,startX=0,startY=0,origX=0,origY=0;
-  document.addEventListener('mousedown',function(e){
-    const hdr=e.target.closest('.mc-hdr');
-    if(!hdr||e.target.closest('.mc-btn'))return;
-    const chat=document.getElementById('miniChat');
-    if(!chat.classList.contains('show'))return;
-    isDrag=true;
-    startX=e.clientX;startY=e.clientY;
-    const rect=chat.getBoundingClientRect();
-    origX=rect.left;origY=rect.top;
-    chat.style.transition='none';
-    e.preventDefault();
+  panel.classList.add('open');
+  currentChatRoom = type;
+
+  if (type === 'all') {
+    title.textContent = '💬 팬클럽 전체 채팅';
+    breadcrumb.style.display = 'none';
+    loadMockMsgs(body, 'all');
+  } else {
+    title.textContent = '🏠 모임 채팅';
+    breadcrumb.style.display = 'flex';
+    renderBreadcrumb(orgPath || 0);
+    loadMockMsgs(body, 'org');
+  }
+
+  setTimeout(() => {
+    document.getElementById('chatInput').focus();
+  }, 400);
+}
+
+function closeChatPanel() {
+  document.getElementById('chatPanel').classList.remove('open');
+}
+
+function renderBreadcrumb(activeIdx) {
+  const league = DM.league;
+  const path = MY_ORG[league] || [];
+  const bc = document.getElementById('chatBreadcrumb');
+  const body = document.getElementById('chatBody');
+
+  bc.innerHTML = '';
+  path.forEach((name, i) => {
+    if (i > 0) {
+      const arrow = document.createElement('span');
+      arrow.className = 'chat-bc-arrow';
+      arrow.textContent = '›';
+      bc.appendChild(arrow);
+    }
+    const item = document.createElement('div');
+    item.className = 'chat-bc-item';
+    const btn = document.createElement('div');
+    btn.className = 'chat-bc-btn' + (i === activeIdx ? ' active' : '');
+    btn.textContent = name;
+    btn.onclick = () => {
+      renderBreadcrumb(i);
+      loadMockMsgs(body, name);
+    };
+    item.appendChild(btn);
+    bc.appendChild(item);
   });
-  document.addEventListener('mousemove',function(e){
-    if(!isDrag)return;
-    const chat=document.getElementById('miniChat');
-    const dx=e.clientX-startX,dy=e.clientY-startY;
-    chat.style.left=(origX+dx)+'px';
-    chat.style.top=(origY+dy)+'px';
-    chat.style.bottom='auto';
-    chat.style.transform='none';
+}
+
+function loadMockMsgs(body, roomType) {
+  body.innerHTML = '';
+  const count = 6 + Math.floor(Math.random() * 4);
+  const msgs = [...MOCK_MSGS]
+    .sort(() => Math.random() - 0.5)
+    .slice(0, count);
+
+  msgs.forEach((m, i) => {
+    const isMe = i === msgs.length - 1;
+    const color = LEAGUE_COLORS[m.league] || '#c084fc';
+    const time = new Date(Date.now() - (msgs.length - i) * 180000);
+    const timeStr = time.getHours() + ':' +
+      String(time.getMinutes()).padStart(2, '0');
+
+    const el = document.createElement('div');
+    el.className = 'chat-msg' + (isMe ? ' me' : '');
+    el.innerHTML = `
+      <div class="chat-msg-avatar"
+        style="background:${color}22;border-color:${color}44">
+        ${isMe ? '🧑' : '👤'}
+      </div>
+      <div class="chat-msg-body">
+        <div class="chat-msg-name"
+          style="color:${color}">${isMe ? '나' : m.name}</div>
+        <div class="chat-msg-bubble">${isMe ? '안녕하세요! 👋' : m.msg}</div>
+        <div class="chat-msg-time">${timeStr}</div>
+      </div>`;
+    body.appendChild(el);
   });
-  document.addEventListener('mouseup',function(){
-    if(!isDrag)return;
-    isDrag=false;
-    document.getElementById('miniChat').style.transition='opacity .3s';
-  });
-  /* 터치 지원 */
-  document.addEventListener('touchstart',function(e){
-    const hdr=e.target.closest('.mc-hdr');
-    if(!hdr||e.target.closest('.mc-btn'))return;
-    const chat=document.getElementById('miniChat');
-    if(!chat.classList.contains('show'))return;
-    isDrag=true;
-    const tc=e.touches[0];
-    startX=tc.clientX;startY=tc.clientY;
-    const rect=chat.getBoundingClientRect();
-    origX=rect.left;origY=rect.top;
-    chat.style.transition='none';
-  },{passive:true});
-  document.addEventListener('touchmove',function(e){
-    if(!isDrag)return;
-    const tc=e.touches[0];
-    const chat=document.getElementById('miniChat');
-    const dx=tc.clientX-startX,dy=tc.clientY-startY;
-    chat.style.left=(origX+dx)+'px';
-    chat.style.top=(origY+dy)+'px';
-    chat.style.bottom='auto';
-    chat.style.transform='none';
-  },{passive:true});
-  document.addEventListener('touchend',function(){
-    if(!isDrag)return;
-    isDrag=false;
-    document.getElementById('miniChat').style.transition='opacity .3s';
-  });
-})();
+  body.scrollTop = body.scrollHeight;
+}
+
+function sendChatMsg() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  const body = document.getElementById('chatBody');
+  const time = new Date();
+  const timeStr = time.getHours() + ':' +
+    String(time.getMinutes()).padStart(2, '0');
+
+  const el = document.createElement('div');
+  el.className = 'chat-msg me';
+  el.innerHTML = `
+    <div class="chat-msg-avatar"
+      style="background:rgba(192,132,252,0.2);border-color:rgba(192,132,252,0.4)">
+      🧑
+    </div>
+    <div class="chat-msg-body">
+      <div class="chat-msg-name" style="color:var(--lp)">나</div>
+      <div class="chat-msg-bubble">${msg}</div>
+      <div class="chat-msg-time">${timeStr}</div>
+    </div>`;
+  body.appendChild(el);
+  body.scrollTop = body.scrollHeight;
+  input.value = '';
+
+  showSpeechBubble('myAv', '나', msg, true);
+}
+
+function showSpeechBubble(avatarId, name, msg, isMe) {
+  const av = document.getElementById(avatarId);
+  if (!av) return;
+
+  const old = av.querySelector('.speech-bubble');
+  if (old) old.remove();
+
+  const league = DM.league;
+  const color = isMe
+    ? (LEAGUE_COLORS[league] || '#c084fc')
+    : '#94a3b8';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'speech-bubble';
+  bubble.style.cssText = `
+    left:50%;
+    bottom:calc(100% + 6px);
+    border-color:${color}44;
+  `;
+  bubble.innerHTML = `
+    <div class="speech-bubble-name"
+      style="color:${color}">${name}</div>
+    ${msg}`;
+  av.style.position = 'absolute';
+  av.appendChild(bubble);
+
+  clearTimeout(av._bubbleTimer);
+  av._bubbleTimer = setTimeout(() => {
+    bubble.remove();
+  }, 5000);
+}
+
+function showNpcBubble(npcIdx, msg) {
+  const npc = document.getElementById('npc' + npcIdx);
+  if (!npc) return;
+  const old = npc.querySelector('.speech-bubble');
+  if (old) old.remove();
+
+  const bubble = document.createElement('div');
+  bubble.className = 'speech-bubble';
+  bubble.style.cssText = 'left:50%;bottom:calc(100% + 4px);';
+  bubble.innerHTML = msg;
+  npc.appendChild(bubble);
+
+  clearTimeout(npc._bubbleTimer);
+  npc._bubbleTimer = setTimeout(() => bubble.remove(), 5000);
+}
+
+function startNpcChat() {
+  const npcMsgs = [
+    '오늘도 열심히! 💪', '같이 미션 해요~', '안녕하세요 👋',
+    '스밍 고고! 🔥', '우리 팬클럽 최고 ✨', '화이팅!! 💜',
+    '오늘 일기 썼어요 📝', '레벨업 했어요! 🎉'
+  ];
+  setInterval(() => {
+    const idx = Math.floor(Math.random() * 5);
+    const msg = npcMsgs[Math.floor(Math.random() * npcMsgs.length)];
+    showNpcBubble(idx, msg);
+  }, 8000 + Math.random() * 6000);
+}
 
 function toggleFcHeader(){
   const body=document.getElementById('fcBody');
