@@ -1487,7 +1487,7 @@ gems.forEach(gm=>{
 function drawSmoke(){
   const time=Date.now()/1000;
   BLD.forEach((b,i)=>{
-    if(!t.buildings[i].chimney)return;
+    if(!t.buildings[i] || !t.buildings[i].chimney)return;
     const sx=b.x+b.w*.65+4,sy=b.y+4;
     for(let j=0;j<5;j++){
       const age=((time*.4+j*.6)%3)/3;
