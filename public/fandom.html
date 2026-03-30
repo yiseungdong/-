@@ -10,22 +10,10 @@
 :root{--lp:#fbbf24;--ls:#f59e0b;--lg:rgba(251,191,36,.3);--g1:#141828;--text:#e8e4f0;--muted:rgba(200,190,220,.5);--panel:rgba(10,10,22,.96);--border:rgba(180,150,255,.13);--gold:#f0c040}
 html,body{height:100%;overflow:hidden;background:#0a0a14;color:var(--text);font-family:'Noto Sans KR',sans-serif;user-select:none;-webkit-tap-highlight-color:transparent}
 
-/* 헤더 */
-.hdr{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:linear-gradient(180deg,rgba(6,6,14,.96),rgba(6,6,14,.3) 90%,transparent);backdrop-filter:blur(8px)}
-.hdr-l{display:flex;align-items:center;gap:8px}
-.hdr-back{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;transition:.3s}
-.hdr-back:hover{background:rgba(255,255,255,.15);transform:scale(1.1)}
-.hdr-name{font-family:'Cinzel',serif;font-weight:700;font-size:13px;color:var(--lp);text-shadow:0 0 12px var(--lg)}
-.hdr-sub{font-size:9px;color:var(--muted);display:flex;align-items:center;gap:3px}
-.hdr-dot{width:6px;height:6px;border-radius:50%;background:var(--lp);box-shadow:0 0 4px var(--lg)}
-.hdr-r{display:flex;align-items:center;gap:8px}
-.hdr-w{display:flex;align-items:center;gap:3px;font-size:10px;color:var(--muted);padding:2px 7px;border-radius:12px;background:rgba(255,255,255,.05)}
-.hdr-on{font-size:9px;color:#38bdf8;display:flex;align-items:center;gap:2px}
-.hdr-on-dot{width:4px;height:4px;border-radius:50%;background:#34d399;animation:p 2s infinite}
-@keyframes p{0%,100%{opacity:1}50%{opacity:.3}}
+/* 헤더 제거됨 */
 
 /* 마을 */
-.vc{position:fixed;inset:0;z-index:2;overflow:hidden;cursor:grab}.vc:active{cursor:grabbing}
+.vc{position:fixed;top:44px;left:0;right:0;bottom:0;z-index:2;overflow:hidden;cursor:grab}.vc:active{cursor:grabbing}
 .vw{position:absolute}
 canvas{position:absolute;inset:0;z-index:1}
 /* 건물 클릭 영역 */
@@ -47,7 +35,7 @@ canvas{position:absolute;inset:0;z-index:1}
 .npc-n{font-size:5px;color:var(--muted);margin-top:1px}
 
 /* 하단 */
-.bot{position:fixed;bottom:52px;left:0;right:0;z-index:100;padding:6px 14px 10px;background:linear-gradient(0deg,rgba(6,6,14,.96),rgba(6,6,14,.3) 90%,transparent);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:space-between}
+.bot{position:fixed;bottom:8px;left:0;right:0;z-index:100;padding:6px 14px 10px;background:linear-gradient(0deg,rgba(6,6,14,.96),rgba(6,6,14,.3) 90%,transparent);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:space-between}
 .bot-s{display:flex;gap:12px}
 .bot-sv{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--lp)}
 .bot-sl{font-size:7px;color:var(--muted)}
@@ -71,45 +59,121 @@ canvas{position:absolute;inset:0;z-index:1}
 .pb{width:100%;height:4px;border-radius:2px;background:rgba(255,255,255,.08);margin-top:4px;overflow:hidden}
 .pf{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--ls),var(--lp));transition:width 1.5s}
 
-.hint{position:fixed;bottom:110px;left:50%;transform:translateX(-50%);z-index:50;padding:4px 12px;border-radius:12px;background:rgba(0,0,0,.7);border:1px solid var(--border);font-size:9px;color:var(--muted);opacity:0;transition:opacity 1s;pointer-events:none}.hint.show{opacity:1}
-#toast{position:fixed;bottom:120px;left:50%;transform:translateX(-50%) translateY(14px);padding:7px 16px;border-radius:14px;background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:11px;opacity:0;transition:all .3s;z-index:300;pointer-events:none;white-space:nowrap}#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.hint{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:50;padding:4px 12px;border-radius:12px;background:rgba(0,0,0,.7);border:1px solid var(--border);font-size:9px;color:var(--muted);opacity:0;transition:opacity 1s;pointer-events:none}.hint.show{opacity:1}
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(14px);padding:7px 16px;border-radius:14px;background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:11px;opacity:0;transition:all .3s;z-index:300;pointer-events:none;white-space:nowrap}#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .ent{position:fixed;inset:0;z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 1s}.ent.fo{opacity:0;pointer-events:none}
 .ent-t{font-family:'Cinzel',serif;font-size:24px;font-weight:700;color:var(--lp);text-shadow:0 0 30px var(--lg);animation:ep 1.5s ease-in-out infinite}
 .ent-s{font-size:11px;color:var(--muted);margin-top:5px;font-family:'Orbitron',monospace}
 @keyframes ep{0%,100%{opacity:.4;transform:scale(.97)}50%{opacity:1;transform:scale(1)}}
 
-/* 상단 네비게이션 6개 메뉴 */
 .top-nav {
-  position:sticky; top:0; z-index:300;
-  display:flex; align-items:center;
-  background:rgba(10,10,22,0.96); backdrop-filter:blur(20px);
+  position:fixed; top:0; left:0; right:0; z-index:400;
+  display:flex; align-items:center; justify-content:center;
+  gap:28px;
+  height:44px;
+  background:rgba(10,10,22,0.96);
+  backdrop-filter:blur(20px);
   border-bottom:1px solid rgba(180,150,255,0.13);
-  overflow-x:auto; -webkit-overflow-scrolling:touch;
 }
-.top-nav::-webkit-scrollbar { display:none; }
 .top-nav-item {
-  flex-shrink:0; display:flex; flex-direction:column; align-items:center;
-  padding:10px 14px; cursor:pointer; text-decoration:none;
-  color:rgba(200,190,220,0.5); border-bottom:2px solid transparent;
-  gap:3px; transition:all .2s;
+  font-size:12px; font-weight:500;
+  color:rgba(200,190,220,0.45);
+  text-decoration:none;
+  cursor:pointer;
+  transition:all .2s;
+  letter-spacing:0.5px;
+  padding:4px 2px;
+  border-bottom:2px solid transparent;
 }
-.top-nav-item.active { color:#c084fc; border-bottom-color:#c084fc; }
 .top-nav-item:hover { color:#e8e4f0; }
-.top-nav-icon { font-size:18px; }
-.top-nav-label { font-size:9px; font-weight:500; white-space:nowrap; }
+.top-nav-item.active {
+  color:#c084fc; border-bottom-color:#c084fc;
+}
+/* 접이식 헤더 */
+.fc-header {
+  position:fixed;
+  top:52px; left:12px;
+  z-index:350;
+  min-width:200px;
+  max-width:260px;
+  border-radius:12px;
+  overflow:hidden;
+  border:1px solid rgba(180,150,255,0.18);
+  backdrop-filter:blur(12px);
+}
+.fc-header-top {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:8px 12px;
+  background:rgba(10,10,22,0.92);
+  cursor:pointer;
+  user-select:none;
+}
+.fc-header-name {
+  font-family:'Orbitron',monospace;
+  font-size:11px; font-weight:700;
+  color:var(--lp);
+  text-shadow:0 0 8px var(--lg);
+}
+.fc-header-rank {
+  font-size:9px; color:var(--muted);
+  display:flex; align-items:center; gap:4px;
+  margin-top:2px;
+}
+.fc-header-arrow {
+  font-size:10px; color:var(--muted);
+  transition:transform .3s;
+}
+.fc-header-arrow.open { transform:rotate(180deg); }
+.fc-header-body {
+  background:rgba(10,10,22,0.92);
+  border-top:1px solid rgba(180,150,255,0.1);
+  max-height:0; overflow:hidden;
+  transition:max-height .35s ease;
+}
+.fc-header-body.open { max-height:200px; }
+.fc-compare-row {
+  padding:8px 12px;
+  border-bottom:1px solid rgba(180,150,255,0.07);
+}
+.fc-compare-label {
+  font-size:8px; color:var(--muted);
+  margin-bottom:4px;
+  display:flex; align-items:center; gap:3px;
+}
+.fc-compare-name {
+  font-size:10px; font-weight:700; color:var(--text);
+  margin-bottom:4px;
+}
+.fc-compare-bar-wrap {
+  width:100%; height:5px;
+  background:rgba(255,255,255,0.08);
+  border-radius:3px; overflow:hidden;
+  margin-bottom:3px;
+}
+.fc-compare-bar-fill {
+  height:100%; border-radius:3px;
+  background:linear-gradient(90deg, var(--ls), var(--lp));
+  transition:width 1.2s ease;
+}
+.fc-compare-diff {
+  font-size:8px; font-family:'Orbitron',monospace;
+  color:var(--lp);
+}
+.fc-special {
+  padding:8px 12px;
+  font-size:9px; color:var(--gold);
+  text-align:center;
+  letter-spacing:0.5px;
+}
 /* 미니 이벤트 팝업 */
 .mini-evt-float{position:absolute;z-index:25;pointer-events:none;display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:12px;background:rgba(10,10,22,.85);border:1px solid var(--border);backdrop-filter:blur(4px);white-space:nowrap;animation:evtFloat 3.5s ease-out forwards}
 .mini-evt-float .ei{font-size:12px}
 .mini-evt-float .et{font-size:8px;color:var(--text)}
 .mini-evt-float .en{color:var(--lp);font-weight:700}
 @keyframes evtFloat{0%{opacity:0;transform:translateY(10px)}10%{opacity:1;transform:translateY(0)}75%{opacity:1;transform:translateY(-8px)}100%{opacity:0;transform:translateY(-20px)}}
-.lg-tabs{position:fixed;top:48px;left:0;right:0;z-index:99;display:flex;justify-content:center;gap:4px;padding:4px 10px;background:rgba(6,6,14,.8);backdrop-filter:blur(6px)}
-.lg-tab{padding:4px 10px;border-radius:14px;font-size:9px;font-weight:700;color:var(--muted);background:rgba(255,255,255,.04);border:1px solid transparent;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:3px}
-.lg-tab:hover{background:rgba(255,255,255,.08)}
-.lg-tab.active{color:#fff;border-color:var(--lp);background:rgba(255,255,255,.08);box-shadow:0 0 8px var(--lg)}
-.lg-tab .tab-dot{width:6px;height:6px;border-radius:50%}
+/* 리그 탭 제거됨 */
 /* 미니 채팅창 */
-.mini-chat{position:fixed;bottom:110px;left:50%;transform:translateX(-50%) translateY(20px);z-index:250;width:88%;max-width:360px;height:320px;background:var(--panel);border:1px solid var(--border);border-radius:16px;display:none;flex-direction:column;overflow:hidden;opacity:0;transition:opacity .3s,transform .3s}
+.mini-chat{position:fixed;bottom:70px;left:50%;transform:translateX(-50%) translateY(20px);z-index:250;width:88%;max-width:360px;height:320px;background:var(--panel);border:1px solid var(--border);border-radius:16px;display:none;flex-direction:column;overflow:hidden;opacity:0;transition:opacity .3s,transform .3s}
 .mini-chat.show{display:flex;opacity:1;transform:translateX(-50%) translateY(0)}
 .mc-hdr{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(255,255,255,.03);border-bottom:1px solid var(--border)}
 .mc-profile{display:flex;align-items:center;gap:8px}
@@ -148,12 +212,24 @@ canvas{position:absolute;inset:0;z-index:1}
 </head>
 <body>
 <div class="ent" id="ent"><div class="ent-t" id="entT">STARIUM</div><div class="ent-s" id="entS">entering...</div></div>
-<header class="hdr"><div class="hdr-l"><div class="hdr-back" onclick="history.length>1?history.back():location='/'">←</div><div><div class="hdr-name" id="hName">STARIUM</div><div class="hdr-sub"><span class="hdr-dot"></span><span id="hLg">스타 리그</span> · <span id="hRk">#3</span></div></div></div><div class="hdr-r"><div class="hdr-w"><span id="wI">☀️</span><span id="wT">맑음</span></div><div class="hdr-on"><span class="hdr-on-dot"></span><span id="hOn">1,234</span></div></div></header>
-<div class="lg-tabs" id="lgTabs">  <div class="lg-tab" onclick="switchLeague('dust')" data-lg="dust"><span class="tab-dot" style="background:#b0bec5"></span>더스트</div>
-  <div class="lg-tab active" onclick="switchLeague('star')" data-lg="star"><span class="tab-dot" style="background:#fbbf24"></span>스타</div>
-  <div class="lg-tab" onclick="switchLeague('planet')" data-lg="planet"><span class="tab-dot" style="background:#34d399"></span>플래닛</div>
-  <div class="lg-tab" onclick="switchLeague('nova')" data-lg="nova"><span class="tab-dot" style="background:#c084fc"></span>노바</div>
-  <div class="lg-tab" onclick="switchLeague('quasar')" data-lg="quasar"><span class="tab-dot" style="background:#f0c040"></span>퀘이사</div>
+<!-- 헤더 제거됨 -->
+<!-- 리그 탭 제거됨 -->
+<div class="fc-header" id="fcHeader">
+  <div class="fc-header-top" onclick="toggleFcHeader()">
+    <div>
+      <div class="fc-header-name" id="fcName">BTS ARMY</div>
+      <div class="fc-header-rank">
+        <span id="fcLeague">스타 리그</span>
+        <span>·</span>
+        <span id="fcRank" style="color:var(--gold);font-weight:700">#3</span>
+      </div>
+    </div>
+    <div class="fc-header-arrow" id="fcArrow">▼</div>
+  </div>
+  <div class="fc-header-body" id="fcBody">
+    <div id="fcCompareTop" class="fc-compare-row"></div>
+    <div id="fcCompareBot" class="fc-compare-row"></div>
+  </div>
 </div>
 <div class="vc" id="vc"><div class="vw" id="vw"><canvas id="cv"></canvas><div id="bL"></div><div class="avatar" id="myAv" style="left:960px;top:760px"><div class="av-body" style="pointer-events:auto;cursor:pointer" onclick="openMiniChat()">🧑</div><div class="av-tag">나</div></div><div id="nL"></div><div id="miniEvts" style="position:absolute;z-index:25;pointer-events:none"></div></div></div>
 <div class="bot"><div class="bot-s"><div><div class="bot-sv" id="bM">98,432</div><div class="bot-sl">멤버</div></div><div><div class="bot-sv" id="bS">847</div><div class="bot-sl">점수</div></div></div><div class="bot-e"><div class="bot-eb"><div class="bot-ef" id="bE" style="width:72%"></div></div><div class="bot-el">에너지 <span id="bP">72%</span></div></div><div class="bot-d" id="bD">D-14</div></div>
@@ -184,12 +260,12 @@ canvas{position:absolute;inset:0;z-index:1}
   </div>
 </div>
 <nav class="top-nav">
-  <a class="top-nav-item active" href="/fandom.html"><div class="top-nav-icon">🏘️</div><div class="top-nav-label">팬덤</div></a>
-  <a class="top-nav-item" href="/index.html"><div class="top-nav-icon">🏠</div><div class="top-nav-label">홈</div></a>
-  <a class="top-nav-item" href="/astra.html"><div class="top-nav-icon">⭐</div><div class="top-nav-label">아스트라</div></a>
-  <a class="top-nav-item" href="/room3d.html"><div class="top-nav-icon">🏡</div><div class="top-nav-label">내 방</div></a>
-  <a class="top-nav-item" href="/avatar.html"><div class="top-nav-icon">🎭</div><div class="top-nav-label">아바타</div></a>
-  <a class="top-nav-item" href="/shop.html"><div class="top-nav-icon">🛒</div><div class="top-nav-label">상점</div></a>
+  <a class="top-nav-item" href="/index.html">홈</a>
+  <a class="top-nav-item active" href="/fandom.html">팬덤</a>
+  <a class="top-nav-item" href="/astra.html">아스트라</a>
+  <a class="top-nav-item" href="/room3d.html">내방</a>
+  <a class="top-nav-item" href="/avatar.html">아바타</a>
+  <a class="top-nav-item" href="/shop.html">상점</a>
 </nav>
 
 <script>
@@ -1358,7 +1434,7 @@ function render(league){
   draw();
 }
 
-function showData(d){const tl=LG[d.league];document.getElementById('hName').textContent=d.name+' STARIUM';document.getElementById('hLg').textContent=tl.name+' 리그';document.getElementById('hRk').textContent='#'+d.rank;document.getElementById('hOn').textContent=d.online.toLocaleString();document.getElementById('bM').textContent=d.members.toLocaleString();document.getElementById('bS').textContent=d.score;document.getElementById('bE').style.width=d.energy+'%';document.getElementById('bP').textContent=d.energy+'%';document.getElementById('bD').textContent='D-'+d.dday;}
+function showData(d){document.getElementById('bM').textContent=d.members.toLocaleString();document.getElementById('bS').textContent=d.score;document.getElementById('bE').style.width=d.energy+'%';document.getElementById('bP').textContent=d.energy+'%';document.getElementById('bD').textContent='D-'+d.dday;renderFcHeader(d.league);}
 function setW(e){let c='w-clear';if(e>=150)c='w-fest';else if(e<30)c='w-dark';else if(e<60)c='w-fog';const wo=document.getElementById('weatherOv');if(wo)wo.className=c;const m={'w-clear':['☀️','맑음'],'w-fog':['🌫️','안개'],'w-dark':['🌑','암흑'],'w-fest':['🎆','축제']};const[i,tx]=m[c]||['☀️','맑음'];document.getElementById('wI').textContent=i;document.getElementById('wT').textContent=tx;}
 
 /* 드래그 */
@@ -1410,7 +1486,7 @@ window.addEventListener('DOMContentLoaded',()=>{
     },1000);
     setTimeout(()=>{
       /* 페이드아웃 시작할 때 Canvas 렌더링 시작 */
-      render(DM.league);showData(DM);setW(DM.energy);initDrag();animNPC();
+      render(DM.league);renderFcHeader(DM.league);showData(DM);setW(DM.energy);initDrag();animNPC();
       ent.classList.add('fo');
       setTimeout(()=>{
         ent.style.display='none';
@@ -1425,7 +1501,7 @@ window.addEventListener('DOMContentLoaded',()=>{
     },2000);
   } else {
     /* 진입 화면 없으면 바로 렌더링 */
-    render(DM.league);showData(DM);setW(DM.energy);initDrag();animNPC();
+    render(DM.league);renderFcHeader(DM.league);showData(DM);setW(DM.energy);initDrag();animNPC();
     startMiniEvents();
   }
 });
@@ -1576,7 +1652,66 @@ document.addEventListener('keydown',e=>{
   });
 })();
 
-window.switchLeague=function(l){if(!LG[l])return;DM.league=l;render(l);showData(DM);showToast('🌟 '+LG[l].name+' — '+LG[l].vName);document.querySelectorAll('.lg-tab').forEach(t=>{t.classList.toggle('active',t.dataset.lg===l)})};
+function toggleFcHeader(){
+  const body=document.getElementById('fcBody');
+  const arrow=document.getElementById('fcArrow');
+  const isOpen=body.classList.contains('open');
+  body.classList.toggle('open',!isOpen);
+  arrow.classList.toggle('open',!isOpen);
+}
+
+function renderFcHeader(league){
+  const leagueOrder=['dust','star','planet','nova','quasar'];
+  const leagueNames={dust:'더스트',star:'스타',planet:'플래닛',nova:'노바',quasar:'퀘이사'};
+  const idx=leagueOrder.indexOf(league);
+
+  document.getElementById('fcName').textContent=DM.name;
+  document.getElementById('fcLeague').textContent=leagueNames[league]+' 리그';
+  document.getElementById('fcRank').textContent='#'+DM.rank;
+
+  const top=document.getElementById('fcCompareTop');
+  const bot=document.getElementById('fcCompareBot');
+
+  if(league==='quasar'){
+    top.innerHTML=`<div class="fc-special">👑 최상위 리그 달성!</div>`;
+  } else {
+    const upperLeague=leagueNames[leagueOrder[idx+1]];
+    const myTop=Math.round(DM.score*1.15);
+    const upperTop=Math.round(DM.score*1.32);
+    const pct=Math.round((myTop/upperTop)*100);
+    const diff=upperTop-myTop;
+    top.innerHTML=`
+      <div class="fc-compare-label">🔺 리그 1등 vs ${upperLeague} 1등</div>
+      <div class="fc-compare-name">NOVA CORE</div>
+      <div class="fc-compare-bar-wrap">
+        <div class="fc-compare-bar-fill" style="width:0%" data-w="${pct}%"></div>
+      </div>
+      <div class="fc-compare-diff">${upperLeague}1등까지 -${diff.toLocaleString()}</div>`;
+  }
+
+  if(league==='dust'){
+    bot.innerHTML=`<div class="fc-special">🌱 최하위 리그 — 여기서 시작!</div>`;
+  } else {
+    const lowerLeague=leagueNames[leagueOrder[idx-1]];
+    const myBot=Math.round(DM.score*0.74);
+    const lowerTop=Math.round(DM.score*0.68);
+    const pct=Math.round((myBot/DM.score)*100);
+    const diff=myBot-lowerTop;
+    bot.innerHTML=`
+      <div class="fc-compare-label">🔻 리그 꼴등 vs ${lowerLeague} 1등</div>
+      <div class="fc-compare-name">SERENADE</div>
+      <div class="fc-compare-bar-wrap">
+        <div class="fc-compare-bar-fill" style="width:0%" data-w="${pct}%"></div>
+      </div>
+      <div class="fc-compare-diff">${lowerLeague}1등보다 +${diff.toLocaleString()} 앞서</div>`;
+  }
+
+  setTimeout(()=>{
+    document.querySelectorAll('.fc-compare-bar-fill').forEach(el=>{
+      el.style.width=el.dataset.w;
+    });
+  },100);
+}
 </script>
 </body>
 </html>
