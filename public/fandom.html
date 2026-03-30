@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>스타리움 STARIUM | ASTERIA</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Orbitron:wght@400;700;900&family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--lp:#fbbf24;--ls:#f59e0b;--lg:rgba(251,191,36,.3);--g1:#141828;--text:#e8e4f0;--muted:rgba(200,190,220,.5);--panel:rgba(10,10,22,.96);--border:rgba(180,150,255,.13);--gold:#f0c040}
@@ -632,6 +633,17 @@ const MAP_SIZE={
 const DM={name:'BTS ARMY',league:'star',rank:3,members:98432,score:847,energy:72,dday:14,online:1234,
 ann:['🔥 시즌 종료 D-14!','📢 새로운 소원 제안!'],ld:{n:'StarCommander',lv:78,a:'전략가'}};
 
+/* Socket.IO 연결 */
+let socket = null;
+let roomCounts = {
+  'all': 0,
+  'org0': 0,
+  'org1': 0,
+  'org2': 0,
+  'org3': 0,
+  'org4': 0
+};
+
 /* 내 소속 경로 (리그별) */
 const MY_ORG = {
   dust:    ['게더링1', '포인트1'],
@@ -725,6 +737,28 @@ function openMiniChatWindow(roomId, roomName, color) {
   document.body.appendChild(win);
   miniChatWindows.push({ roomId, el: win });
   loadMcwMsgs(roomId, color);
+
+  /* 현재 인원수 표시 */
+  const currentCount = roomCounts[roomId] || 0;
+  if (currentCount > 0) {
+    setTimeout(() => updateOpenWindowCount(roomId, currentCount), 100);
+  }
+
+  /* Socket.IO로 room 인원수 요청 */
+  if (socket && socket.connected) {
+    const league = DM.league;
+    const roomName = roomId === 'all' ? 'global' : `org:${roomId.replace('org', '')}`;
+    fetch(`/api/realtime/room-count?room=${roomName}`)
+      .then(r => r.json())
+      .then(data => {
+        roomCounts[roomId] = data.count || 0;
+        updateOpenWindowCount(roomId, data.count || 0);
+      })
+      .catch(() => {});
+  } else {
+    loadFallbackCounts();
+  }
+
   initMcwDrag(win);
   win.addEventListener('mousedown', () => {
     win.style.zIndex = ++miniChatZIndex;
@@ -2241,7 +2275,7 @@ window.addEventListener('DOMContentLoaded',()=>{
       setTimeout(()=>{
         ent.style.display='none';
         ent.remove();
-        startMiniEvents();startNpcChat();
+        startMiniEvents();startNpcChat();initSocket();
         showToast('🌟 '+DM.name+' STARIUM');
         setTimeout(()=>{
           document.getElementById('hint').classList.add('show');
@@ -2476,6 +2510,161 @@ function startNpcChat() {
     const msg = npcMsgs[Math.floor(Math.random() * npcMsgs.length)];
     showNpcBubble(idx, msg);
   }, 8000 + Math.random() * 6000);
+}
+
+function initSocket() {
+  try {    socket = io(window.location.origin, {
+      transports: ['websocket', 'polling'],
+      timeout: 5000
+    });
+
+    socket.on('connect', () => {
+      console.log('✅ Socket.IO 연결됨:', socket.id);
+      /* 임시 토큰으로 인증 (실제 구현 시 JWT 토큰 사용) */
+      const token = localStorage.getItem('asteria_token');
+      if (token) socket.emit('authenticate', token);
+    });
+
+    socket.on('disconnect', () => {
+      console.log('🔌 Socket.IO 연결 끊김');
+    });
+
+    /* room별 인원수 업데이트 */
+    socket.on('room_count', (data) => {
+      updateRoomCount(data.room, data.count);
+    });
+
+    /* 실시간 채팅 메시지 수신 */
+    socket.on('new_message', (data) => {
+      receiveSocketMessage(data);
+    });
+
+    /* 연결 실패 시 폴백 */
+    socket.on('connect_error', () => {
+      console.log('⚠️ Socket.IO 연결 실패 — 목업 모드로 전환');
+      loadFallbackCounts();
+    });
+
+  } catch (err) {
+    console.log('⚠️ Socket.IO 초기화 실패 — 목업 모드');
+    loadFallbackCounts();
+  }
+}
+
+function updateRoomCount(room, count) {
+  /* room ID를 미니채팅창 roomId로 변환 */
+  const league = DM.league;
+  const path = MY_ORG[league] || [];
+
+  let roomId = null;
+  if (room === 'global' || room === `fandom:${DM.fandom_id}`) {
+    roomId = 'all';
+  } else if (room.startsWith('org:')) {
+    /* 소속 경로 인덱스로 매핑 */
+    path.forEach((name, i) => {
+      if (room === `org:${i}`) roomId = 'org' + i;
+    });
+    roomId = roomId || 'org0';
+  }
+
+  if (roomId) {
+    roomCounts[roomId] = count;
+    /* 열려있는 채팅창 인원수 업데이트 */
+    updateOpenWindowCount(roomId, count);
+  }
+
+  /* 하단 전체채팅바 인원수도 업데이트 */
+  if (roomId === 'all') {
+    const onlineEl = document.getElementById('fcChatOnline');
+    if (onlineEl) onlineEl.textContent = count.toLocaleString();
+  }
+}
+
+function updateOpenWindowCount(roomId, count) {
+  const win = miniChatWindows.find(w => w.roomId === roomId);
+  if (!win) return;
+
+  let countEl = win.el.querySelector('.mcw-count');
+  if (!countEl) {
+    const hdr = win.el.querySelector('.mcw-hdr');
+    if (!hdr) return;
+    countEl = document.createElement('span');
+    countEl.className = 'mcw-count';
+    countEl.style.cssText = `
+      font-size:8px;
+      color:var(--muted);
+      font-family:'Orbitron',monospace;
+      margin-right:4px;
+      display:flex;
+      align-items:center;
+      gap:2px;
+    `;
+    const btns = hdr.querySelector('.mcw-btns');
+    if (btns) hdr.insertBefore(countEl, btns);
+  }
+  countEl.innerHTML = `
+    <span style="width:5px;height:5px;border-radius:50%;
+      background:#34d399;display:inline-block"></span>
+    ${count.toLocaleString()}명
+  `;
+}
+
+function loadFallbackCounts() {
+  /* Socket.IO 연결 실패 시 API로 폴백 */
+  const league = DM.league;
+  const fandomRoom = `fandom:${DM.fandom_id || 1}`;
+
+  fetch(`/api/realtime/room-count?room=global`)
+    .then(r => r.json())
+    .then(data => {
+      roomCounts['all'] = data.count || 0;
+      updateOpenWindowCount('all', data.count || 0);
+    })
+    .catch(() => {
+      /* API도 실패 시 목업 숫자 */
+      roomCounts['all'] = Math.floor(800 + Math.random() * 800);
+      updateOpenWindowCount('all', roomCounts['all']);
+    });
+}
+
+function receiveSocketMessage(data) {
+  /* 현재 열린 채팅창에서 해당 room 찾기 */
+  const league = DM.league;
+  const path = MY_ORG[league] || [];
+
+  let targetRoomId = null;
+  if (data.room === 'global' || data.room === `fandom:${DM.fandom_id}`) {
+    targetRoomId = 'all';
+  }
+
+  if (!targetRoomId) return;
+
+  const win = miniChatWindows.find(w => w.roomId === targetRoomId);
+  if (!win) return;
+
+  const body = win.el.querySelector('.mcw-body');
+  if (!body) return;
+
+  /* 내 메시지는 이미 표시됨 — 다른 사람 메시지만 추가 */
+  if (data.userId === DM.myUserId) return;
+
+  const color = LEAGUE_COLORS['star'] || '#fbbf24';
+  const time = new Date(data.createdAt);
+  const timeStr = time.getHours() + ':' +
+    String(time.getMinutes()).padStart(2, '0');
+
+  const el = document.createElement('div');
+  el.className = 'mcw-msg other';
+  el.innerHTML = `
+    <div class="mcw-msg-name" style="color:${color}">${data.nickname}</div>
+    <div class="mcw-msg-bubble">${data.message}</div>
+    <div style="font-size:7px;color:var(--muted);margin-top:1px">${timeStr}</div>`;
+  body.appendChild(el);
+  body.scrollTop = body.scrollHeight;
+
+  /* 상대방 NPC 말풍선 */
+  const npcIdx = Math.floor(Math.random() * 5);
+  showNpcBubble(npcIdx, data.message);
 }
 
 function toggleFcHeader(){
