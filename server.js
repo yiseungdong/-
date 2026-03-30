@@ -6032,6 +6032,29 @@ io.on('connection', (socket) => {
       socket.join(`league:${u.league}`);
       socket.join('global');
 
+      /* room별 인원수 브로드캐스트 */
+      if (u.fandom_id) {
+        const fandomRoom = `fandom:${u.fandom_id}`;
+        const fandomSize = io.sockets.adapter.rooms.get(fandomRoom)?.size || 0;
+        io.to(fandomRoom).emit('room_count', {
+          room: fandomRoom,
+          count: fandomSize
+        });
+      }
+      if (u.org_id) {
+        const orgRoom = `org:${u.org_id}`;
+        const orgSize = io.sockets.adapter.rooms.get(orgRoom)?.size || 0;
+        io.to(orgRoom).emit('room_count', {
+          room: orgRoom,
+          count: orgSize
+        });
+      }
+      const globalSize = connectedUsers.size;
+      io.to('global').emit('room_count', {
+        room: 'global',
+        count: globalSize
+      });
+
       socket.emit('authenticated', { userId: u.id, nickname: u.nickname });
 
       // 접속자 수 브로드캐스트
@@ -6103,6 +6126,24 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     const user = connectedUsers.get(socket.id);
     connectedUsers.delete(socket.id);
+
+    /* 퇴장 시 room별 인원수 업데이트 */
+    if (user) {
+      if (user.fandomId) {
+        const fandomRoom = `fandom:${user.fandomId}`;
+        const fandomSize = io.sockets.adapter.rooms.get(fandomRoom)?.size || 0;
+        io.to(fandomRoom).emit('room_count', {
+          room: fandomRoom,
+          count: fandomSize
+        });
+      }
+      const globalSize = connectedUsers.size;
+      io.to('global').emit('room_count', {
+        room: 'global',
+        count: globalSize
+      });
+    }
+
     io.to('global').emit('online_count', connectedUsers.size);
     if (user) console.log(`🔌 연결 해제: ${user.nickname}`);
   });
@@ -6145,6 +6186,15 @@ app.get('/api/realtime/online', (req, res) => {
     byLeague: leagueCount,
     byFandom: fandomCount
   });
+});
+
+app.get('/api/realtime/room-count', (req, res) => {
+  const { room } = req.query;
+  if (!room) {
+    return res.status(400).json({ message: 'room 파라미터가 필요합니다.' });
+  }
+  const roomSize = io.sockets.adapter.rooms.get(room)?.size || 0;
+  res.json({ room, count: roomSize });
 });
 
 // ══════════════════════════════════════════════
