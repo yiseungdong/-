@@ -581,6 +581,7 @@ body::-webkit-scrollbar { width:0; }
   overflow:hidden;
 }
 </style>
+<script src="/js/avatar-svgs.js"></script>
 </head>
 <body style="padding-top:44px">
 
@@ -659,7 +660,14 @@ body::-webkit-scrollbar { width:0; }
             <div class="orbit-ring"></div>
             <div class="orbit-ring"></div>
           </div>
-          <canvas id="avatarCanvas" width="280" height="280"></canvas>
+          <div style="position:relative;width:280px;height:280px;margin:0 auto">
+  <canvas id="avatarCanvas" width="280" height="280"
+    style="position:absolute;inset:0;z-index:1"></canvas>
+  <div id="svgAvatarOverlay"
+    style="position:absolute;inset:0;z-index:2;
+           display:flex;align-items:center;justify-content:center;
+           pointer-events:none"></div>
+</div>
           <div class="avatar-info">
             <div class="av-name" id="avName">별빛 탐험가</div>
             <div class="av-grade" id="avGrade">SPIRIT · 정체성의 확립</div>
@@ -982,16 +990,6 @@ function drawAvatar(){
   auraParticles=auraParticles.filter(p=>!p.dead());
   auraParticles.forEach(p=>{p.update();ax.save();ax.globalAlpha=p.life*.6;
     ax.fillStyle=getAuraColor(effect);ax.beginPath();ax.arc(p.x,p.y,p.size,0,Math.PI*2);ax.fill();ax.restore();});
-  // 캐릭터 몸체
-  const by=cy+Math.sin(animFrame*.02)*5;
-  const bg=ax.createRadialGradient(cx-10,by-10,5,cx,by,48);
-  bg.addColorStop(0,getAuraColor(effect,.7));bg.addColorStop(.5,getAuraColor(effect,.3));bg.addColorStop(1,'rgba(7,7,15,.9)');
-  ax.fillStyle=bg;ax.beginPath();ax.arc(cx,by,48,0,Math.PI*2);ax.fill();
-  ax.beginPath();ax.arc(cx,by,49,0,Math.PI*2);ax.strokeStyle=getAuraColor(effect,.6);ax.lineWidth=1.5;ax.stroke();
-  ax.font='42px serif';ax.textAlign='center';ax.textBaseline='middle';ax.fillText(state.emoji,cx,by);
-  if(state.level>=50){for(let i=0;i<3;i++){ax.save();ax.translate(cx,by);ax.rotate(animFrame*.012+i*(Math.PI*2/3));
-    ax.beginPath();ax.arc(50,0,3,0,Math.PI*2);ax.fillStyle=getAuraColor(effect,.8);ax.fill();ax.restore();}}
-  if(state.level>=91){ax.font='20px serif';ax.fillText('👑',cx,by-58+Math.sin(animFrame*.03)*3);}
   requestAnimationFrame(drawAvatar);
 }
 
@@ -1351,7 +1349,14 @@ async function submitBugReport(){
 }
 
 // ═══ 초기화 ═══
+function loadSVGAvatar(){
+  const base = localStorage.getItem('asteria_avatar_base') || 'm1';
+  const overlay = document.getElementById('svgAvatarOverlay');
+  if(overlay) overlay.innerHTML = getBaseSVG(base);
+}
+
 renderAll();
+loadSVGAvatar();
 drawAvatar();
 rotateAlert();
 restoreTab();
