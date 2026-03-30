@@ -1138,11 +1138,6 @@ function renderSummary(){
 // ═══ 성궤 탭 렌더링 ═══
 function renderOrbitTab(){
   const league=LEAGUES[state.league];const grade=getGrade(state.level);
-  const o1=document.getElementById('occOrb');
-if(o1){
-  const base=localStorage.getItem('asteria_avatar_base')||'m1';
-  o1.innerHTML=`<div style="transform:scale(0.35);transform-origin:top left;width:280px;height:350px;margin-top:-10px;margin-left:-40px">${getBaseSVG(base)}</div>`;
-}
   const o2=document.getElementById('occName');if(o2)o2.textContent=state.name;
   const o3=document.getElementById('occGrade');if(o3)o3.textContent='Lv.'+state.level+' '+grade.label+' — '+grade.key.toUpperCase();
   const o4=document.getElementById('occArchetype');if(o4)o4.textContent=state.archetype;
@@ -1370,6 +1365,13 @@ setInterval(()=>{
     r.delta=(d>0?'+':'')+d.toLocaleString();r.up=d>0;});
   renderRanking();
 },3000);
+
+(function(){  const base = localStorage.getItem('asteria_avatar_base') || 'm1';
+  const el = document.getElementById('occOrb');
+  if(el && typeof getBaseSVG === 'function'){
+    el.innerHTML = '<div style="transform:scale(0.32);transform-origin:top left;width:200px;height:250px;margin-top:-5px;margin-left:-36px">' + getBaseSVG(base) + '</div>';
+  }
+})();
 </script>
 </body>
 </html>
