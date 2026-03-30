@@ -1435,7 +1435,7 @@ function render(league){
 }
 
 function showData(d){document.getElementById('bM').textContent=d.members.toLocaleString();document.getElementById('bS').textContent=d.score;document.getElementById('bE').style.width=d.energy+'%';document.getElementById('bP').textContent=d.energy+'%';document.getElementById('bD').textContent='D-'+d.dday;renderFcHeader(d.league);}
-function setW(e){let c='w-clear';if(e>=150)c='w-fest';else if(e<30)c='w-dark';else if(e<60)c='w-fog';const wo=document.getElementById('weatherOv');if(wo)wo.className=c;const m={'w-clear':['☀️','맑음'],'w-fog':['🌫️','안개'],'w-dark':['🌑','암흑'],'w-fest':['🎆','축제']};const[i,tx]=m[c]||['☀️','맑음'];document.getElementById('wI').textContent=i;document.getElementById('wT').textContent=tx;}
+
 
 /* 드래그 */
 function initDrag(){
@@ -1486,7 +1486,7 @@ window.addEventListener('DOMContentLoaded',()=>{
     },1000);
     setTimeout(()=>{
       /* 페이드아웃 시작할 때 Canvas 렌더링 시작 */
-      render(DM.league);renderFcHeader(DM.league);showData(DM);setW(DM.energy);initDrag();animNPC();
+      render(DM.league);renderFcHeader(DM.league);showData(DM);initDrag();animNPC();
       ent.classList.add('fo');
       setTimeout(()=>{
         ent.style.display='none';
@@ -1501,7 +1501,7 @@ window.addEventListener('DOMContentLoaded',()=>{
     },2000);
   } else {
     /* 진입 화면 없으면 바로 렌더링 */
-    render(DM.league);renderFcHeader(DM.league);showData(DM);setW(DM.energy);initDrag();animNPC();
+    render(DM.league);renderFcHeader(DM.league);showData(DM);initDrag();animNPC();
     startMiniEvents();
   }
 });
