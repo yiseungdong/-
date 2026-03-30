@@ -179,7 +179,188 @@ canvas{position:absolute;inset:0;z-index:1}
 @keyframes evtFloat{0%{opacity:0;transform:translateY(10px)}10%{opacity:1;transform:translateY(0)}75%{opacity:1;transform:translateY(-8px)}100%{opacity:0;transform:translateY(-20px)}}
 /* 리그 탭 제거됨 */
 /* 미니 채팅창 */
-/* 미니 채팅창 제거됨 */
+/* 미니채팅창 공통 */
+.mini-chat-window {
+  position:fixed;
+  z-index:500;
+  width:260px;
+  background:rgba(10,10,22,0.97);
+  border:1px solid rgba(180,150,255,0.2);
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 8px 32px rgba(0,0,0,0.5);
+  display:flex;
+  flex-direction:column;
+  transition:box-shadow .2s;
+}
+.mini-chat-window:hover {
+  box-shadow:0 12px 40px rgba(0,0,0,0.6);
+}
+.mini-chat-window.minimized .mcw-body,
+.mini-chat-window.minimized .mcw-footer {
+  display:none;
+}
+
+/* 미니채팅창 헤더 */
+.mcw-hdr {
+  display:flex;
+  align-items:center;
+  padding:8px 10px;
+  gap:6px;
+  cursor:move;
+  user-select:none;
+  border-bottom:1px solid rgba(180,150,255,0.1);
+  flex-shrink:0;
+}
+.mcw-dot {
+  width:8px; height:8px;
+  border-radius:50%;
+  flex-shrink:0;
+  animation:p 2s infinite;
+}
+.mcw-title {
+  flex:1;
+  font-size:10px;
+  font-weight:700;
+  color:var(--text);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.mcw-btns {
+  display:flex;
+  gap:4px;
+}
+.mcw-btn {
+  width:20px; height:20px;
+  border-radius:50%;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(180,150,255,0.15);
+  display:flex; align-items:center; justify-content:center;
+  font-size:9px; cursor:pointer;
+  color:var(--muted);
+  transition:.2s;
+  flex-shrink:0;
+}
+.mcw-btn:hover { background:rgba(255,255,255,0.14); }
+
+/* 미니채팅창 바디 */
+.mcw-body {
+  height:180px;
+  overflow-y:auto;
+  padding:8px 10px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.mcw-body::-webkit-scrollbar { width:3px; }
+.mcw-body::-webkit-scrollbar-thumb {
+  background:rgba(180,150,255,0.2);
+  border-radius:2px;
+}
+.mcw-msg {
+  display:flex;
+  flex-direction:column;
+  max-width:85%;
+}
+.mcw-msg.me { align-self:flex-end; align-items:flex-end; }
+.mcw-msg.other { align-self:flex-start; }
+.mcw-msg-name {
+  font-size:7px;
+  color:var(--muted);
+  margin-bottom:2px;
+}
+.mcw-msg-bubble {
+  padding:5px 9px;
+  border-radius:10px;
+  font-size:9px;
+  line-height:1.5;
+  color:var(--text);
+  word-break:break-word;
+}
+.mcw-msg.other .mcw-msg-bubble {
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(180,150,255,0.1);
+  border-bottom-left-radius:2px;
+}
+.mcw-msg.me .mcw-msg-bubble {
+  background:rgba(192,132,252,0.2);
+  border:1px solid rgba(192,132,252,0.25);
+  border-bottom-right-radius:2px;
+}
+
+/* 미니채팅창 푸터 */
+.mcw-footer {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 8px;
+  border-top:1px solid rgba(180,150,255,0.1);
+  flex-shrink:0;
+}
+.mcw-input {
+  flex:1;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(180,150,255,0.15);
+  border-radius:14px;
+  padding:5px 10px;
+  font-size:9px;
+  color:var(--text);
+  outline:none;
+  font-family:'Noto Sans KR',sans-serif;
+}
+.mcw-input::placeholder { color:var(--muted); }
+.mcw-send {
+  width:26px; height:26px;
+  border-radius:50%;
+  border:none;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px;
+  cursor:pointer;
+  transition:.2s;
+  flex-shrink:0;
+}
+.mcw-send:hover { transform:scale(1.1); }
+
+/* 팬클럽 본부 채팅방 목록 */
+.hq-chat-list {
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  margin-top:4px;
+}
+.hq-chat-btn {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 10px;
+  border-radius:8px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(180,150,255,0.1);
+  cursor:pointer;
+  transition:all .2s;
+}
+.hq-chat-btn:hover {
+  background:rgba(255,255,255,0.08);
+  border-color:rgba(180,150,255,0.25);
+  transform:translateX(3px);
+}
+.hq-chat-btn-dot {
+  width:8px; height:8px;
+  border-radius:50%;
+  flex-shrink:0;
+}
+.hq-chat-btn-label {
+  font-size:10px;
+  font-weight:600;
+  color:var(--text);
+  flex:1;
+}
+.hq-chat-btn-count {
+  font-size:8px;
+  color:var(--muted);
+  font-family:'Orbitron',monospace;
+}
 
 /* 팬클럽 전체채팅 하단 고정바 */
 .fc-chat-bar {
