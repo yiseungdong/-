@@ -13,7 +13,7 @@ html,body{height:100%;overflow:hidden;background:#0a0a14;color:var(--text);font-
 /* 헤더 제거됨 */
 
 /* 마을 */
-.vc{position:fixed;top:44px;left:0;right:0;bottom:0;z-index:2;overflow:hidden;cursor:grab}.vc:active{cursor:grabbing}
+.vc{position:fixed;top:44px;left:0;right:0;bottom:44px;z-index:2;overflow:hidden;cursor:grab}.vc:active{cursor:grabbing}
 .vw{position:absolute}
 canvas{position:absolute;inset:0;z-index:1}
 /* 건물 클릭 영역 */
@@ -35,7 +35,7 @@ canvas{position:absolute;inset:0;z-index:1}
 .npc-n{font-size:5px;color:var(--muted);margin-top:1px}
 
 /* 하단 */
-.bot{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);z-index:100;display:flex;align-items:center;gap:12px;padding:6px 16px;background:rgba(10,10,22,0.85);backdrop-filter:blur(8px);border:1px solid rgba(180,150,255,0.13);border-radius:20px;}
+.bot{position:fixed;bottom:52px;left:50%;transform:translateX(-50%);z-index:100;display:flex;align-items:center;gap:12px;padding:6px 16px;background:rgba(10,10,22,0.85);backdrop-filter:blur(8px);border:1px solid rgba(180,150,255,0.13);border-radius:20px;}
 .bot-e{display:flex;flex-direction:column;align-items:center;gap:1px}
 .bot-eb{width:90px;height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden}
 .bot-ef{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--ls),var(--lp));box-shadow:0 0 4px var(--lg);transition:width 1s}
@@ -214,6 +214,201 @@ canvas{position:absolute;inset:0;z-index:1}
   .mc-input{padding:4px 8px;font-size:9px;border-radius:14px}
   .mc-send{width:22px;height:22px;font-size:10px}
   .mc-timer{font-size:6px;padding:1px}}
+
+/* 팬클럽 전체채팅 하단 고정바 */
+.fc-chat-bar {
+  position:fixed; bottom:0; left:0; right:0; z-index:350;
+  height:44px;
+  background:rgba(10,10,22,0.96);
+  backdrop-filter:blur(12px);
+  border-top:1px solid rgba(180,150,255,0.18);
+  display:flex; align-items:center;
+  padding:0 16px; gap:10px;
+  cursor:pointer;
+  transition:background .2s;
+}
+.fc-chat-bar:hover { background:rgba(20,20,40,0.98); }
+.fc-chat-bar-icon { font-size:16px; }
+.fc-chat-bar-label {
+  font-size:11px; font-weight:600;
+  color:rgba(200,190,220,0.7);
+  flex:1;
+}
+.fc-chat-bar-count {
+  font-size:9px;
+  color:var(--lp);
+  font-family:'Orbitron',monospace;
+  display:flex; align-items:center; gap:4px;
+}
+.fc-chat-bar-dot {
+  width:5px; height:5px; border-radius:50%;
+  background:#34d399;
+  animation:p 2s infinite;
+}
+
+/* 채팅 전체 패널 */
+.chat-panel {
+  position:fixed; top:44px; right:0; bottom:44px;
+  width:0; z-index:300;
+  background:rgba(10,10,22,0.97);
+  backdrop-filter:blur(16px);
+  border-left:1px solid rgba(180,150,255,0.15);
+  display:flex; flex-direction:column;
+  overflow:hidden;
+  transition:width .35s cubic-bezier(.4,0,.2,1);
+}
+.chat-panel.open { width:320px; }
+@media(max-width:600px){
+  .chat-panel.open { width:100vw; }
+}
+.chat-panel-hdr {
+  display:flex; align-items:center;
+  padding:10px 14px; gap:10px;
+  border-bottom:1px solid rgba(180,150,255,0.13);
+  background:rgba(255,255,255,0.03);
+  min-height:48px;
+}
+.chat-panel-title {
+  flex:1; font-size:12px; font-weight:700;
+  color:var(--lp); font-family:'Orbitron',monospace;
+}
+.chat-panel-close {
+  width:28px; height:28px; border-radius:50%;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(180,150,255,0.13);
+  display:flex; align-items:center; justify-content:center;
+  font-size:12px; cursor:pointer; color:var(--muted);
+}
+
+/* 모임 경로 브레드크럼 */
+.chat-breadcrumb {
+  display:flex; align-items:center;
+  padding:8px 14px; gap:4px;
+  border-bottom:1px solid rgba(180,150,255,0.1);
+  overflow-x:auto; -webkit-overflow-scrolling:touch;
+  flex-shrink:0;
+}
+.chat-breadcrumb::-webkit-scrollbar { display:none; }
+.chat-bc-item {
+  display:flex; align-items:center; gap:4px;
+  white-space:nowrap;
+}
+.chat-bc-btn {
+  padding:4px 10px; border-radius:12px;
+  font-size:9px; font-weight:600;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(180,150,255,0.15);
+  color:rgba(200,190,220,0.6);
+  cursor:pointer; transition:all .2s;
+  white-space:nowrap;
+}
+.chat-bc-btn:hover,
+.chat-bc-btn.active {
+  background:rgba(192,132,252,0.15);
+  border-color:var(--lp);
+  color:var(--lp);
+}
+.chat-bc-arrow {
+  font-size:8px; color:var(--muted);
+}
+
+/* 채팅 메시지 영역 */
+.chat-body {
+  flex:1; overflow-y:auto;
+  padding:10px 12px;
+  display:flex; flex-direction:column; gap:8px;
+}
+.chat-body::-webkit-scrollbar { width:3px; }
+.chat-body::-webkit-scrollbar-thumb {
+  background:rgba(180,150,255,0.2); border-radius:2px;
+}
+.chat-msg {
+  display:flex; align-items:flex-start; gap:7px;
+}
+.chat-msg.me { flex-direction:row-reverse; }
+.chat-msg-avatar {
+  width:24px; height:24px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; flex-shrink:0;
+  border:1px solid rgba(255,255,255,0.1);
+}
+.chat-msg-body { max-width:75%; }
+.chat-msg-name {
+  font-size:8px; color:var(--muted);
+  margin-bottom:2px;
+}
+.chat-msg.me .chat-msg-name { text-align:right; }
+.chat-msg-bubble {
+  padding:6px 10px; border-radius:12px;
+  font-size:10px; line-height:1.5; color:var(--text);
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(180,150,255,0.1);
+  word-break:break-word;
+}
+.chat-msg.me .chat-msg-bubble {
+  background:rgba(192,132,252,0.2);
+  border-color:rgba(192,132,252,0.3);
+}
+.chat-msg-time {
+  font-size:7px; color:var(--muted);
+  margin-top:2px;
+}
+.chat-msg.me .chat-msg-time { text-align:right; }
+
+/* 채팅 입력 */
+.chat-footer {
+  display:flex; align-items:center; gap:8px;
+  padding:8px 12px;
+  border-top:1px solid rgba(180,150,255,0.1);
+}
+.chat-input {
+  flex:1; background:rgba(255,255,255,0.05);
+  border:1px solid rgba(180,150,255,0.15);
+  border-radius:20px; padding:7px 14px;
+  font-size:10px; color:var(--text);
+  outline:none; font-family:'Noto Sans KR',sans-serif;
+}
+.chat-input::placeholder { color:var(--muted); }
+.chat-send {
+  width:32px; height:32px; border-radius:50%;
+  background:var(--lp); border:none;
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; cursor:pointer; transition:.2s;
+  flex-shrink:0;
+}
+.chat-send:hover { transform:scale(1.1); }
+
+/* 말풍선 */
+.speech-bubble {
+  position:absolute; z-index:25;
+  background:rgba(10,10,22,0.92);
+  border:1px solid rgba(180,150,255,0.25);
+  border-radius:12px;
+  padding:5px 10px;
+  font-size:9px; color:var(--text);
+  max-width:160px;
+  word-break:break-word;
+  backdrop-filter:blur(8px);
+  pointer-events:none;
+  animation:bubbleIn .2s ease;
+  transform:translateX(-50%);
+}
+.speech-bubble::after {
+  content:'';
+  position:absolute; bottom:-6px; left:50%;
+  transform:translateX(-50%);
+  border:6px solid transparent;
+  border-top-color:rgba(180,150,255,0.25);
+  border-bottom:none;
+}
+.speech-bubble-name {
+  font-size:7px; font-weight:700;
+  margin-bottom:2px;
+}
+@keyframes bubbleIn {
+  from { opacity:0; transform:translateX(-50%) translateY(4px); }
+  to { opacity:1; transform:translateX(-50%) translateY(0); }
+}
 </style>
 </head>
 <body>
@@ -240,6 +435,19 @@ canvas{position:absolute;inset:0;z-index:1}
   <div class="fc-header-body" id="fcBody">
     <div id="fcCompareTop" class="fc-compare-row"></div>
     <div id="fcCompareBot" class="fc-compare-row"></div>
+  </div>
+</div>
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-panel-hdr">
+    <div class="chat-panel-title" id="chatPanelTitle">💬 팬클럽 전체 채팅</div>
+    <div class="chat-panel-close" onclick="closeChatPanel()">✕</div>
+  </div>
+  <div class="chat-breadcrumb" id="chatBreadcrumb" style="display:none"></div>
+  <div class="chat-body" id="chatBody"></div>
+  <div class="chat-footer">
+    <input class="chat-input" id="chatInput"
+      placeholder="메시지를 입력하세요..." maxlength="200">
+    <button class="chat-send" onclick="sendChatMsg()">➤</button>
   </div>
 </div>
 <div class="vc" id="vc"><div class="vw" id="vw"><canvas id="cv"></canvas><div id="bL"></div><div class="avatar" id="myAv" style="left:960px;top:760px"><div class="av-body" style="pointer-events:auto;cursor:pointer" onclick="openMiniChat()">🧑</div><div class="av-tag">나</div></div><div id="nL"></div><div id="miniEvts" style="position:absolute;z-index:25;pointer-events:none"></div></div></div>
@@ -269,6 +477,14 @@ canvas{position:absolute;inset:0;z-index:1}
     <input class="mc-input" id="mcInput" placeholder="메시지를 입력하세요..." maxlength="200">
     <button class="mc-send" id="mcSend" onclick="sendMiniChat()">➤</button>
   </div>
+</div>
+<div class="fc-chat-bar" onclick="openFcChat('all')">
+  <span class="fc-chat-bar-icon">💬</span>
+  <span class="fc-chat-bar-label">팬클럽 전체 채팅</span>
+  <span class="fc-chat-bar-count">
+    <span class="fc-chat-bar-dot"></span>
+    <span id="fcChatOnline">1,234</span>명 대화중
+  </span>
 </div>
 <nav class="top-nav">
   <a class="top-nav-item" href="/index.html">홈</a>
