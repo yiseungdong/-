@@ -222,7 +222,7 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 .av{position:absolute;display:flex;flex-direction:column;align-items:center;z-index:60;pointer-events:none;transition:left .55s cubic-bezier(.34,1.2,.64,1),top .55s cubic-bezier(.34,1.2,.64,1)}
 .av-chat{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:rgba(13,13,28,.95);border:1px solid var(--border);border-radius:12px 12px 12px 0;padding:6px 10px;font-size:11px;max-width:180px;white-space:normal;opacity:0;transition:opacity .3s;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.5)}
 .av-chat.show{opacity:1}
-.av-body{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--quasar),var(--quasar2));border:3px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 0 0 4px rgba(240,192,64,.25),0 0 30px rgba(192,132,252,.5);animation:afloat 3s ease-in-out infinite}
+.av-body{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--quasar),var(--quasar2));border:3px solid var(--gold);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 4px rgba(240,192,64,.25),0 0 30px rgba(192,132,252,.5);animation:afloat 3s ease-in-out infinite}
 @keyframes afloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 .av-name{font-size:11px;color:var(--gold);margin-top:4px;font-weight:700;text-shadow:0 0 8px rgba(240,192,64,.6)}
 
@@ -322,6 +322,7 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 .bug-submit{background:linear-gradient(90deg,#4a90d9,#7c5ce0);color:#fff}
 .bug-cancel{background:transparent;border:1px solid rgba(200,175,80,0.2)!important;color:#e8ecf4}
 </style>
+<script src="/js/avatar-svgs.js"></script>
 </head>
 <body style="padding-top:44px">
 
@@ -493,7 +494,7 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
         <div class="cn" style="left:1700px;top:400px"><div class="cb">📢</div><div class="cn-name">공지 광장</div></div>
         <div class="av" id="avnode" style="display:none;left:1090px;top:680px">
           <div class="av-chat" id="avchat"></div>
-          <div class="av-body" id="avbody">🌟</div>
+          <div class="av-body" id="avbody" style="overflow:hidden;padding:0;"></div>
           <div class="av-name" id="avname"></div>
         </div>
       </div>
@@ -583,7 +584,11 @@ function doLogin(){
   // 아바타 활성화
   const av=document.getElementById('avnode');
   av.style.display='flex';
-  document.getElementById('avbody').textContent=emoji;
+  const avbody=document.getElementById('avbody');
+if(avbody){
+  const base=localStorage.getItem('asteria_avatar_base')||'m1';
+  avbody.innerHTML=`<div style="transform:scale(0.25);transform-origin:top left;width:280px;height:350px;margin-top:-15px;margin-left:-55px">${getBaseSVG(base)}</div>`;
+}
   document.getElementById('avname').textContent=nick;
   // 채팅 활성화
   const ci=document.getElementById('chatInput');

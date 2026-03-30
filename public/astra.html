@@ -762,7 +762,7 @@ body::-webkit-scrollbar { width:0; }
         <div class="orbit-card-container" style="padding:16px;">
           <div class="orbit-card" style="background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;">
             <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
-              <div id="occOrb" style="width:64px;height:64px;border-radius:50%;background:radial-gradient(circle,rgba(192,132,252,.3),rgba(7,7,15,.9));display:flex;align-items:center;justify-content:center;font-size:32px;">🌟</div>
+              <div id="occOrb" style="width:64px;height:64px;border-radius:50%;overflow:hidden;border:2px solid rgba(192,132,252,0.4);box-shadow:0 0 12px rgba(192,132,252,0.3);flex-shrink:0;"></div>
               <div>
                 <div id="occName" style="font-size:16px;font-weight:700;">별빛 탐험가</div>
                 <div id="occGrade" style="font-size:11px;color:var(--muted);margin-top:4px;">Lv.1 성아 — SEED</div>
@@ -1138,7 +1138,11 @@ function renderSummary(){
 // ═══ 성궤 탭 렌더링 ═══
 function renderOrbitTab(){
   const league=LEAGUES[state.league];const grade=getGrade(state.level);
-  const o1=document.getElementById('occOrb');if(o1)o1.textContent=state.emoji;
+  const o1=document.getElementById('occOrb');
+if(o1){
+  const base=localStorage.getItem('asteria_avatar_base')||'m1';
+  o1.innerHTML=`<div style="transform:scale(0.35);transform-origin:top left;width:280px;height:350px;margin-top:-10px;margin-left:-40px">${getBaseSVG(base)}</div>`;
+}
   const o2=document.getElementById('occName');if(o2)o2.textContent=state.name;
   const o3=document.getElementById('occGrade');if(o3)o3.textContent='Lv.'+state.level+' '+grade.label+' — '+grade.key.toUpperCase();
   const o4=document.getElementById('occArchetype');if(o4)o4.textContent=state.archetype;
