@@ -37,7 +37,7 @@ html, body {
 #app {
   max-width:480px;
   margin:0 auto; min-height:100vh;
-  position:relative; overflow:visible;
+  position:relative; overflow-x:hidden;
 }
 
 /* ── 별빛 캔버스 배경 ── */
@@ -538,11 +538,10 @@ body::-webkit-scrollbar { width:0; }
 
 /* ── 탭 바 ── */
 .tab-bar {
-  position:sticky; top:96px; z-index:200;
+  position:sticky; top:88px; z-index:200;
   display:flex; align-items:center;
   background:rgba(10,10,22,0.96); backdrop-filter:blur(20px);
   border-bottom:1px solid rgba(180,150,255,0.13);
-  position:relative;
 }
 .tab-btn {
   flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
@@ -550,7 +549,6 @@ body::-webkit-scrollbar { width:0; }
   color:rgba(200,190,220,0.5); font-size:12px; font-weight:600;
   font-family:'Noto Sans KR',sans-serif;
   cursor:pointer; transition:color .3s;
-  position:relative; z-index:1;
 }
 .tab-btn.active { color:#f0c040; }
 .tab-btn:hover { color:#e8e4f0; }
@@ -562,13 +560,13 @@ body::-webkit-scrollbar { width:0; }
   background:#f0c040;
   transition:transform .3s cubic-bezier(.4,0,.2,1);
   border-radius:2px;
+  pointer-events:none;
 }
 
 /* ── 탭 슬라이드 ── */
 .tab-content-wrapper {
   overflow:hidden;
-  position:relative;
-  z-index:1;
+  width:100%;
 }
 .tab-slider {
   display:flex;
@@ -577,8 +575,10 @@ body::-webkit-scrollbar { width:0; }
   align-items:flex-start;
 }
 .tab-panel {
+  width:100%;
   min-width:100%;
   flex-shrink:0;
+  overflow:hidden;
 }
 </style>
 </head>
