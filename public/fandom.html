@@ -603,7 +603,7 @@ canvas{position:absolute;inset:0;z-index:1}
 <div class="mo" id="mo" onclick="closeMo(event)"><div class="mo-c" id="moC" onclick="event.stopPropagation()"></div></div>
 <div id="toast"></div>
 <!-- 미니 채팅창 제거됨 -->
-<div class="fc-chat-bar" onclick="openFcChat('all')">
+<div class="fc-chat-bar" onclick="openMiniChatWindow('all','팬클럽 전체','var(--lp)')">
   <span class="fc-chat-bar-icon">💬</span>
   <span class="fc-chat-bar-label">팬클럽 전체 채팅</span>
   <span class="fc-chat-bar-count">
@@ -762,6 +762,102 @@ function loadMcwMsgs(roomId, color) {
     body.appendChild(el);
   });
   body.scrollTop = body.scrollHeight;
+}
+
+/* ═══ 메시지 전송 ═══ */
+function sendMcwMsg(roomId, color) {
+  const input = document.getElementById('mcwInput_' + roomId);
+  if (!input) return;
+  const msg = input.value.trim();
+  if (!msg) return;
+  const body = document.getElementById('mcwBody_' + roomId);
+  if (!body) return;
+  const time = new Date();
+  const timeStr = time.getHours() + ':' +    String(time.getMinutes()).padStart(2, '0');
+  const el = document.createElement('div');
+  el.className = 'mcw-msg me';
+  el.innerHTML = `
+    <div class="mcw-msg-bubble">${msg}</div>
+    <div style="font-size:7px;color:var(--muted);
+      margin-top:1px;text-align:right">${timeStr}</div>`;
+  body.appendChild(el);
+  body.scrollTop = body.scrollHeight;
+  input.value = '';
+  showSpeechBubble('myAv', '나', msg, true);
+  setTimeout(() => {
+    const replies = [
+      '맞아요! 💜','오~ 좋아요 ✨','화이팅!! 🔥',
+      '저도요! 😊','완전 공감 💫','같이해요~ 👋'
+    ];
+    const name = CHAT_MOCK_NAMES[
+      Math.floor(Math.random() * CHAT_MOCK_NAMES.length)];
+    const reply = replies[Math.floor(Math.random() * replies.length)];
+    const replyEl = document.createElement('div');
+    replyEl.className = 'mcw-msg other';
+    replyEl.innerHTML = `
+      <div class="mcw-msg-name" style="color:${color}">${name}</div>
+      <div class="mcw-msg-bubble">${reply}</div>`;
+    body.appendChild(replyEl);
+    body.scrollTop = body.scrollHeight;
+    const npcIdx = Math.floor(Math.random() * 5);
+    showNpcBubble(npcIdx, reply);
+  }, 1000 + Math.random() * 1500);
+}
+
+/* ═══ 최소화/닫기 ═══ */
+function minimizeMcw(btn) {
+  const win = btn.closest('.mini-chat-window');
+  if (!win) return;
+  win.classList.toggle('minimized');
+  btn.textContent = win.classList.contains('minimized') ? '□' : '_';
+}
+
+function closeMcw(btn) {
+  const win = btn.closest('.mini-chat-window');
+  if (!win) return;
+  const idx = miniChatWindows.findIndex(w => w.el === win);
+  if (idx !== -1) miniChatWindows.splice(idx, 1);
+  win.remove();
+}
+
+/* ═══ 드래그 ═══ */
+function initMcwDrag(win) {
+  const hdr = win.querySelector('.mcw-hdr');
+  let isDrag = false;
+  let startX = 0, startY = 0, origX = 0, origY = 0;
+  hdr.addEventListener('mousedown', e => {
+    if (e.target.closest('.mcw-btn')) return;
+    isDrag = true;
+    startX = e.clientX; startY = e.clientY;
+    const rect = win.getBoundingClientRect();
+    origX = rect.left; origY = rect.top;
+    win.style.transition = 'none';
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', e => {
+    if (!isDrag) return;
+    win.style.left = (origX + e.clientX - startX) + 'px';
+    win.style.top = (origY + e.clientY - startY) + 'px';
+  });
+  document.addEventListener('mouseup', () => {
+    if (!isDrag) return;
+    isDrag = false;
+    win.style.transition = 'box-shadow .2s';
+  });
+  hdr.addEventListener('touchstart', e => {
+    if (e.target.closest('.mcw-btn')) return;
+    isDrag = true;
+    const tc = e.touches[0];
+    startX = tc.clientX; startY = tc.clientY;
+    const rect = win.getBoundingClientRect();
+    origX = rect.left; origY = rect.top;
+  }, { passive:true });  document.addEventListener('touchmove', e => {
+    if (!isDrag) return;
+    const tc = e.touches[0];
+    win.style.left = (origX + tc.clientX - startX) + 'px';
+    win.style.top = (origY + tc.clientY - startY) + 'px';
+  }, { passive:true });
+  document.addEventListener('touchend', () => { isDrag = false; });
 }
 
 /* ═══ 리그 데이터 ═══ */
@@ -2037,7 +2133,78 @@ function animNPC(){document.querySelectorAll('.npc').forEach(n=>{setInterval(()=
 
 /* 모달 */
 const MO={
-hq:()=>`<div class="mo-h"><div class="mo-t">${icons[DM.league].hq} 팬클럽 본부</div><div class="mo-x" onclick="closeMo()">✕</div></div><div class="mc"><div class="mc-t">📊 현황</div><div class="mc-c"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>멤버</span><span style="color:var(--lp);font-family:Orbitron;font-weight:700">${DM.members.toLocaleString()}</span></div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>순위</span><span style="color:var(--gold);font-family:Orbitron;font-weight:700">#${DM.rank}</span></div><div style="display:flex;justify-content:space-between"><span>점수</span><span style="color:var(--lp);font-family:Orbitron;font-weight:700">${DM.score}/850</span></div><div class="pb"><div class="pf" style="width:${(DM.score/850*100)|0}%"></div></div></div></div><div class="mc"><div class="mc-t">👑 리더</div><div class="mc-c"><b>${DM.ld.n}</b> · Lv.${DM.ld.lv} · ${DM.ld.a}</div></div><div class="mc"><div class="mc-t">📢 공지</div><div class="mc-c">${DM.ann.map(a=>'<div style="padding:2px 0">'+a+'</div>').join('')}</div></div>`,
+hq: () => {
+  const league = DM.league;
+  const path = MY_ORG[league] || [];
+  const chatColors = [
+    'var(--lp)','#38bdf8','#34d399','#fb923c','#a78bfa'
+  ];
+  const chatBtns = [{
+    id:'all', name:'팬클럽 전체',
+    color:'var(--lp)', count:'1,234명'
+  }];
+  path.forEach((name, i) => {
+    chatBtns.push({
+      id: 'org' + i, name,
+      color: chatColors[i+1] || '#a78bfa',
+      count: ['234명','89명','42명','18명','8명'][i] || '5명'
+    });
+  });
+  const btnsHtml = chatBtns.map(b => `
+    <div class="hq-chat-btn"
+      onclick="openMiniChatWindow('${b.id}','${b.name}','${b.color}')">
+      <div class="hq-chat-btn-dot"
+        style="background:${b.color}"></div>
+      <div class="hq-chat-btn-label">${b.name}</div>
+      <div class="hq-chat-btn-count">${b.count}</div>
+    </div>`).join('');
+  return `
+    <div class="mo-h">
+      <div class="mo-t">🏰 팬클럽 본부</div>
+      <div class="mo-x" onclick="closeMo()">✕</div>
+    </div>
+    <div class="mc">
+      <div class="mc-t">📊 현황</div>
+      <div class="mc-c">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span>멤버</span>
+          <span style="color:var(--lp);font-family:Orbitron;font-weight:700">
+            ${DM.members.toLocaleString()}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span>순위</span>
+          <span style="color:var(--gold);font-family:Orbitron;font-weight:700">
+            #${DM.rank}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <span>점수</span>
+          <span style="color:var(--lp);font-family:Orbitron;font-weight:700">
+            ${DM.score}/850</span>
+        </div>
+        <div class="pb">
+          <div class="pf" style="width:${(DM.score/850*100)|0}%"></div>
+        </div>
+      </div>
+    </div>
+    <div class="mc">
+      <div class="mc-t">👑 리더</div>
+      <div class="mc-c">
+        <b>${DM.ld.n}</b> · Lv.${DM.ld.lv} · ${DM.ld.a}
+      </div>
+    </div>
+    <div class="mc">
+      <div class="mc-t">📢 공지</div>
+      <div class="mc-c">
+        ${DM.ann.map(a =>
+          `<div style="padding:2px 0">${a}</div>`
+        ).join('')}
+      </div>
+    </div>
+    <div class="mc">
+      <div class="mc-t">💬 채팅방</div>
+      <div class="hq-chat-list">${btnsHtml}</div>
+    </div>`;
+},
 board:()=>`<div class="mo-h"><div class="mo-t">📋 게시판 거리</div><div class="mo-x" onclick="closeMo()">✕</div></div><div class="mc"><div class="mc-t">🔥 핫 게시물</div><div class="mc-c">${[{t:'컴백 스밍 총공 전략!',a:'StreamQueen',l:234},{t:'팬아트 D-14 기념',a:'ArtStar',l:189},{t:'투표 현황 정리',a:'VoteGuard',l:156}].map(p=>'<div style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04)"><div style="font-weight:500">'+p.t+'</div><div style="font-size:9px;color:var(--muted)">'+p.a+' · ❤️'+p.l+'</div></div>').join('')}</div></div>`,
 vote:()=>`<div class="mo-h"><div class="mo-t">🗳️ 투표소</div><div class="mo-x" onclick="closeMo()">✕</div></div><div class="mc"><div class="mc-t">📌 진행 중</div><div class="mc-c">${[{s:'투표중',c:'#34d399',t:'생일 카페 장소',d:'18시간'},{s:'공감중',c:'#fbbf24',t:'슬로건 변경',d:'67/200'},{s:'확정',c:'#94a3b8',t:'총공 시간대',d:'82%'}].map(v=>'<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="padding:1px 5px;border-radius:6px;font-size:8px;font-weight:700;background:rgba(255,255,255,.06);color:'+v.c+'">'+v.s+'</span><div><div style="font-weight:500">'+v.t+'</div><div style="font-size:8px;color:var(--muted)">'+v.d+'</div></div></div>').join('')}</div></div>`,
 wish:()=>`<div class="mo-h"><div class="mo-t">⭐ 소원의 신전</div><div class="mo-x" onclick="closeMo()">✕</div></div><div class="mc"><div class="mc-t">🌟 메인 소원</div><div class="mc-c"><div style="text-align:center;font-size:28px;padding:8px">⭐</div><div style="text-align:center"><div style="font-size:12px;font-weight:700;color:var(--gold)">팬 생일 카페 이벤트</div><div class="pb" style="margin-top:6px;height:6px"><div class="pf" style="width:64%"></div></div><div style="font-size:9px;color:var(--lp);margin-top:3px;font-family:Orbitron">128,000/200,000</div></div></div></div>`,
