@@ -29,7 +29,7 @@ html,body {
    TOP BAR
 ══════════════════════ */
 .topbar {
-  position:sticky; top:0; z-index:200;
+  position:sticky; top:44px; z-index:200;
   display:flex; align-items:center; gap:10px; padding:13px 18px;
   background:var(--panel); backdrop-filter:blur(20px);
   border-bottom:1px solid var(--border);
@@ -53,7 +53,7 @@ html,body {
 ══════════════════════ */
 .preview-section {
   position:relative; z-index:10;
-  height:320px; display:flex; flex-direction:column;
+  height:380px; display:flex; flex-direction:column;
   align-items:center; justify-content:center;
   overflow:hidden;
 }
@@ -66,7 +66,8 @@ html,body {
 /* 아바타 캔버스 */
 #avatarPreview {
   position:relative; z-index:5;
-  width:180px; height:180px;
+  width:240px; height:240px;
+  cursor:pointer; transition:transform .3s cubic-bezier(.34,1.56,.64,1);
 }
 
 /* 아바타 이름 & 등급 */
@@ -401,7 +402,6 @@ html,body {
 </nav>
 
 <canvas id="starCanvas"></canvas>
-<canvas id="starCanvas"></canvas>
 
 <div id="toast" class="toast"></div>
 
@@ -416,7 +416,7 @@ html,body {
   <!-- 아바타 프리뷰 -->
   <div class="preview-section">
     <div class="preview-bg" id="previewBg"></div>
-    <canvas id="avatarPreview" width="180" height="180"></canvas>
+    <canvas id="avatarPreview" width="240" height="240"></canvas>
     <div class="preview-info">
       <div class="preview-name" id="previewName">별빛 탐험가</div>
       <div class="preview-league" id="previewLeague">✨ 더스트 리그</div>
@@ -730,8 +730,8 @@ let frame = 0;
 
 function drawAvatarPreview() {
   frame++;
-  ax.clearRect(0,0,180,180);
-  const cx=90, cy=85;
+  ax.clearRect(0,0,240,240);
+  const cx=120, cy=110;
   const league = LEAGUES.find(l=>l.id===avatar.league)||LEAGUES[0];
   const aura = AURAS.find(a=>a.id===avatar.aura)||AURAS[0];
 
@@ -1086,6 +1086,10 @@ if(saved) Object.assign(avatar,JSON.parse(saved));
 updateLeagueColor();
 renderFace();
 drawAvatarPreview();
+
+document.getElementById('avatarPreview').addEventListener('click', function(){
+  this.style.transform = this.style.transform === 'scale(1.15)' ? 'scale(1)' : 'scale(1.15)';
+});
 </script>
 
 /* ══════════════════════════
