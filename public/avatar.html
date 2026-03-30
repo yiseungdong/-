@@ -59,11 +59,10 @@ html,body {
   transition:background 1s ease;
 }
 
-/* 아바타 캔버스 */
-#avatarPreview {
+/* 아바타 컨테이너 */
+#avatarContainer {
   position:relative; z-index:5;
-  width:240px; height:240px;
-  cursor:pointer; transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1);
 }
 
 /* 아바타 이름 & 등급 */
@@ -93,6 +92,10 @@ html,body {
   background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);
   animation:shine 2s ease-in-out infinite; }
 @keyframes shine { 0%{transform:translateX(-100%)} 100%{transform:translateX(200%)} }
+@keyframes auraPulse {
+  0%,100% { transform:scale(1); opacity:0.7; }
+  50% { transform:scale(1.1); opacity:1; }
+}
 
 /* ══════════════════════
    TAB 네비게이션
@@ -411,7 +414,14 @@ html,body {
   <!-- 아바타 프리뷰 -->
   <div class="preview-section">
     <div class="preview-bg" id="previewBg"></div>
-    <canvas id="avatarPreview" width="240" height="240"></canvas>
+    <div id="avatarContainer" style="width:240px;height:300px;position:relative;margin:0 auto;cursor:pointer">
+      <div id="layer-aura"   style="position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;pointer-events:none"></div>
+      <div id="layer-body"   style="position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;pointer-events:none"></div>
+      <div id="layer-bottom" style="position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;pointer-events:none"></div>
+      <div id="layer-top"    style="position:absolute;inset:0;z-index:4;display:flex;align-items:center;justify-content:center;pointer-events:none"></div>
+      <div id="layer-hair"   style="position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;pointer-events:none"></div>
+      <div id="layer-acc"    style="position:absolute;inset:0;z-index:6;pointer-events:none"></div>
+    </div>
     <div class="preview-info">
       <div class="preview-name" id="previewName">별빛 탐험가</div>
       <div class="preview-league" id="previewLeague">✨ 더스트 리그</div>
@@ -717,87 +727,174 @@ let avatar = {
 let currentOutfitTab = 'top';
 
 // ════════════════════════════════════
-// AVATAR CANVAS
+// AVATAR SVG LAYERS
 // ════════════════════════════════════
-const ac = document.getElementById('avatarPreview');
-const ax = ac.getContext('2d');
-let frame = 0;
+function getBaseSVG(base){
+  const svgs = {
+    'm1': `<svg width="240" height="300" viewBox="0 0 80 100">
+      <ellipse cx="40" cy="72" rx="18" ry="22" fill="#1e40af"/>
+      <rect x="36" y="52" width="8" height="8" rx="2" fill="#FDBCB4"/>
+      <ellipse cx="40" cy="42" rx="18" ry="17" fill="#FDBCB4"/>
+      <ellipse cx="33" cy="40" rx="4" ry="4.5" fill="white"/>
+      <ellipse cx="47" cy="40" rx="4" ry="4.5" fill="white"/>
+      <circle cx="34" cy="41" r="2.5" fill="#38bdf8"/>
+      <circle cx="48" cy="41" r="2.5" fill="#38bdf8"/>
+      <circle cx="35" cy="40" r="0.8" fill="white"/>
+      <circle cx="49" cy="40" r="0.8" fill="white"/>
+      <path d="M36 47 Q40 50 44 47" stroke="#e07070" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+      <ellipse cx="40" cy="28" rx="18" ry="13" fill="#1a1a1a"/>
+      <polygon points="30,22 26,8 34,18" fill="#1a1a1a"/>
+      <polygon points="40,20 38,4 44,18" fill="#1a1a1a"/>
+      <polygon points="50,22 54,8 46,18" fill="#1a1a1a"/>
+      <rect x="18" y="58" width="7" height="18" rx="3" fill="#1e40af"/>
+      <rect x="55" y="58" width="7" height="18" rx="3" fill="#1e40af"/>
+      <rect x="22" y="70" width="16" height="5" rx="2" fill="#1d3570"/>
+      <rect x="28" y="90" width="9" height="10" rx="3" fill="#334155"/>
+      <rect x="43" y="90" width="9" height="10" rx="3" fill="#334155"/>
+    </svg>`,
+    'm2': `<svg width="240" height="300" viewBox="0 0 80 100">
+      <ellipse cx="40" cy="72" rx="18" ry="22" fill="#1a1a2e"/>
+      <rect x="36" y="52" width="8" height="8" rx="2" fill="#f0d0c0"/>
+      <ellipse cx="40" cy="42" rx="18" ry="17" fill="#f0d0c0"/>
+      <ellipse cx="33" cy="41" rx="4" ry="3" fill="white"/>
+      <ellipse cx="47" cy="41" rx="4" ry="3" fill="white"/>
+      <ellipse cx="34" cy="42" rx="2.5" ry="2" fill="#c084fc"/>
+      <ellipse cx="48" cy="42" rx="2.5" ry="2" fill="#c084fc"/>
+      <path d="M29 40 Q33 38 37 40" stroke="#555" stroke-width="1.5" fill="none"/>
+      <path d="M43 40 Q47 38 51 40" stroke="#555" stroke-width="1.5" fill="none"/>
+      <path d="M37 47 Q40 48 43 47" stroke="#c08080" stroke-width="1" fill="none"/>
+      <ellipse cx="40" cy="28" rx="18" ry="13" fill="#4c1d95"/>
+      <path d="M22 32 Q25 20 38 22 Q32 38 22 42" fill="#4c1d95"/>
+      <path d="M22 60 Q22 50 40 50 Q58 50 58 60" fill="#0f0f1a"/>
+      <rect x="28" y="90" width="9" height="10" rx="3" fill="#0f0f1a"/>
+      <rect x="43" y="90" width="9" height="10" rx="3" fill="#0f0f1a"/>
+      <rect x="20" y="68" width="6" height="14" rx="3" fill="#1a1a2e"/>
+    </svg>`,
+    'm3': `<svg width="240" height="300" viewBox="0 0 80 100">
+      <ellipse cx="40" cy="72" rx="20" ry="22" fill="#fbbf24"/>
+      <rect x="36" y="52" width="8" height="8" rx="2" fill="#f4a76f"/>
+      <ellipse cx="40" cy="41" rx="20" ry="19" fill="#f4a76f"/>
+      <ellipse cx="28" cy="46" rx="5" ry="3" fill="#f9a8d4" opacity="0.5"/>
+      <ellipse cx="52" cy="46" rx="5" ry="3" fill="#f9a8d4" opacity="0.5"/>
+      <ellipse cx="32" cy="40" rx="5.5" ry="6" fill="white"/>
+      <ellipse cx="48" cy="40" rx="5.5" ry="6" fill="white"/>
+      <circle cx="33" cy="41" r="3.5" fill="#92400e"/>
+      <circle cx="49" cy="41" r="3.5" fill="#92400e"/>
+      <circle cx="34" cy="40" r="1.5" fill="white"/>
+      <circle cx="50" cy="40" r="1.5" fill="white"/>
+      <path d="M34 48 Q40 53 46 48" stroke="#c06060" stroke-width="1.5" fill="none"/>
+      <ellipse cx="40" cy="27" rx="20" ry="14" fill="#78350f"/>
+      <ellipse cx="26" cy="35" rx="6" ry="10" fill="#78350f"/>
+      <ellipse cx="54" cy="35" rx="6" ry="10" fill="#78350f"/>
+      <rect x="16" y="60" width="7" height="16" rx="3" fill="#fbbf24" transform="rotate(-25,20,60)"/>
+      <rect x="57" y="60" width="7" height="16" rx="3" fill="#fbbf24" transform="rotate(25,60,60)"/>
+      <rect x="28" y="90" width="10" height="10" rx="3" fill="#92400e"/>
+      <rect x="42" y="90" width="10" height="10" rx="3" fill="#92400e"/>
+    </svg>`,
+    'f1': `<svg width="240" height="300" viewBox="0 0 80 100">
+      <ellipse cx="40" cy="72" rx="18" ry="22" fill="#fce7f3"/>
+      <rect x="36" y="52" width="8" height="8" rx="2" fill="#FDBCB4"/>
+      <ellipse cx="40" cy="41" rx="17" ry="16" fill="#FDBCB4"/>
+      <ellipse cx="29" cy="45" rx="5" ry="3" fill="#f9a8d4" opacity="0.6"/>
+      <ellipse cx="51" cy="45" rx="5" ry="3" fill="#f9a8d4" opacity="0.6"/>
+      <ellipse cx="33" cy="40" rx="4.5" ry="5" fill="white"/>
+      <circle cx="34" cy="41" r="3" fill="#f472b6"/>
+      <circle cx="35" cy="40" r="1.2" fill="white"/>
+      <path d="M43 39 Q47 37 51 39" stroke="#888" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M44 41 Q47 43 50 41" stroke="#f472b6" stroke-width="1" fill="none"/>
+      <path d="M35 47 Q40 51 45 47" stroke="#f472b6" stroke-width="1.2" fill="none"/>
+      <ellipse cx="40" cy="28" rx="17" ry="12" fill="#f472b6"/>
+      <ellipse cx="57" cy="20" rx="5" ry="14" fill="#f472b6" transform="rotate(15,57,20)"/>
+      <circle cx="57" cy="13" r="4" fill="#fda4d0"/>
+      <rect x="18" y="58" width="7" height="20" rx="3" fill="#fce7f3"/>
+      <rect x="55" y="58" width="7" height="20" rx="3" fill="#fce7f3"/>
+      <rect x="28" y="90" width="9" height="10" rx="4" fill="#fbcfe8"/>
+      <rect x="43" y="90" width="9" height="10" rx="4" fill="#fbcfe8"/>
+    </svg>`,
+    'f2': `<svg width="240" height="300" viewBox="0 0 80 100">
+      <ellipse cx="40" cy="72" rx="18" ry="22" fill="#e0f2fe"/>
+      <rect x="36" y="52" width="8" height="8" rx="2" fill="#fde8d8"/>
+      <ellipse cx="40" cy="41" rx="17" ry="16" fill="#fde8d8"/>
+      <ellipse cx="29" cy="45" rx="4" ry="2.5" fill="#fca5a5" opacity="0.4"/>
+      <ellipse cx="51" cy="45" rx="4" ry="2.5" fill="#fca5a5" opacity="0.4"/>
+      <ellipse cx="33" cy="40" rx="4" ry="4.5" fill="white"/>
+      <ellipse cx="47" cy="40" rx="4" ry="4.5" fill="white"/>
+      <circle cx="33.5" cy="41" r="2.8" fill="#7dd3fc"/>
+      <circle cx="47.5" cy="41" r="2.8" fill="#7dd3fc"/>
+      <circle cx="34.3" cy="40" r="1.1" fill="white"/>
+      <circle cx="48.3" cy="40" r="1.1" fill="white"/>
+      <circle cx="40" cy="47" r="2" fill="#fca5a5" opacity="0.6"/>
+      <ellipse cx="40" cy="28" rx="17" ry="12" fill="#7dd3fc"/>
+      <rect x="23" y="28" width="7" height="18" rx="3" fill="#7dd3fc"/>
+      <rect x="50" y="28" width="7" height="18" rx="3" fill="#7dd3fc"/>
+      <rect x="20" y="65" width="7" height="15" rx="3" fill="#e0f2fe"/>
+      <rect x="53" y="65" width="7" height="15" rx="3" fill="#e0f2fe"/>
+      <rect x="29" y="90" width="9" height="10" rx="4" fill="#bae6fd"/>
+      <rect x="42" y="90" width="9" height="10" rx="4" fill="#bae6fd"/>
+    </svg>`,
+    'f3': `<svg width="240" height="300" viewBox="0 0 80 100">
+      <ellipse cx="40" cy="72" rx="18" ry="22" fill="#4c1d95"/>
+      <path d="M30 58 Q40 55 50 58 Q48 80 40 94 Q32 80 30 58" fill="#7c3aed" opacity="0.8"/>
+      <path d="M35 60 Q40 57 45 60" stroke="#f0c040" stroke-width="1.5" fill="none"/>
+      <rect x="36" y="52" width="8" height="8" rx="2" fill="#f0e0d0"/>
+      <ellipse cx="40" cy="41" rx="17" ry="16" fill="#f0e0d0"/>
+      <ellipse cx="33" cy="41" rx="4.5" ry="3.5" fill="white"/>
+      <ellipse cx="47" cy="41" rx="4.5" ry="3.5" fill="white"/>
+      <ellipse cx="33.5" cy="42" rx="3" ry="2.5" fill="#f0c040"/>
+      <ellipse cx="47.5" cy="42" rx="3" ry="2.5" fill="#f0c040"/>
+      <path d="M29 40 Q33 37 37 40" stroke="#6b21a8" stroke-width="1.8" fill="none"/>
+      <path d="M43 40 Q47 37 51 40" stroke="#6b21a8" stroke-width="1.8" fill="none"/>
+      <path d="M36 47 Q40 50 44 47" stroke="#c084fc" stroke-width="1" fill="none"/>
+      <ellipse cx="40" cy="27" rx="17" ry="12" fill="#e2e8f0"/>
+      <rect x="22" y="30" width="7" height="35" rx="3" fill="#e2e8f0"/>
+      <rect x="51" y="30" width="7" height="35" rx="3" fill="#e2e8f0"/>
+      <rect x="54" y="65" width="6" height="18" rx="3" fill="#4c1d95"/>
+      <text x="52" y="63" font-size="12">&#11088;</text>
+      <rect x="20" y="68" width="6" height="15" rx="3" fill="#4c1d95"/>
+      <rect x="29" y="90" width="9" height="10" rx="4" fill="#6d28d9"/>
+      <rect x="42" y="90" width="9" height="10" rx="4" fill="#6d28d9"/>
+    </svg>`
+  };
+  return svgs[base] || svgs['m1'];
+}
 
-function drawAvatarPreview() {
-  frame++;
-  ax.clearRect(0,0,240,240);
-  const cx=120, cy=110;
-  const league = LEAGUES.find(l=>l.id===avatar.league)||LEAGUES[0];
-  const aura = AURAS.find(a=>a.id===avatar.aura)||AURAS[0];
+function renderAvatarLayers(){
+  const base = localStorage.getItem('asteria_avatar_base') || 'm1';
+  const aura = AURAS.find(a=>a.id===avatar.aura) || AURAS[0];
 
-  // 아우라 효과
-  const grd = ax.createRadialGradient(cx,cy,10,cx,cy,75);
-  grd.addColorStop(0,`rgba(${league.rgb},.4)`);
-  grd.addColorStop(.5,`rgba(${league.rgb},.15)`);
-  grd.addColorStop(1,'transparent');
-  ax.fillStyle=grd;
-  ax.beginPath();ax.arc(cx,cy,75,0,Math.PI*2);ax.fill();
+  // 아우라 레이어
+  document.getElementById('layer-aura').innerHTML = `
+    <div style="width:220px;height:220px;border-radius:50%;
+      background:radial-gradient(circle,${aura.color}35 0%,transparent 70%);
+      animation:auraPulse 3s ease-in-out infinite;
+      box-shadow:0 0 50px ${aura.color}30">
+    </div>`;
 
-  // 리그별 아우라 이펙트
-  if(avatar.league==='quasar'){
-    for(let i=0;i<4;i++){
-      ax.save();ax.translate(cx,cy);ax.rotate(i*Math.PI/2+frame*.005);
-      const g=ax.createLinearGradient(0,-65,0,0);
-      g.addColorStop(0,'transparent');g.addColorStop(1,`rgba(240,192,64,.4)`);
-      ax.fillStyle=g;ax.fillRect(-2,-65,4,65);ax.restore();
-    }
-  } else if(avatar.league==='nova'){
-    for(let r=35;r<70;r+=12){
-      ax.beginPath();ax.arc(cx,cy,r+Math.sin(frame*.04)*3,0,Math.PI*2);
-      ax.strokeStyle=`rgba(192,132,252,${.12-(r-35)*.002})`;
-      ax.lineWidth=1.5;ax.stroke();
-    }
-  } else if(avatar.league==='planet'){
-    ax.save();ax.translate(cx,cy);
-    ax.rotate(frame*.008);
-    ax.beginPath();ax.ellipse(0,0,55,22,0,0,Math.PI*2);
-    ax.strokeStyle='rgba(52,211,153,.3)';ax.lineWidth=1.5;ax.stroke();
-    ax.restore();
-  } else if(avatar.league==='star'){
-    for(let i=0;i<8;i++){
-      const a=i*Math.PI/4+frame*.01;
-      ax.beginPath();ax.arc(cx+Math.cos(a)*50,cy+Math.sin(a)*50,2,0,Math.PI*2);
-      ax.fillStyle=`rgba(251,191,36,${.5+Math.sin(frame*.08+i)*.4})`;ax.fill();
-    }
-  }
+  // 몸통(베이스 SVG) 레이어
+  document.getElementById('layer-body').innerHTML = getBaseSVG(base);
 
-  // 몸 (부유)
-  const by = cy + Math.sin(frame*.02)*4;
+  // 의상 레이어
+  const topItem = (OUTFITS.top||[]).find(o=>o.id===avatar.outfit_top);
+  const botItem = (OUTFITS.bottom||[]).find(o=>o.id===avatar.outfit_bottom);
+  document.getElementById('layer-top').innerHTML = topItem
+    ? `<div style="font-size:52px;margin-top:90px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5))">${topItem.emoji}</div>` : '';
+  document.getElementById('layer-bottom').innerHTML = botItem
+    ? `<div style="font-size:40px;margin-top:170px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5))">${botItem.emoji}</div>` : '';
 
-  // 피부색 기반 몸통
-  ax.beginPath();ax.arc(cx,by,38,0,Math.PI*2);
-  const bodyG=ax.createRadialGradient(cx-8,by-8,4,cx,by,38);
-  bodyG.addColorStop(0,avatar.skin+'cc');
-  bodyG.addColorStop(1,'rgba(7,7,15,.9)');
-  ax.fillStyle=bodyG;ax.fill();
-  ax.strokeStyle=`rgba(${league.rgb},.5)`;ax.lineWidth=1.5;ax.stroke();
+  // 헤어 레이어
+  const hairItem = HAIRS.find(h=>h.id===avatar.hair);
+  document.getElementById('layer-hair').innerHTML = hairItem
+    ? `<div style="font-size:44px;margin-top:5px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5))">${hairItem.emoji}</div>` : '';
 
-  // 이모지 (얼굴)
-  ax.font='30px serif';ax.textAlign='center';ax.textBaseline='middle';
-  ax.fillText(avatar.emoji,cx,by);
-
-  // 액세서리 - 왕관
-  if(avatar.acc_crown){
-    const c=ACCESSORIES.crown.find(x=>x.id===avatar.acc_crown);
-    if(c){ax.font='18px serif';ax.fillText(c.emoji,cx,by-44+Math.sin(frame*.03)*2);}
-  }
-  // 날개
-  if(avatar.acc_wing){
-    const w=ACCESSORIES.wing.find(x=>x.id===avatar.acc_wing);
-    if(w){ax.font='18px serif';ax.fillText(w.emoji,cx+38,by);}
-  }
-  // 무기
-  if(avatar.acc_weapon){
-    const wp=ACCESSORIES.weapon.find(x=>x.id===avatar.acc_weapon);
-    if(wp){ax.font='18px serif';ax.fillText(wp.emoji,cx-42,by+5);}
-  }
-
-  requestAnimationFrame(drawAvatarPreview);
+  // 액세서리 레이어
+  const crown  = avatar.acc_crown  ? ACCESSORIES.crown.find(c=>c.id===avatar.acc_crown)   : null;
+  const wing   = avatar.acc_wing   ? ACCESSORIES.wing.find(w=>w.id===avatar.acc_wing)     : null;
+  const weapon = avatar.acc_weapon ? ACCESSORIES.weapon.find(w=>w.id===avatar.acc_weapon) : null;
+  document.getElementById('layer-acc').innerHTML = `
+    ${crown  ? `<div style="position:absolute;top:5px;left:50%;transform:translateX(-50%);font-size:32px">${crown.emoji}</div>`  : ''}
+    ${wing   ? `<div style="position:absolute;top:90px;right:5px;font-size:32px">${wing.emoji}</div>`                            : ''}
+    ${weapon ? `<div style="position:absolute;top:110px;left:5px;font-size:32px">${weapon.emoji}</div>`                          : ''}
+  `;
 }
 
 // ════════════════════════════════════
@@ -932,18 +1029,18 @@ function renderGrowth(){
 function selectFace(id){
   const f=FACES.find(x=>x.id===id);
   if(!f||!f.unlocked){showToast(`🔒 ${f.req} 달성 시 해금!`);return;}
-  avatar.face=id; renderFace(); burst(); showToast('얼굴형 변경!');
+  avatar.face=id; renderFace(); renderAvatarLayers(); burst(); showToast('얼굴형 변경!');
 }
 function selectSkin(color){
-  avatar.skin=color; renderFace(); burst(); showToast('피부색 변경!');
+  avatar.skin=color; renderFace(); renderAvatarLayers(); burst(); showToast('피부색 변경!');
 }
 function selectHair(id){
   const h=HAIRS.find(x=>x.id===id);
   if(!h||!h.unlocked){showToast(`🔒 ${h.req} 달성 시 해금!`);return;}
-  avatar.hair=id; renderHair(); burst(); showToast('헤어스타일 변경!');
+  avatar.hair=id; renderHair(); renderAvatarLayers(); burst(); showToast('헤어스타일 변경!');
 }
 function selectHairColor(color){
-  avatar.hairColor=color; renderHair(); burst(); showToast('헤어 컬러 변경!');
+  avatar.hairColor=color; renderHair(); renderAvatarLayers(); burst(); showToast('헤어 컬러 변경!');
 }
 function selectOutfit(type,id){
   const o=(OUTFITS[type]||[]).find(x=>x.id===id);
@@ -952,10 +1049,10 @@ function selectOutfit(type,id){
   (OUTFITS[type]||[]).forEach(x=>x.equipped=false);
   o.equipped=true;
   avatar['outfit_'+type]=id;
-  renderOutfit(type); burst(); showToast(`${o.emoji} ${o.name} 착용!`);
+  renderOutfit(type); renderAvatarLayers(); burst(); showToast(`${o.emoji} ${o.name} 착용!`);
 }
 function selectAura(id){
-  avatar.aura=id; renderAura(); burst();
+  avatar.aura=id; renderAura(); renderAvatarLayers(); burst();
   const a=AURAS.find(x=>x.id===id);
   showToast(`✨ ${a.name} 적용!`);
   updateLeagueColor();
@@ -966,19 +1063,19 @@ function selectAcc(type,id){
   if(!a||!a.unlocked){showToast(`🔒 ${a.req} 달성 시 해금!`);return;}
   // 토글 (같은 거 클릭하면 해제)
   avatar['acc_'+type] = avatar['acc_'+type]===id ? null : id;
-  renderAcc(); burst();
+  renderAcc(); renderAvatarLayers(); burst();
   showToast(avatar['acc_'+type]?`${a.emoji} ${a.name} 장착!`:`${a.emoji} 해제`);
 }
 function selectEmotion(id){
   const e=EMOTIONS.find(x=>x.id===id);
   if(!e||!e.unlocked){showToast(`🔒 ${e.req} 달성 시 해금!`);return;}
-  avatar.emotion=id; renderEmotion(); burst();
+  avatar.emotion=id; renderEmotion(); renderAvatarLayers(); burst();
   showToast(`${e.emoji} 표정 변경!`);
 }
 function selectMotion(id){
   const m=MOTIONS.find(x=>x.id===id);
   if(!m||!m.unlocked){showToast(`🔒 ${m.req} 달성 시 해금!`);return;}
-  avatar.motion=id; renderEmotion(); burst();
+  avatar.motion=id; renderEmotion(); renderAvatarLayers(); burst();
   showToast(`${m.emoji} 모션 변경!`);
 }
 function switchOutfit(type,btn){
@@ -1074,15 +1171,18 @@ function showToast(msg){
 // ════════════════════════════════════
 // INIT
 // ════════════════════════════════════
+const savedBase = localStorage.getItem('asteria_avatar_base');
+if(!savedBase) window.location.href = '/avatar-select.html';
+
 // 저장된 아바타 불러오기
 const saved=localStorage.getItem('asteria_avatar');
 if(saved) Object.assign(avatar,JSON.parse(saved));
 
 updateLeagueColor();
 renderFace();
-drawAvatarPreview();
+renderAvatarLayers();
 
-document.getElementById('avatarPreview').addEventListener('click', function(){
+document.getElementById('avatarContainer').addEventListener('click', function(){
   this.style.transform = this.style.transform === 'scale(1.15)' ? 'scale(1)' : 'scale(1.15)';
 });
 </script>
