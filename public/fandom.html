@@ -35,10 +35,7 @@ canvas{position:absolute;inset:0;z-index:1}
 .npc-n{font-size:5px;color:var(--muted);margin-top:1px}
 
 /* 하단 */
-.bot{position:fixed;bottom:8px;left:0;right:0;z-index:100;padding:6px 14px 10px;background:linear-gradient(0deg,rgba(6,6,14,.96),rgba(6,6,14,.3) 90%,transparent);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:space-between}
-.bot-s{display:flex;gap:12px}
-.bot-sv{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--lp)}
-.bot-sl{font-size:7px;color:var(--muted)}
+.bot{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);z-index:100;display:flex;align-items:center;gap:12px;padding:6px 16px;background:rgba(10,10,22,0.85);backdrop-filter:blur(8px);border:1px solid rgba(180,150,255,0.13);border-radius:20px;}
 .bot-e{display:flex;flex-direction:column;align-items:center;gap:1px}
 .bot-eb{width:90px;height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden}
 .bot-ef{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--ls),var(--lp));box-shadow:0 0 4px var(--lg);transition:width 1s}
@@ -118,6 +115,15 @@ canvas{position:absolute;inset:0;z-index:1}
   font-size:9px; color:var(--muted);
   display:flex; align-items:center; gap:4px;
   margin-top:2px;
+}
+.fc-header-stats {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:3px;
+  font-size:9px;
+  color:rgba(200,190,220,0.6);
+  font-family:'Orbitron',monospace;
 }
 .fc-header-arrow {
   font-size:10px; color:var(--muted);
@@ -223,6 +229,11 @@ canvas{position:absolute;inset:0;z-index:1}
         <span>·</span>
         <span id="fcRank" style="color:var(--gold);font-weight:700">#3</span>
       </div>
+      <div class="fc-header-stats">
+        <span>👥 <span id="bM">98,432</span></span>
+        <span style="color:rgba(200,190,220,0.3)">·</span>
+        <span>⭐ <span id="bS">847</span>점</span>
+      </div>
     </div>
     <div class="fc-header-arrow" id="fcArrow">▼</div>
   </div>
@@ -232,7 +243,7 @@ canvas{position:absolute;inset:0;z-index:1}
   </div>
 </div>
 <div class="vc" id="vc"><div class="vw" id="vw"><canvas id="cv"></canvas><div id="bL"></div><div class="avatar" id="myAv" style="left:960px;top:760px"><div class="av-body" style="pointer-events:auto;cursor:pointer" onclick="openMiniChat()">🧑</div><div class="av-tag">나</div></div><div id="nL"></div><div id="miniEvts" style="position:absolute;z-index:25;pointer-events:none"></div></div></div>
-<div class="bot"><div class="bot-s"><div><div class="bot-sv" id="bM">98,432</div><div class="bot-sl">멤버</div></div><div><div class="bot-sv" id="bS">847</div><div class="bot-sl">점수</div></div></div><div class="bot-e"><div class="bot-eb"><div class="bot-ef" id="bE" style="width:72%"></div></div><div class="bot-el">에너지 <span id="bP">72%</span></div></div><div class="bot-d" id="bD">D-14</div></div>
+<div class="bot"><div class="bot-e"><div class="bot-eb"><div class="bot-ef" id="bE" style="width:72%"></div></div><div class="bot-el">에너지 <span id="bP">72%</span></div></div><div class="bot-d" id="bD">D-14</div></div>
 <div class="hint" id="hint">빈 곳을 클릭하면 이동!</div>
 <div class="mo" id="mo" onclick="closeMo(event)"><div class="mo-c" id="moC" onclick="event.stopPropagation()"></div></div>
 <div id="toast"></div>
