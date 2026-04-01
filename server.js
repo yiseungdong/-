@@ -1795,7 +1795,7 @@ function authenticateToken(req, res, next) {
   if (!token) return res.status(401).json({ message: '인증이 필요합니다. Authorization: Bearer <token> 헤더를 포함해 주세요.' });
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded;
+    req.user = decoded; // decoded 안에 id, nickname, email, astraId 포함
     next();
   } catch (err) {
     if (err.name === 'TokenExpiredError') {
@@ -1883,20 +1883,29 @@ app.post('/api/auth/register', async (req, res) => {
       [userId, astraId]
     );
 
-    // 추천인 처리
+    // 추천인 처리 (아스트라 번호 AA0001 형식으로 조회)
     if (referral_code) {
-      const referrer = await pool.query('SELECT id FROM users WHERE id = $1', [parseInt(referral_code)]);
+      const referrer = await pool.query(
+        `SELECT u.id FROM users u
+         JOIN nebulae n ON n.user_id = u.id
+         WHERE n.serial_code = $1`,
+        [referral_code.trim().toUpperCase()]
+      );
       if (referrer.rows.length > 0) {
         await pool.query(
-          `INSERT INTO referrals (referrer_id, referee_id) VALUES ($1, $2)`,
+          `INSERT INTO referrals (referrer_id, referee_id) VALUES ($1, $2)
+           ON CONFLICT DO NOTHING`,
           [referrer.rows[0].id, userId]
         );
-        await pool.query('UPDATE users SET stardust = stardust + 500 WHERE id = $1', [referrer.rows[0].id]);
+        await pool.query(
+          'UPDATE users SET stardust = stardust + 500 WHERE id = $1',
+          [referrer.rows[0].id]
+        );
       }
     }
 
     // Access 토큰 (15분) + Refresh 토큰 (7일)
-    const tokenPayload = { id: userId, nickname, email };
+    const tokenPayload = { id: userId, nickname, email, astraId };
     const accessToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
     const refreshToken = jwt.sign({ id: userId, type: 'refresh' }, JWT_REFRESH_SECRET, { expiresIn: JWT_REFRESH_EXPIRES_IN });
 
@@ -1980,8 +1989,10 @@ app.post('/api/auth/login', async (req, res) => {
       [user.id]
     );
 
-    // Access 토큰 (15분) + Refresh 토큰 (7일)
-    const tokenPayload = { id: user.id, nickname: user.nickname, email: user.email };
+    // 아스트라 번호 조회 후 토큰에 포함
+    const nebula = await pool.query('SELECT serial_code FROM nebulae WHERE user_id = $1', [user.id]);
+    const astraId = nebula.rows[0]?.serial_code || null;
+    const tokenPayload = { id: user.id, nickname: user.nickname, email: user.email, astraId };
     const accessToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
     const refreshToken = jwt.sign({ id: user.id, type: 'refresh' }, JWT_REFRESH_SECRET, { expiresIn: JWT_REFRESH_EXPIRES_IN });
 
@@ -1992,10 +2003,6 @@ app.post('/api/auth/login', async (req, res) => {
       `INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)`,
       [user.id, refreshToken, refreshExpiry]
     );
-
-    // 성궤번호 조회
-    const nebula = await pool.query('SELECT serial_code FROM nebulae WHERE user_id = $1', [user.id]);
-    const astraId = nebula.rows[0]?.serial_code || null;
 
     res.json({
       accessToken,
@@ -2147,7 +2154,7 @@ async function socialLoginOrRegister({ provider, providerId, email, name, avatar
   const user = userInfo.rows[0];
 
   // JWT 발급
-  const tokenPayload = { id: user.id, nickname: user.nickname, email: user.email };
+  const tokenPayload = { id: user.id, nickname: user.nickname, email: user.email, astraId: user.astra_id || null };
   const accessToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
   const refreshToken = jwt.sign({ id: user.id, type: 'refresh' }, JWT_REFRESH_SECRET, { expiresIn: JWT_REFRESH_EXPIRES_IN });
 
