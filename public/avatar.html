@@ -874,18 +874,10 @@ function renderAvatarLayers(){
   // 몸통(베이스 SVG) 레이어
   document.getElementById('layer-body').innerHTML = getBaseSVG(base);
 
-  // 의상 레이어
-  const topItem = (OUTFITS.top||[]).find(o=>o.id===avatar.outfit_top);
-  const botItem = (OUTFITS.bottom||[]).find(o=>o.id===avatar.outfit_bottom);
-  document.getElementById('layer-top').innerHTML = topItem
-    ? `<div style="font-size:52px;margin-top:90px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5))">${topItem.emoji}</div>` : '';
-  document.getElementById('layer-bottom').innerHTML = botItem
-    ? `<div style="font-size:40px;margin-top:170px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5))">${botItem.emoji}</div>` : '';
-
-  // 헤어 레이어
-  const hairItem = HAIRS.find(h=>h.id===avatar.hair);
-  document.getElementById('layer-hair').innerHTML = hairItem
-    ? `<div style="font-size:44px;margin-top:5px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5))">${hairItem.emoji}</div>` : '';
+  // 의상/헤어 레이어 — SVG 아바타 시스템으로 전환 중, 이모지 겹침 방지
+  document.getElementById('layer-top').innerHTML = '';
+  document.getElementById('layer-bottom').innerHTML = '';
+  document.getElementById('layer-hair').innerHTML = '';
 
   // 액세서리 레이어
   const crown  = avatar.acc_crown  ? ACCESSORIES.crown.find(c=>c.id===avatar.acc_crown)   : null;
@@ -1197,8 +1189,11 @@ function renderAstraId(el, serial) {
 }
 
 // 페이지 로드 시 번호 즉시 표시
+// asteria_serial 없으면 state.serial 또는 기본값 사용
 const psInit = document.getElementById('previewSerial');
-renderAstraId(psInit, localStorage.getItem('asteria_serial') || '');
+const serialVal = localStorage.getItem('asteria_serial') ||
+                  (typeof state !== 'undefined' && state.serial) || '';
+renderAstraId(psInit, serialVal);
 </script>
 
 /* ══════════════════════════
