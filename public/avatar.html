@@ -862,12 +862,9 @@ function getBaseSVG(base){
 }
 
 function renderAvatarLayers(){
-  // avatar.face 값을 base SVG 선택에 연결 (없으면 localStorage, 없으면 m1)
+  // avatar.face = SVG base 키 (m1~m3, f1~f3) 직접 사용
   const base = avatar.face || localStorage.getItem('asteria_avatar_base') || 'm1';
   const aura = AURAS.find(a=>a.id===avatar.aura) || AURAS[0];
-
-  // base 변경 시 localStorage 동기화
-  localStorage.setItem('asteria_avatar_base', base);
 
   // 아우라 레이어
   document.getElementById('layer-aura').innerHTML = `
@@ -1027,8 +1024,11 @@ function renderGrowth(){
 // ════════════════════════════════════
 function selectFace(id){
   const f=FACES.find(x=>x.id===id);
-  if(!f||!f.unlocked){showToast(`🔒 ${f.req} 달성 시 해금!`);return;}
-  avatar.face=id; renderFace(); renderAvatarLayers(); burst(); showToast('얼굴형 변경!');
+  if(!f||!f.unlocked){showToast(`🔒 ${f?.req||''} 달성 시 해금!`);return;}
+  avatar.face=id;
+  // 선택 즉시 localStorage 반영 (다른 페이지 실시간 연동)
+  localStorage.setItem('asteria_avatar_base', id);
+  renderFace(); renderAvatarLayers(); burst(); showToast('얼굴형 변경!');
 }
 function selectSkin(color){
   avatar.skin=color; renderFace(); renderAvatarLayers(); burst(); showToast('피부색 변경!');
@@ -1132,6 +1132,8 @@ document.addEventListener('keydown',e=>{
 // SAVE
 // ════════════════════════════════════
 function saveAvatar(){
+  // avatar.face 가 실제 SVG base 키이므로 asteria_avatar_base 도 함께 저장
+  if(avatar.face) localStorage.setItem('asteria_avatar_base', avatar.face);
   localStorage.setItem('asteria_avatar', JSON.stringify(avatar));
   burst(); showToast('✨ 아바타가 저장됐어요!');
 }
@@ -1176,6 +1178,12 @@ if(!savedBase) window.location.href = '/avatar-select.html';
 // 저장된 아바타 불러오기
 const saved=localStorage.getItem('asteria_avatar');
 if(saved) Object.assign(avatar,JSON.parse(saved));
+
+// avatar.face 가 없거나 SVG base 키가 아니면 asteria_avatar_base 로 초기화
+const validBases = ['m1','m2','m3','f1','f2','f3'];
+if(!avatar.face || !validBases.includes(avatar.face)){
+  avatar.face = localStorage.getItem('asteria_avatar_base') || 'm1';
+}
 
 updateLeagueColor();
 renderFace();
