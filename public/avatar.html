@@ -441,25 +441,10 @@ html,body {
   <!-- TAB NAV -->
   <div class="tab-nav" id="tabNav">
     <div class="tab-btn active" onclick="switchTab('face',this)">
-      <div class="tab-btn-icon">👤</div>얼굴
-    </div>
-    <div class="tab-btn" onclick="switchTab('hair',this)">
-      <div class="tab-btn-icon">💇</div>헤어
-    </div>
-    <div class="tab-btn" onclick="switchTab('outfit',this)">
-      <div class="tab-btn-icon">👗</div>의상
+      <div class="tab-btn-icon">👤</div>캐릭터
     </div>
     <div class="tab-btn" onclick="switchTab('aura',this)">
       <div class="tab-btn-icon">✨</div>아우라
-    </div>
-    <div class="tab-btn" onclick="switchTab('acc',this)">
-      <div class="tab-btn-icon">👑</div>액세서리
-    </div>
-    <div class="tab-btn" onclick="switchTab('emotion',this)">
-      <div class="tab-btn-icon">😊</div>표정
-    </div>
-    <div class="tab-btn" onclick="switchTab('growth',this)">
-      <div class="tab-btn-icon">📈</div>성장
     </div>
   </div>
 
@@ -873,7 +858,7 @@ function renderAvatarLayers(){
   // 몸통(베이스 SVG) 레이어 — face 선택에 따라 교체
   document.getElementById('layer-body').innerHTML = getBaseSVG(base);
 
-  // 의상/헤어/액세서리 레이어 — 추후 SVG 기반으로 재설계 예정, 현재 비움
+  // 의상/헤어/액세서리 레이어 — SVG 캐릭터 자체에 포함됨, 이모지 레이어 미사용
   document.getElementById('layer-top').innerHTML = '';
   document.getElementById('layer-bottom').innerHTML = '';
   document.getElementById('layer-hair').innerHTML = '';
@@ -1075,18 +1060,10 @@ function switchOutfit(type,btn){
 // TAB SWITCH
 // ════════════════════════════════════
 function switchTab(name, btn){
-  // 헤어/의상/액세서리/표정/성장은 준비중
-  const comingSoon = ['hair','outfit','acc','emotion','growth'];
-  if(comingSoon.includes(name)){
-    showToast('🔧 준비중이에요! 곧 업데이트될 예정이에요.');
-    return;
-  }
-
   document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
   btn.classList.add('active');
-
   if(name==='face') renderFace();
   if(name==='aura') renderAura();
 }
