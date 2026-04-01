@@ -1272,3 +1272,86 @@ bcrypt, JWT, 최소수집(이메일+닉네임), 소셜로그인2FA, 욕설필터
 - 리그별 아바타 방식C: 아우라 이펙트 변화 + 리그 전용 아이템 해금
 - SVG 공용파일: public/js/avatar-svgs.js (모든 페이지에서 공유)
 - 6개 기본 아바타: 루카(m1)/제이(m2)/코코(m3)/아리(f1)/세나(f2)/루나(f3)
+
+---
+
+## 📅 2026.04.01 작업 내역
+
+### ✅ 완료된 작업
+
+#### 1. 아스트라 번호 체계 변경
+- 기존: 숫자 기반 (#00,000,001 형식)
+- 변경: 영문+숫자 (AA0001 ~ ZZ9999, 최대 676만 명)
+- 수정 파일: server.js
+  - generateAstraId() 함수 신규 추가
+  - nebulae 테이블 serial_number → serial_code (VARCHAR 8) 변경
+  - 기존 데이터 마이그레이션 코드 추가
+  - 회원가입/로그인/소셜로그인 API 전체 반영
+  - JWT 토큰에 astraId 포함
+  - referral_code 버그 수정 (숫자 id → 아스트라 번호로 조회)
+
+#### 2. 아스트라 번호 색상 분리
+- 영문(AA) → 보라색 #c084fc
+- 숫자(0001) → 금색 #f0c040
+- renderAstraId() 함수로 전 페이지 공통 처리
+- 적용 페이지: intro.html, astra.html, avatar.html, index.html
+
+#### 3. 아바타 이름 밑 번호 표시
+- astra.html 성궤탭 카드 — 이름 아래 번호 표시
+- avatar.html 아바타 꾸미기 — 이름 아래 번호 표시
+- index.html 지도 아바타 노드 — 이름 아래 번호 표시
+- localStorage 키: asteria_serial
+
+#### 4. occOrb 아바타 원 안 맞춤 (astra.html 성궤탭)
+- SVG 아바타를 64x64 원 안에 중앙 배치
+- transform: translate(-50%,-30%) scale(0.36) 로 조정
+
+#### 5. index.html avbody 썸네일 수정
+- 52x52 원 안에 SVG 아바타 중앙 배치
+
+#### 6. intro.html 번호 형식 변경
+- 기존: #00,000,001 고정값
+- 변경: localStorage에서 astraId 읽어서 AA0001 형식 + 색상 분리 표시
+
+#### 7. avatar.html 아바타 꾸미기 개편
+- FACES 배열 id를 SVG base 키(m1~m3, f1~f3)와 연결
+- 캐릭터 선택 시 localStorage('asteria_avatar_base') 즉시 저장
+- saveAvatar() 시 asteria_avatar_base 동기화
+- 이모지 레이어(헤어/의상/액세서리) 완전 제거 — SVG 캐릭터 자체가 완성형
+- 탭: 캐릭터/아우라 2개만 유지 (나머지 추후 재설계)
+
+### ❌ 미완성 / 다음 세션에서 처리
+
+#### 1. 아바타 전 페이지 연동 (최우선)
+- avatar.html에서 캐릭터 선택 후 저장 시 다른 페이지(index, astra, room3d 등)에 동일 아바타 미반영
+- 원인 추정: asteria_avatar_base localStorage 키 동기화 타이밍 문제
+- 해결 방향: 새 세션에서 처음부터 디버깅 필요
+
+#### 2. avatar-select.html 이름 작명 단계 추가
+- 가입 시 아바타 이름 직접 작명 단계 미구현
+
+#### 3. 리그별 아바타 차별화 (방식C)
+- 아우라 이펙트 + 리그 전용 아이템 해금 시스템
+
+#### 4. 아티스트 캐릭터 시스템
+
+#### 5. fandom.html / room3d.html 아바타 연동
+
+### 📌 현재 확정된 설계
+
+#### 아바타 시스템
+- SVG 공용파일: public/js/avatar-svgs.js
+- 6개 기본 아바타: 루카(m1)/제이(m2)/코코(m3)/아리(f1)/세나(f2)/루나(f3)
+- localStorage 키:
+  - asteria_avatar_base: 선택된 SVG 캐릭터 키 (m1~f3)
+  - asteria_avatar: 전체 아바타 설정 JSON
+  - asteria_serial: 아스트라 번호 (AA0001 형식)
+- 아바타 이름 변경 조건: 리그 승격 시 1회 무료 / 스타더스트 소모 / 미션 보상
+- 의상/헤어 시스템: 추후 SVG 기반으로 재설계 예정
+
+#### 다음 작업 순서
+1. 아바타 전 페이지 연동 디버깅 (최우선)
+2. avatar-select.html 이름 작명 단계
+3. 리그별 아바타 차별화
+4. 아티스트 캐릭터 시스템
+5. fandom/room3d 아바타 연동

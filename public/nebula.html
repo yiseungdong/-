@@ -8,5 +8,15 @@ localStorage.setItem('asteria_lastTab','orbit');
 location.href='/astra.html';
 </script>
 </head>
-<body></body>
+<body>
+<script src="/js/avatar-svgs.js"></script>
+<script src="/js/avatar-renderer.js"></script>
+<script>
+if (typeof initAvatarSync === 'function') {
+  initAvatarSync([
+    { id: 'nebulaAvatar', options: { scale: 0.4, topOffset: '-25%' } }
+  ]);
+}
+</script>
+</body>
 </html>
