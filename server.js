@@ -175,7 +175,7 @@ async function initDB() {
         user_id         INTEGER NOT NULL REFERENCES users(id) UNIQUE,
 
         -- 성궤 정보
-        serial_number   INTEGER UNIQUE,   -- 생성 순서 번호 (001~)
+        serial_code     VARCHAR(8) UNIQUE,   -- 아스트라 번호 (AA0001 형식)
         ark_type        VARCHAR(30) NOT NULL DEFAULT 'life',
         -- life(생활) oracle(전략) sovereign(주권) vault(자산) artist(아티스트 전용)
 
@@ -1722,6 +1722,25 @@ async function initDB() {
       console.log('  📌 오픈 이벤트 5개 초기 데이터 삽입');
     }
 
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'nebulae' AND column_name = 'serial_code'
+        ) THEN
+          ALTER TABLE nebulae ADD COLUMN serial_code VARCHAR(8) UNIQUE;
+        END IF;
+        UPDATE nebulae
+        SET serial_code = (
+          CHR(65 + ((serial_number - 1) / (26 * 9999))) ||
+          CHR(65 + (((serial_number - 1) / 9999) % 26)) ||
+          LPAD(((serial_number - 1) % 9999 + 1)::TEXT, 4, '0')
+        )
+        WHERE serial_code IS NULL AND serial_number IS NOT NULL;
+      END $$;
+    `);
+
     await client.query('COMMIT');
     console.log('✅ 아스테리아 DB 초기화 완료 — 56개 테이블 생성');
   } catch (err) {
@@ -1789,10 +1808,27 @@ function authenticateToken(req, res, next) {
 // 기존 authMiddleware 호환 별칭
 const authMiddleware = authenticateToken;
 
-// 성궤번호 포맷: #00,000,001
-function formatOrbitNumber(num) {
-  const padded = String(num).padStart(8, '0');
-  return `#${padded.slice(0,2)},${padded.slice(2,5)},${padded.slice(5,8)}`;
+// pool 또는 client 모두 전달 가능
+// 아스트라 번호 생성: AA0001 ~ ZZ9999 형식 (최대 약 676만 명)
+async function generateAstraId(client) {
+  const result = await client.query(
+    `SELECT serial_code FROM nebulae WHERE serial_code IS NOT NULL ORDER BY serial_code DESC LIMIT 1`
+  );
+  if (!result.rows[0]) return 'AA0001';
+  const last = result.rows[0].serial_code;
+  const prefix = last.slice(0, 2);
+  const num = parseInt(last.slice(2));
+  if (num < 9999) return prefix + String(num + 1).padStart(4, '0');
+  const first = prefix[0];
+  const second = prefix[1];
+  if (second < 'Z') return first + String.fromCharCode(second.charCodeAt(0) + 1) + '0001';
+  if (first < 'Z') return String.fromCharCode(first.charCodeAt(0) + 1) + 'A0001';
+  throw new Error('아스트라 번호가 모두 소진되었습니다 (최대 676만 명).');
+}
+
+// 표시용 (AA0001 형식 그대로 반환)
+function formatOrbitNumber(code) {
+  return code || null;
 }
 
 // ══════════════════════════════════════════════
@@ -1824,8 +1860,7 @@ app.post('/api/auth/register', async (req, res) => {
     const hashed = await bcrypt.hash(password, 12);
 
     // 성궤번호 자동 발급: 현재 최대 orbit_number + 1
-    const maxOrbit = await pool.query('SELECT COALESCE(MAX(serial_number), 0) AS max_num FROM nebulae');
-    const orbitNumber = parseInt(maxOrbit.rows[0].max_num) + 1;
+    const astraId = await generateAstraId(pool);
 
     // 개척자 순번 계산
     const countResult = await pool.query('SELECT COUNT(*) FROM users');
@@ -1844,8 +1879,8 @@ app.post('/api/auth/register', async (req, res) => {
 
     // 성궤 자동 생성 (orbit_number 포맷: #00,000,001)
     await pool.query(
-      `INSERT INTO nebulae (user_id, serial_number) VALUES ($1, $2)`,
-      [userId, orbitNumber]
+      `INSERT INTO nebulae (user_id, serial_code) VALUES ($1, $2)`,
+      [userId, astraId]
     );
 
     // 추천인 처리
@@ -1883,15 +1918,15 @@ app.post('/api/auth/register', async (req, res) => {
         level: 1,
         grade: 'stardust',
         league: 'dust',
-        orbitNumber: formatOrbitNumber(orbitNumber),
+        astraId: astraId,
         isPioneer,
         pioneerRank,
         stardust: isPioneer ? 2000 : 500,
         stats: { loy: 0, act: 0, soc: 0, eco: 0, cre: 0, int: 0 }
       },
       message: isPioneer
-        ? `🌟 개척자 ${pioneerRank}번으로 등록되었습니다! 성궤번호: ${formatOrbitNumber(orbitNumber)}`
-        : `아스테리아에 오신 것을 환영합니다! 성궤번호: ${formatOrbitNumber(orbitNumber)}`
+        ? `🌟 개척자 ${pioneerRank}번으로 등록되었습니다! 아스트라 번호: ${astraId}`
+        : `아스테리아에 오신 것을 환영합니다! 아스트라 번호: ${astraId}`
     });
   } catch (err) {
     console.error('회원가입 오류:', err);
@@ -1959,8 +1994,8 @@ app.post('/api/auth/login', async (req, res) => {
     );
 
     // 성궤번호 조회
-    const nebula = await pool.query('SELECT serial_number FROM nebulae WHERE user_id = $1', [user.id]);
-    const orbitNumber = nebula.rows[0] ? formatOrbitNumber(nebula.rows[0].serial_number) : null;
+    const nebula = await pool.query('SELECT serial_code FROM nebulae WHERE user_id = $1', [user.id]);
+    const astraId = nebula.rows[0]?.serial_code || null;
 
     res.json({
       accessToken,
@@ -1972,7 +2007,7 @@ app.post('/api/auth/login', async (req, res) => {
         level: user.level,
         grade: user.grade,
         league: user.league,
-        orbitNumber,
+        astraId,
         ap: user.ap,
         cp: user.cp,
         stardust: user.stardust,
@@ -2074,8 +2109,7 @@ async function socialLoginOrRegister({ provider, providerId, email, name, avatar
       }
 
       // 성궤번호 자동 발급
-      const maxOrbit = await pool.query('SELECT COALESCE(MAX(serial_number), 0) AS max_num FROM nebulae');
-      const orbitNumber = parseInt(maxOrbit.rows[0].max_num) + 1;
+      const astraId = await generateAstraId(pool);
 
       // 개척자 순번
       const countResult = await pool.query('SELECT COUNT(*) FROM users');
@@ -2092,7 +2126,7 @@ async function socialLoginOrRegister({ provider, providerId, email, name, avatar
       userId = userResult.rows[0].id;
 
       // 성궤 자동 생성
-      await pool.query('INSERT INTO nebulae (user_id, serial_number) VALUES ($1, $2)', [userId, orbitNumber]);
+      await pool.query('INSERT INTO nebulae (user_id, serial_code) VALUES ($1, $2)', [userId, astraId]);
     }
 
     // 소셜 연동 정보 저장
@@ -2107,7 +2141,7 @@ async function socialLoginOrRegister({ provider, providerId, email, name, avatar
 
   // 유저 정보 조회
   const userInfo = await pool.query(
-    `SELECT u.*, n.serial_number FROM users u LEFT JOIN nebulae n ON n.user_id = u.id WHERE u.id = $1`,
+    `SELECT u.*, n.serial_code AS astra_id FROM users u LEFT JOIN nebulae n ON n.user_id = u.id WHERE u.id = $1`,
     [userId]
   );
   const user = userInfo.rows[0];
@@ -2133,7 +2167,7 @@ async function socialLoginOrRegister({ provider, providerId, email, name, avatar
       level: user.level,
       grade: user.grade,
       league: user.league,
-      orbitNumber: user.serial_number ? formatOrbitNumber(user.serial_number) : null,
+      astraId: user.astra_id || null,
       isPioneer: user.is_pioneer,
       pioneerRank: user.pioneer_rank,
       stardust: user.stardust,
@@ -2335,7 +2369,7 @@ app.post('/api/auth/logout', authenticateToken, async (req, res) => {
 app.get('/api/auth/me', authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT u.*, n.serial_number, n.evolution_stage, n.theme, n.cultural_power, n.resonance_index
+      `SELECT u.*, n.serial_code AS astra_id, n.evolution_stage, n.theme, n.cultural_power, n.resonance_index
        FROM users u
        LEFT JOIN nebulae n ON n.user_id = u.id
        WHERE u.id = $1`,
@@ -2346,7 +2380,7 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
 
     // 비밀번호 및 민감 정보 제외
     const { password, login_fail_count, locked_until, ...safe } = user;
-    safe.orbitNumber = user.serial_number ? formatOrbitNumber(user.serial_number) : null;
+    safe.astraId = user.astra_id || null;
     safe.stats = {
       loy: user.stat_loy, act: user.stat_act, soc: user.stat_soc,
       eco: user.stat_eco, cre: user.stat_cre, int: user.stat_int,
@@ -2428,7 +2462,7 @@ app.get('/api/user/profile/:id', async (req, res) => {
               u.stat_loy, u.stat_act, u.stat_soc, u.stat_eco, u.stat_cre, u.stat_int,
               u.archetype, u.is_pioneer, u.pioneer_rank, u.ap, u.cp, u.stardust,
               u.fandom_id, u.unit_id, u.created_at,
-              n.serial_number, n.evolution_stage, n.cultural_power,
+              n.serial_code AS astra_id, n.evolution_stage, n.cultural_power,
               f.name AS fandom_name, f.emoji AS fandom_emoji
        FROM users u
        LEFT JOIN nebulae n ON n.user_id = u.id
@@ -2452,7 +2486,7 @@ app.get('/api/user/profile/:id', async (req, res) => {
       level: user.level,
       grade: user.grade,
       league: user.league,
-      orbitNumber: user.serial_number ? formatOrbitNumber(user.serial_number) : null,
+      astraId: user.astra_id || null,
       isPioneer: user.is_pioneer,
       pioneerRank: user.pioneer_rank,
       stats,
@@ -3152,7 +3186,7 @@ app.get('/api/nebula/:userId', authMiddleware, async (req, res) => {
   try {
     const targetId = parseInt(req.params.userId);
     const nebula = await pool.query(
-      `SELECT n.serial_number, n.evolution_stage, n.theme, n.bg_color, n.accent_color,
+      `SELECT n.serial_code AS astra_id, n.evolution_stage, n.theme, n.bg_color, n.accent_color,
               n.visitor_count, n.total_hearts, n.cultural_power, n.resonance_index,
               n.has_advent, n.advent_message, n.items, n.guestbook,
               u.nickname, u.emoji, u.level, u.grade, u.archetype,
