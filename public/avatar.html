@@ -555,10 +555,12 @@ html,body {
 // DATA
 // ════════════════════════════════════
 const FACES = [
-  {id:'f1',emoji:'🟡',name:'둥근형',unlocked:true},
-  {id:'f2',emoji:'🔶',name:'계란형',unlocked:true},
-  {id:'f3',emoji:'🔷',name:'각진형',unlocked:true},
-  {id:'f4',emoji:'⬡',name:'하트형',unlocked:true},
+  {id:'m1',emoji:'🟡',name:'루카 (남)',unlocked:true},
+  {id:'m2',emoji:'🔶',name:'제이 (남)',unlocked:true},
+  {id:'m3',emoji:'🔷',name:'코코 (남)',unlocked:true},
+  {id:'f1',emoji:'🌸',name:'아리 (여)',unlocked:true},
+  {id:'f2',emoji:'💜',name:'세나 (여)',unlocked:true},
+  {id:'f3',emoji:'🌙',name:'루나 (여)',unlocked:true},
   {id:'f5',emoji:'🫧',name:'청순형',unlocked:false,req:'Lv.20'},
   {id:'f6',emoji:'💫',name:'요정형',unlocked:false,req:'상점'},
   {id:'f7',emoji:'🌙',name:'신비형',unlocked:false,req:'Lv.40'},
@@ -860,8 +862,12 @@ function getBaseSVG(base){
 }
 
 function renderAvatarLayers(){
-  const base = localStorage.getItem('asteria_avatar_base') || 'm1';
+  // avatar.face 값을 base SVG 선택에 연결 (없으면 localStorage, 없으면 m1)
+  const base = avatar.face || localStorage.getItem('asteria_avatar_base') || 'm1';
   const aura = AURAS.find(a=>a.id===avatar.aura) || AURAS[0];
+
+  // base 변경 시 localStorage 동기화
+  localStorage.setItem('asteria_avatar_base', base);
 
   // 아우라 레이어
   document.getElementById('layer-aura').innerHTML = `
@@ -871,15 +877,15 @@ function renderAvatarLayers(){
       box-shadow:0 0 50px ${aura.color}30">
     </div>`;
 
-  // 몸통(베이스 SVG) 레이어
+  // 몸통(베이스 SVG) 레이어 — face 선택에 따라 교체
   document.getElementById('layer-body').innerHTML = getBaseSVG(base);
 
-  // 의상/헤어 레이어 — SVG 아바타 시스템으로 전환 중, 이모지 겹침 방지
+  // 의상/헤어 레이어 — SVG 아바타 전환 중, 이모지 겹침 방지로 비움
   document.getElementById('layer-top').innerHTML = '';
   document.getElementById('layer-bottom').innerHTML = '';
   document.getElementById('layer-hair').innerHTML = '';
 
-  // 액세서리 레이어
+  // 액세서리 레이어 (위치 기반이라 유지)
   const crown  = avatar.acc_crown  ? ACCESSORIES.crown.find(c=>c.id===avatar.acc_crown)   : null;
   const wing   = avatar.acc_wing   ? ACCESSORIES.wing.find(w=>w.id===avatar.acc_wing)     : null;
   const weapon = avatar.acc_weapon ? ACCESSORIES.weapon.find(w=>w.id===avatar.acc_weapon) : null;
@@ -1191,8 +1197,7 @@ function renderAstraId(el, serial) {
 // 페이지 로드 시 번호 즉시 표시
 // asteria_serial 없으면 state.serial 또는 기본값 사용
 const psInit = document.getElementById('previewSerial');
-const serialVal = localStorage.getItem('asteria_serial') ||
-                  (typeof state !== 'undefined' && state.serial) || '';
+const serialVal = localStorage.getItem('asteria_serial') || 'AA0001';
 renderAstraId(psInit, serialVal);
 </script>
 
