@@ -709,7 +709,7 @@ let avatar = {
   name: '별빛 탐험가',
   emoji: '🌟',
   league: 'dust',
-  face: 'f1',
+  face: 'm1',
   skin: '#FDBCB4',
   hair: 'h1',
   hairColor: '#1a1a1a',
@@ -1174,8 +1174,9 @@ if(!savedBase) window.location.href = '/avatar-select.html';
 // 저장된 아바타 불러오기
 const saved=localStorage.getItem('asteria_avatar');
 if(saved) Object.assign(avatar,JSON.parse(saved));
-// face 값이 없으면 asteria_avatar_base 로 초기화
-if(!avatar.face) avatar.face = localStorage.getItem('asteria_avatar_base') || 'm1';
+if(!avatar.face || !['m1','m2','m3','f1','f2','f3'].includes(avatar.face)){
+  avatar.face = localStorage.getItem('asteria_avatar_base') || 'm1';
+}
 
 updateLeagueColor();
 renderFace();
