@@ -1097,9 +1097,13 @@ document.addEventListener('keydown',e=>{
 // SAVE
 // ════════════════════════════════════
 function saveAvatar(){
-  // avatar.face 가 실제 SVG base 키이므로 asteria_avatar_base 도 함께 저장
   if(avatar.face) localStorage.setItem('asteria_avatar_base', avatar.face);
   localStorage.setItem('asteria_avatar', JSON.stringify(avatar));
+  if (typeof BroadcastChannel !== 'undefined') {
+    const ch = new BroadcastChannel('asteria_avatar_sync');
+    ch.postMessage({ type: 'AVATAR_UPDATED', base: avatar.face || 'm1' });
+    ch.close();
+  }
   burst(); showToast('✨ 아바타가 저장됐어요!');
 }
 

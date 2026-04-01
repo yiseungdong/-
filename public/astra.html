@@ -582,6 +582,7 @@ body::-webkit-scrollbar { width:0; }
 }
 </style>
 <script src="/js/avatar-svgs.js"></script>
+<script src="/js/avatar-renderer.js"></script>
 </head>
 <body style="padding-top:44px">
 
@@ -1357,8 +1358,13 @@ function loadSVGAvatar(){
 }
 
 renderAll();
-loadSVGAvatar();
 drawAvatar();
+if (typeof initAvatarSync === 'function') {
+  initAvatarSync([
+    { id: 'svgAvatarOverlay', options: { scale: 0.55, topOffset: '-15%' } },
+    { id: 'occOrb',           options: { scale: 0.32, topOffset: '-20%' } }
+  ]);
+}
 rotateAlert();
 restoreTab();
 
@@ -1368,22 +1374,6 @@ setInterval(()=>{
   renderRanking();
 },3000);
 
-(function(){
-  const base = localStorage.getItem('asteria_avatar_base') || 'm1';
-  const el = document.getElementById('occOrb');
-  if(el && typeof getBaseSVG === 'function'){
-    // occOrb는 64x64 원 — SVG를 원 안에 딱 맞게 중앙 배치
-    el.style.position = 'relative';
-    el.style.overflow = 'hidden';
-    el.innerHTML = '<div style="' +
-      'position:absolute;' +
-      'width:200px;height:250px;' +
-      'top:50%;left:50%;' +
-      'transform:translate(-50%,-20%) scale(0.32);' +
-      'transform-origin:center top;' +
-    '">' + getBaseSVG(base) + '</div>';
-  }
-})();
 
 function renderAstraId(el, serial) {
   if(!el || !serial) return;

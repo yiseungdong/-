@@ -323,6 +323,7 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 .bug-cancel{background:transparent;border:1px solid rgba(200,175,80,0.2)!important;color:#e8ecf4}
 </style>
 <script src="/js/avatar-svgs.js"></script>
+<script src="/js/avatar-renderer.js"></script>
 </head>
 <body style="padding-top:44px">
 
@@ -577,6 +578,7 @@ function closeLoginModal(){document.getElementById('loginModal').classList.remov
 let curUser=null;
 function doLogin(){
   const nick=document.getElementById('loginNick').value.trim()||'별빛 탐험가';
+  localStorage.setItem('asteria_nick', nick);
   const emoji=document.getElementById('loginEmoji').value.trim()||'🌟';
   curUser={nick,emoji};
   // 상단 헤더 업데이트
@@ -585,20 +587,9 @@ function doLogin(){
   // 아바타 활성화
   const av=document.getElementById('avnode');
   av.style.display='flex';
-  const avbody = document.getElementById('avbody');
-  if(avbody){
-    const base = localStorage.getItem('asteria_avatar_base') || 'm1';
-    // avbody는 52x52 원 — SVG를 원 안에 딱 맞게 중앙 배치
-    avbody.style.position = 'relative';
-    avbody.style.overflow = 'hidden';
-    avbody.innerHTML = '<div style="' +
-      'position:absolute;' +
-      'width:200px;height:250px;' +
-      'top:50%;left:50%;' +
-      'transform:translate(-50%,-48%) scale(0.45);' +
-      'transform-origin:center top;' +
-    '">' + getBaseSVG(base) + '</div>';
-}
+  if (typeof renderAvatarToEl === 'function') {
+    renderAvatarToEl('avbody', { scale: 0.45, topOffset: '-48%' });
+  }
   document.getElementById('avname').textContent=nick;
   function renderAstraId(el, serial) {
     if(!el || !serial) return;
@@ -1084,7 +1075,24 @@ function updatePromotionBars(league) {
 }
 
 // 입장 첫화면을 퀘이사로 통일
-window.addEventListener('DOMContentLoaded', () => { switchLeague('quasar'); });
+window.addEventListener('DOMContentLoaded', () => {
+  switchLeague('quasar');
+  const token = localStorage.getItem('accessToken');
+  const nick = localStorage.getItem('asteria_nick') || '';
+  if (token && nick) {
+    const avnode = document.getElementById('avnode');
+    if (avnode) avnode.style.display = 'flex';
+    const avname = document.getElementById('avname');
+    if (avname) avname.textContent = nick;
+    const loginBtn = document.getElementById('loginBtn');
+    if (loginBtn) { loginBtn.textContent = '👤 ' + nick; loginBtn.onclick = null; }
+  }
+  if (typeof initAvatarSync === 'function') {
+    initAvatarSync([
+      { id: 'avbody', options: { scale: 0.45, topOffset: '-48%' } }
+    ]);
+  }
+});
 
 // ══════════════════════════════════════════════
 //  별빛 배경 스크립트
