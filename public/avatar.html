@@ -1178,12 +1178,8 @@ if(!savedBase) window.location.href = '/avatar-select.html';
 // 저장된 아바타 불러오기
 const saved=localStorage.getItem('asteria_avatar');
 if(saved) Object.assign(avatar,JSON.parse(saved));
-
-// avatar.face 가 없거나 SVG base 키가 아니면 asteria_avatar_base 로 초기화
-const validBases = ['m1','m2','m3','f1','f2','f3'];
-if(!avatar.face || !validBases.includes(avatar.face)){
-  avatar.face = localStorage.getItem('asteria_avatar_base') || 'm1';
-}
+// face 값이 없으면 asteria_avatar_base 로 초기화
+if(!avatar.face) avatar.face = localStorage.getItem('asteria_avatar_base') || 'm1';
 
 updateLeagueColor();
 renderFace();
