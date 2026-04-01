@@ -1008,9 +1008,20 @@ function buildAvatar() {
   if(myAvatarMesh) { roomGroup.remove(myAvatarMesh); myAvatarMesh=null; avatarHead=null; }
   const group = new THREE.Group();
 
-  const skinColor = 0xfce4d6;
-  const bodyColor = 0xc084fc;
-  const hairColor = 0x7c3aed;
+  // asteria_avatar_base 값에 따라 캐릭터 색상 결정
+  const base = localStorage.getItem('asteria_avatar_base') || 'm1';
+  const CHAR_COLORS = {
+    m1: { skin: 0xfce4d6, body: 0xf0c040, hair: 0x7c3aed }, // 루카 — 노란 옷, 보라 머리
+    m2: { skin: 0xfce4d6, body: 0xff6b6b, hair: 0x333333 }, // 제이 — 빨간 옷, 검정 머리
+    m3: { skin: 0xfde8c8, body: 0x38bdf8, hair: 0x4a90d9 }, // 코코 — 하늘 옷, 파랑 머리
+    f1: { skin: 0xfce4d6, body: 0xff85c2, hair: 0xc084fc }, // 아리 — 핑크 옷, 보라 머리
+    f2: { skin: 0xfde8c8, body: 0xa78bfa, hair: 0x6d28d9 }, // 세나 — 보라 옷, 진보라 머리
+    f3: { skin: 0xfce4d6, body: 0x34d399, hair: 0x1a1a2e }, // 루나 — 초록 옷, 검정 머리
+  };
+  const cc = CHAR_COLORS[base] || CHAR_COLORS.m1;
+  const skinColor = cc.skin;
+  const bodyColor = cc.body;
+  const hairColor = cc.hair;
   const skinMat = new THREE.MeshStandardMaterial({color:skinColor, roughness:0.6, metalness:0.02});
   const bodyMat = new THREE.MeshStandardMaterial({color:bodyColor, emissive:bodyColor, emissiveIntensity:0.1, roughness:0.4, metalness:0.15});
   const hairMat = new THREE.MeshStandardMaterial({color:hairColor, emissive:hairColor, emissiveIntensity:0.08, roughness:0.5, metalness:0.1});
@@ -2349,10 +2360,15 @@ async function submitBugReport(){var t=localStorage.getItem('accessToken');if(!t
 <script src="/js/avatar-svgs.js"></script>
 <script src="/js/avatar-renderer.js"></script>
 <script>
-if (typeof initAvatarSync === 'function') {
-  initAvatarSync([
-    { id: 'roomAvatar', options: { scale: 0.4, topOffset: '-25%' } }
-  ]);
+// BroadcastChannel 수신 — avatar.html에서 저장 시 3D 아바타 색상 즉시 반영
+if (typeof BroadcastChannel !== 'undefined') {
+  const avatarCh = new BroadcastChannel('asteria_avatar_sync');
+  avatarCh.onmessage = function(e) {
+    if (e.data && e.data.type === 'AVATAR_UPDATED') {
+      // buildAvatar 재호출로 색상 즉시 갱신
+      if (typeof buildAvatar === 'function') buildAvatar();
+    }
+  };
 }
 </script>
 </body>
