@@ -1366,10 +1366,20 @@ setInterval(()=>{
   renderRanking();
 },3000);
 
-(function(){  const base = localStorage.getItem('asteria_avatar_base') || 'm1';
+(function(){
+  const base = localStorage.getItem('asteria_avatar_base') || 'm1';
   const el = document.getElementById('occOrb');
   if(el && typeof getBaseSVG === 'function'){
-    el.innerHTML = '<div style="transform:scale(0.32);transform-origin:top left;width:200px;height:250px;margin-top:-5px;margin-left:-36px">' + getBaseSVG(base) + '</div>';
+    // occOrb는 64x64 원 — SVG를 원 안에 딱 맞게 중앙 배치
+    el.style.position = 'relative';
+    el.style.overflow = 'hidden';
+    el.innerHTML = '<div style="' +
+      'position:absolute;' +
+      'width:200px;height:250px;' +
+      'top:50%;left:50%;' +
+      'transform:translate(-50%,-52%) scale(0.28);' +
+      'transform-origin:center top;' +
+    '">' + getBaseSVG(base) + '</div>';
   }
 })();
 </script>
