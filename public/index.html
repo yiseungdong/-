@@ -584,10 +584,19 @@ function doLogin(){
   // 아바타 활성화
   const av=document.getElementById('avnode');
   av.style.display='flex';
-  const avbody=document.getElementById('avbody');
-if(avbody){
-  const base=localStorage.getItem('asteria_avatar_base')||'m1';
-  avbody.innerHTML=`<div style="transform:scale(0.25);transform-origin:top left;width:280px;height:350px;margin-top:-15px;margin-left:-55px">${getBaseSVG(base)}</div>`;
+  const avbody = document.getElementById('avbody');
+  if(avbody){
+    const base = localStorage.getItem('asteria_avatar_base') || 'm1';
+    // avbody는 52x52 원 — SVG를 원 안에 딱 맞게 중앙 배치
+    avbody.style.position = 'relative';
+    avbody.style.overflow = 'hidden';
+    avbody.innerHTML = '<div style="' +
+      'position:absolute;' +
+      'width:200px;height:250px;' +
+      'top:50%;left:50%;' +
+      'transform:translate(-50%,-52%) scale(0.22);' +
+      'transform-origin:center top;' +
+    '">' + getBaseSVG(base) + '</div>';
 }
   document.getElementById('avname').textContent=nick;
   // 채팅 활성화
