@@ -600,6 +600,14 @@ function doLogin(){
     '">' + getBaseSVG(base) + '</div>';
 }
   document.getElementById('avname').textContent=nick;
+  function renderAstraId(el, serial) {
+    if(!el || !serial) return;
+    const prefix = serial.slice(0, 2);
+    const num = serial.slice(2);
+    el.innerHTML =
+      '<span style="color:#c084fc;font-family:\'Orbitron\',monospace;font-weight:700;">' + prefix + '</span>' +
+      '<span style="color:#f0c040;font-family:\'Orbitron\',monospace;font-weight:700;">' + num + '</span>';
+  }
   renderAstraId(document.getElementById('avserial'), localStorage.getItem('asteria_serial')||'');
   // 채팅 활성화
   const ci=document.getElementById('chatInput');
@@ -1148,15 +1156,6 @@ window.addEventListener('DOMContentLoaded', () => { switchLeague('quasar'); });
   }
   loop();
 })();
-
-function renderAstraId(el, serial) {
-  if(!el || !serial) return;
-  const prefix = serial.slice(0, 2);
-  const num = serial.slice(2);
-  el.innerHTML =
-    '<span style="color:#c084fc;font-family:\'Orbitron\',monospace;font-weight:700;">' + prefix + '</span>' +
-    '<span style="color:#f0c040;font-family:\'Orbitron\',monospace;font-weight:700;">' + num + '</span>';
-}
 </script>
 </body>
 </html>

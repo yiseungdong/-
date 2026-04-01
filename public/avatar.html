@@ -1187,10 +1187,6 @@ document.getElementById('avatarContainer').addEventListener('click', function(){
   this.style.transform = this.style.transform === 'scale(1.15)' ? 'scale(1)' : 'scale(1.15)';
 });
 
-// 페이지 로드 시 번호 즉시 표시
-const psInit = document.getElementById('previewSerial');
-renderAstraId(psInit, localStorage.getItem('asteria_serial') || '');
-
 function renderAstraId(el, serial) {
   if(!el || !serial) return;
   const prefix = serial.slice(0, 2);
@@ -1199,6 +1195,10 @@ function renderAstraId(el, serial) {
     '<span style="color:#c084fc;font-family:\'Orbitron\',monospace;font-weight:700;">' + prefix + '</span>' +
     '<span style="color:#f0c040;font-family:\'Orbitron\',monospace;font-weight:700;">' + num + '</span>';
 }
+
+// 페이지 로드 시 번호 즉시 표시
+const psInit = document.getElementById('previewSerial');
+renderAstraId(psInit, localStorage.getItem('asteria_serial') || '');
 </script>
 
 /* ══════════════════════════
