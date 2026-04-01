@@ -873,28 +873,11 @@ function renderAvatarLayers(){
   // 몸통(베이스 SVG) 레이어 — face 선택에 따라 교체
   document.getElementById('layer-body').innerHTML = getBaseSVG(base);
 
-  // 의상 레이어 — SVG 아바타 위 정확한 위치에 표시
-  const topItem = (OUTFITS.top||[]).find(o=>o.id===avatar.outfit_top);
-  const botItem = (OUTFITS.bottom||[]).find(o=>o.id===avatar.outfit_bottom);
-  document.getElementById('layer-top').innerHTML = topItem
-    ? `<div style="position:absolute;top:130px;left:50%;transform:translateX(-50%);font-size:48px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.6))">${topItem.emoji}</div>` : '';
-  document.getElementById('layer-bottom').innerHTML = botItem
-    ? `<div style="position:absolute;top:195px;left:50%;transform:translateX(-50%);font-size:36px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.6))">${botItem.emoji}</div>` : '';
-
-  // 헤어 레이어 — 머리 위치에 맞게 표시
-  const hairItem = HAIRS.find(h=>h.id===avatar.hair);
-  document.getElementById('layer-hair').innerHTML = hairItem
-    ? `<div style="position:absolute;top:18px;left:50%;transform:translateX(-50%);font-size:40px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.6))">${hairItem.emoji}</div>` : '';
-
-  // 액세서리 레이어
-  const crown  = avatar.acc_crown  ? ACCESSORIES.crown.find(c=>c.id===avatar.acc_crown)   : null;
-  const wing   = avatar.acc_wing   ? ACCESSORIES.wing.find(w=>w.id===avatar.acc_wing)     : null;
-  const weapon = avatar.acc_weapon ? ACCESSORIES.weapon.find(w=>w.id===avatar.acc_weapon) : null;
-  document.getElementById('layer-acc').innerHTML = `
-    ${crown  ? `<div style="position:absolute;top:8px;left:50%;transform:translateX(-50%);font-size:28px">${crown.emoji}</div>`  : ''}
-    ${wing   ? `<div style="position:absolute;top:110px;right:8px;font-size:28px">${wing.emoji}</div>`                           : ''}
-    ${weapon ? `<div style="position:absolute;top:130px;left:8px;font-size:28px">${weapon.emoji}</div>`                          : ''}
-  `;
+  // 의상/헤어/액세서리 레이어 — 추후 SVG 기반으로 재설계 예정, 현재 비움
+  document.getElementById('layer-top').innerHTML = '';
+  document.getElementById('layer-bottom').innerHTML = '';
+  document.getElementById('layer-hair').innerHTML = '';
+  document.getElementById('layer-acc').innerHTML = '';
 }
 
 // ════════════════════════════════════
@@ -1092,19 +1075,20 @@ function switchOutfit(type,btn){
 // TAB SWITCH
 // ════════════════════════════════════
 function switchTab(name, btn){
+  // 헤어/의상/액세서리/표정/성장은 준비중
+  const comingSoon = ['hair','outfit','acc','emotion','growth'];
+  if(comingSoon.includes(name)){
+    showToast('🔧 준비중이에요! 곧 업데이트될 예정이에요.');
+    return;
+  }
+
   document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
   btn.classList.add('active');
 
-  // 탭별 렌더
   if(name==='face') renderFace();
-  if(name==='hair') renderHair();
-  if(name==='outfit') renderOutfit(currentOutfitTab);
   if(name==='aura') renderAura();
-  if(name==='acc') renderAcc();
-  if(name==='emotion') renderEmotion();
-  if(name==='growth') renderGrowth();
 }
 
 // ════════════════════════════════════
