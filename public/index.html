@@ -496,6 +496,7 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
           <div class="av-chat" id="avchat"></div>
           <div class="av-body" id="avbody" style="overflow:hidden;padding:0;"></div>
           <div class="av-name" id="avname"></div>
+          <div id="avserial" style="font-size:9px;letter-spacing:1px;text-align:center;margin-top:1px;"></div>
         </div>
       </div>
     </div>
@@ -599,6 +600,7 @@ function doLogin(){
     '">' + getBaseSVG(base) + '</div>';
 }
   document.getElementById('avname').textContent=nick;
+  renderAstraId(document.getElementById('avserial'), localStorage.getItem('asteria_serial')||'');
   // 채팅 활성화
   const ci=document.getElementById('chatInput');
   ci.disabled=false;ci.placeholder='메시지를 입력하세요...';
@@ -1146,6 +1148,15 @@ window.addEventListener('DOMContentLoaded', () => { switchLeague('quasar'); });
   }
   loop();
 })();
+
+function renderAstraId(el, serial) {
+  if(!el || !serial) return;
+  const prefix = serial.slice(0, 2);
+  const num = serial.slice(2);
+  el.innerHTML =
+    '<span style="color:#c084fc;font-family:\'Orbitron\',monospace;font-weight:700;">' + prefix + '</span>' +
+    '<span style="color:#f0c040;font-family:\'Orbitron\',monospace;font-weight:700;">' + num + '</span>';
+}
 </script>
 </body>
 </html>

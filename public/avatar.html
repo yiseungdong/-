@@ -424,6 +424,7 @@ html,body {
     </div>
     <div class="preview-info">
       <div class="preview-name" id="previewName">별빛 탐험가</div>
+      <div id="previewSerial" style="font-size:11px;letter-spacing:2px;margin-top:2px;margin-bottom:2px;opacity:0.9;"></div>
       <div class="preview-league" id="previewLeague">✨ 더스트 리그</div>
     </div>
     <div class="auto-growth-bar">
@@ -1185,6 +1186,19 @@ renderAvatarLayers();
 document.getElementById('avatarContainer').addEventListener('click', function(){
   this.style.transform = this.style.transform === 'scale(1.15)' ? 'scale(1)' : 'scale(1.15)';
 });
+
+// 페이지 로드 시 번호 즉시 표시
+const psInit = document.getElementById('previewSerial');
+renderAstraId(psInit, localStorage.getItem('asteria_serial') || '');
+
+function renderAstraId(el, serial) {
+  if(!el || !serial) return;
+  const prefix = serial.slice(0, 2);
+  const num = serial.slice(2);
+  el.innerHTML =
+    '<span style="color:#c084fc;font-family:\'Orbitron\',monospace;font-weight:700;">' + prefix + '</span>' +
+    '<span style="color:#f0c040;font-family:\'Orbitron\',monospace;font-weight:700;">' + num + '</span>';
+}
 </script>
 
 /* ══════════════════════════

@@ -670,8 +670,7 @@ body::-webkit-scrollbar { width:0; }
 </div>
           <div class="avatar-info">
             <div class="av-name" id="avName">별빛 탐험가</div>
-            <div id="avSerial" style="font-family:'Orbitron',monospace;font-size:11px;color:var(--accent);opacity:0.7;letter-spacing:1px;margin-bottom:2px;"></div>
-            <div class="av-grade" id="avGrade">SPIRIT · 정체성의 확립</div>
+            <div id="avSerial" style="font-size:11px;letter-spacing:2px;margin-top:2px;margin-bottom:4px;opacity:0.9;"></div>
             <div class="av-league-badge">
               <span class="league-icon" id="leagueIcon">🌠</span>
               <span class="league-name" id="leagueName">더스트 리그</span>
@@ -1027,7 +1026,8 @@ function renderAll(){
   const sb=document.getElementById('stageBg');if(sb)sb.style.background=league.bg;
   renderOrbits(league);
   const an=document.getElementById('avName');if(an)an.textContent=state.name;
-  const avs=document.getElementById('avSerial');if(avs)avs.textContent=localStorage.getItem('asteria_serial')||state.serial||'';
+  const avs=document.getElementById('avSerial');
+  renderAstraId(avs, localStorage.getItem('asteria_serial')||state.serial||'');
   const ag=document.getElementById('avGrade');
   if(ag){ag.textContent=grade.key.toUpperCase()+' · '+grade.sub;ag.style.color=grade.color;
     ag.style.border='1px solid '+grade.color+'40';ag.style.padding='3px 12px';
@@ -1379,11 +1379,20 @@ setInterval(()=>{
       'position:absolute;' +
       'width:200px;height:250px;' +
       'top:50%;left:50%;' +
-      'transform:translate(-50%,-30%) scale(0.36);' +
+      'transform:translate(-50%,-20%) scale(0.32);' +
       'transform-origin:center top;' +
     '">' + getBaseSVG(base) + '</div>';
   }
 })();
+
+function renderAstraId(el, serial) {
+  if(!el || !serial) return;
+  const prefix = serial.slice(0, 2);
+  const num = serial.slice(2);
+  el.innerHTML =
+    '<span style="color:#c084fc;font-family:\'Orbitron\',monospace;font-weight:700;">' + prefix + '</span>' +
+    '<span style="color:#f0c040;font-family:\'Orbitron\',monospace;font-weight:700;">' + num + '</span>';
+}
 </script>
 </body>
 </html>
