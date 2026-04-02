@@ -2265,7 +2265,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   // 내 아바타 SVG 렌더 + BroadcastChannel 실시간 동기화
   if (typeof renderAvatarCard === 'function') {
     renderAvatarCard('fandomMyAvBody', {
-      size: 'xs',
+      size: 'md',
       layout: 'vertical',
       showName: true,
       showLevel: true,
@@ -2277,7 +2277,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   }
   if (typeof initAvatarCardSync === 'function') {
     initAvatarCardSync([
-      { id: 'fandomMyAvBody', options: { size: 'xs', layout: 'vertical', showName: true, showLevel: true, showLeague: false, showAura: false, showSerial: false, nameSize: '9px' } }
+      { id: 'fandomMyAvBody', options: { size: 'md', layout: 'vertical', showName: true, showLevel: true, showLeague: false, showAura: false, showSerial: false, nameSize: '9px' } }
     ]);
   }
   /* 진입 애니메이션 먼저 처리, Canvas는 나중에 시작 */
