@@ -1422,6 +1422,8 @@ function animate() {
     updateArtistTag();
     updateArtistBubblePos();
   }
+  // 내 말풍선 위치 업데이트
+  if(myBubbleEl) updateMyBubblePos();
 
   // ── Items float ──
   if(roomGroup) {
@@ -2657,14 +2659,43 @@ function dismissArtist(){
   showToast('🎤 아티스트가 돌아갔어요');
 }
 
+var myBubbleEl = null;
+function showMyBubble(text){
+  if(myBubbleEl) myBubbleEl.remove();
+  var b = document.createElement('div');
+  b.className = 'artist-bubble';
+  b.style.background = 'rgba(192,132,252,0.15)';
+  b.style.borderColor = 'rgba(192,132,252,0.4)';
+  b.style.color = '#c084fc';
+  b.textContent = text;
+  b.id = 'myBubble';
+  document.getElementById('canvasContainer').appendChild(b);
+  myBubbleEl = b;
+  clearTimeout(b._t);
+  b._t = setTimeout(function(){ if(b.parentNode) b.remove(); myBubbleEl=null; }, 4000);
+}
+
+function updateMyBubblePos(){
+  if(!myAvatarMesh || !myBubbleEl || !camera || !renderer) return;
+  var pos = new THREE.Vector3(myAvatarMesh.position.x, myAvatarMesh.position.y+1.2, myAvatarMesh.position.z);
+  pos.project(camera);
+  var cvs = renderer.domElement;
+  var sx = (pos.x*0.5+0.5)*cvs.clientWidth;
+  var sy = (-pos.y*0.5+0.5)*cvs.clientHeight;
+  myBubbleEl.style.left = sx+'px';
+  myBubbleEl.style.top = sy+'px';
+  if(pos.z >= 1) myBubbleEl.style.opacity = '0';
+  else myBubbleEl.style.opacity = '1';
+}
+
 // 메시지 전송 (Claude API)
 function sendArtistMsg(){
   var input = document.getElementById('artistInput');
   var msg = input.value.trim();
   if(!msg || !artistActive) return;
   input.value = '';
-  // 내 말풍선은 내 아바타 위에 (간단히 토스트)
-  showToast('💬 나: ' + msg);
+  // 내 말풍선은 내 아바타 위에
+  showMyBubble(msg);
   // 아티스트 응답 (Claude API 호출)
   fetch('https://api.anthropic.com/v1/messages', {
     method:'POST',
