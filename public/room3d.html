@@ -90,7 +90,7 @@ html,body {
 .edit-toolbar {
   display:none; position:absolute; bottom:0; left:0; right:0; z-index:150;
   background:rgba(5,8,20,.95); border-top:1px solid var(--border);
-  backdrop-filter:blur(12px); flex-direction:column;
+  backdrop-filter:blur(12px); flex-direction:column; max-height:40vh; overflow-y:auto;
 }
 .edit-active .edit-toolbar { display:flex; }
 .et-tabs {
@@ -105,7 +105,7 @@ html,body {
 .et-tab.active { color:var(--gold); border-bottom-color:var(--gold); }
 .et-tab:hover { color:var(--text); }
 .et-items {
-  display:flex; gap:8px; padding:10px 14px; overflow-x:auto;
+  display:flex; gap:8px; padding:10px 14px; overflow-x:auto; flex-wrap:wrap;
 }
 .et-items::-webkit-scrollbar { height:3px; }
 .et-items::-webkit-scrollbar-thumb { background:rgba(240,192,64,.3); border-radius:3px; }
@@ -1116,14 +1116,14 @@ function buildAvatar() {
   // renderAvatarCard로 통일된 아바타 표시
   if(typeof renderAvatarCard === 'function') {
     renderAvatarCard('avatarOverlay', {
-      size: 'md',
+      size: 'lg',
       layout: 'vertical',
       showName: true,
       showLevel: true,
       showLeague: false,
       showAura: true,
       showSerial: false,
-      nameSize: '11px'
+      nameSize: '13px'
     });
   }
 
@@ -2470,7 +2470,7 @@ function buildArtistChar() {
 
   var aName = localStorage.getItem('asteria_artist_name') || '아티스트';
   var style = getArtistStyle();
-  var artistSVG = buildArtistSVG(style);
+  var artistSVG = buildArtistSVG(style, 128, 160);
   overlay.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;">' +
     '<div style="position:relative;display:flex;align-items:center;justify-content:center;">' +
     '<div style="position:absolute;inset:-6px;border-radius:50%;box-shadow:0 0 16px '+style.auraColor+'88;animation:asteria-aura-pulse 2s ease-in-out infinite;pointer-events:none;"></div>' +
@@ -2764,7 +2764,7 @@ function saveArtistCustom() {
     if(overlay) {
       var aName = localStorage.getItem('asteria_artist_name') || '아티스트';
       var style = tempArtistStyle;
-      var artistSVG = buildArtistSVG(style);
+      var artistSVG = buildArtistSVG(style, 128, 160);
       overlay.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;">' +
         '<div style="position:relative;display:flex;align-items:center;justify-content:center;">' +
         '<div style="position:absolute;inset:-6px;border-radius:50%;box-shadow:0 0 16px '+style.auraColor+'88;animation:asteria-aura-pulse 2s ease-in-out infinite;pointer-events:none;"></div>' +
@@ -2788,8 +2788,8 @@ if (typeof BroadcastChannel !== 'undefined') {
       // SVG 아바타 갱신
       if(typeof renderAvatarCard === 'function') {
         renderAvatarCard('avatarOverlay', {
-          size: 'md', layout: 'vertical', showName: true, showLevel: true,
-          showLeague: false, showAura: true, showSerial: false, nameSize: '11px'
+          size: 'lg', layout: 'vertical', showName: true, showLevel: true,
+          showLeague: false, showAura: true, showSerial: false, nameSize: '13px'
         });
       }
     }
