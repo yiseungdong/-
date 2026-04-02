@@ -534,12 +534,17 @@ canvas{position:absolute;inset:0;z-index:1}
   border-radius:12px;
   padding:5px 10px;
   font-size:9px; color:var(--text);
-  max-width:160px;
-  word-break:break-word;
+  max-width:200px;
+  min-width:60px;
+  white-space:nowrap;
   backdrop-filter:blur(8px);
   pointer-events:none;
   animation:bubbleIn .2s ease;
   transform:translateX(-50%);
+}
+.speech-bubble.long {
+  white-space:normal;
+  word-break:break-word;
 }
 .speech-bubble::after {
   content:'';
@@ -2471,6 +2476,7 @@ function showSpeechBubble(avatarId, name, msg, isMe) {
 
   const bubble = document.createElement('div');
   bubble.className = 'speech-bubble';
+  if(msg.length > 15) bubble.classList.add('long');
   bubble.style.cssText = `
     left:50%;
     bottom:calc(100% + 6px);
@@ -2497,6 +2503,7 @@ function showNpcBubble(npcIdx, msg) {
 
   const bubble = document.createElement('div');
   bubble.className = 'speech-bubble';
+  if(msg.length > 15) bubble.classList.add('long');
   bubble.style.cssText = 'left:50%;bottom:calc(100% + 4px);';
   bubble.innerHTML = msg;
   npc.appendChild(bubble);
