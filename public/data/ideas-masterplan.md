@@ -1355,3 +1355,59 @@ bcrypt, JWT, 최소수집(이메일+닉네임), 소셜로그인2FA, 욕설필터
 3. 리그별 아바타 차별화
 4. 아티스트 캐릭터 시스템
 5. fandom/room3d 아바타 연동
+
+---
+
+## 스킬 업데이트 요약 (2026.04.02)
+
+### avatar-svgs.js 현재 구조
+- AVATAR_SVGS 객체: m1~m3, f1~f3 총 6개 SVG 정의
+- getBaseSVG(base): SVG 문자열 반환
+- renderAvatarToEl(elementId, options): localStorage에서 base 읽어 요소에 SVG 삽입. options: {scale, topOffset}
+- initAvatarSync(targets): 모든 타겟에 렌더링 + BroadcastChannel 실시간 동기화
+
+### room3d.html 아티스트 시스템 변수/함수
+- artistMesh, artistHead, artistActive, artistTimer, artistTimeLeft
+- artistBubbleEl, myBubbleEl, artistChatHistory[], artistWanderTimer, artistWanderTarget
+- buildArtistChar(): 핑크+골드 3D 캐릭터 생성
+- summonArtist(): 초대 (작명 + 빌드 + 파티클 + 타이머 + 자동이동)
+- dismissArtist(): 퇴장 (제거 + 정리)
+- toggleArtist(): 토글
+- sendArtistMsg(): 내 말풍선 + 1초후 Claude API 호출
+- showArtistBubble(text) / showMyBubble(text): CSS 말풍선
+- startArtistWander(): 30~50초 간격 랜덤 이동
+- updateArtistTag() / updateArtistBubblePos() / updateMyBubblePos(): animate 루프에서 위치 업데이트
+
+### 카메라 설정
+- camTheta=0.3, camPhi=0.55, camRadius=7.5
+- camera.lookAt(0, 0, 0)
+- toggleEdit 종료 시 카메라 리셋 포함
+
+### avatar-select.html
+- public/avatar-select.html 신규 생성됨
+- 6캐릭터 그리드 + 이름 입력 + 시작하기 → avatar.html 이동
+- avatar-svgs.js 로드하여 SVG 미리보기
+
+### localStorage 키 전체 목록
+- asteria_avatar_base: m1~f3
+- asteria_avatar: JSON
+- asteria_nick: 이름
+- asteria_serial: AA0001
+- asteria_artist_name: 아티스트 이름
+- asteria_level: 레벨
+- asteria_league: 리그명
+- asteria_lastTab: astra.html 마지막 탭
+- accessToken: JWT
+
+### 아바타 통일 완료 (2026.04.02)
+- avatar-renderer.js 삭제 (중복 파일)
+- avatar-svgs.js 하나로 통일
+- 전 페이지 initAvatarSync 동기화 적용
+- 변경 파일: astra.html, index.html, fandom.html, room3d.html, nebula.html, shop.html, chat.html
+
+### 다음 작업 순서 (업데이트)
+1. ~~아바타 전 페이지 통일~~ — 완료
+2. ~~shop.html 아바타 SVG 렌더링~~ — 완료
+3. 리그별 아바타 차별화 (테두리/글로우/뱃지)
+4. 아티스트 꾸미기 (프리셋 방식 — 머리색/옷색)
+5. 아바타 헤어/의상 확장 (SVG 레이어 분리 — 큰 작업)
