@@ -1566,13 +1566,15 @@ function toggleEdit() {
     app.classList.add('edit-active');
     renderEditTabs();
     renderEditItems();
-    setTimeout(()=> onResize(), 50);
+    document.getElementById('canvasContainer').style.paddingBottom = '190px';
+    setTimeout(function(){ if(typeof onResize === 'function') onResize(); }, 100);
     showToast('✏️ 아이템을 선택해서 배치하세요!');
   } else {
     app.classList.remove('edit-active');
+    document.getElementById('canvasContainer').style.paddingBottom = '0';
     camTheta = 0.3; camPhi = 0.55; camRadius = 7.5;
     updateCameraPos();
-    setTimeout(()=> onResize(), 50);
+    setTimeout(function(){ if(typeof onResize === 'function') onResize(); }, 100);
     showToast('✓ 꾸미기 완료!');
   }
 }
