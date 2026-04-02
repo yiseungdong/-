@@ -802,7 +802,7 @@ function initThree() {
   camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 100);
   updateCameraPos();
 
-  renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:false });
+  renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:false, preserveDrawingBuffer:true });
   renderer.setSize(w, h);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.shadowMap.enabled = true;
@@ -1749,12 +1749,45 @@ function shareRoom() {
   navigator.clipboard?.writeText('https://asteria.me.kr/room3d.html').then(()=>showToast('🔗 링크 복사됐어요!'));
 }
 function shareToSNS(p) {
-  const url=encodeURIComponent('https://asteria.me.kr/room3d.html');
-  const txt=encodeURIComponent('별빛 탐험가의 3D 방을 구경하세요! 🌟 #아스테리아');
-  if(p==='copy'){navigator.clipboard?.writeText('https://asteria.me.kr/room3d.html').then(()=>showToast('🔗 복사됐어요!'));return;}
-  if(p==='twitter'){window.open(`https://twitter.com/intent/tweet?text=${txt}&url=${url}`,'_blank');return;}
-  if(p==='kakao'){window.open(`https://story.kakao.com/share?url=${url}`,'_blank');return;}
+  var url=encodeURIComponent('https://asteria.me.kr/room3d.html');
+  var txt=encodeURIComponent('별빛 탐험가의 3D 방을 구경하세요! 🌟 #아스테리아');
+  if(p==='copy'){navigator.clipboard?.writeText('https://asteria.me.kr/room3d.html').then(function(){showToast('🔗 복사됐어요!')});return;}
+  if(p==='twitter'){window.open('https://twitter.com/intent/tweet?text='+txt+'&url='+url,'_blank');return;}
+  if(p==='kakao'){window.open('https://story.kakao.com/share?url='+url,'_blank');return;}
+  if(p==='instagram'){
+    try {
+      var canvas = renderer.domElement;
+      renderer.render(scene, camera);
+      canvas.toBlob(function(blob) {
+        if(!blob) { showToast('❌ 캡처 실패'); return; }
+        if(navigator.share && navigator.canShare) {
+          var file = new File([blob], 'asteria-room.png', {type:'image/png'});
+          navigator.share({
+            title: '아스테리아 내 방',
+            text: '별빛 탐험가의 3D 방을 구경하세요! 🌟 #아스테리아',
+            files: [file]
+          }).then(function(){showToast('📤 공유됐어요!')}).catch(function(){
+            downloadBlob(blob);
+          });
+        } else {
+          downloadBlob(blob);
+        }
+      }, 'image/png');
+    } catch(e) { showToast('❌ 캡처 실패'); }
+    return;
+  }
   showToast('📤 공유됐어요!');
+}
+
+function downloadBlob(blob) {
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'asteria-room-' + Date.now() + '.png';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+  showToast('📸 방 스크린샷 저장! 인스타에 올려보세요!');
 }
 
 // ══════════════════════════════════════════
