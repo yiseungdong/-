@@ -494,10 +494,7 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
         <div class="cn" style="left:1700px;top:400px"><div class="cb">📢</div><div class="cn-name">공지 광장</div></div>
         <div class="av" id="avnode" style="display:none;left:1090px;top:680px">
           <div class="av-chat" id="avchat"></div>
-          <div class="av-body" id="avbody" style="overflow:hidden;padding:0;"></div>
-          <div class="av-name" id="avname"></div>
-          <div id="avleague" style="font-size:9px;text-align:center;margin-top:2px;"></div>
-          <div id="avserial" style="font-size:9px;letter-spacing:1px;text-align:center;margin-top:1px;"></div>
+          <div id="indexAvatarCard"></div>
         </div>
       </div>
     </div>
@@ -587,14 +584,9 @@ function doLogin(){
   // 아바타 활성화
   const av=document.getElementById('avnode');
   av.style.display='flex';
-  if (typeof renderAvatarToEl === 'function') {
-    renderAvatarToEl('avbody', { size: 'sm' });
+  if(typeof renderAvatarCard === 'function') {
+    renderAvatarCard('indexAvatarCard', { size:'xs', layout:'vertical', showLevel:false, showLeague:false, showAura:false, showSerial:false });
   }
-  document.getElementById('avname').textContent=nick;
-  var _league = localStorage.getItem('asteria_league') || 'dust';
-  var _li = (typeof LEAGUE_INFO !== 'undefined' && LEAGUE_INFO[_league]) || {icon:'🌫️',name:'더스트',color:'#94a3b8'};
-  var _avleague = document.getElementById('avleague');
-  if(_avleague) _avleague.innerHTML = '<span style="color:'+_li.color+'">'+_li.icon+' '+_li.name+'</span>';
   function renderAstraId(el, serial) {
     if(!el || !serial) return;
     const prefix = serial.slice(0, 2);
@@ -1091,9 +1083,9 @@ window.addEventListener('DOMContentLoaded', () => {
     const loginBtn = document.getElementById('loginBtn');
     if (loginBtn) { loginBtn.textContent = '👤 ' + nick; loginBtn.onclick = null; }
   }
-  if (typeof initAvatarSync === 'function') {
-    initAvatarSync([
-      { id: 'avbody', options: { size: 'sm' } }
+  if(typeof initAvatarCardSync === 'function') {
+    initAvatarCardSync([
+      { id:'indexAvatarCard', options:{ size:'xs', layout:'vertical', showLevel:false, showLeague:false, showAura:false, showSerial:false } }
     ]);
   }
 });

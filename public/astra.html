@@ -660,22 +660,11 @@ body::-webkit-scrollbar { width:0; }
             <div class="orbit-ring"></div>
             <div class="orbit-ring"></div>
           </div>
-          <div style="position:relative;width:280px;height:280px;margin:0 auto">
+          <div style="position:relative;width:280px;margin:0 auto">
   <canvas id="avatarCanvas" width="280" height="280"
     style="position:absolute;inset:0;z-index:1"></canvas>
-  <div id="svgAvatarOverlay"
-    style="position:absolute;inset:0;z-index:2;
-           display:flex;align-items:center;justify-content:center;
-           pointer-events:none"></div>
+  <div id="astraAvatarCard" style="position:relative;z-index:2;pointer-events:none;"></div>
 </div>
-          <div class="avatar-info">
-            <div class="av-name" id="avName">별빛 탐험가</div>
-            <div id="avSerial" style="font-size:11px;letter-spacing:2px;margin-top:2px;margin-bottom:4px;opacity:0.9;"></div>
-            <div class="av-league-badge">
-              <span class="league-icon" id="leagueIcon">🌠</span>
-              <span class="league-name" id="leagueName">더스트 리그</span>
-            </div>
-          </div>
           <div class="level-bar-wrap">
             <div class="level-label">
               <span id="levelText">Lv. 1</span>
@@ -1034,6 +1023,7 @@ function renderAll(){
     ag.style.borderRadius='20px';ag.style.display='inline-block';ag.style.background=grade.color+'12';}
   const li=document.getElementById('leagueIcon');if(li)li.textContent=league.icon;
   const ln=document.getElementById('leagueName');if(ln){ln.textContent=league.name;ln.style.color=league.color;}
+  if(typeof renderAvatarCard === 'function') renderAvatarCard('astraAvatarCard', { size:'xl', layout:'vertical', showSerial:true, showAura:false });
   const le=document.getElementById('levelNum');if(le)le.textContent=level;
   const expCur=state.ap-levelToExpNeeded(level-1);
   const expNeed=levelToExpNeeded(level)-levelToExpNeeded(level-1);
@@ -1352,9 +1342,12 @@ async function submitBugReport(){
 // ═══ 초기화 ═══
 renderAll();
 drawAvatar();
-if (typeof initAvatarSync === 'function') {
-  initAvatarSync([
-    { id: 'svgAvatarOverlay', options: { size: 'xl' } }
+if(typeof renderAvatarCard === 'function') {
+  renderAvatarCard('astraAvatarCard', { size:'xl', layout:'vertical', showSerial:true, showAura:false });
+}
+if(typeof initAvatarCardSync === 'function') {
+  initAvatarCardSync([
+    { id:'astraAvatarCard', options:{ size:'xl', layout:'vertical', showSerial:true, showAura:false } }
   ]);
 }
 rotateAlert();

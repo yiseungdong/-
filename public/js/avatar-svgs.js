@@ -246,8 +246,17 @@ function getAuraCSS(league){
 }
 
 // ═══════════════════════════════════════════════════════
-// 신규: 프로필 카드 렌더러
+// 프로필 카드 렌더러
 // ═══════════════════════════════════════════════════════
+
+var AVATAR_CARD_FONT_SIZES = {
+  'xs':   { name: 10, level: 8,  league: 8,  gap: 4  },
+  'sm':   { name: 12, level: 10, league: 10, gap: 5  },
+  'md':   { name: 14, level: 11, league: 11, gap: 6  },
+  'lg':   { name: 16, level: 12, league: 12, gap: 8  },
+  'xl':   { name: 18, level: 13, league: 13, gap: 10 },
+  'full': { name: 20, level: 14, league: 14, gap: 12 }
+};
 
 function renderAvatarCard(elementId, options){
   var el = document.getElementById(elementId);
@@ -260,41 +269,68 @@ function renderAvatarCard(elementId, options){
   var league = localStorage.getItem('asteria_league') || 'dust';
   var info = LEAGUE_INFO[league] || LEAGUE_INFO['dust'];
   var svg = getBaseSVG(base);
+
+  var sizeKey = opt.size || 'md';
+  var preset = AVATAR_SIZE_PRESETS[sizeKey] || AVATAR_SIZE_PRESETS['md'];
+  var fonts = AVATAR_CARD_FONT_SIZES[sizeKey] || AVATAR_CARD_FONT_SIZES['md'];
+
   var showName = opt.showName !== false;
   var showLevel = opt.showLevel !== false;
   var showLeague = opt.showLeague !== false;
   var showAura = opt.showAura !== false;
-  var avatarSize = opt.avatarSize || 80;
-  var cardW = opt.avatarWidth || 64;
-  var cardH = opt.avatarHeight || 80;
+  var showSerial = opt.showSerial === true;
+  var layout = opt.layout || 'vertical';
+  var clickable = opt.clickable === true;
+  var nameSize = opt.nameSize || (fonts.name + 'px');
+  var levelSize = fonts.level + 'px';
+  var leagueSize = fonts.league + 'px';
+  var gap = fonts.gap;
 
+  var w = preset.width;
+  var h = preset.height;
+  var resizedSvg = svg.replace(/width="200"/, 'width="' + w + '"').replace(/height="250"/, 'height="' + h + '"');
   var auraHTML = showAura ? getAuraCSS(league) : '';
 
-  var html = '<div class="asteria-avatar-card" style="display:flex;flex-direction:column;align-items:center;gap:6px;">';
-
-  // 아바타 + 아우라
-  html += '<div class="aac-avatar-wrap" style="position:relative;width:' + avatarSize + 'px;height:' + avatarSize + 'px;display:flex;align-items:center;justify-content:center;">';
-  html += auraHTML;
-  var resizedSvg = svg.replace(/width="200"/, 'width="' + cardW + '"').replace(/height="250"/, 'height="' + cardH + '"');
-  html += '<div class="aac-avatar" style="position:relative;z-index:1;display:flex;align-items:center;justify-content:center;">' + resizedSvg + '</div>';
-  html += '</div>';
-
-  // 이름
-  if(showName){
-    html += '<div class="aac-name" style="font-size:14px;font-weight:900;color:#e8ecf4;text-align:center;line-height:1.2;">' + nick + '</div>';
+  // 시리얼
+  var serialHTML = '';
+  if(showSerial){
+    var serial = localStorage.getItem('asteria_serial') || '';
+    if(serial){
+      var prefix = serial.slice(0,2);
+      var num = serial.slice(2);
+      serialHTML = '<div style="font-size:10px;letter-spacing:2px;margin-top:1px;"><span style="color:#c084fc;font-family:Orbitron,monospace;font-weight:700;">'+prefix+'</span><span style="color:#f0c040;font-family:Orbitron,monospace;font-weight:700;">'+num+'</span></div>';
+    }
   }
 
-  // 레벨 + 리그
+  var isH = layout === 'horizontal';
+  var cursor = clickable ? 'cursor:pointer;' : '';
+  var onclick = clickable ? ' onclick="window.location.href=\'/avatar.html\'"' : '';
+
+  var html = '<div class="asteria-ac" style="display:flex;' + (isH ? 'align-items:center;' : 'flex-direction:column;align-items:center;') + 'gap:' + gap + 'px;' + cursor + '"' + onclick + '>';
+
+  // 아바타 + 아우라
+  html += '<div class="asteria-ac-wrap" style="position:relative;width:' + w + 'px;height:' + h + 'px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">';
+  html += auraHTML;
+  html += '<div class="asteria-ac-svg" style="position:relative;z-index:1;">' + resizedSvg + '</div>';
+  html += '</div>';
+
+  // 정보
+  html += '<div class="asteria-ac-info" style="' + (isH ? '' : 'text-align:center;') + '">';
+  if(showName){
+    html += '<div style="font-size:' + nameSize + ';font-weight:900;color:#e8ecf4;">' + nick + '</div>';
+  }
+  if(showSerial) html += serialHTML;
   if(showLevel || showLeague){
-    html += '<div style="display:flex;align-items:center;gap:6px;">';
+    html += '<div style="display:flex;align-items:center;' + (isH ? '' : 'justify-content:center;') + 'gap:6px;margin-top:2px;">';
     if(showLevel){
-      html += '<span class="aac-level" style="font-size:11px;color:#c084fc;font-family:\'Orbitron\',monospace;">Lv.' + level + '</span>';
+      html += '<span style="font-size:' + levelSize + ';color:#c084fc;font-family:\'Orbitron\',monospace;">Lv.' + level + '</span>';
     }
     if(showLeague){
-      html += '<span class="aac-league" style="font-size:11px;padding:2px 10px;border-radius:12px;border:1px solid ' + info.color + ';color:' + info.color + ';">' + info.icon + ' ' + info.name + '</span>';
+      html += '<span style="font-size:' + leagueSize + ';padding:2px 8px;border-radius:10px;border:1px solid ' + info.color + ';color:' + info.color + ';">' + info.icon + ' ' + info.name + '</span>';
     }
     html += '</div>';
   }
+  html += '</div>';
 
   html += '</div>';
   el.innerHTML = html;
