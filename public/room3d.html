@@ -2482,7 +2482,17 @@ var artistTimer = null;
 var artistTimeLeft = 0;
 var artistBubbleEl = null;
 var artistWanderTimer = null;
+var artistName = localStorage.getItem('asteria_artist_name') || '아티스트';
 var artistWanderTarget = null;
+
+function setArtistName(name){
+  if(!name || name.trim().length < 2 || name.trim().length > 8){
+    showToast('이름은 2~8글자로 입력해주세요!');
+    return;
+  }
+  artistName = name.trim();
+  localStorage.setItem('asteria_artist_name', artistName);
+}
 
 // 아티스트 3D 캐릭터 빌드 (핑크+골드 테마)
 function buildArtistChar() {
@@ -2586,7 +2596,7 @@ function showArtistBubble(text){
   if(artistBubbleEl) artistBubbleEl.remove();
   var b = document.createElement('div');
   b.className = 'artist-bubble';
-  b.textContent = text;
+  b.innerHTML = '<div style="font-size:8px;color:#f0c040;font-weight:700;margin-bottom:2px">' + (localStorage.getItem('asteria_artist_name')||'아티스트') + '</div>' + text;
   b.id = 'artistBubble';
   document.getElementById('canvasContainer').appendChild(b);
   artistBubbleEl = b;
@@ -2650,7 +2660,7 @@ function summonArtist(){
   var tag = document.createElement('div');
   tag.id = 'artistTag';
   tag.style.cssText = 'position:absolute;top:0;left:0;z-index:71;pointer-events:none;font-family:Orbitron,monospace;text-align:center;transition:opacity .3s';
-  tag.innerHTML = '<div style="font-size:11px;font-weight:900;color:#f0c040;text-shadow:0 0 8px rgba(240,192,64,.5),0 1px 3px rgba(0,0,0,.8);letter-spacing:1px">🎤 아티스트</div>';
+  tag.innerHTML = '<div style="font-size:11px;font-weight:900;color:#f0c040;text-shadow:0 0 8px rgba(240,192,64,.5),0 1px 3px rgba(0,0,0,.8);letter-spacing:1px">🎤 ' + artistName + '</div>';
   document.getElementById('canvasContainer').appendChild(tag);
   // 대화바 표시
   document.getElementById('artistChatBar').classList.add('show');
