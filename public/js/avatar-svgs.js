@@ -125,3 +125,33 @@ const AVATAR_SVGS = {
 };
 
 function getBaseSVG(base){ return AVATAR_SVGS[base] || AVATAR_SVGS['m1']; }
+
+function renderAvatarToEl(elementId, options){
+  var el = document.getElementById(elementId);
+  if(!el) return;
+  var base = localStorage.getItem('asteria_avatar_base') || 'm1';
+  var svg = getBaseSVG(base);
+  var scale = (options && options.scale) || 1;
+  var topOffset = (options && options.topOffset) || '0';
+  el.innerHTML = '<div style="transform:scale(' + scale + ');transform-origin:top center;position:relative;top:' + topOffset + ';display:flex;align-items:center;justify-content:center;">' + svg + '</div>';
+}
+
+function initAvatarSync(targets){
+  if(targets && targets.length){
+    targets.forEach(function(t){
+      renderAvatarToEl(t.id, t.options);
+    });
+  }
+  if(typeof BroadcastChannel !== 'undefined'){
+    var ch = new BroadcastChannel('asteria_avatar_sync');
+    ch.onmessage = function(e){
+      if(e.data && e.data.type === 'AVATAR_UPDATED'){
+        if(targets && targets.length){
+          targets.forEach(function(t){
+            renderAvatarToEl(t.id, t.options);
+          });
+        }
+      }
+    };
+  }
+}
