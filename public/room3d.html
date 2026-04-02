@@ -488,6 +488,47 @@ html,body {
 .dc-nav-cnt{font-size:11px;color:var(--muted);font-family:'Orbitron',monospace}
 @keyframes diarySpark{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--sx),var(--sy)) scale(0);opacity:0}}
 .diary-spark{position:fixed;width:6px;height:6px;border-radius:50%;background:var(--gold);pointer-events:none;z-index:9999;animation:diarySpark .7s ease-out forwards}
+/* 아티스트 말풍선 */
+.artist-bubble {
+  position:absolute; z-index:80; pointer-events:none;
+  background:rgba(240,192,64,0.15); border:1px solid rgba(240,192,64,0.4);
+  border-radius:14px; padding:8px 14px; font-size:11px; color:#f0c040;
+  max-width:220px; word-break:break-word;
+  backdrop-filter:blur(8px);
+  animation:abIn .3s ease;
+  transform:translate(-50%,-100%);
+  text-shadow:0 1px 3px rgba(0,0,0,.6);
+}
+.artist-bubble::after {
+  content:''; position:absolute; bottom:-7px; left:50%;
+  transform:translateX(-50%);
+  border:7px solid transparent;
+  border-top-color:rgba(240,192,64,0.4); border-bottom:none;
+}
+@keyframes abIn { from{opacity:0;transform:translate(-50%,calc(-100% + 8px))} to{opacity:1;transform:translate(-50%,-100%)} }
+/* 아티스트 대화 입력 바 */
+.artist-chat-bar {
+  position:fixed; bottom:60px; left:50%; transform:translateX(-50%);
+  z-index:200; display:none; align-items:center; gap:8px;
+  background:rgba(10,10,22,0.95); border:1px solid rgba(240,192,64,0.3);
+  border-radius:24px; padding:6px 8px 6px 16px;
+  backdrop-filter:blur(10px); width:min(420px,90vw);
+}
+.artist-chat-bar.show { display:flex; }
+.artist-chat-input {
+  flex:1; background:none; border:none; color:var(--text);
+  font-size:13px; font-family:'Noto Sans KR',sans-serif; outline:none;
+}
+.artist-chat-input::placeholder { color:var(--muted); }
+.artist-chat-send {
+  width:32px; height:32px; border-radius:50%;
+  background:linear-gradient(135deg,#f0c040,#c084fc);
+  border:none; color:#030308; font-size:14px; cursor:pointer;
+}
+.artist-timer {
+  font-size:10px; color:#f0c040; font-family:'Orbitron',monospace;
+  letter-spacing:1px;
+}
 </style>
 </head>
 <body style="padding-top:44px">
@@ -569,7 +610,7 @@ html,body {
   <!-- TOP BAR -->
   <div class="topbar">
     <a class="tb-back" href="/">←</a>
-    <div class="tb-title">🏡 별빛 탐험가의 방</div>
+    <div class="tb-title" id="roomTitle">🏡 별빛 탐험가의 방</div>
     <div class="tb-actions">
       <button class="tb-btn tb-share" onclick="shareRoom()">공유 📤</button>
       <button class="tb-btn tb-edit" id="editBtn" onclick="toggleEdit()">꾸미기 ✏️</button>
@@ -587,8 +628,8 @@ html,body {
         <div class="profile-row">
           <div class="profile-av">🌟</div>
           <div class="profile-info">
-            <div class="profile-name">별빛 탐험가</div>
-            <div class="profile-grade">✨ 더스트 리그 · 성진 Lv.23</div>
+            <div class="profile-name" id="roomProfileName">별빛 탐험가</div>
+            <div class="profile-grade" id="roomProfileGrade">✨ 더스트 리그 · Lv.1</div>
             <div class="profile-stats">
               <div class="ps-item">방문 <span id="visitCnt">127</span></div>
               <div class="ps-item">하트 <span id="heartCnt">89</span></div>
@@ -690,6 +731,7 @@ html,body {
           <div class="ctrl-btn" onclick="zoomIn()" title="확대">🔍</div>
           <div class="ctrl-btn" onclick="zoomOut()" title="축소">🔎</div>
           <div class="ctrl-btn" onclick="toggleLight()" title="조명 변경">💡</div>
+          <div class="ctrl-btn" onclick="toggleArtist()" title="아티스트 초대" id="artistBtn">🎤</div>
         </div>
         <!-- 꾸미기 상단 바 -->
         <div class="edit-topbar">
@@ -1177,7 +1219,9 @@ function buildAvatar() {
     tag = document.createElement('div');
     tag.id = 'avatarTag';
     tag.style.cssText = 'position:absolute;top:0;left:0;z-index:70;pointer-events:none;font-family:Orbitron,monospace;text-align:center;transition:opacity .3s';
-    tag.innerHTML = '<div style="font-size:12px;font-weight:900;color:#f0c040;text-shadow:0 0 8px rgba(240,192,64,.4),0 1px 3px rgba(0,0,0,.8);letter-spacing:1px">별빛 탐험가</div><div style="font-size:10px;color:#c084fc;margin-top:2px;text-shadow:0 1px 3px rgba(0,0,0,.8)">Lv.23</div>';
+    var roomNick = localStorage.getItem('asteria_nick') || '별빛 탐험가';
+    var roomLevel = localStorage.getItem('asteria_level') || '1';
+    tag.innerHTML = '<div style="font-size:12px;font-weight:900;color:#f0c040;text-shadow:0 0 8px rgba(240,192,64,.4),0 1px 3px rgba(0,0,0,.8);letter-spacing:1px">' + roomNick + '</div><div style="font-size:10px;color:#c084fc;margin-top:2px;text-shadow:0 1px 3px rgba(0,0,0,.8)">Lv.' + roomLevel + '</div>';
     document.getElementById('canvasContainer').appendChild(tag);
   }
 }
@@ -1364,6 +1408,19 @@ function animate() {
       tag.style.transform = 'translate(-50%,-100%)';
       tag.style.opacity = pos.z < 1 ? '1' : '0';
     }
+  }
+
+  // 아티스트 애니메이션
+  if(artistMesh){
+    var ab=Math.sin(floatTime*0.9)*0.02;
+    artistMesh.position.y=-1.2+ab;
+    if(artistHead){
+      artistHead.rotation.z=Math.sin(floatTime*0.6+2)*0.06;
+      artistHead.rotation.x=Math.sin(floatTime*0.4+1)*0.04;
+    }
+    artistMesh.children.forEach(function(c){if(c.userData.isAura)c.rotation.z=floatTime*0.8;});
+    updateArtistTag();
+    updateArtistBubblePos();
   }
 
   // ── Items float ──
@@ -1756,36 +1813,24 @@ function shareToSNS(p) {
   if(p==='kakao'){window.open('https://story.kakao.com/share?url='+url,'_blank');return;}
   if(p==='instagram'){
     try {
-      var canvas = renderer.domElement;
       renderer.render(scene, camera);
-      canvas.toBlob(function(blob) {
-        if(!blob) { showToast('❌ 캡처 실패'); return; }
-        if(navigator.share && navigator.canShare) {
+      renderer.domElement.toBlob(function(blob) {
+        if(!blob){showToast('❌ 캡처 실패');return;}
+        if(navigator.share && navigator.canShare){
           var file = new File([blob], 'asteria-room.png', {type:'image/png'});
-          navigator.share({
-            title: '아스테리아 내 방',
-            text: '별빛 탐험가의 3D 방을 구경하세요! 🌟 #아스테리아',
-            files: [file]
-          }).then(function(){showToast('📤 공유됐어요!')}).catch(function(){
-            downloadBlob(blob);
-          });
-        } else {
-          downloadBlob(blob);
-        }
+          navigator.share({title:'아스테리아 내 방',text:'별빛 탐험가의 3D 방을 구경하세요! 🌟 #아스테리아',files:[file]}).then(function(){showToast('📤 공유됐어요!')}).catch(function(){downloadBlob(blob)});
+        } else { downloadBlob(blob); }
       }, 'image/png');
-    } catch(e) { showToast('❌ 캡처 실패'); }
+    } catch(e){showToast('❌ 캡처 실패');}
     return;
   }
   showToast('📤 공유됐어요!');
 }
-
-function downloadBlob(blob) {
-  var a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'asteria-room-' + Date.now() + '.png';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+function downloadBlob(blob){
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='asteria-room-'+Date.now()+'.png';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
   URL.revokeObjectURL(a.href);
   showToast('📸 방 스크린샷 저장! 인스타에 올려보세요!');
 }
@@ -1822,6 +1867,15 @@ function showToast(msg) {
 // ══════════════════════════════════════════
 window.addEventListener('load', ()=>{
   initThree();
+  // 프로필 localStorage 연동
+  (function(){
+    var nick=localStorage.getItem('asteria_nick')||'별빛 탐험가';
+    var level=localStorage.getItem('asteria_level')||'1';
+    var league=localStorage.getItem('asteria_league')||'더스트';
+    var pn=document.getElementById('roomProfileName');if(pn)pn.textContent=nick;
+    var pg=document.getElementById('roomProfileGrade');if(pg)pg.textContent='✨ '+league+' 리그 · Lv.'+level;
+    var rt=document.getElementById('roomTitle');if(rt)rt.textContent='🏡 '+nick+'의 방';
+  })();
   renderItems();
   renderThemes();
   renderGuestbook();
@@ -2356,6 +2410,13 @@ window.addEventListener('load', ()=>{
 })();
 </script>
 
+<!-- 아티스트 대화 입력바 -->
+<div class="artist-chat-bar" id="artistChatBar">
+  <div class="artist-timer" id="artistTimer">10:00</div>
+  <input class="artist-chat-input" id="artistInput" placeholder="아티스트에게 말하기..." maxlength="200">
+  <button class="artist-chat-send" onclick="sendArtistMsg()">✦</button>
+</div>
+
 <!-- 버그 리포트 플로팅 버튼 + 모달 -->
 <style>
 .bug-report-btn{position:fixed;bottom:80px;right:20px;width:48px;height:48px;border-radius:50%;background:rgba(5,12,30,0.93);border:1px solid rgba(200,175,80,0.13);color:#4a90d9;font-size:20px;cursor:pointer;z-index:9999;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,0.3);transition:all .3s}
@@ -2392,6 +2453,246 @@ async function submitBugReport(){var t=localStorage.getItem('accessToken');if(!t
 </script>
 <script src="/js/avatar-svgs.js"></script>
 <script src="/js/avatar-renderer.js"></script>
+<script>
+// ══════════════════════════════════════════
+// 아티스트 초대 시스템
+// ══════════════════════════════════════════
+var artistMesh = null;
+var artistHead = null;
+var artistActive = false;
+var artistTimer = null;
+var artistTimeLeft = 0;
+var artistBubbleEl = null;
+
+// 아티스트 3D 캐릭터 빌드 (핑크+골드 테마)
+function buildArtistChar() {
+  if(artistMesh){ roomGroup.remove(artistMesh); artistMesh=null; artistHead=null; }
+  var g = new THREE.Group();
+  var skinMat = new THREE.MeshStandardMaterial({color:0xfce4d6, roughness:0.6, metalness:0.02});
+  var bodyMat = new THREE.MeshStandardMaterial({color:0xf472b6, emissive:0xf472b6, emissiveIntensity:0.15, roughness:0.4, metalness:0.15});
+  var hairMat = new THREE.MeshStandardMaterial({color:0xf0c040, emissive:0xf0c040, emissiveIntensity:0.1, roughness:0.5, metalness:0.1});
+  // 머리
+  var hg = new THREE.Group(); hg.position.y = 0.72;
+  var head = new THREE.Mesh(new THREE.SphereGeometry(0.38,24,20), skinMat); head.castShadow=true; hg.add(head);
+  var hairTop = new THREE.Mesh(new THREE.SphereGeometry(0.40,24,16,0,Math.PI*2,0,Math.PI*0.55), hairMat); hairTop.position.y=0.04; hg.add(hairTop);
+  var hairBack = new THREE.Mesh(new THREE.SphereGeometry(0.36,16,12,0,Math.PI*2,0.3,Math.PI*0.5), hairMat.clone()); hairBack.position.set(0,-0.02,-0.08); hairBack.scale.set(1,1,1.15); hg.add(hairBack);
+  var fringe = new THREE.Mesh(new THREE.BoxGeometry(0.52,0.08,0.15), hairMat.clone()); fringe.position.set(0,0.2,0.28); fringe.rotation.x=0.15; hg.add(fringe);
+  // 눈 (별 모양 눈동자)
+  [[-0.12,0],[0.12,0]].forEach(function(ox){
+    var ew=new THREE.Mesh(new THREE.SphereGeometry(0.065,12,12),new THREE.MeshBasicMaterial({color:0xffffff}));
+    ew.position.set(ox[0],0.02,0.32); ew.scale.set(1,1.2,0.5); hg.add(ew);
+    var iris=new THREE.Mesh(new THREE.SphereGeometry(0.04,10,10),new THREE.MeshBasicMaterial({color:0xf0c040}));
+    iris.position.set(ox[0],0.02,0.36); iris.scale.set(1,1,0.3); hg.add(iris);
+    var pupil=new THREE.Mesh(new THREE.SphereGeometry(0.02,8,8),new THREE.MeshBasicMaterial({color:0x1a1a2e}));
+    pupil.position.set(ox[0],0.02,0.38); pupil.scale.set(1,1,0.3); hg.add(pupil);
+  });
+  // 입 (미소)
+  var smileShape = new THREE.Shape();
+  smileShape.moveTo(-0.06,0); smileShape.quadraticCurveTo(0,-0.04,0.06,0);
+  var smileGeo = new THREE.ShapeGeometry(smileShape);
+  var smile = new THREE.Mesh(smileGeo, new THREE.MeshBasicMaterial({color:0xff6b8a,side:THREE.DoubleSide}));
+  smile.position.set(0,-0.1,0.35); hg.add(smile);
+  // 왕관 (아티스트 특징)
+  var crownMat = new THREE.MeshStandardMaterial({color:0xf0c040,emissive:0xf0c040,emissiveIntensity:0.6,metalness:0.5});
+  var crownBase = new THREE.Mesh(new THREE.CylinderGeometry(0.15,0.18,0.06,6), crownMat);
+  crownBase.position.set(0,0.38,0); hg.add(crownBase);
+  [-0.08,0,0.08].forEach(function(cx){
+    var spike = new THREE.Mesh(new THREE.CylinderGeometry(0.01,0.04,0.08,4), crownMat.clone());
+    spike.position.set(cx,0.44,0); hg.add(spike);
+  });
+  g.add(hg); artistHead = hg;
+  // 몸통
+  var body=new THREE.Mesh(new THREE.CylinderGeometry(0.18,0.22,0.4,20),bodyMat); body.position.y=0.2; body.castShadow=true; g.add(body);
+  // 팔
+  [-0.28,0.28].forEach(function(ax){
+    var arm=new THREE.Mesh(new THREE.SphereGeometry(0.09,12,12),bodyMat.clone()); arm.position.set(ax,0.26,0.02); arm.scale.set(0.8,1,0.8); g.add(arm);
+    var hand=new THREE.Mesh(new THREE.SphereGeometry(0.055,10,10),skinMat.clone()); hand.position.set(ax*1.2,0.15,0.04); g.add(hand);
+  });
+  // 다리
+  var legMat=new THREE.MeshStandardMaterial({color:0xc084fc,roughness:0.5,metalness:0.1});
+  [-0.09,0.09].forEach(function(lx){
+    var lg2=new THREE.Group(); lg2.position.set(lx,-0.1,0);
+    var legM=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.08,0.22,12),legMat.clone()); lg2.add(legM);
+    var foot=new THREE.Mesh(new THREE.SphereGeometry(0.08,10,8),new THREE.MeshStandardMaterial({color:0x6d28d9,roughness:0.4}));
+    foot.position.set(0,-0.12,0.02); foot.scale.set(1,0.6,1.2); lg2.add(foot);
+    g.add(lg2);
+  });
+  // 그림자
+  var sh=new THREE.Mesh(new THREE.CircleGeometry(0.35,20),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.2}));
+  sh.rotation.x=-Math.PI/2; sh.position.y=-0.33; g.add(sh);
+  // 아우라 링 (골드)
+  var ring=new THREE.Mesh(new THREE.TorusGeometry(0.35,0.02,8,48),new THREE.MeshStandardMaterial({color:0xf0c040,emissive:0xf0c040,emissiveIntensity:1.2,transparent:true,opacity:0.6}));
+  ring.position.y=0; ring.rotation.x=Math.PI/2; ring.userData.isAura=true; g.add(ring);
+  // 캐릭터 빛
+  var cl=new THREE.PointLight(0xf0c040,0.5,3); cl.position.y=0.5; g.add(cl);
+  // 위치: 방 왼쪽 앞
+  g.position.set(-2.0,-1.2,1.0);
+  g.scale.setScalar(0.55);
+  g.userData.isArtist = true;
+  roomGroup.add(g);
+  artistMesh = g;
+}
+
+// 등장 파티클 연출
+function artistSpawnParticles(pos){
+  for(var i=0;i<20;i++){
+    var pg=new THREE.Mesh(
+      new THREE.SphereGeometry(0.03,6,6),
+      new THREE.MeshBasicMaterial({color:Math.random()>0.5?0xf0c040:0xc084fc,transparent:true,opacity:0.9})
+    );
+    pg.position.set(pos.x+(Math.random()-0.5)*1.5, pos.y+Math.random()*2, pos.z+(Math.random()-0.5)*1.5);
+    pg.userData.vel = new THREE.Vector3((Math.random()-0.5)*0.02, 0.02+Math.random()*0.03, (Math.random()-0.5)*0.02);
+    pg.userData.life = 1.0;
+    roomGroup.add(pg);
+    setTimeout(function(p){return function(){roomGroup.remove(p);if(p.geometry)p.geometry.dispose();if(p.material)p.material.dispose()}}(pg), 2000);
+  }
+}
+
+// 아티스트 말풍선 표시 (CSS overlay)
+function showArtistBubble(text){
+  if(artistBubbleEl) artistBubbleEl.remove();
+  var b = document.createElement('div');
+  b.className = 'artist-bubble';
+  b.textContent = text;
+  b.id = 'artistBubble';
+  document.getElementById('canvasContainer').appendChild(b);
+  artistBubbleEl = b;
+  clearTimeout(b._t);
+  b._t = setTimeout(function(){ if(b.parentNode) b.remove(); artistBubbleEl=null; }, 5000);
+}
+
+// 아티스트 말풍선 위치 업데이트 (animate 루프에서 호출)
+function updateArtistBubblePos(){
+  if(!artistMesh || !artistBubbleEl || !camera || !renderer) return;
+  var pos = new THREE.Vector3(artistMesh.position.x, artistMesh.position.y+1.2, artistMesh.position.z);
+  pos.project(camera);
+  var cvs = renderer.domElement;
+  var sx = (pos.x*0.5+0.5)*cvs.clientWidth;
+  var sy = (-pos.y*0.5+0.5)*cvs.clientHeight;
+  artistBubbleEl.style.left = sx+'px';
+  artistBubbleEl.style.top = sy+'px';
+  if(pos.z >= 1) artistBubbleEl.style.opacity = '0';
+  else artistBubbleEl.style.opacity = '1';
+}
+
+// 아티스트 이름표
+function updateArtistTag(){
+  if(!artistMesh || !camera || !renderer) return;
+  var tag = document.getElementById('artistTag');
+  if(!tag) return;
+  var pos = new THREE.Vector3(artistMesh.position.x, artistMesh.position.y+1.0, artistMesh.position.z);
+  pos.project(camera);
+  var cvs = renderer.domElement;
+  tag.style.left = (pos.x*0.5+0.5)*cvs.clientWidth+'px';
+  tag.style.top = (-pos.y*0.5+0.5)*cvs.clientHeight+'px';
+  tag.style.transform = 'translate(-50%,-100%)';
+  tag.style.opacity = pos.z < 1 ? '1' : '0';
+}
+
+// 타이머 표시
+function updateTimerDisplay(){
+  var m = Math.floor(artistTimeLeft/60);
+  var s = artistTimeLeft%60;
+  var el = document.getElementById('artistTimer');
+  if(el) el.textContent = (m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+}
+
+// 아티스트 토글 (초대/퇴장)
+function toggleArtist(){
+  if(artistActive){
+    dismissArtist();
+  } else {
+    summonArtist();
+  }
+}
+
+// 아티스트 초대
+function summonArtist(){
+  artistActive = true;
+  document.getElementById('artistBtn').style.borderColor = '#f0c040';
+  document.getElementById('artistBtn').style.boxShadow = '0 0 12px rgba(240,192,64,0.4)';
+  buildArtistChar();
+  artistSpawnParticles(artistMesh.position);
+  // 이름표
+  var tag = document.createElement('div');
+  tag.id = 'artistTag';
+  tag.style.cssText = 'position:absolute;top:0;left:0;z-index:71;pointer-events:none;font-family:Orbitron,monospace;text-align:center;transition:opacity .3s';
+  tag.innerHTML = '<div style="font-size:11px;font-weight:900;color:#f0c040;text-shadow:0 0 8px rgba(240,192,64,.5),0 1px 3px rgba(0,0,0,.8);letter-spacing:1px">🎤 아티스트</div>';
+  document.getElementById('canvasContainer').appendChild(tag);
+  // 대화바 표시
+  document.getElementById('artistChatBar').classList.add('show');
+  // 타이머 (600 + 레벨x10초)
+  var level = parseInt(localStorage.getItem('asteria_level')||'1');
+  artistTimeLeft = 600 + level * 10;
+  updateTimerDisplay();
+  artistTimer = setInterval(function(){
+    artistTimeLeft--;
+    updateTimerDisplay();
+    if(artistTimeLeft <= 0){
+      clearInterval(artistTimer);
+      showArtistBubble('오늘 즐거웠어! 또 올게~ ✨');
+      setTimeout(function(){ dismissArtist(); }, 3000);
+    }
+  }, 1000);
+  // 인사말
+  setTimeout(function(){
+    showArtistBubble('안녕! 방이 정말 예쁘다~ 💫');
+  }, 1000);
+  showToast('🎤 아티스트가 방에 놀러왔어요!');
+}
+
+// 아티스트 퇴장
+function dismissArtist(){
+  artistActive = false;
+  document.getElementById('artistBtn').style.borderColor = '';
+  document.getElementById('artistBtn').style.boxShadow = '';
+  if(artistMesh){
+    artistSpawnParticles(artistMesh.position);
+    roomGroup.remove(artistMesh); artistMesh=null; artistHead=null;
+  }
+  var tag=document.getElementById('artistTag'); if(tag) tag.remove();
+  if(artistBubbleEl){artistBubbleEl.remove(); artistBubbleEl=null;}
+  document.getElementById('artistChatBar').classList.remove('show');
+  if(artistTimer){clearInterval(artistTimer);artistTimer=null;}
+  showToast('🎤 아티스트가 돌아갔어요');
+}
+
+// 메시지 전송 (Claude API)
+function sendArtistMsg(){
+  var input = document.getElementById('artistInput');
+  var msg = input.value.trim();
+  if(!msg || !artistActive) return;
+  input.value = '';
+  // 내 말풍선은 내 아바타 위에 (간단히 토스트)
+  showToast('💬 나: ' + msg);
+  // 아티스트 응답 (Claude API 호출)
+  fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:150,
+      system:'너는 케이팝 아이돌 아티스트야. 팬의 3D 방에 초대받아서 놀러왔어. 짧고 친근하게 반말로 대답해. 이모지를 많이 써. 2~3문장으로 짧게. 방 꾸미기를 칭찬하거나, 팬과 일상 대화를 해.',
+      messages:[{role:'user',content:msg}]
+    })
+  })
+  .then(function(r){return r.json()})
+  .then(function(data){
+    var reply = (data.content && data.content[0] && data.content[0].text) || '헤헤, 좋아~ 💫';
+    showArtistBubble(reply);
+  })
+  .catch(function(){
+    // API 실패시 랜덤 응답
+    var fallbacks = ['헤헤, 좋아~ 💫','방 진짜 예쁘다! 🌟','오늘 기분 좋아? 😊','같이 있어서 행복해~ 💜','우와 이거 어디서 구한 거야? ✨'];
+    showArtistBubble(fallbacks[Math.floor(Math.random()*fallbacks.length)]);
+  });
+}
+
+// Enter키로 전송
+document.getElementById('artistInput').addEventListener('keydown', function(e){
+  if(e.key==='Enter'){e.preventDefault();sendArtistMsg();}
+});
+</script>
 <script>
 // BroadcastChannel 수신 — avatar.html에서 저장 시 3D 아바타 색상 즉시 반영
 if (typeof BroadcastChannel !== 'undefined') {
