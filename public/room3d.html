@@ -508,11 +508,11 @@ html,body {
 @keyframes abIn { from{opacity:0;transform:translate(-50%,calc(-100% + 8px))} to{opacity:1;transform:translate(-50%,-100%)} }
 /* 아티스트 대화 입력 바 */
 .artist-chat-bar {
-  position:fixed; bottom:60px; left:50%; transform:translateX(-50%);
-  z-index:200; display:none; align-items:center; gap:8px;
+  position:absolute; bottom:12px; left:50%; transform:translateX(-50%);
+  z-index:90; display:none; align-items:center; gap:8px;
   background:rgba(10,10,22,0.95); border:1px solid rgba(240,192,64,0.3);
   border-radius:24px; padding:6px 8px 6px 16px;
-  backdrop-filter:blur(10px); width:min(420px,90vw);
+  backdrop-filter:blur(10px); width:min(380px,85%);
 }
 .artist-chat-bar.show { display:flex; }
 .artist-chat-input {
@@ -1412,6 +1412,22 @@ function animate() {
 
   // 아티스트 애니메이션
   if(artistMesh){
+    // 자동 이동
+    if(artistWanderTarget){
+      var adx = artistWanderTarget.x - artistMesh.position.x;
+      var adz = artistWanderTarget.z - artistMesh.position.z;
+      var adist = Math.sqrt(adx*adx+adz*adz);
+      if(adist > 0.08){
+        var aspeed = 0.015;
+        artistMesh.position.x += (adx/adist)*aspeed;
+        artistMesh.position.z += (adz/adist)*aspeed;
+        artistMesh.rotation.y = Math.atan2(adx, adz);
+      } else {
+        artistMesh.position.x = artistWanderTarget.x;
+        artistMesh.position.z = artistWanderTarget.z;
+        artistWanderTarget = null;
+      }
+    }
     var ab=Math.sin(floatTime*0.9)*0.02;
     artistMesh.position.y=-1.2+ab;
     if(artistHead){
@@ -2465,6 +2481,8 @@ var artistActive = false;
 var artistTimer = null;
 var artistTimeLeft = 0;
 var artistBubbleEl = null;
+var artistWanderTimer = null;
+var artistWanderTarget = null;
 
 // 아티스트 3D 캐릭터 빌드 (핑크+골드 테마)
 function buildArtistChar() {
@@ -2548,6 +2566,19 @@ function artistSpawnParticles(pos){
     roomGroup.add(pg);
     setTimeout(function(p){return function(){roomGroup.remove(p);if(p.geometry)p.geometry.dispose();if(p.material)p.material.dispose()}}(pg), 2000);
   }
+}
+
+function startArtistWander(){
+  // 처음에 방 중앙으로 이동
+  artistWanderTarget = new THREE.Vector3(0, -1.2, 0.5);
+  // 30~50초마다 랜덤 위치로 이동
+  artistWanderTimer = setInterval(function(){
+    var rx = (Math.random()-0.5) * 5;  // -2.5 ~ 2.5
+    var rz = (Math.random()-0.5) * 4;  // -2 ~ 2
+    rx = Math.max(-3, Math.min(3, rx));
+    rz = Math.max(-2.5, Math.min(2.5, rz));
+    artistWanderTarget = new THREE.Vector3(rx, -1.2, rz);
+  }, 30000 + Math.random()*20000);
 }
 
 // 아티스트 말풍선 표시 (CSS overlay)
@@ -2640,6 +2671,8 @@ function summonArtist(){
   setTimeout(function(){
     showArtistBubble('안녕! 방이 정말 예쁘다~ 💫');
   }, 1000);
+  // 자동 이동 시작
+  startArtistWander();
   showToast('🎤 아티스트가 방에 놀러왔어요!');
 }
 
@@ -2656,6 +2689,8 @@ function dismissArtist(){
   if(artistBubbleEl){artistBubbleEl.remove(); artistBubbleEl=null;}
   document.getElementById('artistChatBar').classList.remove('show');
   if(artistTimer){clearInterval(artistTimer);artistTimer=null;}
+  if(artistWanderTimer){clearInterval(artistWanderTimer);artistWanderTimer=null;}
+  artistWanderTarget = null;
   showToast('🎤 아티스트가 돌아갔어요');
 }
 
@@ -2720,9 +2755,12 @@ function sendArtistMsg(){
 }
 
 // Enter키로 전송
-document.getElementById('artistInput').addEventListener('keydown', function(e){
-  if(e.key==='Enter'){e.preventDefault();sendArtistMsg();}
-});
+setTimeout(function(){
+  var ai = document.getElementById('artistInput');
+  if(ai) ai.addEventListener('keydown', function(e){
+    if(e.key==='Enter'){e.preventDefault();sendArtistMsg();}
+  });
+}, 100);
 </script>
 <script>
 // BroadcastChannel 수신 — avatar.html에서 저장 시 3D 아바타 색상 즉시 반영
