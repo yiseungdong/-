@@ -1667,6 +1667,8 @@ function toggleEdit() {
     showToast('✏️ 아이템을 선택해서 배치하세요!');
   } else {
     app.classList.remove('edit-active');
+    camTheta = 0.5; camPhi = 0.55; camRadius = 7.5;
+    updateCameraPos();
     setTimeout(()=> onResize(), 50);
     showToast('✓ 꾸미기 완료!');
   }
@@ -2651,6 +2653,17 @@ function toggleArtist(){
 
 // 아티스트 초대
 function summonArtist(){
+  // 첫 초대시 이름 입력
+  var artistName = localStorage.getItem('asteria_artist_name');
+  if(!artistName){
+    artistName = prompt('아티스트의 이름을 지어주세요! (2~8글자)');
+    if(!artistName || artistName.trim().length < 2 || artistName.trim().length > 8){
+      showToast('이름은 2~8글자로 입력해주세요!');
+      return;
+    }
+    artistName = artistName.trim();
+    localStorage.setItem('asteria_artist_name', artistName);
+  }
   artistActive = true;
   document.getElementById('artistBtn').style.borderColor = '#f0c040';
   document.getElementById('artistBtn').style.boxShadow = '0 0 12px rgba(240,192,64,0.4)';
@@ -2660,7 +2673,7 @@ function summonArtist(){
   var tag = document.createElement('div');
   tag.id = 'artistTag';
   tag.style.cssText = 'position:absolute;top:0;left:0;z-index:71;pointer-events:none;font-family:Orbitron,monospace;text-align:center;transition:opacity .3s';
-  tag.innerHTML = '<div style="font-size:11px;font-weight:900;color:#f0c040;text-shadow:0 0 8px rgba(240,192,64,.5),0 1px 3px rgba(0,0,0,.8);letter-spacing:1px">🎤 ' + artistName + '</div>';
+  tag.innerHTML = '<div style="font-size:11px;font-weight:900;color:#f0c040;text-shadow:0 0 8px rgba(240,192,64,.5),0 1px 3px rgba(0,0,0,.8);letter-spacing:1px">🎤 ' + (localStorage.getItem('asteria_artist_name') || '아티스트') + '</div>';
   document.getElementById('canvasContainer').appendChild(tag);
   // 대화바 표시
   document.getElementById('artistChatBar').classList.add('show');

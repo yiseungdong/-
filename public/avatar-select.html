@@ -2,342 +2,112 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>아스트라 선택 | ASTERIA</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>아스트라 선택 — ASTERIA</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{--void:#0a0a14;--panel:rgba(10,10,22,0.96);--border:rgba(180,150,255,0.13);--accent:#c084fc;--gold:#f0c040;--text:#e8e4f0;--muted:rgba(200,190,220,0.5)}
-html,body{height:100%;background:var(--void);color:var(--text);font-family:'Noto Sans KR',sans-serif;user-select:none;-webkit-tap-highlight-color:transparent}
-body{overflow-y:auto;overflow-x:hidden}
-
-/* 별빛 캔버스 */
-#starCanvas{position:fixed;inset:0;z-index:0;pointer-events:none}
-
-/* 상단 네비 */
-.top-nav{
-  position:fixed;top:0;left:0;right:0;z-index:400;
-  display:flex;align-items:center;justify-content:center;
-  gap:28px;height:44px;
-  background:rgba(10,10,22,0.96);
-  backdrop-filter:blur(20px);
-  border-bottom:1px solid rgba(180,150,255,0.13);
-}
-.top-nav-item{
-  font-size:12px;font-weight:500;
-  color:rgba(200,190,220,0.45);
-  text-decoration:none;cursor:pointer;
-  transition:all .2s;letter-spacing:0.5px;
-  padding:4px 2px;
-  border-bottom:2px solid transparent;
-}
-.top-nav-item:hover{color:#e8e4f0}
-.top-nav-item.active{color:#c084fc;border-bottom-color:#c084fc}
-
-/* 메인 콘텐츠 */
-.main{position:relative;z-index:1;padding-bottom:60px}
-
-/* 아바타 카드 그리드 */
-.grid{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:14px;
-  max-width:420px;
-  margin:0 auto;
-  padding:0 20px;
-}
-.card{
-  display:flex;flex-direction:column;align-items:center;
-  padding:18px 8px 14px;
-  background:rgba(255,255,255,0.03);
-  border:1.5px solid var(--border);
-  border-radius:16px;
-  cursor:pointer;
-  transition:all .3s cubic-bezier(.34,1.56,.64,1);
-}
-.card:hover{transform:translateY(-4px);border-color:rgba(192,132,252,0.3)}
-.card.selected{
-  border-color:var(--accent);
-  box-shadow:0 0 20px rgba(192,132,252,0.25),0 0 40px rgba(192,132,252,0.1);
-  background:rgba(192,132,252,0.06);
-}
-.card svg{filter:drop-shadow(0 2px 6px rgba(0,0,0,0.4))}
-.card-name{
-  margin-top:10px;font-size:12px;font-weight:700;
-  color:var(--text);letter-spacing:0.5px;
-}
-.card-name-en{
-  font-size:9px;font-family:'Orbitron',monospace;
-  color:var(--muted);margin-top:2px;letter-spacing:1px;
-}
-
-/* 시작 버튼 */
-.start-wrap{text-align:center;margin-top:32px;padding:0 20px}
-.start-btn{
-  display:inline-block;
-  padding:14px 48px;
-  border-radius:50px;
-  border:none;
-  font-family:'Noto Sans KR',sans-serif;
-  font-size:15px;font-weight:700;
-  cursor:pointer;
-  transition:all .3s;
-  letter-spacing:1px;
-}
-.start-btn.disabled{
-  background:rgba(255,255,255,0.06);
-  color:rgba(200,190,220,0.3);
-  pointer-events:none;
-}
-.start-btn.active{
-  background:linear-gradient(135deg,#f0c040,#f59e0b);
-  color:#0a0a14;
-  box-shadow:0 0 24px rgba(240,192,64,0.3),0 4px 12px rgba(0,0,0,0.3);
-}
-.start-btn.active:hover{
-  transform:translateY(-2px);
-  box-shadow:0 0 32px rgba(240,192,64,0.4),0 6px 16px rgba(0,0,0,0.3);
-}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--void:#030308;--panel:rgba(10,10,22,0.96);--border:rgba(180,150,255,0.13);--gold:#f0c040;--accent:#c084fc;--text:#e8e4f0;--muted:rgba(200,190,220,0.5)}
+html,body{width:100%;min-height:100vh;background:var(--void);color:var(--text);font-family:'Noto Sans KR',sans-serif;user-select:none;overflow-x:hidden}
+#app{max-width:480px;margin:0 auto;min-height:100vh;padding:20px 16px 40px;position:relative;z-index:1}
+canvas#starCanvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+.title{text-align:center;font-size:22px;font-weight:900;color:var(--gold);margin-bottom:6px;font-family:'Orbitron',monospace;letter-spacing:2px}
+.subtitle{text-align:center;font-size:12px;color:var(--muted);margin-bottom:24px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px}
+.card{background:var(--panel);border:2px solid var(--border);border-radius:16px;padding:16px 8px 12px;text-align:center;cursor:pointer;transition:all .2s}
+.card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.card.selected{border-color:var(--gold);box-shadow:0 0 20px rgba(240,192,64,.25)}
+.card-check{display:none;position:absolute;top:8px;right:8px;width:22px;height:22px;background:var(--gold);border-radius:50%;color:#030308;font-size:13px;font-weight:900;line-height:22px;text-align:center}
+.card.selected .card-check{display:block}
+.card-wrap{position:relative}
+.card-svg{width:100px;height:125px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center}
+.card-svg svg{width:100%;height:100%}
+.card-name{font-size:13px;font-weight:700;color:var(--text)}
+.card-preview{font-size:11px;color:var(--gold);margin-top:4px;min-height:16px;font-weight:700}
+.name-section{display:none;text-align:center;animation:fadeUp .3s ease}
+.name-section.show{display:block}
+.name-title{font-size:16px;font-weight:700;color:var(--accent);margin-bottom:12px}
+.name-input{width:100%;max-width:280px;padding:12px 16px;background:rgba(20,20,40,0.8);border:2px solid var(--border);border-radius:14px;color:var(--text);font-size:16px;font-family:'Noto Sans KR',sans-serif;text-align:center;outline:none;transition:border-color .2s}
+.name-input:focus{border-color:var(--gold)}
+.name-hint{font-size:10px;color:var(--muted);margin-top:6px}
+.start-btn{display:block;width:100%;max-width:280px;margin:20px auto 0;padding:14px;background:linear-gradient(135deg,var(--gold),#c084fc);border:none;border-radius:14px;color:#030308;font-size:15px;font-weight:900;font-family:'Noto Sans KR',sans-serif;cursor:pointer;opacity:0.4;pointer-events:none;transition:all .2s}
+.start-btn.active{opacity:1;pointer-events:auto}
+.start-btn.active:hover{transform:scale(1.02);box-shadow:0 4px 20px rgba(240,192,64,.3)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 </style>
 </head>
 <body>
-
 <canvas id="starCanvas"></canvas>
-
-<!-- 상단 네비 -->
-<nav class="top-nav">
-  <a class="top-nav-item" href="/index.html">홈</a>
-  <a class="top-nav-item" href="/fandom.html">팬덤</a>
-  <a class="top-nav-item" href="/astra.html">아스트라</a>
-  <a class="top-nav-item" href="/room3d.html">내방</a>
-  <a class="top-nav-item active" href="/avatar.html">아바타</a>
-  <a class="top-nav-item" href="/shop.html">상점</a>
-</nav>
-
-<div class="main">
-  <!-- 타이틀 -->
-  <div style="text-align:center;padding:60px 0 30px">
-    <div style="font-family:Orbitron;font-size:11px;color:#c084fc;letter-spacing:3px">CHOOSE YOUR ASTRA</div>
-    <div style="font-size:20px;font-weight:900;margin-top:8px">나만의 아스트라를 선택하세요</div>
-    <div style="font-size:12px;color:rgba(200,190,220,0.5);margin-top:6px">선택한 아바타는 나중에 꾸미기에서 바꿀 수 있어요</div>
-  </div>
-
-  <!-- 아바타 카드 그리드 -->
-  <div class="grid">
-
-    <!-- m1 - 루카 -->
-    <div class="card" data-id="m1" data-name="루카" onclick="selectCard(this)">
-      <svg viewBox="0 0 80 100" width="120" height="150">
-        <ellipse cx="40" cy="72" rx="18" ry="22" fill="#1e40af"/>
-        <rect x="36" y="52" width="8" height="8" rx="2" fill="#FDBCB4"/>
-        <ellipse cx="40" cy="42" rx="18" ry="17" fill="#FDBCB4"/>
-        <ellipse cx="33" cy="40" rx="4" ry="4.5" fill="white"/>
-        <ellipse cx="47" cy="40" rx="4" ry="4.5" fill="white"/>
-        <circle cx="34" cy="41" r="2.5" fill="#38bdf8"/>
-        <circle cx="48" cy="41" r="2.5" fill="#38bdf8"/>
-        <circle cx="35" cy="40" r="0.8" fill="white"/>
-        <circle cx="49" cy="40" r="0.8" fill="white"/>
-        <path d="M36 47 Q40 50 44 47" stroke="#e07070" stroke-width="1.2" fill="none" stroke-linecap="round"/>
-        <ellipse cx="40" cy="28" rx="18" ry="13" fill="#1a1a1a"/>
-        <polygon points="30,22 26,8 34,18" fill="#1a1a1a"/>
-        <polygon points="40,20 38,4 44,18" fill="#1a1a1a"/>
-        <polygon points="50,22 54,8 46,18" fill="#1a1a1a"/>
-        <rect x="18" y="58" width="7" height="18" rx="3" fill="#1e40af"/>
-        <rect x="55" y="58" width="7" height="18" rx="3" fill="#1e40af"/>
-        <rect x="22" y="70" width="16" height="5" rx="2" fill="#1d3570"/>
-        <rect x="28" y="90" width="9" height="10" rx="3" fill="#334155"/>
-        <rect x="43" y="90" width="9" height="10" rx="3" fill="#334155"/>
-      </svg>
-      <div class="card-name">루카</div>
-      <div class="card-name-en">LUKA</div>
-    </div>
-
-    <!-- m2 - 제이 -->
-    <div class="card" data-id="m2" data-name="제이" onclick="selectCard(this)">
-      <svg viewBox="0 0 80 100" width="120" height="150">
-        <ellipse cx="40" cy="72" rx="18" ry="22" fill="#1a1a2e"/>
-        <rect x="36" y="52" width="8" height="8" rx="2" fill="#f0d0c0"/>
-        <ellipse cx="40" cy="42" rx="18" ry="17" fill="#f0d0c0"/>
-        <ellipse cx="33" cy="41" rx="4" ry="3" fill="white"/>
-        <ellipse cx="47" cy="41" rx="4" ry="3" fill="white"/>
-        <ellipse cx="34" cy="42" rx="2.5" ry="2" fill="#c084fc"/>
-        <ellipse cx="48" cy="42" rx="2.5" ry="2" fill="#c084fc"/>
-        <path d="M29 40 Q33 38 37 40" stroke="#555" stroke-width="1.5" fill="none"/>
-        <path d="M43 40 Q47 38 51 40" stroke="#555" stroke-width="1.5" fill="none"/>
-        <path d="M37 47 Q40 48 43 47" stroke="#c08080" stroke-width="1" fill="none"/>
-        <ellipse cx="40" cy="28" rx="18" ry="13" fill="#4c1d95"/>
-        <path d="M22 32 Q25 20 38 22 Q32 38 22 42" fill="#4c1d95"/>
-        <path d="M22 60 Q22 50 40 50 Q58 50 58 60" fill="#0f0f1a"/>
-        <rect x="28" y="90" width="9" height="10" rx="3" fill="#0f0f1a"/>
-        <rect x="43" y="90" width="9" height="10" rx="3" fill="#0f0f1a"/>
-        <rect x="20" y="68" width="6" height="14" rx="3" fill="#1a1a2e"/>
-      </svg>
-      <div class="card-name">제이</div>
-      <div class="card-name-en">JAY</div>
-    </div>
-
-    <!-- m3 - 코코 -->
-    <div class="card" data-id="m3" data-name="코코" onclick="selectCard(this)">
-      <svg viewBox="0 0 80 100" width="120" height="150">
-        <ellipse cx="40" cy="72" rx="20" ry="22" fill="#fbbf24"/>
-        <rect x="36" y="52" width="8" height="8" rx="2" fill="#f4a76f"/>
-        <ellipse cx="40" cy="41" rx="20" ry="19" fill="#f4a76f"/>
-        <ellipse cx="28" cy="46" rx="5" ry="3" fill="#f9a8d4" opacity="0.5"/>
-        <ellipse cx="52" cy="46" rx="5" ry="3" fill="#f9a8d4" opacity="0.5"/>
-        <ellipse cx="32" cy="40" rx="5.5" ry="6" fill="white"/>
-        <ellipse cx="48" cy="40" rx="5.5" ry="6" fill="white"/>
-        <circle cx="33" cy="41" r="3.5" fill="#92400e"/>
-        <circle cx="49" cy="41" r="3.5" fill="#92400e"/>
-        <circle cx="34" cy="40" r="1.5" fill="white"/>
-        <circle cx="50" cy="40" r="1.5" fill="white"/>
-        <path d="M34 48 Q40 53 46 48" stroke="#c06060" stroke-width="1.5" fill="none"/>
-        <ellipse cx="40" cy="27" rx="20" ry="14" fill="#78350f"/>
-        <ellipse cx="26" cy="35" rx="6" ry="10" fill="#78350f"/>
-        <ellipse cx="54" cy="35" rx="6" ry="10" fill="#78350f"/>
-        <rect x="16" y="60" width="7" height="16" rx="3" fill="#fbbf24" transform="rotate(-25,20,60)"/>
-        <rect x="57" y="60" width="7" height="16" rx="3" fill="#fbbf24" transform="rotate(25,60,60)"/>
-        <rect x="28" y="90" width="10" height="10" rx="3" fill="#92400e"/>
-        <rect x="42" y="90" width="10" height="10" rx="3" fill="#92400e"/>
-      </svg>
-      <div class="card-name">코코</div>
-      <div class="card-name-en">KOKO</div>
-    </div>
-
-    <!-- f1 - 아리 -->
-    <div class="card" data-id="f1" data-name="아리" onclick="selectCard(this)">
-      <svg viewBox="0 0 80 100" width="120" height="150">
-        <ellipse cx="40" cy="72" rx="18" ry="22" fill="#fce7f3"/>
-        <rect x="36" y="52" width="8" height="8" rx="2" fill="#FDBCB4"/>
-        <ellipse cx="40" cy="41" rx="17" ry="16" fill="#FDBCB4"/>
-        <ellipse cx="29" cy="45" rx="5" ry="3" fill="#f9a8d4" opacity="0.6"/>
-        <ellipse cx="51" cy="45" rx="5" ry="3" fill="#f9a8d4" opacity="0.6"/>
-        <ellipse cx="33" cy="40" rx="4.5" ry="5" fill="white"/>
-        <circle cx="34" cy="41" r="3" fill="#f472b6"/>
-        <circle cx="35" cy="40" r="1.2" fill="white"/>
-        <path d="M43 39 Q47 37 51 39" stroke="#888" stroke-width="2" fill="none" stroke-linecap="round"/>
-        <path d="M44 41 Q47 43 50 41" stroke="#f472b6" stroke-width="1" fill="none"/>
-        <path d="M35 47 Q40 51 45 47" stroke="#f472b6" stroke-width="1.2" fill="none"/>
-        <ellipse cx="40" cy="28" rx="17" ry="12" fill="#f472b6"/>
-        <ellipse cx="57" cy="20" rx="5" ry="14" fill="#f472b6" transform="rotate(15,57,20)"/>
-        <circle cx="57" cy="13" r="4" fill="#fda4d0"/>
-        <rect x="18" y="58" width="7" height="20" rx="3" fill="#fce7f3"/>
-        <rect x="55" y="58" width="7" height="20" rx="3" fill="#fce7f3"/>
-        <rect x="28" y="90" width="9" height="10" rx="4" fill="#fbcfe8"/>
-        <rect x="43" y="90" width="9" height="10" rx="4" fill="#fbcfe8"/>
-      </svg>
-      <div class="card-name">아리</div>
-      <div class="card-name-en">ARI</div>
-    </div>
-
-    <!-- f2 - 세나 -->
-    <div class="card" data-id="f2" data-name="세나" onclick="selectCard(this)">
-      <svg viewBox="0 0 80 100" width="120" height="150">
-        <ellipse cx="40" cy="72" rx="18" ry="22" fill="#e0f2fe"/>
-        <rect x="36" y="52" width="8" height="8" rx="2" fill="#fde8d8"/>
-        <ellipse cx="40" cy="41" rx="17" ry="16" fill="#fde8d8"/>
-        <ellipse cx="29" cy="45" rx="4" ry="2.5" fill="#fca5a5" opacity="0.4"/>
-        <ellipse cx="51" cy="45" rx="4" ry="2.5" fill="#fca5a5" opacity="0.4"/>
-        <ellipse cx="33" cy="40" rx="4" ry="4.5" fill="white"/>
-        <ellipse cx="47" cy="40" rx="4" ry="4.5" fill="white"/>
-        <circle cx="33.5" cy="41" r="2.8" fill="#7dd3fc"/>
-        <circle cx="47.5" cy="41" r="2.8" fill="#7dd3fc"/>
-        <circle cx="34.3" cy="40" r="1.1" fill="white"/>
-        <circle cx="48.3" cy="40" r="1.1" fill="white"/>
-        <circle cx="40" cy="47" r="2" fill="#fca5a5" opacity="0.6"/>
-        <ellipse cx="40" cy="28" rx="17" ry="12" fill="#7dd3fc"/>
-        <rect x="23" y="28" width="7" height="18" rx="3" fill="#7dd3fc"/>
-        <rect x="50" y="28" width="7" height="18" rx="3" fill="#7dd3fc"/>
-        <rect x="20" y="65" width="7" height="15" rx="3" fill="#e0f2fe"/>
-        <rect x="53" y="65" width="7" height="15" rx="3" fill="#e0f2fe"/>
-        <rect x="29" y="90" width="9" height="10" rx="4" fill="#bae6fd"/>
-        <rect x="42" y="90" width="9" height="10" rx="4" fill="#bae6fd"/>
-      </svg>
-      <div class="card-name">세나</div>
-      <div class="card-name-en">SENA</div>
-    </div>
-
-    <!-- f3 - 루나 -->
-    <div class="card" data-id="f3" data-name="루나" onclick="selectCard(this)">
-      <svg viewBox="0 0 80 100" width="120" height="150">
-        <ellipse cx="40" cy="72" rx="18" ry="22" fill="#4c1d95"/>
-        <path d="M30 58 Q40 55 50 58 Q48 80 40 94 Q32 80 30 58" fill="#7c3aed" opacity="0.8"/>
-        <path d="M35 60 Q40 57 45 60" stroke="#f0c040" stroke-width="1.5" fill="none"/>
-        <rect x="36" y="52" width="8" height="8" rx="2" fill="#f0e0d0"/>
-        <ellipse cx="40" cy="41" rx="17" ry="16" fill="#f0e0d0"/>
-        <ellipse cx="33" cy="41" rx="4.5" ry="3.5" fill="white"/>
-        <ellipse cx="47" cy="41" rx="4.5" ry="3.5" fill="white"/>
-        <ellipse cx="33.5" cy="42" rx="3" ry="2.5" fill="#f0c040"/>
-        <ellipse cx="47.5" cy="42" rx="3" ry="2.5" fill="#f0c040"/>
-        <path d="M29 40 Q33 37 37 40" stroke="#6b21a8" stroke-width="1.8" fill="none"/>
-        <path d="M43 40 Q47 37 51 40" stroke="#6b21a8" stroke-width="1.8" fill="none"/>
-        <path d="M36 47 Q40 50 44 47" stroke="#c084fc" stroke-width="1" fill="none"/>
-        <ellipse cx="40" cy="27" rx="17" ry="12" fill="#e2e8f0"/>
-        <rect x="22" y="30" width="7" height="35" rx="3" fill="#e2e8f0"/>
-        <rect x="51" y="30" width="7" height="35" rx="3" fill="#e2e8f0"/>
-        <rect x="54" y="65" width="6" height="18" rx="3" fill="#4c1d95"/>
-        <text x="52" y="63" font-size="12">&#11088;</text>
-        <rect x="20" y="68" width="6" height="15" rx="3" fill="#4c1d95"/>
-        <rect x="29" y="90" width="9" height="10" rx="4" fill="#6d28d9"/>
-        <rect x="42" y="90" width="9" height="10" rx="4" fill="#6d28d9"/>
-      </svg>
-      <div class="card-name">루나</div>
-      <div class="card-name-en">LUNA</div>
-    </div>
-
-  </div>
-
-  <!-- 시작 버튼 -->
-  <div class="start-wrap">
-    <button class="start-btn disabled" id="startBtn" onclick="goStart()">시작하기</button>
+<div id="app">
+  <div class="title">✨ ASTRA</div>
+  <div class="subtitle">나의 아스트라를 선택하세요</div>
+  <div class="grid" id="charGrid"></div>
+  <div class="name-section" id="nameSection">
+    <div class="name-title">아스트라의 이름을 지어주세요!</div>
+    <input class="name-input" id="nameInput" placeholder="2~8글자" maxlength="8">
+    <div class="name-hint">이름은 나중에 변경할 수 있어요 (스타더스트 소모)</div>
+    <button class="start-btn" id="startBtn" onclick="goStart()">✦ 시작하기</button>
   </div>
 </div>
-
+<script src="/js/avatar-svgs.js"></script>
 <script>
-// ── 별빛 캔버스 ──
-(function(){
-  const c=document.getElementById('starCanvas'),x=c.getContext('2d');
-  let stars=[];
-  function resize(){c.width=innerWidth;c.height=innerHeight;stars=[];for(let i=0;i<120;i++)stars.push({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*1.2+0.3,a:Math.random(),s:Math.random()*0.008+0.003})}
-  function draw(){x.clearRect(0,0,c.width,c.height);stars.forEach(s=>{s.a+=s.s;if(s.a>1)s.s=-Math.abs(s.s);if(s.a<0)s.s=Math.abs(s.s);x.beginPath();x.arc(s.x,s.y,s.r,0,Math.PI*2);x.fillStyle=`rgba(200,190,255,${s.a*0.7})`;x.fill()});requestAnimationFrame(draw)}
-  resize();draw();window.addEventListener('resize',resize);
-})();
-
-// ── 카드 선택 ──
-let selectedCard=null;
-function selectCard(el){
-  document.querySelectorAll('.card').forEach(c=>c.classList.remove('selected'));
-  el.classList.add('selected');
-  selectedCard=el;
-  const btn=document.getElementById('startBtn');
-  btn.classList.remove('disabled');
-  btn.classList.add('active');
+// 캐릭터 목록
+var CHARS = [
+  {id:'m1',name:'루카',en:'LUCA'},
+  {id:'m2',name:'제이',en:'JAY'},
+  {id:'m3',name:'코코',en:'COCO'},
+  {id:'f1',name:'아리',en:'ARI'},
+  {id:'f2',name:'세나',en:'SENA'},
+  {id:'f3',name:'루나',en:'LUNA'}
+];
+var selectedChar = null;
+// 그리드 렌더링
+function renderGrid(){
+  document.getElementById('charGrid').innerHTML = CHARS.map(function(c){
+    var sel = selectedChar === c.id ? ' selected' : '';
+    return '<div class="card-wrap"><div class="card' + sel + '" onclick="selectChar(\'' + c.id + '\')">' +
+      '<div class="card-check">✓</div>' +
+      '<div class="card-svg">' + (typeof getBaseSVG==='function'?getBaseSVG(c.id):'') + '</div>' +
+      '<div class="card-name">' + c.name + ' ' + c.en + '</div>' +
+      '<div class="card-preview" id="preview_' + c.id + '"></div>' +
+    '</div></div>';
+  }).join('');
 }
-
-// ── 시작하기 ──
+function selectChar(id){
+  selectedChar = id;
+  renderGrid();
+  document.getElementById('nameSection').classList.add('show');
+  document.getElementById('nameInput').focus();
+  updatePreview();
+}
+// 이름 입력 실시간 미리보기
+document.getElementById('nameInput').addEventListener('input', function(){
+  updatePreview();
+  var len = this.value.trim().length;
+  var btn = document.getElementById('startBtn');
+  if(len >= 2) btn.classList.add('active');
+  else btn.classList.remove('active');
+});
+function updatePreview(){
+  var name = document.getElementById('nameInput').value.trim();
+  CHARS.forEach(function(c){
+    var el = document.getElementById('preview_' + c.id);
+    if(el) el.textContent = (c.id === selectedChar && name) ? name : '';
+  });
+}
+// 시작하기
 function goStart(){
-  if(!selectedCard)return;
-  const id=selectedCard.dataset.id;
-  const name=selectedCard.dataset.name;
-  localStorage.setItem('asteria_avatar_base',id);
-  localStorage.setItem('asteria_avatar',JSON.stringify({
-    base:id,
-    name:name,
-    skin:'#FDBCB4',
-    hair:'h1',
-    hairColor:'#1a1a1a',
-    outfit_top:'t1',
-    outfit_bottom:'b1',
-    outfit_full:null,
-    aura:'a1',
-    acc_crown:null,
-    acc_wing:null,
-    acc_weapon:null,
-    emotion:'e1',
-    motion:'m1',
-    league:'dust'
-  }));
-  location.href='/avatar.html';
+  var name = document.getElementById('nameInput').value.trim();
+  if(!selectedChar){alert('캐릭터를 선택해주세요!');return;}
+  if(name.length < 2){alert('이름은 2글자 이상이어야 해요!');return;}
+  localStorage.setItem('asteria_avatar_base', selectedChar);
+  localStorage.setItem('asteria_nick', name);
+  localStorage.setItem('asteria_avatar', JSON.stringify({face:selectedChar}));
+  window.location.href = '/avatar.html';
 }
+renderGrid();
+// 별빛 배경
+(function(){var c=document.getElementById('starCanvas');if(!c)return;var x=c.getContext('2d');var W,H;function r(){W=c.width=innerWidth;H=c.height=innerHeight}r();addEventListener('resize',r);var s=[];for(var i=0;i<200;i++)s.push({x:Math.random()*2000,y:Math.random()*2000,r:Math.random()*1.2+0.3,a:Math.random(),s:Math.random()*0.02+0.005});function d(){x.clearRect(0,0,W,H);s.forEach(function(p){p.a+=p.s;var o=0.3+Math.sin(p.a)*0.7;x.beginPath();x.arc(p.x%W,p.y%H,p.r,0,Math.PI*2);x.fillStyle='rgba(200,180,255,'+o+')';x.fill()});requestAnimationFrame(d)}d()})();
 </script>
 </body>
 </html>
