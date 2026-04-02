@@ -546,10 +546,14 @@ async function submitBugReport(){var t=localStorage.getItem('accessToken');if(!t
 <script>
 // shop 아바타 렌더링 + BroadcastChannel 동기화
 if(typeof initAvatarSync === 'function'){
-  initAvatarSync([{id:'shopMyAv', options:{scale:0.28, topOffset:'-10px'}}]);
+  initAvatarSync([{id:'shopMyAv', options:{size:'xs'}}]);
 }
 var sn = document.getElementById('shopMyName');
-if(sn) sn.textContent = localStorage.getItem('asteria_nick') || '별빛 탐험가';
+if(sn) {
+  var nick = localStorage.getItem('asteria_nick') || '별빛 탐험가';
+  var lv = localStorage.getItem('asteria_level') || '1';
+  sn.innerHTML = nick + ' <span style="color:#c084fc;font-size:10px;font-family:Orbitron,monospace;">Lv.' + lv + '</span>';
+}
 </script>
 </body>
 </html>

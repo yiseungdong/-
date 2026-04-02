@@ -2266,7 +2266,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   // 내 아바타 SVG 렌더 + BroadcastChannel 실시간 동기화
   if (typeof initAvatarSync === 'function') {
     initAvatarSync([
-      { id: 'fandomMyAvBody', options: { scale: 0.18, topOffset: '-10%', width: 200, height: 250 } }
+      { id: 'fandomMyAvBody', options: { size: 'xs' } }
     ]);
   }
   /* 진입 애니메이션 먼저 처리, Canvas는 나중에 시작 */

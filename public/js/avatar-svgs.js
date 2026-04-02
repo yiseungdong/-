@@ -140,7 +140,18 @@ var LEAGUE_INFO = {
 };
 
 // ═══════════════════════════════════════════════════════
-// 기존 함수 (하위호환 100%)
+// 크기 프리셋
+// ═══════════════════════════════════════════════════════
+var AVATAR_SIZE_PRESETS = {
+  'xs': { scale: 0.18, topOffset: '-10%' },
+  'sm': { scale: 0.35, topOffset: '-20%' },
+  'md': { scale: 0.45, topOffset: '-30%' },
+  'lg': { scale: 0.6,  topOffset: '-35%' },
+  'xl': { scale: 0.8,  topOffset: '-40%' }
+};
+
+// ═══════════════════════════════════════════════════════
+// 기존 함수 (하위호환 100% + 크기 프리셋 지원)
 // ═══════════════════════════════════════════════════════
 
 function getBaseSVG(base){ return AVATAR_SVGS[base] || AVATAR_SVGS['m1']; }
@@ -150,8 +161,11 @@ function renderAvatarToEl(elementId, options){
   if(!el) return;
   var base = localStorage.getItem('asteria_avatar_base') || 'm1';
   var svg = getBaseSVG(base);
-  var scale = (options && options.scale) || 1;
-  var topOffset = (options && options.topOffset) || '0';
+  var opt = options || {};
+  // 크기 프리셋 적용 (size가 있으면 프리셋 사용, 없으면 기존 scale/topOffset)
+  var preset = (opt.size && AVATAR_SIZE_PRESETS[opt.size]) || null;
+  var scale = preset ? preset.scale : (opt.scale || 1);
+  var topOffset = preset ? preset.topOffset : (opt.topOffset || '0');
   el.innerHTML = '<div style="transform:scale(' + scale + ');transform-origin:top center;position:relative;top:' + topOffset + ';display:flex;align-items:center;justify-content:center;">' + svg + '</div>';
 }
 

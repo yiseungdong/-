@@ -1350,18 +1350,11 @@ async function submitBugReport(){
 }
 
 // ═══ 초기화 ═══
-function loadSVGAvatar(){
-  const base = localStorage.getItem('asteria_avatar_base') || 'm1';
-  const overlay = document.getElementById('svgAvatarOverlay');
-  if(overlay) overlay.innerHTML = getBaseSVG(base);
-}
-
 renderAll();
 drawAvatar();
 if (typeof initAvatarSync === 'function') {
   initAvatarSync([
-    { id: 'svgAvatarOverlay', options: { scale: 0.55, topOffset: '-15%' } },
-    { id: 'occOrb',           options: { scale: 0.32, topOffset: '-20%' } }
+    { id: 'svgAvatarOverlay', options: { size: 'xl' } }
   ]);
 }
 rotateAlert();

@@ -496,6 +496,7 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
           <div class="av-chat" id="avchat"></div>
           <div class="av-body" id="avbody" style="overflow:hidden;padding:0;"></div>
           <div class="av-name" id="avname"></div>
+          <div id="avleague" style="font-size:9px;text-align:center;margin-top:2px;"></div>
           <div id="avserial" style="font-size:9px;letter-spacing:1px;text-align:center;margin-top:1px;"></div>
         </div>
       </div>
@@ -587,9 +588,13 @@ function doLogin(){
   const av=document.getElementById('avnode');
   av.style.display='flex';
   if (typeof renderAvatarToEl === 'function') {
-    renderAvatarToEl('avbody', { scale: 0.45, topOffset: '-48%' });
+    renderAvatarToEl('avbody', { size: 'sm' });
   }
   document.getElementById('avname').textContent=nick;
+  var _league = localStorage.getItem('asteria_league') || 'dust';
+  var _li = (typeof LEAGUE_INFO !== 'undefined' && LEAGUE_INFO[_league]) || {icon:'🌫️',name:'더스트',color:'#94a3b8'};
+  var _avleague = document.getElementById('avleague');
+  if(_avleague) _avleague.innerHTML = '<span style="color:'+_li.color+'">'+_li.icon+' '+_li.name+'</span>';
   function renderAstraId(el, serial) {
     if(!el || !serial) return;
     const prefix = serial.slice(0, 2);
@@ -1088,7 +1093,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
   if (typeof initAvatarSync === 'function') {
     initAvatarSync([
-      { id: 'avbody', options: { scale: 0.45, topOffset: '-48%' } }
+      { id: 'avbody', options: { size: 'sm' } }
     ]);
   }
 });

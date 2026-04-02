@@ -498,8 +498,8 @@ const RARE_LINES=[
 // ══════════════════════════════════════════
 // SVG 아바타 표시 (avatar-svgs.js 로드 후 실행)
 if(typeof renderAvatarToEl === 'function'){
-  renderAvatarToEl('eoAv', {scale:0.35, topOffset:'0'});
-  renderAvatarToEl('headerAv', {scale:0.3, topOffset:'-5px'});
+  renderAvatarToEl('eoAv', {size:'sm'});
+  renderAvatarToEl('headerAv', {size:'xs'});
 } else {
   document.getElementById('eoAv').textContent=ARTIST_EMOJI;
   document.getElementById('headerAv').textContent=ARTIST_EMOJI;
@@ -772,8 +772,8 @@ async function submitBugReport(){var t=localStorage.getItem('accessToken');if(!t
 // 아바타 BroadcastChannel 동기화
 if(typeof initAvatarSync === 'function'){
   initAvatarSync([
-    {id:'eoAv', options:{scale:0.35, topOffset:'0'}},
-    {id:'headerAv', options:{scale:0.3, topOffset:'-5px'}}
+    {id:'eoAv', options:{size:'sm'}},
+    {id:'headerAv', options:{size:'xs'}}
   ]);
 }
 </script>
