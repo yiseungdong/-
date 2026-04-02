@@ -1411,3 +1411,12 @@ bcrypt, JWT, 최소수집(이메일+닉네임), 소셜로그인2FA, 욕설필터
 3. 리그별 아바타 차별화 (테두리/글로우/뱃지)
 4. 아티스트 꾸미기 (프리셋 방식 — 머리색/옷색)
 5. 아바타 헤어/의상 확장 (SVG 레이어 분리 — 큰 작업)
+
+### 2026.04.03 작업 내역
+- avatar-svgs.js 업그레이드: AVATAR_SIZE_PRESETS(xs/sm/md/lg/xl/full), renderAvatarCard(), getAuraCSS(), initAvatarCardSync()
+- 아바타 SVG 전 페이지 통일: astra(xl+sm)/shop(xs)/index(xs)/fandom(md)/room3d(lg)
+- room3d 3D→SVG: buildAvatar()→Object3D+overlay, buildArtistChar()→Object3D+overlay
+- 아티스트 꾸미기: buildArtistSVG(style), 🎨패널, 머리색/옷색/악세/아우라 8가지씩
+- avatar.html SVG 180x225 축소 + preview-section 380px + margin-top:20px
+- fandom 아바타 renderAvatarCard md + 채팅버튼 우측이동
+- astra 성궤탭 renderAvatarCard sm horizontal
