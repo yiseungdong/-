@@ -750,14 +750,7 @@ body::-webkit-scrollbar { width:0; }
       <div class="tab-panel" id="panel-orbit">
         <div class="orbit-card-container" style="padding:16px;">
           <div class="orbit-card" style="background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;">
-            <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
-              <div id="occOrb" style="width:64px;height:64px;border-radius:50%;overflow:hidden;border:2px solid rgba(192,132,252,0.4);box-shadow:0 0 12px rgba(192,132,252,0.3);flex-shrink:0;"></div>
-              <div>
-                <div id="occName" style="font-size:16px;font-weight:700;">별빛 탐험가</div>
-                <div id="occGrade" style="font-size:11px;color:var(--muted);margin-top:4px;">Lv.1 성아 — SEED</div>
-                <div id="occArchetype" style="font-size:10px;color:var(--accent);margin-top:2px;">수호자</div>
-              </div>
-            </div>
+            <div id="orbitAvatarCard" style="margin-bottom:16px;"></div>
             <div style="font-size:9px;color:var(--muted);text-align:right;" id="oscNumber">OSC-2026-0001</div>
           </div>
           <div class="section-title" style="margin-bottom:12px;">✦ STATS 스탯 현황</div>
@@ -1023,7 +1016,10 @@ function renderAll(){
     ag.style.borderRadius='20px';ag.style.display='inline-block';ag.style.background=grade.color+'12';}
   const li=document.getElementById('leagueIcon');if(li)li.textContent=league.icon;
   const ln=document.getElementById('leagueName');if(ln){ln.textContent=league.name;ln.style.color=league.color;}
-  if(typeof renderAvatarCard === 'function') renderAvatarCard('astraAvatarCard', { size:'xl', layout:'vertical', showSerial:true, showAura:false });
+  if(typeof renderAvatarCard === 'function') {
+    renderAvatarCard('astraAvatarCard', { size:'xl', layout:'vertical', showSerial:true, showAura:false });
+    renderAvatarCard('orbitAvatarCard', { size:'sm', layout:'horizontal', showName:true, showLevel:true, showLeague:true, showAura:true, showSerial:true });
+  }
   const le=document.getElementById('levelNum');if(le)le.textContent=level;
   const expCur=state.ap-levelToExpNeeded(level-1);
   const expNeed=levelToExpNeeded(level)-levelToExpNeeded(level-1);
@@ -1344,10 +1340,12 @@ renderAll();
 drawAvatar();
 if(typeof renderAvatarCard === 'function') {
   renderAvatarCard('astraAvatarCard', { size:'xl', layout:'vertical', showSerial:true, showAura:false });
+  renderAvatarCard('orbitAvatarCard', { size:'sm', layout:'horizontal', showName:true, showLevel:true, showLeague:true, showAura:true, showSerial:true });
 }
 if(typeof initAvatarCardSync === 'function') {
   initAvatarCardSync([
-    { id:'astraAvatarCard', options:{ size:'xl', layout:'vertical', showSerial:true, showAura:false } }
+    { id:'astraAvatarCard', options:{ size:'xl', layout:'vertical', showSerial:true, showAura:false } },
+    { id:'orbitAvatarCard', options:{ size:'sm', layout:'horizontal', showName:true, showLevel:true, showLeague:true, showAura:true, showSerial:true } }
   ]);
 }
 rotateAlert();

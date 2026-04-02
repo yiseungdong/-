@@ -27,7 +27,7 @@ canvas{position:absolute;inset:0;z-index:1}
 
 /* 아바타 */
 .avatar{position:absolute;z-index:20;transition:left .7s ease-in-out,top .7s ease-in-out;display:flex;flex-direction:column;align-items:center;pointer-events:none}
-.av-body{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--lp),var(--ls));border:2px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-size:12px;box-shadow:0 0 10px var(--lg),0 2px 6px rgba(0,0,0,.5)}
+.av-body{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--lp),var(--ls));border:2px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-size:12px;box-shadow:0 0 10px var(--lg),0 2px 6px rgba(0,0,0,.5);overflow:hidden}
 .av-tag{font-size:6px;font-weight:700;background:rgba(0,0,0,.7);padding:1px 4px;border-radius:4px;margin-top:1px;color:#fff}
 .avatar.walk .av-body{animation:avW .25s ease-in-out infinite alternate}
 @keyframes avW{0%{transform:translateY(0) rotate(-4deg)}100%{transform:translateY(-3px) rotate(4deg)}}
@@ -2162,10 +2162,10 @@ function initDrag(){
   function en(){drag=false}
   cont.addEventListener('mousedown',e=>{if(e.target.closest('.bld,.hdr-back,.mo'))return;st(e.clientX,e.clientY)});
   window.addEventListener('mousemove',e=>mv(e.clientX,e.clientY));window.addEventListener('mouseup',en);
-  cont.addEventListener('click',e=>{if(moved||e.target.closest('.bld,.hdr,.bot,.mo'))return;const a=document.getElementById('myAv');a.style.left=(e.clientX-cx-12)+'px';a.style.top=(e.clientY-cy-12)+'px';a.classList.add('walk');setTimeout(()=>a.classList.remove('walk'),700)});
+  cont.addEventListener('click',e=>{if(moved||e.target.closest('.bld,.hdr,.bot,.mo'))return;const a=document.getElementById('myAv');a.style.left=(e.clientX-cx-24)+'px';a.style.top=(e.clientY-cy-24)+'px';a.classList.add('walk');setTimeout(()=>a.classList.remove('walk'),700)});
   cont.addEventListener('touchstart',e=>{if(e.target.closest('.bld'))return;const tc=e.touches[0];st(tc.clientX,tc.clientY)},{passive:true});
   cont.addEventListener('touchmove',e=>{const tc=e.touches[0];mv(tc.clientX,tc.clientY)},{passive:true});
-  cont.addEventListener('touchend',e=>{if(!moved){const tc=e.changedTouches[0];const a=document.getElementById('myAv');a.style.left=(tc.clientX-cx-12)+'px';a.style.top=(tc.clientY-cy-12)+'px';a.classList.add('walk');setTimeout(()=>a.classList.remove('walk'),700)}en()});
+  cont.addEventListener('touchend',e=>{if(!moved){const tc=e.changedTouches[0];const a=document.getElementById('myAv');a.style.left=(tc.clientX-cx-24)+'px';a.style.top=(tc.clientY-cy-24)+'px';a.classList.add('walk');setTimeout(()=>a.classList.remove('walk'),700)}en()});
 }
 function animNPC(){document.querySelectorAll('.npc').forEach(n=>{setInterval(()=>{const cl=parseFloat(n.style.left)||900,ct=parseFloat(n.style.top)||800;n.style.left=Math.max(W*.2,Math.min(W*.8,cl+(Math.random()-.5)*50))+'px';n.style.top=Math.max(H*.3,Math.min(H*.75,ct+(Math.random()-.5)*40))+'px'},5000+Math.random()*4000)})}
 /* playEnt 로직은 DOMContentLoaded에 통합 */
@@ -2266,7 +2266,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   // 내 아바타 SVG 렌더 + BroadcastChannel 실시간 동기화
   if (typeof initAvatarSync === 'function') {
     initAvatarSync([
-      { id: 'fandomMyAvBody', options: { size: 'xs' } }
+      { id: 'fandomMyAvBody', options: { size: 'sm' } }
     ]);
   }
   /* 진입 애니메이션 먼저 처리, Canvas는 나중에 시작 */
