@@ -88,7 +88,7 @@ html,body {
 
 /* 꾸미기 도구바 */
 .edit-toolbar {
-  display:none; position:absolute; bottom:0; left:0; right:0; z-index:150;
+  display:none; position:fixed; bottom:0; left:0; right:0; z-index:500;
   background:rgba(5,8,20,.95); border-top:1px solid var(--border);
   backdrop-filter:blur(12px); flex-direction:column; max-height:40vh; overflow-y:auto;
 }
@@ -876,7 +876,7 @@ const keysPressed = {};
 
 // ── 방 크기 상수 ──
 const RW = 8, RH = 5, RD = 7;
-const ROOM_BOUNDS = { xMin:-(RW/2-0.4), xMax:RW/2-0.4, zMin:-(RD/2-0.4), zMax:RD/2-0.4 };
+const ROOM_BOUNDS = { xMin:-(RW/2-0.6), xMax:RW/2-0.6, zMin:-(RD/2-1.0), zMax:RD/2-0.6 };
 
 // ══════════════════════════════════════════
 //  THREE.JS 초기화
@@ -1436,7 +1436,7 @@ function onCanvasClick(e) {
   if(window._memoryStarClick && window._memoryStarClick(raycaster)) return;
 
   // 바닥 클릭 → 캐릭터 이동
-  const floorPlane = new THREE.Plane(new THREE.Vector3(0,1,0), 1.5);
+  const floorPlane = new THREE.Plane(new THREE.Vector3(0,1,0), 1.2);
   const target = new THREE.Vector3();
   raycaster.ray.intersectPlane(floorPlane, target);
   if(target) {
@@ -1496,7 +1496,7 @@ function onTouchEnd(e) {
         raycaster.setFromCamera(mouse, camera);
         if(window._memoryStarClick && window._memoryStarClick(raycaster)) return;
         // 바닥 탭 → 이동
-        const floorPlane = new THREE.Plane(new THREE.Vector3(0,1,0), 1.5);
+        const floorPlane = new THREE.Plane(new THREE.Vector3(0,1,0), 1.2);
         const target = new THREE.Vector3();
         raycaster.ray.intersectPlane(floorPlane, target);
         if(target) {
@@ -2531,7 +2531,7 @@ function showArtistBubble(text){
 // 아티스트 말풍선 위치 업데이트 (animate 루프에서 호출)
 function updateArtistBubblePos(){
   if(!artistMesh || !artistBubbleEl || !camera || !renderer) return;
-  var pos = new THREE.Vector3(artistMesh.position.x, artistMesh.position.y+1.2, artistMesh.position.z);
+  var pos = new THREE.Vector3(artistMesh.position.x, artistMesh.position.y+2.0, artistMesh.position.z);
   pos.project(camera);
   var cvs = renderer.domElement;
   var sx = (pos.x*0.5+0.5)*cvs.clientWidth;
@@ -2650,7 +2650,7 @@ function showMyBubble(text){
 
 function updateMyBubblePos(){
   if(!myAvatarMesh || !myBubbleEl || !camera || !renderer) return;
-  var pos = new THREE.Vector3(myAvatarMesh.position.x, myAvatarMesh.position.y+1.2, myAvatarMesh.position.z);
+  var pos = new THREE.Vector3(myAvatarMesh.position.x, myAvatarMesh.position.y+2.0, myAvatarMesh.position.z);
   pos.project(camera);
   var cvs = renderer.domElement;
   var sx = (pos.x*0.5+0.5)*cvs.clientWidth;
