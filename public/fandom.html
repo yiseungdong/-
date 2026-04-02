@@ -370,7 +370,7 @@ canvas{position:absolute;inset:0;z-index:1}
   background:rgba(10,10,22,0.96);
   backdrop-filter:blur(12px);
   border-top:1px solid rgba(180,150,255,0.18);
-  display:flex; align-items:center;
+  display:flex; align-items:center; justify-content:flex-end;
   padding:0 16px; gap:10px;
   cursor:pointer;
   transition:background .2s;
@@ -380,7 +380,6 @@ canvas{position:absolute;inset:0;z-index:1}
 .fc-chat-bar-label {
   font-size:11px; font-weight:600;
   color:rgba(200,190,220,0.7);
-  flex:1;
 }
 .fc-chat-bar-count {
   font-size:9px;
@@ -603,7 +602,7 @@ canvas{position:absolute;inset:0;z-index:1}
     <button class="chat-send" onclick="sendChatMsg()">➤</button>
   </div>
 </div>
-<div class="vc" id="vc"><div class="vw" id="vw"><canvas id="cv"></canvas><div id="bL"></div><div class="avatar" id="myAv" style="left:960px;top:760px"><div class="av-body" id="fandomMyAvBody" style="pointer-events:auto;cursor:pointer" onclick="openFcChat('all')"></div><div class="av-tag">나</div></div><div id="nL"></div><div id="miniEvts" style="position:absolute;z-index:25;pointer-events:none"></div></div></div>
+<div class="vc" id="vc"><div class="vw" id="vw"><canvas id="cv"></canvas><div id="bL"></div><div class="avatar" id="myAv" style="left:960px;top:760px"><div id="fandomMyAvBody" style="pointer-events:auto;cursor:pointer" onclick="openFcChat('all')"></div></div><div id="nL"></div><div id="miniEvts" style="position:absolute;z-index:25;pointer-events:none"></div></div></div>
 <div class="bot"><div class="bot-e"><div class="bot-eb"><div class="bot-ef" id="bE" style="width:72%"></div></div><div class="bot-el">에너지 <span id="bP">72%</span></div></div><div class="bot-d" id="bD">D-14</div></div>
 <div class="hint" id="hint">빈 곳을 클릭하면 이동!</div>
 <div class="mo" id="mo" onclick="closeMo(event)"><div class="mo-c" id="moC" onclick="event.stopPropagation()"></div></div>
@@ -2162,10 +2161,10 @@ function initDrag(){
   function en(){drag=false}
   cont.addEventListener('mousedown',e=>{if(e.target.closest('.bld,.hdr-back,.mo'))return;st(e.clientX,e.clientY)});
   window.addEventListener('mousemove',e=>mv(e.clientX,e.clientY));window.addEventListener('mouseup',en);
-  cont.addEventListener('click',e=>{if(moved||e.target.closest('.bld,.hdr,.bot,.mo'))return;const a=document.getElementById('myAv');a.style.left=(e.clientX-cx-24)+'px';a.style.top=(e.clientY-cy-24)+'px';a.classList.add('walk');setTimeout(()=>a.classList.remove('walk'),700)});
+  cont.addEventListener('click',e=>{if(moved||e.target.closest('.bld,.hdr,.bot,.mo'))return;const a=document.getElementById('myAv');a.style.left=(e.clientX-cx-16)+'px';a.style.top=(e.clientY-cy-30)+'px';a.classList.add('walk');setTimeout(()=>a.classList.remove('walk'),700)});
   cont.addEventListener('touchstart',e=>{if(e.target.closest('.bld'))return;const tc=e.touches[0];st(tc.clientX,tc.clientY)},{passive:true});
   cont.addEventListener('touchmove',e=>{const tc=e.touches[0];mv(tc.clientX,tc.clientY)},{passive:true});
-  cont.addEventListener('touchend',e=>{if(!moved){const tc=e.changedTouches[0];const a=document.getElementById('myAv');a.style.left=(tc.clientX-cx-24)+'px';a.style.top=(tc.clientY-cy-24)+'px';a.classList.add('walk');setTimeout(()=>a.classList.remove('walk'),700)}en()});
+  cont.addEventListener('touchend',e=>{if(!moved){const tc=e.changedTouches[0];const a=document.getElementById('myAv');a.style.left=(tc.clientX-cx-16)+'px';a.style.top=(tc.clientY-cy-30)+'px';a.classList.add('walk');setTimeout(()=>a.classList.remove('walk'),700)}en()});
 }
 function animNPC(){document.querySelectorAll('.npc').forEach(n=>{setInterval(()=>{const cl=parseFloat(n.style.left)||900,ct=parseFloat(n.style.top)||800;n.style.left=Math.max(W*.2,Math.min(W*.8,cl+(Math.random()-.5)*50))+'px';n.style.top=Math.max(H*.3,Math.min(H*.75,ct+(Math.random()-.5)*40))+'px'},5000+Math.random()*4000)})}
 /* playEnt 로직은 DOMContentLoaded에 통합 */
@@ -2264,9 +2263,21 @@ document.addEventListener('keydown',e=>{
 window.addEventListener('DOMContentLoaded',()=>{
   init();
   // 내 아바타 SVG 렌더 + BroadcastChannel 실시간 동기화
-  if (typeof initAvatarSync === 'function') {
-    initAvatarSync([
-      { id: 'fandomMyAvBody', options: { size: 'sm' } }
+  if (typeof renderAvatarCard === 'function') {
+    renderAvatarCard('fandomMyAvBody', {
+      size: 'xs',
+      layout: 'vertical',
+      showName: true,
+      showLevel: true,
+      showLeague: false,
+      showAura: false,
+      showSerial: false,
+      nameSize: '9px'
+    });
+  }
+  if (typeof initAvatarCardSync === 'function') {
+    initAvatarCardSync([
+      { id: 'fandomMyAvBody', options: { size: 'xs', layout: 'vertical', showName: true, showLevel: true, showLeague: false, showAura: false, showSerial: false, nameSize: '9px' } }
     ]);
   }
   /* 진입 애니메이션 먼저 처리, Canvas는 나중에 시작 */
