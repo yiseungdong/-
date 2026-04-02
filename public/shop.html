@@ -191,6 +191,15 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
     <button class="bal-charge" onclick="showToast('💫 충전 기능은 추후 오픈!')">+ 충전</button>
   </div>
 
+  <!-- 내 프로필 -->
+  <div style="display:flex;align-items:center;gap:10px;padding:8px 14px;margin-bottom:8px;background:var(--panel);border:1px solid var(--border);border-radius:14px;">
+    <div id="shopMyAv" style="width:40px;height:40px;border-radius:50%;overflow:hidden;border:2px solid rgba(192,132,252,0.4);display:flex;align-items:center;justify-content:center;flex-shrink:0;"></div>
+    <div>
+      <div id="shopMyName" style="font-size:13px;font-weight:700;"></div>
+      <div id="shopMySerial" style="font-size:9px;letter-spacing:1px;margin-top:1px;"></div>
+    </div>
+  </div>
+
   <!-- 상점 주인 NPC -->
   <div class="npc-bar">
     <div class="npc-avatar">🧙</div>
@@ -532,6 +541,22 @@ renderTabs();renderContent();
 </div></div></div>
 <script>
 async function submitBugReport(){var t=localStorage.getItem('accessToken');if(!t){alert('로그인이 필요합니다.');return}try{var r=await fetch('/api/bugs',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},body:JSON.stringify({page:document.getElementById('bugPage').value,issue_type:document.getElementById('bugType').value,description:document.getElementById('bugDesc').value})});var d=await r.json();if(r.ok){if(typeof showToast==='function')showToast(d.message);else alert(d.message);document.getElementById('bugModal').classList.remove('open');document.getElementById('bugDesc').value=''}else{alert(d.message||'제출 실패')}}catch(e){alert('네트워크 오류')}}
+</script>
+<script src="/js/avatar-svgs.js"></script>
+<script>
+// 내 아바타 + 이름 표시
+if(typeof initAvatarSync === 'function'){
+  initAvatarSync([{id:'shopMyAv', options:{scale:0.3, topOffset:'-15%'}}]);
+}
+var sn = document.getElementById('shopMyName');
+if(sn) sn.textContent = localStorage.getItem('asteria_nick') || '별빛 탐험가';
+var ss = document.getElementById('shopMySerial');
+if(ss){
+  var serial = localStorage.getItem('asteria_serial') || '';
+  if(serial){
+    ss.innerHTML = '<span style="color:#c084fc;font-family:Orbitron,monospace;font-weight:700">' + serial.slice(0,2) + '</span><span style="color:#f0c040;font-family:Orbitron,monospace;font-weight:700">' + serial.slice(2) + '</span>';
+  }
+}
 </script>
 </body>
 </html>

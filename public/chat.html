@@ -464,10 +464,10 @@ function detectMood(text){
 // ══════════════════════════════════════════
 const savedArtist=JSON.parse(localStorage.getItem('asteria_artist')||'null');
 const savedChars=JSON.parse(localStorage.getItem('asteria_chars')||'null');
-const ARTIST_NAME=savedArtist?.name||savedChars?.artist?.name||'나의 아티스트';
+const ARTIST_NAME=localStorage.getItem('asteria_artist_name')||savedArtist?.name||savedChars?.artist?.name||'나의 아티스트';
 const ARTIST_EMOJI=savedArtist?.emoji||savedChars?.artist?.emoji||'🌟';
 const ARTIST_ROLE=savedArtist?.role||savedChars?.artist?.role||'나만의 아티스트 — My Artist';
-const USER_NAME=savedChars?.my?.name||'별빛 탐험가';
+const USER_NAME=localStorage.getItem('asteria_nick')||savedChars?.my?.name||'별빛 탐험가';
 const USER_EMOJI=savedChars?.my?.emoji||'🌌';
 const TOTAL_TIME=600; // 프로토타입 고정
 
@@ -496,6 +496,12 @@ const RARE_LINES=[
 //  초기화
 // ══════════════════════════════════════════
 document.getElementById('eoAv').textContent=ARTIST_EMOJI;
+// 입장 오버레이에 내 SVG 아바타도 표시
+if(typeof getBaseSVG === 'function'){
+  var base = localStorage.getItem('asteria_avatar_base') || 'm1';
+  var eoAv = document.getElementById('eoAv');
+  if(eoAv) eoAv.innerHTML = '<div style="transform:scale(0.35);transform-origin:center center;">' + getBaseSVG(base) + '</div>';
+}
 document.getElementById('eoName').textContent=ARTIST_NAME;
 document.getElementById('eoRole').textContent=ARTIST_ROLE;
 document.getElementById('headerAv').textContent=ARTIST_EMOJI;
@@ -761,5 +767,6 @@ function showToast(msg){
 <script>
 async function submitBugReport(){var t=localStorage.getItem('accessToken');if(!t){alert('로그인이 필요합니다.');return}try{var r=await fetch('/api/bugs',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},body:JSON.stringify({page:document.getElementById('bugPage').value,issue_type:document.getElementById('bugType').value,description:document.getElementById('bugDesc').value})});var d=await r.json();if(r.ok){if(typeof showToast==='function')showToast(d.message);else alert(d.message);document.getElementById('bugModal').classList.remove('open');document.getElementById('bugDesc').value=''}else{alert(d.message||'제출 실패')}}catch(e){alert('네트워크 오류')}}
 </script>
+<script src="/js/avatar-svgs.js"></script>
 </body>
 </html>
