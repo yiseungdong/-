@@ -508,8 +508,8 @@ html,body {
 @keyframes abIn { from{opacity:0;transform:translate(-50%,calc(-100% + 8px))} to{opacity:1;transform:translate(-50%,-100%)} }
 /* 아티스트 대화 입력 바 */
 .artist-chat-bar {
-  position:fixed; bottom:12px; left:50%; transform:translateX(-50%);
-  z-index:9000; display:none; align-items:center; gap:8px;
+  position:absolute; bottom:12px; left:50%; transform:translateX(-50%);
+  z-index:90; display:none; align-items:center; gap:8px;
   background:rgba(10,10,22,0.95); border:1px solid rgba(240,192,64,0.3);
   border-radius:24px; padding:6px 8px 6px 16px;
   backdrop-filter:blur(10px); width:min(380px,85vw);
@@ -713,6 +713,12 @@ html,body {
       <div class="canvas-container" id="canvasContainer">
         <!-- Three.js 캔버스 -->
         <canvas id="threeCanvas"></canvas>
+        <!-- 아티스트 대화 입력바 -->
+        <div class="artist-chat-bar" id="artistChatBar">
+          <div class="artist-timer" id="artistTimer">10:00</div>
+          <input class="artist-chat-input" id="artistInput" placeholder="아티스트에게 말하기..." maxlength="200">
+          <button class="artist-chat-send" onclick="sendArtistMsg()">✦</button>
+        </div>
 
         <!-- Gift Box Overlay — 캔버스 오른쪽 벽 중간 -->
         <div class="giftbox-wrap" id="giftboxWrap" onclick="openGiftBox()">
@@ -2428,13 +2434,6 @@ window.addEventListener('load', ()=>{
   init();
 })();
 </script>
-
-<!-- 아티스트 대화 입력바 -->
-<div class="artist-chat-bar" id="artistChatBar">
-  <div class="artist-timer" id="artistTimer">10:00</div>
-  <input class="artist-chat-input" id="artistInput" placeholder="아티스트에게 말하기..." maxlength="200">
-  <button class="artist-chat-send" onclick="sendArtistMsg()">✦</button>
-</div>
 
 <!-- 버그 리포트 플로팅 버튼 + 모달 -->
 <style>
