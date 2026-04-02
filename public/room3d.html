@@ -2472,7 +2472,6 @@ window.addEventListener('load', ()=>{
 async function submitBugReport(){var t=localStorage.getItem('accessToken');if(!t){alert('로그인이 필요합니다.');return}try{var r=await fetch('/api/bugs',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},body:JSON.stringify({page:document.getElementById('bugPage').value,issue_type:document.getElementById('bugType').value,description:document.getElementById('bugDesc').value})});var d=await r.json();if(r.ok){if(typeof showToast==='function')showToast(d.message);else alert(d.message);document.getElementById('bugModal').classList.remove('open');document.getElementById('bugDesc').value=''}else{alert(d.message||'제출 실패')}}catch(e){alert('네트워크 오류')}}
 </script>
 <script src="/js/avatar-svgs.js"></script>
-<script src="/js/avatar-renderer.js"></script>
 <script>
 // ══════════════════════════════════════════
 // 아티스트 초대 시스템

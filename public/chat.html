@@ -404,6 +404,7 @@ html,body {
   </div>
 </div>
 
+<script src="/js/avatar-svgs.js"></script>
 <script>
 // ══════════════════════════════════════════
 //  별빛 배경
@@ -495,16 +496,16 @@ const RARE_LINES=[
 // ══════════════════════════════════════════
 //  초기화
 // ══════════════════════════════════════════
-document.getElementById('eoAv').textContent=ARTIST_EMOJI;
-// 입장 오버레이에 내 SVG 아바타도 표시
-if(typeof getBaseSVG === 'function'){
-  var base = localStorage.getItem('asteria_avatar_base') || 'm1';
-  var eoAv = document.getElementById('eoAv');
-  if(eoAv) eoAv.innerHTML = '<div style="transform:scale(0.35);transform-origin:center center;">' + getBaseSVG(base) + '</div>';
+// SVG 아바타 표시 (avatar-svgs.js 로드 후 실행)
+if(typeof renderAvatarToEl === 'function'){
+  renderAvatarToEl('eoAv', {scale:0.35, topOffset:'0'});
+  renderAvatarToEl('headerAv', {scale:0.3, topOffset:'-5px'});
+} else {
+  document.getElementById('eoAv').textContent=ARTIST_EMOJI;
+  document.getElementById('headerAv').textContent=ARTIST_EMOJI;
 }
 document.getElementById('eoName').textContent=ARTIST_NAME;
 document.getElementById('eoRole').textContent=ARTIST_ROLE;
-document.getElementById('headerAv').textContent=ARTIST_EMOJI;
 document.getElementById('headerName').textContent=ARTIST_NAME;
 document.getElementById('headerRole').textContent=ARTIST_ROLE;
 const mm=Math.floor(TOTAL_TIME/60),ss=TOTAL_TIME%60;
@@ -767,6 +768,14 @@ function showToast(msg){
 <script>
 async function submitBugReport(){var t=localStorage.getItem('accessToken');if(!t){alert('로그인이 필요합니다.');return}try{var r=await fetch('/api/bugs',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},body:JSON.stringify({page:document.getElementById('bugPage').value,issue_type:document.getElementById('bugType').value,description:document.getElementById('bugDesc').value})});var d=await r.json();if(r.ok){if(typeof showToast==='function')showToast(d.message);else alert(d.message);document.getElementById('bugModal').classList.remove('open');document.getElementById('bugDesc').value=''}else{alert(d.message||'제출 실패')}}catch(e){alert('네트워크 오류')}}
 </script>
-<script src="/js/avatar-svgs.js"></script>
+<script>
+// 아바타 BroadcastChannel 동기화
+if(typeof initAvatarSync === 'function'){
+  initAvatarSync([
+    {id:'eoAv', options:{scale:0.35, topOffset:'0'}},
+    {id:'headerAv', options:{scale:0.3, topOffset:'-5px'}}
+  ]);
+}
+</script>
 </body>
 </html>

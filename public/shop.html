@@ -544,15 +544,10 @@ async function submitBugReport(){var t=localStorage.getItem('accessToken');if(!t
 </script>
 <script src="/js/avatar-svgs.js"></script>
 <script>
-// shop 아바타 렌더링
-(function(){
-  var el = document.getElementById('shopMyAv');
-  if(!el) return;
-  var base = localStorage.getItem('asteria_avatar_base') || 'm1';
-  if(typeof getBaseSVG === 'function'){
-    el.innerHTML = '<div style="transform:scale(0.28);transform-origin:top center;position:relative;top:-10px;display:flex;align-items:center;justify-content:center;">' + getBaseSVG(base) + '</div>';
-  }
-})();
+// shop 아바타 렌더링 + BroadcastChannel 동기화
+if(typeof initAvatarSync === 'function'){
+  initAvatarSync([{id:'shopMyAv', options:{scale:0.28, topOffset:'-10px'}}]);
+}
 var sn = document.getElementById('shopMyName');
 if(sn) sn.textContent = localStorage.getItem('asteria_nick') || '별빛 탐험가';
 </script>
