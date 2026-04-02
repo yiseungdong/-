@@ -1054,183 +1054,40 @@ function buildRoom() {
 
 // ── SD 아바타 (2등신 귀여운 캐릭터) ──
 function buildAvatar() {
-  if(myAvatarMesh) { roomGroup.remove(myAvatarMesh); myAvatarMesh=null; avatarHead=null; }
-  const group = new THREE.Group();
+  if(myAvatarMesh) { roomGroup.remove(myAvatarMesh); myAvatarMesh=null; }
+  avatarHead = null;
 
-  // asteria_avatar_base 값에 따라 캐릭터 색상 결정
-  const base = localStorage.getItem('asteria_avatar_base') || 'm1';
-  const CHAR_COLORS = {
-    m1: { skin: 0xfce4d6, body: 0xf0c040, hair: 0x7c3aed }, // 루카 — 노란 옷, 보라 머리
-    m2: { skin: 0xfce4d6, body: 0xff6b6b, hair: 0x333333 }, // 제이 — 빨간 옷, 검정 머리
-    m3: { skin: 0xfde8c8, body: 0x38bdf8, hair: 0x4a90d9 }, // 코코 — 하늘 옷, 파랑 머리
-    f1: { skin: 0xfce4d6, body: 0xff85c2, hair: 0xc084fc }, // 아리 — 핑크 옷, 보라 머리
-    f2: { skin: 0xfde8c8, body: 0xa78bfa, hair: 0x6d28d9 }, // 세나 — 보라 옷, 진보라 머리
-    f3: { skin: 0xfce4d6, body: 0x34d399, hair: 0x1a1a2e }, // 루나 — 초록 옷, 검정 머리
-  };
-  const cc = CHAR_COLORS[base] || CHAR_COLORS.m1;
-  const skinColor = cc.skin;
-  const bodyColor = cc.body;
-  const hairColor = cc.hair;
-  const skinMat = new THREE.MeshStandardMaterial({color:skinColor, roughness:0.6, metalness:0.02});
-  const bodyMat = new THREE.MeshStandardMaterial({color:bodyColor, emissive:bodyColor, emissiveIntensity:0.1, roughness:0.4, metalness:0.15});
-  const hairMat = new THREE.MeshStandardMaterial({color:hairColor, emissive:hairColor, emissiveIntensity:0.08, roughness:0.5, metalness:0.1});
+  // 위치 추적용 Object3D (3D 씬 안에서 이동)
+  myAvatarMesh = new THREE.Object3D();
+  myAvatarMesh.position.set(2.2, -1.2, 1.5);
+  myAvatarMesh.userData.isMyAvatar = true;
+  roomGroup.add(myAvatarMesh);
 
-  // ── Head group (for tilt animation) ──
-  const headGroup = new THREE.Group();
-  headGroup.position.y = 0.72;
+  // CSS 오버레이로 SVG 아바타 생성
+  var existing = document.getElementById('avatarOverlay');
+  if(existing) existing.remove();
+  var overlay = document.createElement('div');
+  overlay.id = 'avatarOverlay';
+  overlay.style.cssText = 'position:absolute;z-index:60;pointer-events:none;';
+  document.getElementById('canvasContainer').appendChild(overlay);
 
-  // head sphere (big, SD proportions)
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.38, 24, 20), skinMat);
-  head.castShadow = true;
-  headGroup.add(head);
-
-  // hair (hemisphere on top + side volumes)
-  const hairTop = new THREE.Mesh(new THREE.SphereGeometry(0.40, 24, 16, 0, Math.PI*2, 0, Math.PI*0.55), hairMat);
-  hairTop.position.y = 0.04;
-  headGroup.add(hairTop);
-
-  // hair back volume
-  const hairBack = new THREE.Mesh(new THREE.SphereGeometry(0.36, 16, 12, 0, Math.PI*2, 0.3, Math.PI*0.5), hairMat.clone());
-  hairBack.position.set(0, -0.02, -0.08);
-  hairBack.scale.set(1, 1, 1.15);
-  headGroup.add(hairBack);
-
-  // fringe (small box bangs)
-  const fringeMat = hairMat.clone();
-  const fringe = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.08, 0.15), fringeMat);
-  fringe.position.set(0, 0.2, 0.28);
-  fringe.rotation.x = 0.15;
-  headGroup.add(fringe);
-
-  // ── Eyes (big cute SD eyes) ──
-  [[-0.12, 0],[0.12, 0]].forEach(([ox])=>{
-    // eye white
-    const ewGeo = new THREE.SphereGeometry(0.065, 12, 12);
-    const ewMat = new THREE.MeshBasicMaterial({color:0xffffff});
-    const ew = new THREE.Mesh(ewGeo, ewMat);
-    ew.position.set(ox, 0.02, 0.32);
-    ew.scale.set(1, 1.1, 0.6);
-    headGroup.add(ew);
-
-    // iris
-    const irisMat = new THREE.MeshBasicMaterial({color:0x1a1030});
-    const iris = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 10), irisMat);
-    iris.position.set(ox, 0.02, 0.35);
-    iris.scale.set(1, 1.1, 0.5);
-    headGroup.add(iris);
-
-    // highlight sparkle (top-right of each eye)
-    const hlMat = new THREE.MeshBasicMaterial({color:0xffffff});
-    const hl = new THREE.Mesh(new THREE.SphereGeometry(0.018, 6, 6), hlMat);
-    hl.position.set(ox+0.02, 0.06, 0.37);
-    headGroup.add(hl);
-
-    // small bottom highlight
-    const hl2 = new THREE.Mesh(new THREE.SphereGeometry(0.01, 6, 6), hlMat.clone());
-    hl2.position.set(ox-0.01, -0.01, 0.37);
-    headGroup.add(hl2);
-  });
-
-  // ── Cheek blush (2 soft pink circles) ──
-  const blushMat = new THREE.MeshBasicMaterial({color:0xffaaaa, transparent:true, opacity:0.35});
-  [[-0.2, -0.06],[0.2, -0.06]].forEach(([bx, by])=>{
-    const blush = new THREE.Mesh(new THREE.CircleGeometry(0.06, 12), blushMat);
-    blush.position.set(bx, by, 0.36);
-    headGroup.add(blush);
-  });
-
-  // ── Mouth (small curved smile — torus arc) ──
-  const smileGeo = new THREE.TorusGeometry(0.04, 0.012, 8, 12, Math.PI);
-  const smileMat = new THREE.MeshBasicMaterial({color:0xcc6666});
-  const smile = new THREE.Mesh(smileGeo, smileMat);
-  smile.position.set(0, -0.08, 0.35);
-  smile.rotation.x = -0.1;
-  smile.rotation.z = Math.PI; // flip so curve goes up = smile
-  headGroup.add(smile);
-
-  group.add(headGroup);
-  avatarHead = headGroup;
-
-  // ── Body (short chubby cylinder) ──
-  const bodyGeo = new THREE.CylinderGeometry(0.18, 0.22, 0.4, 20);
-  const body = new THREE.Mesh(bodyGeo, bodyMat);
-  body.position.y = 0.2;
-  body.castShadow = true;
-  group.add(body);
-
-  // ── Arms (small spheres on sides) ──
-  const armMat = bodyMat.clone();
-  [[-1, 1]].forEach(()=>{
-    [-0.28, 0.28].forEach((ax, i)=>{
-      const arm = new THREE.Mesh(new THREE.SphereGeometry(0.09, 12, 12), armMat);
-      arm.position.set(ax, 0.26, 0.02);
-      arm.scale.set(0.8, 1, 0.8);
-      arm.castShadow = true;
-      group.add(arm);
-      // small hand (skin sphere)
-      const hand = new THREE.Mesh(new THREE.SphereGeometry(0.055, 10, 10), skinMat.clone());
-      hand.position.set(ax * 1.2, 0.15, 0.04);
-      group.add(hand);
+  // renderAvatarCard로 통일된 아바타 표시
+  if(typeof renderAvatarCard === 'function') {
+    renderAvatarCard('avatarOverlay', {
+      size: 'md',
+      layout: 'vertical',
+      showName: true,
+      showLevel: true,
+      showLeague: false,
+      showAura: true,
+      showSerial: false,
+      nameSize: '11px'
     });
-  });
-
-  // ── Legs (groups for walk animation) ──
-  const legMat = new THREE.MeshStandardMaterial({color:0x6d28d9, roughness:0.5, metalness:0.1});
-  const footMat = new THREE.MeshStandardMaterial({color:0x4c1d95, roughness:0.4});
-  const legNames = ['left','right'];
-  [-0.09, 0.09].forEach((lx, li)=>{
-    const legGroup = new THREE.Group();
-    legGroup.position.set(lx, -0.1, 0);
-    const legMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.08, 0.22, 12), legMat.clone());
-    legMesh.castShadow = true;
-    legGroup.add(legMesh);
-    const foot = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 8), footMat.clone());
-    foot.position.set(0, -0.12, 0.02);
-    foot.scale.set(1, 0.6, 1.2);
-    legGroup.add(foot);
-    group.add(legGroup);
-  });
-
-  // ── Ground shadow ──
-  const shGeo = new THREE.CircleGeometry(0.35, 20);
-  const shMat = new THREE.MeshBasicMaterial({color:0x000000, transparent:true, opacity:0.2});
-  const sh = new THREE.Mesh(shGeo, shMat);
-  sh.rotation.x = -Math.PI/2; sh.position.y = -0.33;
-  group.add(sh);
-
-  // ── Aura ring ──
-  const ringGeo = new THREE.TorusGeometry(0.35, 0.015, 8, 48);
-  const ringMat = new THREE.MeshStandardMaterial({
-    color:bodyColor, emissive:bodyColor, emissiveIntensity:1.0,
-    transparent:true, opacity:0.5,
-  });
-  const ring = new THREE.Mesh(ringGeo, ringMat);
-  ring.position.y = 0.0; ring.rotation.x = Math.PI/2;
-  ring.userData.isAura = true;
-  group.add(ring);
-
-  // ── Character glow ──
-  const charLight = new THREE.PointLight(bodyColor, 0.4, 3);
-  charLight.position.y = 0.5;
-  group.add(charLight);
-
-  group.position.set(2.2, -1.2, 1.5);  // 방 오른쪽 앞
-  group.scale.setScalar(0.55);          // 방 대비 작게
-  group.userData.isMyAvatar = true;
-  roomGroup.add(group);
-  myAvatarMesh = group;
-
-  // ── CSS Nametag overlay ──
-  let tag = document.getElementById('avatarTag');
-  if(!tag){
-    tag = document.createElement('div');
-    tag.id = 'avatarTag';
-    tag.style.cssText = 'position:absolute;top:0;left:0;z-index:70;pointer-events:none;font-family:Orbitron,monospace;text-align:center;transition:opacity .3s';
-    var roomNick = localStorage.getItem('asteria_nick') || '별빛 탐험가';
-    var roomLevel = localStorage.getItem('asteria_level') || '1';
-    tag.innerHTML = '<div style="font-size:12px;font-weight:900;color:#f0c040;text-shadow:0 0 8px rgba(240,192,64,.4),0 1px 3px rgba(0,0,0,.8);letter-spacing:1px">' + roomNick + '</div><div style="font-size:10px;color:#c084fc;margin-top:2px;text-shadow:0 1px 3px rgba(0,0,0,.8)">Lv.' + roomLevel + '</div>';
-    document.getElementById('canvasContainer').appendChild(tag);
   }
+
+  // 기존 avatarTag 제거 — renderAvatarCard가 이름을 포함하므로
+  var oldTag = document.getElementById('avatarTag');
+  if(oldTag) oldTag.remove();
 }
 
 // (3D pouch removed — now HTML overlay)
@@ -1390,30 +1247,24 @@ function animate() {
     const breath = Math.sin(floatTime*0.8)*0.02;
     myAvatarMesh.position.y = -1.2 + breath;
 
-    if(avatarHead) {
-      avatarHead.rotation.z = Math.sin(floatTime*0.5)*0.05;
-      avatarHead.rotation.x = Math.sin(floatTime*0.35+1)*0.03;
-    }
-    myAvatarMesh.children.forEach(child=>{
-      if(child.userData.isAura) child.rotation.z = floatTime*0.6;
-    });
-
-    // CSS 이름표
-    const tag = document.getElementById('avatarTag');
-    if(tag && camera && renderer) {
-      const pos = new THREE.Vector3(
+    // ── SVG 오버레이 위치 업데이트 ──
+    var avatarOv = document.getElementById('avatarOverlay');
+    if(avatarOv && camera && renderer) {
+      var avPos = new THREE.Vector3(
         myAvatarMesh.position.x,
-        myAvatarMesh.position.y + 1.0,
+        myAvatarMesh.position.y + 0.5,
         myAvatarMesh.position.z
       );
-      pos.project(camera);
-      const cvs = renderer.domElement;
-      const sx = (pos.x * 0.5 + 0.5) * cvs.clientWidth;
-      const sy = (-pos.y * 0.5 + 0.5) * cvs.clientHeight;
-      tag.style.left = sx + 'px';
-      tag.style.top = sy + 'px';
-      tag.style.transform = 'translate(-50%,-100%)';
-      tag.style.opacity = pos.z < 1 ? '1' : '0';
+      avPos.project(camera);
+      var cvs = renderer.domElement;
+      var sx = (avPos.x * 0.5 + 0.5) * cvs.clientWidth;
+      var sy = (-avPos.y * 0.5 + 0.5) * cvs.clientHeight;
+      var dist = camera.position.distanceTo(myAvatarMesh.position);
+      var scaleVal = Math.max(0.4, Math.min(1.5, 5.0 / dist));
+      avatarOv.style.left = sx + 'px';
+      avatarOv.style.top = sy + 'px';
+      avatarOv.style.transform = 'translate(-50%,-90%) scale(' + scaleVal + ')';
+      avatarOv.style.opacity = avPos.z < 1 ? '1' : '0';
     }
   }
 
@@ -1437,12 +1288,21 @@ function animate() {
     }
     var ab=Math.sin(floatTime*0.9)*0.02;
     artistMesh.position.y=-1.2+ab;
-    if(artistHead){
-      artistHead.rotation.z=Math.sin(floatTime*0.6+2)*0.06;
-      artistHead.rotation.x=Math.sin(floatTime*0.4+1)*0.04;
+    // 아티스트 SVG 오버레이 위치 업데이트
+    var artistOv = document.getElementById('artistOverlay');
+    if(artistOv && camera && renderer) {
+      var aPos = new THREE.Vector3(artistMesh.position.x, artistMesh.position.y + 0.5, artistMesh.position.z);
+      aPos.project(camera);
+      var cvs = renderer.domElement;
+      var asx = (aPos.x * 0.5 + 0.5) * cvs.clientWidth;
+      var asy = (-aPos.y * 0.5 + 0.5) * cvs.clientHeight;
+      var adist = camera.position.distanceTo(artistMesh.position);
+      var ascale = Math.max(0.4, Math.min(1.5, 5.0 / adist));
+      artistOv.style.left = asx + 'px';
+      artistOv.style.top = asy + 'px';
+      artistOv.style.transform = 'translate(-50%,-90%) scale(' + ascale + ')';
+      artistOv.style.opacity = aPos.z < 1 ? '1' : '0';
     }
-    artistMesh.children.forEach(function(c){if(c.userData.isAura)c.rotation.z=floatTime*0.8;});
-    updateArtistTag();
     updateArtistBubblePos();
   }
   // 내 말풍선 위치 업데이트
@@ -2476,6 +2336,32 @@ async function submitBugReport(){var t=localStorage.getItem('accessToken');if(!t
 // ══════════════════════════════════════════
 // 아티스트 초대 시스템
 // ══════════════════════════════════════════
+var ARTIST_SVG = '<svg width="64" height="80" viewBox="0 0 80 100">' +
+  '<ellipse cx="40" cy="72" rx="18" ry="22" fill="#f472b6"/>' +
+  '<rect x="36" y="52" width="8" height="8" rx="2" fill="#fce4d6"/>' +
+  '<ellipse cx="40" cy="42" rx="18" ry="17" fill="#fce4d6"/>' +
+  '<ellipse cx="33" cy="40" rx="4" ry="4.5" fill="white"/>' +
+  '<ellipse cx="47" cy="40" rx="4" ry="4.5" fill="white"/>' +
+  '<circle cx="34" cy="41" r="2.5" fill="#f0c040"/>' +
+  '<circle cx="48" cy="41" r="2.5" fill="#f0c040"/>' +
+  '<circle cx="35" cy="40" r="0.8" fill="white"/>' +
+  '<circle cx="49" cy="40" r="0.8" fill="white"/>' +
+  '<path d="M36 47 Q40 50 44 47" stroke="#ff6b8a" stroke-width="1.2" fill="none"/>' +
+  '<ellipse cx="40" cy="28" rx="18" ry="13" fill="#f0c040"/>' +
+  '<rect x="22" y="28" width="7" height="20" rx="3" fill="#f0c040"/>' +
+  '<rect x="51" y="28" width="7" height="20" rx="3" fill="#f0c040"/>' +
+  '<polygon points="30,18 33,8 36,18" fill="#f0c040"/>' +
+  '<polygon points="37,16 40,5 43,16" fill="#f0c040"/>' +
+  '<polygon points="44,18 47,8 50,18" fill="#f0c040"/>' +
+  '<circle cx="33" cy="10" r="2" fill="#fbbf24"/>' +
+  '<circle cx="40" cy="7" r="2.5" fill="#fbbf24"/>' +
+  '<circle cx="47" cy="10" r="2" fill="#fbbf24"/>' +
+  '<rect x="18" y="58" width="7" height="18" rx="3" fill="#f472b6"/>' +
+  '<rect x="55" y="58" width="7" height="18" rx="3" fill="#f472b6"/>' +
+  '<rect x="28" y="90" width="9" height="10" rx="3" fill="#c084fc"/>' +
+  '<rect x="43" y="90" width="9" height="10" rx="3" fill="#c084fc"/>' +
+  '</svg>';
+
 var artistMesh = null;
 var artistHead = null;
 var artistActive = false;
@@ -2497,71 +2383,32 @@ function setArtistName(name){
 
 // 아티스트 3D 캐릭터 빌드 (핑크+골드 테마)
 function buildArtistChar() {
-  if(artistMesh){ roomGroup.remove(artistMesh); artistMesh=null; artistHead=null; }
-  var g = new THREE.Group();
-  var skinMat = new THREE.MeshStandardMaterial({color:0xfce4d6, roughness:0.6, metalness:0.02});
-  var bodyMat = new THREE.MeshStandardMaterial({color:0xf472b6, emissive:0xf472b6, emissiveIntensity:0.15, roughness:0.4, metalness:0.15});
-  var hairMat = new THREE.MeshStandardMaterial({color:0xf0c040, emissive:0xf0c040, emissiveIntensity:0.1, roughness:0.5, metalness:0.1});
-  // 머리
-  var hg = new THREE.Group(); hg.position.y = 0.72;
-  var head = new THREE.Mesh(new THREE.SphereGeometry(0.38,24,20), skinMat); head.castShadow=true; hg.add(head);
-  var hairTop = new THREE.Mesh(new THREE.SphereGeometry(0.40,24,16,0,Math.PI*2,0,Math.PI*0.55), hairMat); hairTop.position.y=0.04; hg.add(hairTop);
-  var hairBack = new THREE.Mesh(new THREE.SphereGeometry(0.36,16,12,0,Math.PI*2,0.3,Math.PI*0.5), hairMat.clone()); hairBack.position.set(0,-0.02,-0.08); hairBack.scale.set(1,1,1.15); hg.add(hairBack);
-  var fringe = new THREE.Mesh(new THREE.BoxGeometry(0.52,0.08,0.15), hairMat.clone()); fringe.position.set(0,0.2,0.28); fringe.rotation.x=0.15; hg.add(fringe);
-  // 눈 (별 모양 눈동자)
-  [[-0.12,0],[0.12,0]].forEach(function(ox){
-    var ew=new THREE.Mesh(new THREE.SphereGeometry(0.065,12,12),new THREE.MeshBasicMaterial({color:0xffffff}));
-    ew.position.set(ox[0],0.02,0.32); ew.scale.set(1,1.2,0.5); hg.add(ew);
-    var iris=new THREE.Mesh(new THREE.SphereGeometry(0.04,10,10),new THREE.MeshBasicMaterial({color:0xf0c040}));
-    iris.position.set(ox[0],0.02,0.36); iris.scale.set(1,1,0.3); hg.add(iris);
-    var pupil=new THREE.Mesh(new THREE.SphereGeometry(0.02,8,8),new THREE.MeshBasicMaterial({color:0x1a1a2e}));
-    pupil.position.set(ox[0],0.02,0.38); pupil.scale.set(1,1,0.3); hg.add(pupil);
-  });
-  // 입 (미소)
-  var smileShape = new THREE.Shape();
-  smileShape.moveTo(-0.06,0); smileShape.quadraticCurveTo(0,-0.04,0.06,0);
-  var smileGeo = new THREE.ShapeGeometry(smileShape);
-  var smile = new THREE.Mesh(smileGeo, new THREE.MeshBasicMaterial({color:0xff6b8a,side:THREE.DoubleSide}));
-  smile.position.set(0,-0.1,0.35); hg.add(smile);
-  // 왕관 (아티스트 특징)
-  var crownMat = new THREE.MeshStandardMaterial({color:0xf0c040,emissive:0xf0c040,emissiveIntensity:0.6,metalness:0.5});
-  var crownBase = new THREE.Mesh(new THREE.CylinderGeometry(0.15,0.18,0.06,6), crownMat);
-  crownBase.position.set(0,0.38,0); hg.add(crownBase);
-  [-0.08,0,0.08].forEach(function(cx){
-    var spike = new THREE.Mesh(new THREE.CylinderGeometry(0.01,0.04,0.08,4), crownMat.clone());
-    spike.position.set(cx,0.44,0); hg.add(spike);
-  });
-  g.add(hg); artistHead = hg;
-  // 몸통
-  var body=new THREE.Mesh(new THREE.CylinderGeometry(0.18,0.22,0.4,20),bodyMat); body.position.y=0.2; body.castShadow=true; g.add(body);
-  // 팔
-  [-0.28,0.28].forEach(function(ax){
-    var arm=new THREE.Mesh(new THREE.SphereGeometry(0.09,12,12),bodyMat.clone()); arm.position.set(ax,0.26,0.02); arm.scale.set(0.8,1,0.8); g.add(arm);
-    var hand=new THREE.Mesh(new THREE.SphereGeometry(0.055,10,10),skinMat.clone()); hand.position.set(ax*1.2,0.15,0.04); g.add(hand);
-  });
-  // 다리
-  var legMat=new THREE.MeshStandardMaterial({color:0xc084fc,roughness:0.5,metalness:0.1});
-  [-0.09,0.09].forEach(function(lx){
-    var lg2=new THREE.Group(); lg2.position.set(lx,-0.1,0);
-    var legM=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.08,0.22,12),legMat.clone()); lg2.add(legM);
-    var foot=new THREE.Mesh(new THREE.SphereGeometry(0.08,10,8),new THREE.MeshStandardMaterial({color:0x6d28d9,roughness:0.4}));
-    foot.position.set(0,-0.12,0.02); foot.scale.set(1,0.6,1.2); lg2.add(foot);
-    g.add(lg2);
-  });
-  // 그림자
-  var sh=new THREE.Mesh(new THREE.CircleGeometry(0.35,20),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.2}));
-  sh.rotation.x=-Math.PI/2; sh.position.y=-0.33; g.add(sh);
-  // 아우라 링 (골드)
-  var ring=new THREE.Mesh(new THREE.TorusGeometry(0.35,0.02,8,48),new THREE.MeshStandardMaterial({color:0xf0c040,emissive:0xf0c040,emissiveIntensity:1.2,transparent:true,opacity:0.6}));
-  ring.position.y=0; ring.rotation.x=Math.PI/2; ring.userData.isAura=true; g.add(ring);
-  // 캐릭터 빛
-  var cl=new THREE.PointLight(0xf0c040,0.5,3); cl.position.y=0.5; g.add(cl);
-  // 위치: 방 왼쪽 앞
-  g.position.set(-2.0,-1.2,1.0);
-  g.scale.setScalar(0.55);
-  g.userData.isArtist = true;
-  roomGroup.add(g);
-  artistMesh = g;
+  if(artistMesh) { roomGroup.remove(artistMesh); artistMesh = null; }
+  artistHead = null;
+
+  artistMesh = new THREE.Object3D();
+  artistMesh.position.set(-2.0, -1.2, 1.0);
+  artistMesh.userData.isArtist = true;
+  roomGroup.add(artistMesh);
+
+  var existing = document.getElementById('artistOverlay');
+  if(existing) existing.remove();
+  var overlay = document.createElement('div');
+  overlay.id = 'artistOverlay';
+  overlay.style.cssText = 'position:absolute;z-index:60;pointer-events:none;text-align:center;';
+
+  var aName = localStorage.getItem('asteria_artist_name') || '아티스트';
+  overlay.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;">' +
+    '<div style="position:relative;display:flex;align-items:center;justify-content:center;">' +
+    '<div style="position:absolute;inset:-6px;border-radius:50%;box-shadow:0 0 16px rgba(240,192,64,0.5);animation:asteria-aura-pulse 2s ease-in-out infinite;pointer-events:none;"></div>' +
+    ARTIST_SVG +
+    '</div>' +
+    '<div style="font-size:11px;font-weight:900;color:#f0c040;text-shadow:0 0 8px rgba(240,192,64,.4),0 1px 3px rgba(0,0,0,.8);font-family:Orbitron,monospace;">' + aName + '</div>' +
+    '<div style="font-size:9px;color:#f472b6;text-shadow:0 1px 3px rgba(0,0,0,.8);">★ Artist</div>' +
+    '</div>';
+
+  document.getElementById('canvasContainer').appendChild(overlay);
+  if(typeof _injectAuraStyles === 'function') _injectAuraStyles();
 }
 
 // 등장 파티클 연출
@@ -2621,16 +2468,7 @@ function updateArtistBubblePos(){
 
 // 아티스트 이름표
 function updateArtistTag(){
-  if(!artistMesh || !camera || !renderer) return;
-  var tag = document.getElementById('artistTag');
-  if(!tag) return;
-  var pos = new THREE.Vector3(artistMesh.position.x, artistMesh.position.y+1.0, artistMesh.position.z);
-  pos.project(camera);
-  var cvs = renderer.domElement;
-  tag.style.left = (pos.x*0.5+0.5)*cvs.clientWidth+'px';
-  tag.style.top = (-pos.y*0.5+0.5)*cvs.clientHeight+'px';
-  tag.style.transform = 'translate(-50%,-100%)';
-  tag.style.opacity = pos.z < 1 ? '1' : '0';
+  /* now handled by artistOverlay */
 }
 
 // 타이머 표시
@@ -2708,6 +2546,7 @@ function dismissArtist(){
     roomGroup.remove(artistMesh); artistMesh=null; artistHead=null;
   }
   var tag=document.getElementById('artistTag'); if(tag) tag.remove();
+  var artOv=document.getElementById('artistOverlay'); if(artOv) artOv.remove();
   if(artistBubbleEl){artistBubbleEl.remove(); artistBubbleEl=null;}
   document.getElementById('artistChatBar').classList.remove('show');
   if(artistTimer){clearInterval(artistTimer);artistTimer=null;}
@@ -2800,8 +2639,13 @@ if (typeof BroadcastChannel !== 'undefined') {
   const avatarCh = new BroadcastChannel('asteria_avatar_sync');
   avatarCh.onmessage = function(e) {
     if (e.data && e.data.type === 'AVATAR_UPDATED') {
-      // buildAvatar 재호출로 색상 즉시 갱신
-      if (typeof buildAvatar === 'function') buildAvatar();
+      // SVG 아바타 갱신
+      if(typeof renderAvatarCard === 'function') {
+        renderAvatarCard('avatarOverlay', {
+          size: 'md', layout: 'vertical', showName: true, showLevel: true,
+          showLeague: false, showAura: true, showSerial: false, nameSize: '11px'
+        });
+      }
     }
   };
 }
