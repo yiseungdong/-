@@ -143,11 +143,12 @@ var LEAGUE_INFO = {
 // 크기 프리셋
 // ═══════════════════════════════════════════════════════
 var AVATAR_SIZE_PRESETS = {
-  'xs': { scale: 0.18, topOffset: '-10%' },
-  'sm': { scale: 0.35, topOffset: '-20%' },
-  'md': { scale: 0.45, topOffset: '-30%' },
-  'lg': { scale: 0.6,  topOffset: '-35%' },
-  'xl': { scale: 0.8,  topOffset: '-40%' }
+  'xs':   { width: 32,  height: 40  },
+  'sm':   { width: 48,  height: 60  },
+  'md':   { width: 64,  height: 80  },
+  'lg':   { width: 128, height: 160 },
+  'xl':   { width: 200, height: 250 },
+  'full': { width: 240, height: 300 }
 };
 
 // ═══════════════════════════════════════════════════════
@@ -156,17 +157,26 @@ var AVATAR_SIZE_PRESETS = {
 
 function getBaseSVG(base){ return AVATAR_SVGS[base] || AVATAR_SVGS['m1']; }
 
-function renderAvatarToEl(elementId, options){
+function renderAvatarToEl(elementId, options) {
   var el = document.getElementById(elementId);
-  if(!el) return;
+  if (!el) return;
   var base = localStorage.getItem('asteria_avatar_base') || 'm1';
   var svg = getBaseSVG(base);
   var opt = options || {};
-  // 크기 프리셋 적용 (size가 있으면 프리셋 사용, 없으면 기존 scale/topOffset)
-  var preset = (opt.size && AVATAR_SIZE_PRESETS[opt.size]) || null;
-  var scale = preset ? preset.scale : (opt.scale || 1);
-  var topOffset = preset ? preset.topOffset : (opt.topOffset || '0');
-  el.innerHTML = '<div style="transform:scale(' + scale + ');transform-origin:top center;position:relative;top:' + topOffset + ';display:flex;align-items:center;justify-content:center;">' + svg + '</div>';
+
+  if (opt.size && AVATAR_SIZE_PRESETS[opt.size]) {
+    // 신규 프리셋: SVG width/height를 직접 변경
+    var preset = AVATAR_SIZE_PRESETS[opt.size];
+    var w = preset.width;
+    var h = preset.height;
+    var resized = svg.replace(/width="200"/, 'width="' + w + '"').replace(/height="250"/, 'height="' + h + '"');
+    el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;">' + resized + '</div>';
+  } else {
+    // 기존 하위호환 (scale/topOffset)
+    var scale = opt.scale || 1;
+    var topOffset = opt.topOffset || '0';
+    el.innerHTML = '<div style="transform:scale(' + scale + ');transform-origin:top center;position:relative;top:' + topOffset + ';display:flex;align-items:center;justify-content:center;">' + svg + '</div>';
+  }
 }
 
 function initAvatarSync(targets){
@@ -250,12 +260,13 @@ function renderAvatarCard(elementId, options){
   var league = localStorage.getItem('asteria_league') || 'dust';
   var info = LEAGUE_INFO[league] || LEAGUE_INFO['dust'];
   var svg = getBaseSVG(base);
-  var scale = opt.scale || 0.45;
   var showName = opt.showName !== false;
   var showLevel = opt.showLevel !== false;
   var showLeague = opt.showLeague !== false;
   var showAura = opt.showAura !== false;
   var avatarSize = opt.avatarSize || 80;
+  var cardW = opt.avatarWidth || 64;
+  var cardH = opt.avatarHeight || 80;
 
   var auraHTML = showAura ? getAuraCSS(league) : '';
 
@@ -264,7 +275,8 @@ function renderAvatarCard(elementId, options){
   // 아바타 + 아우라
   html += '<div class="aac-avatar-wrap" style="position:relative;width:' + avatarSize + 'px;height:' + avatarSize + 'px;display:flex;align-items:center;justify-content:center;">';
   html += auraHTML;
-  html += '<div class="aac-avatar" style="position:relative;z-index:1;transform:scale(' + scale + ');transform-origin:top center;display:flex;align-items:center;justify-content:center;">' + svg + '</div>';
+  var resizedSvg = svg.replace(/width="200"/, 'width="' + cardW + '"').replace(/height="250"/, 'height="' + cardH + '"');
+  html += '<div class="aac-avatar" style="position:relative;z-index:1;display:flex;align-items:center;justify-content:center;">' + resizedSvg + '</div>';
   html += '</div>';
 
   // 이름
