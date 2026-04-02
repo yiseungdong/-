@@ -2161,10 +2161,10 @@ function initDrag(){
   function en(){drag=false}
   cont.addEventListener('mousedown',e=>{if(e.target.closest('.bld,.hdr-back,.mo'))return;st(e.clientX,e.clientY)});
   window.addEventListener('mousemove',e=>mv(e.clientX,e.clientY));window.addEventListener('mouseup',en);
-  cont.addEventListener('click',e=>{if(moved||e.target.closest('.bld,.hdr,.bot,.mo'))return;const a=document.getElementById('myAv');a.style.left=(e.clientX-cx-16)+'px';a.style.top=(e.clientY-cy-30)+'px';a.classList.add('walk');setTimeout(()=>a.classList.remove('walk'),700)});
+  cont.addEventListener('click',e=>{if(moved||e.target.closest('.bld,.hdr,.bot,.mo'))return;const a=document.getElementById('myAv');a.style.left=(e.clientX-cx-24)+'px';a.style.top=(e.clientY-cy-40)+'px';a.classList.add('walk');setTimeout(()=>a.classList.remove('walk'),700)});
   cont.addEventListener('touchstart',e=>{if(e.target.closest('.bld'))return;const tc=e.touches[0];st(tc.clientX,tc.clientY)},{passive:true});
   cont.addEventListener('touchmove',e=>{const tc=e.touches[0];mv(tc.clientX,tc.clientY)},{passive:true});
-  cont.addEventListener('touchend',e=>{if(!moved){const tc=e.changedTouches[0];const a=document.getElementById('myAv');a.style.left=(tc.clientX-cx-16)+'px';a.style.top=(tc.clientY-cy-30)+'px';a.classList.add('walk');setTimeout(()=>a.classList.remove('walk'),700)}en()});
+  cont.addEventListener('touchend',e=>{if(!moved){const tc=e.changedTouches[0];const a=document.getElementById('myAv');a.style.left=(tc.clientX-cx-24)+'px';a.style.top=(tc.clientY-cy-40)+'px';a.classList.add('walk');setTimeout(()=>a.classList.remove('walk'),700)}en()});
 }
 function animNPC(){document.querySelectorAll('.npc').forEach(n=>{setInterval(()=>{const cl=parseFloat(n.style.left)||900,ct=parseFloat(n.style.top)||800;n.style.left=Math.max(W*.2,Math.min(W*.8,cl+(Math.random()-.5)*50))+'px';n.style.top=Math.max(H*.3,Math.min(H*.75,ct+(Math.random()-.5)*40))+'px'},5000+Math.random()*4000)})}
 /* playEnt 로직은 DOMContentLoaded에 통합 */

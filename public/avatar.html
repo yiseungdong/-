@@ -49,7 +49,7 @@ html,body {
 ══════════════════════ */
 .preview-section {
   position:relative; z-index:10;
-  height:340px; display:flex; flex-direction:column;
+  height:310px; display:flex; flex-direction:column;
   align-items:center; justify-content:center;
   overflow:hidden;
 }
@@ -414,7 +414,7 @@ html,body {
   <!-- 아바타 프리뷰 -->
   <div class="preview-section">
     <div class="preview-bg" id="previewBg"></div>
-    <div id="avatarContainer" style="width:200px;height:250px;position:relative;margin:0 auto;cursor:pointer">
+    <div id="avatarContainer" style="width:180px;height:225px;position:relative;margin:0 auto;cursor:pointer">
       <div id="layer-aura"   style="position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;pointer-events:none"></div>
       <div id="layer-body"   style="position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;pointer-events:none"></div>
       <div id="layer-bottom" style="position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;pointer-events:none"></div>
@@ -715,7 +715,7 @@ let currentOutfitTab = 'top';
 // ════════════════════════════════════
 function getBaseSVG(base){
   const svgs = {
-    'm1': `<svg width="200" height="250" viewBox="0 0 80 100">
+    'm1': `<svg width="180" height="225" viewBox="0 0 80 100">
       <ellipse cx="40" cy="72" rx="18" ry="22" fill="#1e40af"/>
       <rect x="36" y="52" width="8" height="8" rx="2" fill="#FDBCB4"/>
       <ellipse cx="40" cy="42" rx="18" ry="17" fill="#FDBCB4"/>
@@ -736,7 +736,7 @@ function getBaseSVG(base){
       <rect x="28" y="90" width="9" height="10" rx="3" fill="#334155"/>
       <rect x="43" y="90" width="9" height="10" rx="3" fill="#334155"/>
     </svg>`,
-    'm2': `<svg width="200" height="250" viewBox="0 0 80 100">
+    'm2': `<svg width="180" height="225" viewBox="0 0 80 100">
       <ellipse cx="40" cy="72" rx="18" ry="22" fill="#1a1a2e"/>
       <rect x="36" y="52" width="8" height="8" rx="2" fill="#f0d0c0"/>
       <ellipse cx="40" cy="42" rx="18" ry="17" fill="#f0d0c0"/>
@@ -754,7 +754,7 @@ function getBaseSVG(base){
       <rect x="43" y="90" width="9" height="10" rx="3" fill="#0f0f1a"/>
       <rect x="20" y="68" width="6" height="14" rx="3" fill="#1a1a2e"/>
     </svg>`,
-    'm3': `<svg width="200" height="250" viewBox="0 0 80 100">
+    'm3': `<svg width="180" height="225" viewBox="0 0 80 100">
       <ellipse cx="40" cy="72" rx="20" ry="22" fill="#fbbf24"/>
       <rect x="36" y="52" width="8" height="8" rx="2" fill="#f4a76f"/>
       <ellipse cx="40" cy="41" rx="20" ry="19" fill="#f4a76f"/>
@@ -775,7 +775,7 @@ function getBaseSVG(base){
       <rect x="28" y="90" width="10" height="10" rx="3" fill="#92400e"/>
       <rect x="42" y="90" width="10" height="10" rx="3" fill="#92400e"/>
     </svg>`,
-    'f1': `<svg width="200" height="250" viewBox="0 0 80 100">
+    'f1': `<svg width="180" height="225" viewBox="0 0 80 100">
       <ellipse cx="40" cy="72" rx="18" ry="22" fill="#fce7f3"/>
       <rect x="36" y="52" width="8" height="8" rx="2" fill="#FDBCB4"/>
       <ellipse cx="40" cy="41" rx="17" ry="16" fill="#FDBCB4"/>
@@ -795,7 +795,7 @@ function getBaseSVG(base){
       <rect x="28" y="90" width="9" height="10" rx="4" fill="#fbcfe8"/>
       <rect x="43" y="90" width="9" height="10" rx="4" fill="#fbcfe8"/>
     </svg>`,
-    'f2': `<svg width="200" height="250" viewBox="0 0 80 100">
+    'f2': `<svg width="180" height="225" viewBox="0 0 80 100">
       <ellipse cx="40" cy="72" rx="18" ry="22" fill="#e0f2fe"/>
       <rect x="36" y="52" width="8" height="8" rx="2" fill="#fde8d8"/>
       <ellipse cx="40" cy="41" rx="17" ry="16" fill="#fde8d8"/>
@@ -816,7 +816,7 @@ function getBaseSVG(base){
       <rect x="29" y="90" width="9" height="10" rx="4" fill="#bae6fd"/>
       <rect x="42" y="90" width="9" height="10" rx="4" fill="#bae6fd"/>
     </svg>`,
-    'f3': `<svg width="200" height="250" viewBox="0 0 80 100">
+    'f3': `<svg width="180" height="225" viewBox="0 0 80 100">
       <ellipse cx="40" cy="72" rx="18" ry="22" fill="#4c1d95"/>
       <path d="M30 58 Q40 55 50 58 Q48 80 40 94 Q32 80 30 58" fill="#7c3aed" opacity="0.8"/>
       <path d="M35 60 Q40 57 45 60" stroke="#f0c040" stroke-width="1.5" fill="none"/>
