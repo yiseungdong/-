@@ -823,7 +823,7 @@ let accentLight, pointLight1, pointLight2, pointLight3, ambientLight;
 let ceilingStars = [];
 
 // ── 오빗 카메라 (방 전체 조감) ──
-let camTheta = 0.5;
+let camTheta = 0.3;
 let camPhi = 0.55;
 let camRadius = 7.5;
 let dragMoved = false;
@@ -1493,7 +1493,7 @@ function updateCameraPos() {
   camera.position.x = camRadius * Math.sin(camTheta) * Math.cos(camPhi);
   camera.position.y = camRadius * Math.sin(camPhi);
   camera.position.z = camRadius * Math.cos(camTheta) * Math.cos(camPhi);
-  camera.lookAt(-0.5, 0, 0);
+  camera.lookAt(0, 0, 0);
 }
 
 // ══════════════════════════════════════════
@@ -1617,7 +1617,7 @@ function onResize() {
 }
 
 function resetCamera() {
-  camTheta = 0.5; camPhi = 0.55; camRadius = 7.5;
+  camTheta = 0.3; camPhi = 0.55; camRadius = 7.5;
   updateCameraPos();
   showToast('📷 카메라 리셋');
 }
@@ -1667,7 +1667,7 @@ function toggleEdit() {
     showToast('✏️ 아이템을 선택해서 배치하세요!');
   } else {
     app.classList.remove('edit-active');
-    camTheta = 0.5; camPhi = 0.55; camRadius = 7.5;
+    camTheta = 0.3; camPhi = 0.55; camRadius = 7.5;
     updateCameraPos();
     setTimeout(()=> onResize(), 50);
     showToast('✓ 꾸미기 완료!');
