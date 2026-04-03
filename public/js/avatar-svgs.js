@@ -157,11 +157,39 @@ var AVATAR_SIZE_PRESETS = {
 
 function getBaseSVG(base){ return AVATAR_SVGS[base] || AVATAR_SVGS['m1']; }
 
+// 캐릭터별 헤어/의상 원본 색상 매핑
+var AVATAR_COLOR_MAP = {
+  'm1': { hair: '#1a1a1a', outfit: '#1e40af' },
+  'm2': { hair: '#4c1d95', outfit: '#1a1a2e' },
+  'm3': { hair: '#78350f', outfit: '#fbbf24' },
+  'f1': { hair: '#f472b6', outfit: '#fce7f3' },
+  'f2': { hair: '#7dd3fc', outfit: '#e0f2fe' },
+  'f3': { hair: '#e2e8f0', outfit: '#4c1d95' }
+};
+
+// 스타일 적용된 SVG 반환 (헤어색/의상색 동적 교체)
+function getStyledSVG(base, options) {
+  var svg = AVATAR_SVGS[base] || AVATAR_SVGS['m1'];
+  var map = AVATAR_COLOR_MAP[base] || AVATAR_COLOR_MAP['m1'];
+  var opt = options || {};
+  var hairColor = opt.hairColor || localStorage.getItem('asteria_avatar_hairColor') || '';
+  if (hairColor && hairColor !== map.hair) {
+    var hairRegex = new RegExp('fill="' + map.hair + '"', 'gi');
+    svg = svg.replace(hairRegex, 'fill="' + hairColor + '"');
+  }
+  var outfitColor = opt.outfitColor || localStorage.getItem('asteria_avatar_outfitColor') || '';
+  if (outfitColor && outfitColor !== map.outfit) {
+    var outfitRegex = new RegExp('fill="' + map.outfit + '"', 'gi');
+    svg = svg.replace(outfitRegex, 'fill="' + outfitColor + '"');
+  }
+  return svg;
+}
+
 function renderAvatarToEl(elementId, options) {
   var el = document.getElementById(elementId);
   if (!el) return;
   var base = localStorage.getItem('asteria_avatar_base') || 'm1';
-  var svg = getBaseSVG(base);
+  var svg = getStyledSVG(base);
   var opt = options || {};
 
   if (opt.size && AVATAR_SIZE_PRESETS[opt.size]) {
@@ -268,7 +296,7 @@ function renderAvatarCard(elementId, options){
   var level = localStorage.getItem('asteria_level') || '1';
   var league = localStorage.getItem('asteria_league') || 'dust';
   var info = LEAGUE_INFO[league] || LEAGUE_INFO['dust'];
-  var svg = getBaseSVG(base);
+  var svg = getStyledSVG(base);
 
   var sizeKey = opt.size || 'md';
   var preset = AVATAR_SIZE_PRESETS[sizeKey] || AVATAR_SIZE_PRESETS['md'];

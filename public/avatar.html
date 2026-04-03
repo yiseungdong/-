@@ -466,6 +466,8 @@ html,body {
 
   <!-- ═══ 의상 탭 ═══ -->
   <div class="tab-content" id="tab-outfit">
+    <div class="sec-title" style="margin-bottom:10px;">옷 색상 변경</div>
+    <div class="hair-colors" id="outfitColors"></div>
     <div class="outfit-tabs">
       <button class="outfit-tab active" onclick="switchOutfit('top',this)">상의</button>
       <button class="outfit-tab" onclick="switchOutfit('bottom',this)">하의</button>
@@ -575,6 +577,12 @@ const HAIR_COLORS = [
   '#1a1a1a','#3d2b1f','#6b3a2a','#c67c3a','#d4a853',
   '#e8d5a3','#f7f3e9','#ff6b9d','#c084fc','#38bdf8',
   '#10b981','#f0c040','#ef4444','#818cf8',
+];
+
+const OUTFIT_COLORS = [
+  '#1e40af','#1a1a2e','#fbbf24','#fce7f3','#e0f2fe','#4c1d95',
+  '#ef4444','#f472b6','#10b981','#38bdf8','#f0c040','#1a1a1a',
+  '#f7f3e9','#818cf8','#c084fc','#34d399',
 ];
 
 const OUTFITS = {
@@ -697,7 +705,8 @@ let avatar = {
   face: 'm1',
   skin: '#FDBCB4',
   hair: 'h1',
-  hairColor: '#1a1a1a',
+  hairColor: localStorage.getItem('asteria_avatar_hairColor') || '#1a1a1a',
+  outfitColor: localStorage.getItem('asteria_avatar_outfitColor') || '',
   outfit_top: 't1',
   outfit_bottom: 'b1',
   outfit_full: null,
@@ -855,8 +864,20 @@ function renderAvatarLayers(){
       box-shadow:0 0 50px ${aura.color}30">
     </div>`;
 
-  // 몸통(베이스 SVG) 레이어 — face 선택에 따라 교체
-  document.getElementById('layer-body').innerHTML = getBaseSVG(base);
+  // 몸통(베이스 SVG) 레이어 — face 선택에 따라 교체 + 동적 색상
+  var styledSvg = getBaseSVG(base);
+  if(typeof AVATAR_COLOR_MAP !== 'undefined') {
+    var map = AVATAR_COLOR_MAP[base] || AVATAR_COLOR_MAP['m1'];
+    if(avatar.hairColor && avatar.hairColor !== map.hair) {
+      var hairRe = new RegExp('fill="' + map.hair + '"', 'gi');
+      styledSvg = styledSvg.replace(hairRe, 'fill="' + avatar.hairColor + '"');
+    }
+    if(avatar.outfitColor && avatar.outfitColor !== map.outfit) {
+      var outfitRe = new RegExp('fill="' + map.outfit + '"', 'gi');
+      styledSvg = styledSvg.replace(outfitRe, 'fill="' + avatar.outfitColor + '"');
+    }
+  }
+  document.getElementById('layer-body').innerHTML = styledSvg;
 
   // 의상/헤어/액세서리 레이어 — SVG 캐릭터 자체에 포함됨, 이모지 레이어 미사용
   document.getElementById('layer-top').innerHTML = '';
@@ -912,6 +933,7 @@ function renderOutfit(type='top'){
       <div class="outfit-rarity rarity-${o.rarity}">${o.rarity.toUpperCase()}</div>
     </div>
   `).join('');
+  renderOutfitColors();
 }
 
 function renderAura(){
@@ -1011,7 +1033,21 @@ function selectHair(id){
   avatar.hair=id; renderHair(); renderAvatarLayers(); burst(); showToast('헤어스타일 변경!');
 }
 function selectHairColor(color){
-  avatar.hairColor=color; renderHair(); renderAvatarLayers(); burst(); showToast('헤어 컬러 변경!');
+  avatar.hairColor=color;
+  localStorage.setItem('asteria_avatar_hairColor', color);
+  renderHair(); renderAvatarLayers(); burst(); showToast('헤어 컬러 변경!');
+}
+function selectOutfitColor(color){
+  avatar.outfitColor=color;
+  localStorage.setItem('asteria_avatar_outfitColor', color);
+  renderOutfitColors(); renderAvatarLayers(); burst(); showToast('의상 컬러 변경!');
+}
+function renderOutfitColors(){
+  var el = document.getElementById('outfitColors');
+  if(!el) return;
+  el.innerHTML=OUTFIT_COLORS.map(c=>
+    '<div class="hair-color '+(avatar.outfitColor===c?'active':'')+'" style="background:'+c+';border:1px solid rgba(255,255,255,.1)" onclick="selectOutfitColor(\''+c+'\')"></div>'
+  ).join('');
 }
 function selectOutfit(type,id){
   const o=(OUTFITS[type]||[]).find(x=>x.id===id);
@@ -1101,7 +1137,7 @@ function saveAvatar(){
   localStorage.setItem('asteria_avatar', JSON.stringify(avatar));
   if (typeof BroadcastChannel !== 'undefined') {
     const ch = new BroadcastChannel('asteria_avatar_sync');
-    ch.postMessage({ type: 'AVATAR_UPDATED', base: avatar.face || 'm1' });
+    ch.postMessage({ type: 'AVATAR_UPDATED', base: avatar.face || 'm1', hairColor: avatar.hairColor || '', outfitColor: avatar.outfitColor || '' });
     ch.close();
   }
   burst(); showToast('✨ 아바타가 저장됐어요!');
@@ -1154,6 +1190,7 @@ if(!avatar.face || !['m1','m2','m3','f1','f2','f3'].includes(avatar.face)){
 updateLeagueColor();
 renderFace();
 renderAvatarLayers();
+renderOutfitColors();
 
 document.getElementById('avatarContainer').addEventListener('click', function(){
   this.style.transform = this.style.transform === 'scale(1.15)' ? 'scale(1)' : 'scale(1.15)';
