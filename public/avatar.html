@@ -281,7 +281,7 @@ html,body {
 .emotion-item {
   border-radius:12px; background:rgba(255,255,255,0.08); border:2px solid rgba(180,150,255,0.25);
   padding:10px 6px; display:flex; flex-direction:column; align-items:center; gap:5px;
-  cursor:pointer; transition:all .2s;
+  cursor:pointer; transition:all .2s; position:relative; min-height:70px; justify-content:center;
 }
 .emotion-item:hover { border-color:var(--accent); }
 .emotion-item.active { border-color:var(--accent); background:rgba(192,132,252,.1); }
@@ -988,7 +988,7 @@ function renderAcc(){
 function renderEmotion(){
   document.getElementById('emotionGrid').innerHTML=EMOTIONS.map(e=>`
     <div class="emotion-item ${avatar.emotion===e.id?'active':''}" onclick="selectEmotion('${e.id}')">
-      ${!e.unlocked?`<div style="position:absolute;inset:0;background:rgba(0,0,0,.6);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px">🔒</div>`:''}
+      ${!e.unlocked?`<div style="position:absolute;inset:0;background:rgba(0,0,0,.45);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;padding-top:2px">🔒</div>`:''}
       <div class="emotion-emoji">${e.emoji}</div>
       <div class="emotion-name">${e.name}</div>
     </div>
