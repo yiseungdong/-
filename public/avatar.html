@@ -870,33 +870,18 @@ function renderAvatarLayers(){
   const base = avatar.face || localStorage.getItem('asteria_avatar_base') || 'm1';
   const aura = AURAS.find(a=>a.id===avatar.aura) || AURAS[0];
 
-  // 캐릭터별 원본 색상 매핑 (헤어/의상/피부)
-  var COLOR_MAP = {
-    'm1': { hair:'#1a1a1a', outfit:'#1e40af', skin:'#FDBCB4' },
-    'm2': { hair:'#4c1d95', outfit:'#1a1a2e', skin:'#f0d0c0' },
-    'm3': { hair:'#78350f', outfit:'#fbbf24', skin:'#f4a76f' },
-    'f1': { hair:'#f472b6', outfit:'#fce7f3', skin:'#FDBCB4' },
-    'f2': { hair:'#7dd3fc', outfit:'#e0f2fe', skin:'#fde8d8' },
-    'f3': { hair:'#e2e8f0', outfit:'#4c1d95', skin:'#f0e0d0' }
-  };
-
+  // 아우라 레이어
   document.getElementById('layer-aura').innerHTML = '<div style="width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,'+aura.color+'35 0%,transparent 70%);animation:auraPulse 3s ease-in-out infinite;box-shadow:0 0 50px '+aura.color+'30"></div>';
 
-  var styledSvg = getBaseSVG(base);
-  var map = COLOR_MAP[base] || COLOR_MAP['m1'];
+  // avatar-svgs.js의 getStyledSVG()로 색상 교체된 SVG 가져오기
+  var styledSvg = getStyledSVG(base, {
+    hairColor: avatar.hairColor || '',
+    outfitColor: avatar.outfitColor || '',
+    skinColor: avatar.skin || ''
+  });
 
-  // 헤어 색상 교체
-  if(avatar.hairColor && avatar.hairColor.toLowerCase() !== map.hair.toLowerCase()) {
-    styledSvg = styledSvg.split('fill="' + map.hair + '"').join('fill="' + avatar.hairColor + '"');
-  }
-  // 의상 색상 교체
-  if(avatar.outfitColor && avatar.outfitColor.toLowerCase() !== map.outfit.toLowerCase()) {
-    styledSvg = styledSvg.split('fill="' + map.outfit + '"').join('fill="' + avatar.outfitColor + '"');
-  }
-  // 피부색 교체
-  if(avatar.skin && avatar.skin.toLowerCase() !== map.skin.toLowerCase()) {
-    styledSvg = styledSvg.split('fill="' + map.skin + '"').join('fill="' + avatar.skin + '"');
-  }
+  // 미리보기 크기에 맞게 200x250 → 180x225로 변환
+  styledSvg = styledSvg.replace('width="200"', 'width="180"').replace('height="250"', 'height="225"');
 
   document.getElementById('layer-body').innerHTML = styledSvg;
   document.getElementById('layer-top').innerHTML = '';
