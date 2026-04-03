@@ -443,8 +443,23 @@ html,body {
     <div class="tab-btn active" onclick="switchTab('face',this)">
       <div class="tab-btn-icon">👤</div>캐릭터
     </div>
+    <div class="tab-btn" onclick="switchTab('hair',this)">
+      <div class="tab-btn-icon">💇</div>헤어
+    </div>
+    <div class="tab-btn" onclick="switchTab('outfit',this)">
+      <div class="tab-btn-icon">👔</div>의상
+    </div>
     <div class="tab-btn" onclick="switchTab('aura',this)">
       <div class="tab-btn-icon">✨</div>아우라
+    </div>
+    <div class="tab-btn" onclick="switchTab('acc',this)">
+      <div class="tab-btn-icon">👑</div>악세서리
+    </div>
+    <div class="tab-btn" onclick="switchTab('emotion',this)">
+      <div class="tab-btn-icon">😊</div>표정
+    </div>
+    <div class="tab-btn" onclick="switchTab('growth',this)">
+      <div class="tab-btn-icon">📈</div>성장
     </div>
   </div>
 
@@ -1107,7 +1122,11 @@ function switchTab(name, btn){
   document.getElementById('tab-'+name).classList.add('active');
   btn.classList.add('active');
   if(name==='face') renderFace();
+  if(name==='hair') renderHair();
+  if(name==='outfit') { renderOutfit(); renderOutfitColors(); }
   if(name==='aura') renderAura();
+  if(name==='acc') renderAcc();
+  if(name==='emotion') renderEmotion();
 }
 
 // ════════════════════════════════════
