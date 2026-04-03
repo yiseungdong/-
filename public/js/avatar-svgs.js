@@ -159,12 +159,12 @@ function getBaseSVG(base){ return AVATAR_SVGS[base] || AVATAR_SVGS['m1']; }
 
 // 캐릭터별 헤어/의상 원본 색상 매핑
 var AVATAR_COLOR_MAP = {
-  'm1': { hair: '#1a1a1a', outfit: '#1e40af' },
-  'm2': { hair: '#4c1d95', outfit: '#1a1a2e' },
-  'm3': { hair: '#78350f', outfit: '#fbbf24' },
-  'f1': { hair: '#f472b6', outfit: '#fce7f3' },
-  'f2': { hair: '#7dd3fc', outfit: '#e0f2fe' },
-  'f3': { hair: '#e2e8f0', outfit: '#4c1d95' }
+  'm1': { hair: '#1a1a1a', outfit: '#1e40af', skin: '#FDBCB4' },
+  'm2': { hair: '#4c1d95', outfit: '#1a1a2e', skin: '#f0d0c0' },
+  'm3': { hair: '#78350f', outfit: '#fbbf24', skin: '#f4a76f' },
+  'f1': { hair: '#f472b6', outfit: '#fce7f3', skin: '#FDBCB4' },
+  'f2': { hair: '#7dd3fc', outfit: '#e0f2fe', skin: '#fde8d8' },
+  'f3': { hair: '#e2e8f0', outfit: '#4c1d95', skin: '#f0e0d0' }
 };
 
 // 스타일 적용된 SVG 반환 (헤어색/의상색 동적 교체)
@@ -181,6 +181,10 @@ function getStyledSVG(base, options) {
   if (outfitColor && outfitColor !== map.outfit) {
     var outfitRegex = new RegExp('fill="' + map.outfit + '"', 'gi');
     svg = svg.replace(outfitRegex, 'fill="' + outfitColor + '"');
+  }
+  var skinColor = opt.skinColor || localStorage.getItem('asteria_avatar_skin') || '';
+  if (skinColor && skinColor.toLowerCase() !== map.skin.toLowerCase()) {
+    svg = svg.split('fill="' + map.skin + '"').join('fill="' + skinColor + '"');
   }
   return svg;
 }
