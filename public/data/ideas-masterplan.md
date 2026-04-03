@@ -68,7 +68,7 @@
 - fandom.html URL 파라미터로 팬클럽 데이터 표시
 - 미니 채팅창 Claude API 연결
 
-### 완료된 사항 (이번 채팅방)
+### 완료된 사항 (2026.04.03 이전 세션)
 - 아스트라+성궤 탭 통합 (3탭: 캐릭터/성궤/전적)
   - 성궤 탭: 골드 카드, 스탯, 리소스, 메뉴, 소버린 챌린지
   - 전적 탭: 프로필, 활동 히트맵(잔디), 마일스톤 타임라인, 시즌 기록, 뱃지
@@ -80,6 +80,20 @@
 - nebula.html → astra.html 자동 리다이렉트 (성궤 탭으로)
 - astra.html 별빛 배경 버그 수정
 - astra.html CSS 변수 표준화
+
+### 완료된 사항 (2026.04.03 세션)
+- room3d.html ROOM_BOUNDS 이동범위 재조정 (zMin -2.5→-1.5 뒤쪽 제한 강화, zMax 2.9→3.2 앞쪽 확장)
+- 아바타 헤어/의상 색상 동적 변경 기능 추가
+  - avatar-svgs.js: AVATAR_COLOR_MAP + getStyledSVG 함수 신규
+  - avatar.html: OUTFIT_COLORS 팔레트 + selectOutfitColor/renderOutfitColors 함수
+  - localStorage 연동 (asteria_avatar_hairColor, asteria_avatar_outfitColor)
+- 아바타 피부색 동적 교체 버그 수정
+  - AVATAR_COLOR_MAP에 skin 필드 추가 (6캐릭터)
+  - renderAvatarLayers 내부 COLOR_MAP + split/join 방식 교체 (대소문자 불일치 해결)
+  - selectSkin에 localStorage.setItem('asteria_avatar_skin') 추가
+- avatar.html 탭 네비게이션 복구: 2개(캐릭터/아우라) → 7개(캐릭터/헤어/의상/아우라/악세서리/표정/성장)
+  - switchTab 함수에 탭별 렌더 함수 호출 추가
+- avatar.html script 태그 누락 2건 수정 (별빛 배경 스크립트 시작/끝)
 
 ### 미루기 항목 (팬 충분히 모인 후)
 - #71 기획사 응답 시스템
