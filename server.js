@@ -1386,6 +1386,57 @@ async function initDB() {
     await client.query(`CREATE INDEX IF NOT EXISTS idx_sovereign_votes_fanclub ON sovereign_votes(fanclub_id, status)`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_sovereign_ballots_vote ON sovereign_vote_ballots(vote_id)`);
 
+    // ── 소원 신전 확장 테이블 ──
+    // wishes 테이블 컬럼 추가
+    await client.query(`ALTER TABLE wishes ADD COLUMN IF NOT EXISTS refund_processed BOOLEAN NOT NULL DEFAULT FALSE`);
+    await client.query(`ALTER TABLE wishes ADD COLUMN IF NOT EXISTS parent_org_id INTEGER REFERENCES organizations(id)`);
+    await client.query(`ALTER TABLE wishes ADD COLUMN IF NOT EXISTS pipeline_stage INTEGER NOT NULL DEFAULT 0`);
+    await client.query(`ALTER TABLE wishes ADD COLUMN IF NOT EXISTS is_surprise BOOLEAN NOT NULL DEFAULT FALSE`);
+    await client.query(`ALTER TABLE wishes ADD COLUMN IF NOT EXISTS final_achievement_rate DECIMAL(5,2)`);
+    await client.query(`ALTER TABLE wishes ADD COLUMN IF NOT EXISTS carried_over BOOLEAN NOT NULL DEFAULT FALSE`);
+    await client.query(`ALTER TABLE wishes ADD COLUMN IF NOT EXISTS carried_from_wish_id INTEGER REFERENCES wishes(id)`);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS wish_mission_completions (
+        id SERIAL PRIMARY KEY,
+        mission_id INTEGER NOT NULL REFERENCES wish_missions(id),
+        wish_id INTEGER NOT NULL REFERENCES wishes(id),
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        energy_awarded INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(mission_id, user_id)
+      )
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_wish_mission_comp_user ON wish_mission_completions(user_id, created_at DESC)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_wish_mission_comp_mission ON wish_mission_completions(mission_id)`);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS wish_reward_claims (
+        id SERIAL PRIMARY KEY,
+        wish_id INTEGER NOT NULL REFERENCES wishes(id),
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        reward_type VARCHAR(20) NOT NULL CHECK (reward_type IN ('badge','item_drop','stardust_refund','partial_refund')),
+        badge_tier VARCHAR(10) CHECK (badge_tier IN ('gold','silver','bronze')),
+        stardust_amount INTEGER NOT NULL DEFAULT 0,
+        item_id INTEGER,
+        claimed_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(wish_id, user_id, reward_type)
+      )
+    `);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_wish_reward_user ON wish_reward_claims(user_id)`);
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_wish_reward_wish ON wish_reward_claims(wish_id)`);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS wish_pipeline_log (
+        id SERIAL PRIMARY KEY,
+        wish_id INTEGER NOT NULL REFERENCES wishes(id),
+        from_org_id INTEGER REFERENCES organizations(id),
+        to_org_id INTEGER REFERENCES organizations(id),
+        sympathy_at_transfer INTEGER NOT NULL,
+        transferred_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
     // ── 경쟁 시스템 테이블 (Phase 6, #58~#65) ──
 
     // ① 라이벌 매칭 테이블
@@ -10247,6 +10298,158 @@ app.get('/api/wishes/fanclub/:fanclubId', async (req, res) => {
   }
 });
 
+// GET /api/wishes/my — 내가 기여한 소원 전체 조회 (고정 경로 → :id 앞에 배치)
+app.get('/api/wishes/my', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const contributing = await pool.query(
+      `SELECT w.id AS wish_id, w.title, w.status, w.energy_current, w.energy_goal,
+              COALESCE(SUM(c.energy_amount), 0) AS my_energy
+       FROM wish_energy_contributions c
+       JOIN wishes w ON w.id = c.wish_id
+       WHERE c.user_id = $1
+       GROUP BY w.id, w.title, w.status, w.energy_current, w.energy_goal
+       ORDER BY w.created_at DESC`,
+      [userId]
+    );
+
+    const contributingRows = contributing.rows.map(r => {
+      const visual = getWishVisualStage(r.energy_current, r.energy_goal);
+      return {
+        ...r, my_energy: parseInt(r.my_energy),
+        energy_progress: parseFloat(visual.percent.toFixed(1)),
+        visual
+      };
+    });
+
+    const proposed = await pool.query(
+      `SELECT id AS wish_id, title, status, sympathy_count, created_at
+       FROM wishes WHERE proposer_id = $1 ORDER BY created_at DESC`,
+      [userId]
+    );
+
+    res.json({ contributing: contributingRows, proposed: proposed.rows });
+  } catch (err) {
+    console.error('내 소원 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/wishes/my/energy-log — 내 에너지 기부 이력 (고정 경로 → :id 앞에 배치)
+app.get('/api/wishes/my/energy-log', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+    const offset = (page - 1) * limit;
+
+    const logs = await pool.query(
+      `SELECT c.id, c.wish_id, w.title AS wish_title, c.energy_amount, c.source, c.created_at
+       FROM wish_energy_contributions c
+       JOIN wishes w ON w.id = c.wish_id
+       WHERE c.user_id = $1
+       ORDER BY c.created_at DESC LIMIT $2 OFFSET $3`,
+      [userId, limit, offset]
+    );
+
+    const total = await pool.query(
+      `SELECT COUNT(*) AS cnt FROM wish_energy_contributions WHERE user_id = $1`, [userId]
+    );
+
+    res.json({ logs: logs.rows, total: parseInt(total.rows[0].cnt), page });
+  } catch (err) {
+    console.error('에너지 기부 이력 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/wishes/pipeline/:fanclubId — 파이프라인 전체 현황 (고정 경로 → :id 앞에 배치)
+app.get('/api/wishes/pipeline/:fanclubId', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT w.id, w.title, w.category, w.pipeline_stage, w.sympathy_count, w.sympathy_threshold,
+              w.sympathy_deadline, w.status, w.energy_current, w.energy_goal,
+              o.name AS org_name, o.member_count
+       FROM wishes w
+       LEFT JOIN organizations o ON o.id = w.org_id
+       WHERE w.fanclub_id = $1 AND w.status IN ('proposed','climbing','selected','active')
+       ORDER BY w.pipeline_stage DESC, w.created_at DESC`,
+      [req.params.fanclubId]
+    );
+    const pipeline = result.rows.map(r => ({
+      ...r,
+      required_sympathy: Math.ceil((r.member_count || 0) * parseFloat(r.sympathy_threshold || 0.3))
+    }));
+    res.json({ pipeline });
+  } catch (err) {
+    console.error('파이프라인 현황 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// GET /api/wishes/stats/:fanclubId — 팬클럽 소원 통계 (고정 경로 → :id 앞에 배치)
+app.get('/api/wishes/stats/:fanclubId', async (req, res) => {
+  try {
+    const fcId = req.params.fanclubId;
+
+    const totals = await pool.query(
+      `SELECT
+        COUNT(*) AS total_wishes,
+        COUNT(*) FILTER (WHERE status = 'completed') AS completed_wishes,
+        COUNT(*) FILTER (WHERE status IN ('failed','expired')) AS failed_wishes,
+        AVG(final_achievement_rate) FILTER (WHERE final_achievement_rate IS NOT NULL) AS avg_achievement_rate
+       FROM wishes WHERE fanclub_id = $1`,
+      [fcId]
+    );
+
+    const active = await pool.query(
+      `SELECT id, title, energy_current, energy_goal FROM wishes
+       WHERE fanclub_id = $1 AND status IN ('active','selected')
+       ORDER BY created_at DESC LIMIT 1`,
+      [fcId]
+    );
+
+    const totalEnergy = await pool.query(
+      `SELECT COALESCE(SUM(c.energy_amount), 0) AS total
+       FROM wish_energy_contributions c JOIN wishes w ON w.id = c.wish_id
+       WHERE w.fanclub_id = $1`,
+      [fcId]
+    );
+
+    const topAll = await pool.query(
+      `SELECT u.nickname, SUM(c.energy_amount) AS total_energy
+       FROM wish_energy_contributions c
+       JOIN wishes w ON w.id = c.wish_id
+       JOIN users u ON u.id = c.user_id
+       WHERE w.fanclub_id = $1
+       GROUP BY u.nickname ORDER BY total_energy DESC LIMIT 1`,
+      [fcId]
+    );
+
+    const t = totals.rows[0];
+    let activeWish = null;
+    if (active.rows.length > 0) {
+      const a = active.rows[0];
+      const progress = a.energy_goal > 0 ? parseFloat((a.energy_current / a.energy_goal * 100).toFixed(1)) : 0;
+      activeWish = { id: a.id, title: a.title, progress };
+    }
+
+    res.json({
+      totalWishes: parseInt(t.total_wishes),
+      completedWishes: parseInt(t.completed_wishes),
+      failedWishes: parseInt(t.failed_wishes),
+      activeWish,
+      totalEnergyContributed: parseInt(totalEnergy.rows[0].total),
+      avgAchievementRate: t.avg_achievement_rate ? parseFloat(parseFloat(t.avg_achievement_rate).toFixed(1)) : null,
+      topContributorAllTime: topAll.rows.length > 0 ? { nickname: topAll.rows[0].nickname, totalEnergy: parseInt(topAll.rows[0].total_energy) } : null
+    });
+  } catch (err) {
+    console.error('소원 통계 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
 // GET /api/wishes/:id — 소원 상세
 app.get('/api/wishes/:id', async (req, res) => {
   try {
@@ -10450,6 +10653,584 @@ app.get('/api/wishes/archive/:fanclubId', async (req, res) => {
     res.json({ archives: result.rows });
   } catch (err) {
     console.error('소원 아카이브 조회 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// ══════════════════════════════════════════════
+//  소원 신전 확장 API
+// ══════════════════════════════════════════════
+
+// GET /api/wishes/:id/missions — 소원 미션 목록
+app.get('/api/wishes/:id/missions', async (req, res) => {
+  try {
+    const wishId = req.params.id;
+    const missions = await pool.query(
+      `SELECT m.*, COALESCE(cc.completed_count, 0) AS completed_count
+       FROM wish_missions m
+       LEFT JOIN (SELECT mission_id, COUNT(*) AS completed_count FROM wish_mission_completions GROUP BY mission_id) cc
+         ON cc.mission_id = m.id
+       WHERE m.wish_id = $1 AND m.is_active = true
+       ORDER BY m.created_at ASC`,
+      [wishId]
+    );
+
+    // 로그인 유저면 완료 여부 체크
+    let userId = null;
+    const authHeader = req.headers['authorization'];
+    if (authHeader) {
+      try {
+        const token = authHeader.split(' ')[1];
+        const decoded = jwt.verify(token, JWT_SECRET);
+        userId = decoded.id;
+      } catch(e) { /* 비로그인 */ }
+    }
+
+    let rows = missions.rows;
+    if (userId) {
+      const completions = await pool.query(
+        `SELECT mission_id FROM wish_mission_completions WHERE user_id = $1 AND wish_id = $2`,
+        [userId, wishId]
+      );
+      const completedSet = new Set(completions.rows.map(r => r.mission_id));
+      rows = rows.map(m => ({ ...m, is_completed: completedSet.has(m.id) }));
+    } else {
+      rows = rows.map(m => ({ ...m, is_completed: false }));
+    }
+
+    res.json({ missions: rows });
+  } catch (err) {
+    console.error('소원 미션 목록 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// POST /api/wishes/:id/missions — 소원 미션 추가 (리더/어드민)
+app.post('/api/wishes/:id/missions', authenticateToken, async (req, res) => {
+  try {
+    const wishId = req.params.id;
+    const userId = req.user.id;
+    const { title, description, energy_reward, mission_type } = req.body;
+
+    if (!title) return res.status(400).json({ message: 'title은 필수입니다.' });
+
+    const validTypes = ['daily', 'weekly', 'once'];
+    const mType = validTypes.includes(mission_type) ? mission_type : 'daily';
+    const reward = energy_reward || 100;
+
+    // 소원 존재 및 권한 확인
+    const wish = await pool.query(`SELECT * FROM wishes WHERE id = $1`, [wishId]);
+    if (wish.rows.length === 0) return res.status(404).json({ message: '소원을 찾을 수 없습니다.' });
+
+    const w = wish.rows[0];
+    // 해당 팬클럽 리더이거나 어드민인지 확인
+    const userCheck = await pool.query(`SELECT is_admin FROM users WHERE id = $1`, [userId]);
+    const isAdmin = userCheck.rows[0]?.is_admin;
+
+    if (!isAdmin) {
+      const memberCheck = await pool.query(
+        `SELECT role FROM fanclub_members WHERE fanclub_id = $1 AND user_id = $2`,
+        [w.fanclub_id, userId]
+      );
+      if (!memberCheck.rows[0] || memberCheck.rows[0].role !== 'leader') {
+        return res.status(403).json({ message: '미션 추가 권한이 없습니다.' });
+      }
+    }
+
+    const result = await pool.query(
+      `INSERT INTO wish_missions (wish_id, title, description, energy_reward, mission_type)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [wishId, title, description || '', reward, mType]
+    );
+
+    res.status(201).json({ message: '미션이 추가되었습니다.', mission: result.rows[0] });
+  } catch (err) {
+    console.error('소원 미션 추가 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  }
+});
+
+// POST /api/wishes/:id/missions/:missionId/complete — 미션 완료
+app.post('/api/wishes/:id/missions/:missionId/complete', authenticateToken, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { id: wishId, missionId } = req.params;
+    const userId = req.user.id;
+
+    await client.query('BEGIN');
+
+    // 소원 및 미션 확인
+    const wish = await client.query(`SELECT * FROM wishes WHERE id = $1 AND status IN ('active','selected')`, [wishId]);
+    if (wish.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ message: '활성 소원을 찾을 수 없습니다.' });
+    }
+
+    const mission = await client.query(
+      `SELECT * FROM wish_missions WHERE id = $1 AND wish_id = $2 AND is_active = true`,
+      [missionId, wishId]
+    );
+    if (mission.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ message: '미션을 찾을 수 없습니다.' });
+    }
+
+    const m = mission.rows[0];
+
+    // 중복 완료 체크
+    if (m.mission_type === 'once') {
+      const existing = await client.query(
+        `SELECT id FROM wish_mission_completions WHERE mission_id = $1 AND user_id = $2`,
+        [missionId, userId]
+      );
+      if (existing.rows.length > 0) {
+        await client.query('ROLLBACK');
+        return res.status(409).json({ message: '이미 완료한 미션입니다.' });
+      }
+    } else if (m.mission_type === 'daily') {
+      const todayCheck = await client.query(
+        `SELECT id FROM wish_mission_completions WHERE mission_id = $1 AND user_id = $2 AND created_at::date = CURRENT_DATE`,
+        [missionId, userId]
+      );
+      if (todayCheck.rows.length > 0) {
+        await client.query('ROLLBACK');
+        return res.status(409).json({ message: '오늘 이미 완료한 미션입니다.' });
+      }
+    } else if (m.mission_type === 'weekly') {
+      const weekCheck = await client.query(
+        `SELECT id FROM wish_mission_completions WHERE mission_id = $1 AND user_id = $2 AND created_at >= date_trunc('week', CURRENT_DATE)`,
+        [missionId, userId]
+      );
+      if (weekCheck.rows.length > 0) {
+        await client.query('ROLLBACK');
+        return res.status(409).json({ message: '이번 주에 이미 완료한 미션입니다.' });
+      }
+    }
+
+    // once 타입이 아니면 UNIQUE 제약 우회 위해 별도 처리
+    if (m.mission_type === 'once') {
+      await client.query(
+        `INSERT INTO wish_mission_completions (mission_id, wish_id, user_id, energy_awarded) VALUES ($1, $2, $3, $4)`,
+        [missionId, wishId, userId, m.energy_reward]
+      );
+    } else {
+      // daily/weekly는 UNIQUE 제약 없이 삽입 (중복 체크는 위에서 날짜 기반으로 함)
+      await client.query(
+        `INSERT INTO wish_mission_completions (mission_id, wish_id, user_id, energy_awarded) VALUES ($1, $2, $3, $4)
+         ON CONFLICT (mission_id, user_id) DO NOTHING`,
+        [missionId, wishId, userId, m.energy_reward]
+      );
+    }
+
+    // 에너지 적립
+    await client.query(
+      `UPDATE wishes SET energy_current = energy_current + $1 WHERE id = $2`,
+      [m.energy_reward, wishId]
+    );
+
+    await client.query(
+      `INSERT INTO wish_energy_contributions (wish_id, user_id, energy_amount, source) VALUES ($1, $2, $3, 'mission')`,
+      [wishId, userId, m.energy_reward]
+    );
+
+    // 활동 로그
+    await client.query(
+      `INSERT INTO activity_logs (user_id, fandom_id, area, action, score_type, ap_earned, meta)
+       VALUES ($1, $2, 'wish', 'mission_complete', 'engagement', 5, $3)`,
+      [userId, wish.rows[0].fanclub_id, JSON.stringify({ wish_id: wishId, mission_id: missionId })]
+    );
+
+    await client.query('COMMIT');
+
+    // 최신 소원 상태 조회
+    const updated = await pool.query(`SELECT energy_current, energy_goal FROM wishes WHERE id = $1`, [wishId]);
+    const u = updated.rows[0];
+    const visual = getWishVisualStage(u.energy_current, u.energy_goal);
+
+    res.json({
+      message: `미션 완료! 에너지 ${m.energy_reward}이 소원에 기부되었습니다.`,
+      energyAwarded: m.energy_reward,
+      energyCurrent: u.energy_current,
+      energyGoal: u.energy_goal,
+      visual
+    });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('미션 완료 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  } finally {
+    client.release();
+  }
+});
+
+// POST /api/wishes/:id/pipeline-advance — 소원 파이프라인 상위 전달
+app.post('/api/wishes/:id/pipeline-advance', authenticateToken, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const wishId = req.params.id;
+    const userId = req.user.id;
+    await client.query('BEGIN');
+
+    const wish = await client.query(`SELECT * FROM wishes WHERE id = $1`, [wishId]);
+    if (wish.rows.length === 0) { await client.query('ROLLBACK'); return res.status(404).json({ message: '소원을 찾을 수 없습니다.' }); }
+    const w = wish.rows[0];
+
+    if (w.status !== 'climbing') { await client.query('ROLLBACK'); return res.status(400).json({ message: '파이프라인 전달은 climbing 상태에서만 가능합니다.' }); }
+
+    // 권한 체크: 어드민, 제안자, 또는 해당 팬클럽 리더
+    const userCheck = await client.query(`SELECT is_admin FROM users WHERE id = $1`, [userId]);
+    if (!userCheck.rows[0]?.is_admin && w.proposer_id !== userId) {
+      const memberCheck = await client.query(
+        `SELECT role FROM fanclub_members WHERE fanclub_id = $1 AND user_id = $2`, [w.fanclub_id, userId]
+      );
+      if (memberCheck.rows[0]?.role !== 'leader') { await client.query('ROLLBACK'); return res.status(403).json({ message: '파이프라인 전달 권한이 없습니다.' }); }
+    }
+
+    // 현재 조직의 상위 조직 찾기
+    const currentOrg = await client.query(`SELECT * FROM organizations WHERE id = $1`, [w.org_id]);
+    if (currentOrg.rows.length === 0) { await client.query('ROLLBACK'); return res.status(404).json({ message: '소속 모임을 찾을 수 없습니다.' }); }
+
+    const org = currentOrg.rows[0];
+    const requiredSympathy = Math.ceil(org.member_count * w.sympathy_threshold);
+
+    if (w.sympathy_count < requiredSympathy) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ message: `공감이 부족합니다. (${w.sympathy_count}/${requiredSympathy})` });
+    }
+
+    // 파이프라인 로그
+    await client.query(
+      `INSERT INTO wish_pipeline_log (wish_id, from_org_id, to_org_id, sympathy_at_transfer) VALUES ($1, $2, $3, $4)`,
+      [wishId, w.org_id, org.parent_id, w.sympathy_count]
+    );
+
+    if (org.parent_id) {
+      // 상위 모임으로 전달
+      await client.query(
+        `UPDATE wishes SET org_id = $1, parent_org_id = $2, pipeline_stage = pipeline_stage + 1,
+         sympathy_count = 0, sympathy_deadline = NOW() + INTERVAL '7 days' WHERE id = $3`,
+        [org.parent_id, w.org_id, wishId]
+      );
+      // 기존 공감 초기화
+      await client.query(`DELETE FROM wish_sympathies WHERE wish_id = $1`, [wishId]);
+      await client.query('COMMIT');
+
+      const newOrg = await pool.query(`SELECT name FROM organizations WHERE id = $1`, [org.parent_id]);
+      res.json({
+        message: '소원이 상위 모임으로 전달되었습니다.',
+        newOrgId: org.parent_id,
+        newOrgName: newOrg.rows[0]?.name,
+        newPipelineStage: w.pipeline_stage + 1,
+        status: 'climbing'
+      });
+    } else {
+      // 최상위 → selected 상태로 변경
+      await client.query(
+        `UPDATE wishes SET status = 'selected', selected_at = NOW(), pipeline_stage = pipeline_stage + 1 WHERE id = $1`,
+        [wishId]
+      );
+      await client.query('COMMIT');
+      res.json({ message: '소원이 팬클럽 전체에서 선정되었습니다!', status: 'selected' });
+    }
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('파이프라인 전달 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  } finally {
+    client.release();
+  }
+});
+
+// POST /api/wishes/:id/complete — 소원 달성 처리
+app.post('/api/wishes/:id/complete', authenticateToken, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const wishId = req.params.id;
+    const userId = req.user.id;
+    await client.query('BEGIN');
+
+    const wish = await client.query(`SELECT * FROM wishes WHERE id = $1`, [wishId]);
+    if (wish.rows.length === 0) { await client.query('ROLLBACK'); return res.status(404).json({ message: '소원을 찾을 수 없습니다.' }); }
+    const w = wish.rows[0];
+
+    // 상태 체크: 이미 완료/실패된 소원 재처리 방지
+    if (w.status === 'completed') { await client.query('ROLLBACK'); return res.status(409).json({ message: '이미 완료 처리된 소원입니다.' }); }
+    if (!['active', 'selected'].includes(w.status)) { await client.query('ROLLBACK'); return res.status(400).json({ message: '완료 처리할 수 없는 상태입니다.' }); }
+
+    // 권한 체크: 어드민이거나 해당 팬클럽 리더
+    const userCheck = await client.query(`SELECT is_admin FROM users WHERE id = $1`, [userId]);
+    if (!userCheck.rows[0]?.is_admin) {
+      const memberCheck = await client.query(
+        `SELECT role FROM fanclub_members WHERE fanclub_id = $1 AND user_id = $2`, [w.fanclub_id, userId]
+      );
+      if (memberCheck.rows[0]?.role !== 'leader') { await client.query('ROLLBACK'); return res.status(403).json({ message: '소원 완료 처리 권한이 없습니다.' }); }
+    }
+
+    if (w.energy_current < w.energy_goal) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ message: '에너지 목표에 도달하지 못했습니다.' });
+    }
+
+    const achievementRate = w.energy_goal > 0 ? Math.min(100, (w.energy_current / w.energy_goal * 100)).toFixed(2) : '0.00';
+
+    // 소원 완료 처리
+    await client.query(
+      `UPDATE wishes SET status = 'completed', completed_at = NOW(), final_achievement_rate = $1 WHERE id = $2`,
+      [achievementRate, wishId]
+    );
+
+    // 기여자 조회 및 뱃지 등급 결정
+    const contributors = await client.query(
+      `SELECT user_id, SUM(energy_amount) AS total_energy
+       FROM wish_energy_contributions WHERE wish_id = $1
+       GROUP BY user_id ORDER BY total_energy DESC`,
+      [wishId]
+    );
+
+    const total = contributors.rows.length;
+    for (let i = 0; i < total; i++) {
+      const c = contributors.rows[i];
+      let tier = 'bronze';
+      if (i < Math.ceil(total * 0.1)) tier = 'gold';
+      else if (i < Math.ceil(total * 0.3)) tier = 'silver';
+
+      await client.query(
+        `INSERT INTO wish_reward_claims (wish_id, user_id, reward_type, badge_tier)
+         VALUES ($1, $2, 'badge', $3) ON CONFLICT (wish_id, user_id, reward_type) DO NOTHING`,
+        [wishId, c.user_id, tier]
+      );
+    }
+
+    // 아카이브 기록
+    await client.query(
+      `INSERT INTO wish_archive (wish_id, fanclub_id, title, category, wish_type, energy_goal, energy_final, achievement_rate, contributor_count, season_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      [wishId, w.fanclub_id, w.title, w.category, w.wish_type, w.energy_goal, w.energy_current, achievementRate, total, w.season_id]
+    );
+
+    // 활동 로그
+    await client.query(
+      `INSERT INTO activity_logs (user_id, fandom_id, area, action, score_type, ap_earned, meta)
+       VALUES ($1, $2, 'wish', 'wish_completed', 'engagement', 0, $3)`,
+      [w.proposer_id, w.fanclub_id, JSON.stringify({ wish_id: wishId, achievement_rate: achievementRate })]
+    );
+
+    await client.query('COMMIT');
+
+    // Socket.IO 브로드캐스트
+    if (typeof io !== 'undefined') {
+      io.to(`fanclub:${w.fanclub_id}`).emit('wish:completed', {
+        wishId: parseInt(wishId), title: w.title, fanclubId: w.fanclub_id, achievementRate: parseFloat(achievementRate)
+      });
+    }
+
+    res.json({
+      message: '소원 달성! 초신성이 탄생했습니다!',
+      achievementRate: parseFloat(achievementRate),
+      totalContributors: total,
+      rewardsDistributed: total
+    });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('소원 달성 처리 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  } finally {
+    client.release();
+  }
+});
+
+// POST /api/wishes/:id/fail — 소원 실패/만료 처리
+app.post('/api/wishes/:id/fail', authenticateToken, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const wishId = req.params.id;
+    const userId = req.user.id;
+    await client.query('BEGIN');
+
+    const wish = await client.query(`SELECT * FROM wishes WHERE id = $1`, [wishId]);
+    if (wish.rows.length === 0) { await client.query('ROLLBACK'); return res.status(404).json({ message: '소원을 찾을 수 없습니다.' }); }
+    const w = wish.rows[0];
+
+    // 상태 체크: 이미 완료/실패된 소원 재처리 방지 (이중 환불 차단)
+    if (!['active', 'selected', 'climbing'].includes(w.status)) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ message: `실패 처리할 수 없는 상태입니다. 현재 상태: ${w.status}` });
+    }
+
+    // 권한 체크: 어드민이거나 해당 팬클럽 리더
+    const userCheck = await client.query(`SELECT is_admin FROM users WHERE id = $1`, [userId]);
+    if (!userCheck.rows[0]?.is_admin) {
+      const memberCheck = await client.query(
+        `SELECT role FROM fanclub_members WHERE fanclub_id = $1 AND user_id = $2`, [w.fanclub_id, userId]
+      );
+      if (memberCheck.rows[0]?.role !== 'leader') { await client.query('ROLLBACK'); return res.status(403).json({ message: '소원 실패 처리 권한이 없습니다.' }); }
+    }
+
+    const rate = w.energy_goal > 0 ? (w.energy_current / w.energy_goal * 100) : 0;
+    let refundRate = 0.5;
+    if (rate >= 80) refundRate = 0.9;
+    else if (rate >= 50) refundRate = 0.7;
+
+    // 스타더스트 기부분만 환불
+    const stardustContribs = await client.query(
+      `SELECT user_id, SUM(energy_amount) AS total FROM wish_energy_contributions
+       WHERE wish_id = $1 AND source = 'stardust' GROUP BY user_id`,
+      [wishId]
+    );
+
+    for (const c of stardustContribs.rows) {
+      const refundAmount = Math.floor(c.total * refundRate);
+      if (refundAmount > 0) {
+        await client.query(`UPDATE users SET stardust = stardust + $1 WHERE id = $2`, [refundAmount, c.user_id]);
+
+        const balResult = await client.query(`SELECT stardust FROM users WHERE id = $1`, [c.user_id]);
+        await client.query(
+          `INSERT INTO stardust_ledger (user_id, amount, balance_after, type, description)
+           VALUES ($1, $2, $3, 'wish_refund', $4)`,
+          [c.user_id, refundAmount, balResult.rows[0].stardust, `소원 실패 환불 (${(refundRate*100).toFixed(0)}%) - ${w.title}`]
+        );
+
+        await client.query(
+          `INSERT INTO wish_reward_claims (wish_id, user_id, reward_type, stardust_amount)
+           VALUES ($1, $2, 'partial_refund', $3) ON CONFLICT (wish_id, user_id, reward_type) DO NOTHING`,
+          [wishId, c.user_id, refundAmount]
+        );
+      }
+    }
+
+    // 소원 상태 업데이트
+    await client.query(
+      `UPDATE wishes SET status = 'failed', refund_processed = TRUE, final_achievement_rate = $1 WHERE id = $2`,
+      [rate.toFixed(2), wishId]
+    );
+
+    // 아카이브 기록
+    const contribCount = await client.query(
+      `SELECT COUNT(DISTINCT user_id) AS cnt FROM wish_energy_contributions WHERE wish_id = $1`, [wishId]
+    );
+    await client.query(
+      `INSERT INTO wish_archive (wish_id, fanclub_id, title, category, wish_type, energy_goal, energy_final, achievement_rate, contributor_count, season_id, star_name)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, '미완의 별')`,
+      [wishId, w.fanclub_id, w.title, w.category, w.wish_type, w.energy_goal, w.energy_current, rate.toFixed(2), contribCount.rows[0].cnt, w.season_id]
+    );
+
+    await client.query('COMMIT');
+
+    if (typeof io !== 'undefined') {
+      io.to(`fanclub:${w.fanclub_id}`).emit('wish:failed', {
+        wishId: parseInt(wishId), title: w.title, finalRate: parseFloat(rate.toFixed(1)), refundRate: refundRate * 100
+      });
+    }
+
+    res.json({
+      message: '소원이 만료되었습니다. 스타더스트가 환불되었습니다.',
+      finalAchievementRate: parseFloat(rate.toFixed(1)),
+      refundRate: refundRate * 100,
+      refundedUsers: stardustContribs.rows.length
+    });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('소원 실패 처리 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  } finally {
+    client.release();
+  }
+});
+
+// POST /api/wishes/:id/claim-reward — 달성 보상 수령 (트랜잭션 + 중복 방지)
+app.post('/api/wishes/:id/claim-reward', authenticateToken, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const wishId = req.params.id;
+    const userId = req.user.id;
+
+    await client.query('BEGIN');
+
+    const wish = await client.query(`SELECT * FROM wishes WHERE id = $1 AND status = 'completed'`, [wishId]);
+    if (wish.rows.length === 0) { await client.query('ROLLBACK'); return res.status(404).json({ message: '달성된 소원을 찾을 수 없습니다.' }); }
+
+    const existing = await client.query(
+      `SELECT * FROM wish_reward_claims WHERE wish_id = $1 AND user_id = $2 AND reward_type = 'badge'`,
+      [wishId, userId]
+    );
+    if (existing.rows.length === 0) { await client.query('ROLLBACK'); return res.status(400).json({ message: '이 소원에 기여한 기록이 없습니다.' }); }
+
+    const claim = existing.rows[0];
+
+    // 이미 스타더스트 보상을 수령했는지 확인 (stardust_amount > 0이면 이미 수령)
+    if (claim.stardust_amount > 0) { await client.query('ROLLBACK'); return res.status(409).json({ message: '이미 보상을 수령했습니다.' }); }
+
+    const tierLabels = { gold: '골드 기여자', silver: '실버 기여자', bronze: '브론즈 기여자' };
+    const stardustBonusMap = { gold: 500, silver: 200, bronze: 50 };
+    const bonus = stardustBonusMap[claim.badge_tier] || 50;
+
+    await client.query(`UPDATE users SET stardust = stardust + $1 WHERE id = $2`, [bonus, userId]);
+    const balResult = await client.query(`SELECT stardust FROM users WHERE id = $1`, [userId]);
+    await client.query(
+      `INSERT INTO stardust_ledger (user_id, amount, balance_after, type, description)
+       VALUES ($1, $2, $3, 'wish_reward', $4)`,
+      [userId, bonus, balResult.rows[0].stardust, `소원 달성 보상 (${claim.badge_tier}) - ${wish.rows[0].title}`]
+    );
+
+    // 수령 완료 마킹
+    await client.query(
+      `UPDATE wish_reward_claims SET stardust_amount = $1 WHERE id = $2`,
+      [bonus, claim.id]
+    );
+
+    await client.query('COMMIT');
+
+    res.json({
+      message: '보상을 수령했습니다!',
+      badge: { tier: claim.badge_tier, label: tierLabels[claim.badge_tier] },
+      stardustBonus: bonus
+    });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('보상 수령 오류:', err.message);
+    res.status(500).json({ message: '서버 오류입니다.' });
+  } finally {
+    client.release();
+  }
+});
+
+// GET /api/wishes/:id/visual — 소원 별 시각화 데이터
+app.get('/api/wishes/:id/visual', async (req, res) => {
+  try {
+    const wishId = req.params.id;
+
+    const wish = await pool.query(`SELECT * FROM wishes WHERE id = $1`, [wishId]);
+    if (wish.rows.length === 0) return res.status(404).json({ message: '소원을 찾을 수 없습니다.' });
+    const w = wish.rows[0];
+
+    const visual = getWishVisualStage(w.energy_current, w.energy_goal);
+
+    const recent = await pool.query(
+      `SELECT u.nickname, c.energy_amount AS amount, c.source, c.created_at AS at
+       FROM wish_energy_contributions c JOIN users u ON u.id = c.user_id
+       WHERE c.wish_id = $1 ORDER BY c.created_at DESC LIMIT 5`,
+      [wishId]
+    );
+
+    const top = await pool.query(
+      `SELECT u.nickname, SUM(c.energy_amount) AS total_energy
+       FROM wish_energy_contributions c JOIN users u ON u.id = c.user_id
+       WHERE c.wish_id = $1 GROUP BY u.nickname ORDER BY total_energy DESC LIMIT 1`,
+      [wishId]
+    );
+
+    let topContributor = null;
+    if (top.rows.length > 0) {
+      topContributor = { nickname: top.rows[0].nickname, totalEnergy: parseInt(top.rows[0].total_energy) };
+    }
+
+    res.json({
+      visual: { ...visual, energyCurrent: w.energy_current, energyGoal: w.energy_goal },
+      recentContributions: recent.rows,
+      topContributor
+    });
+  } catch (err) {
+    console.error('소원 시각화 오류:', err.message);
     res.status(500).json({ message: '서버 오류입니다.' });
   }
 });

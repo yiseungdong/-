@@ -1278,6 +1278,8 @@ function animate() {
         const speed = 0.04;
         myAvatarMesh.position.x += (dx/dist)*speed;
         myAvatarMesh.position.z += (dz/dist)*speed;
+        myAvatarMesh.position.x = Math.max(ROOM_BOUNDS.xMin, Math.min(ROOM_BOUNDS.xMax, myAvatarMesh.position.x));
+        myAvatarMesh.position.z = Math.max(ROOM_BOUNDS.zMin, Math.min(ROOM_BOUNDS.zMax, myAvatarMesh.position.z));
         myAvatarMesh.rotation.y = Math.atan2(dx, dz);
       } else {
         myAvatarMesh.position.x = avatarTargetPos.x;
@@ -1438,8 +1440,8 @@ function onCanvasClick(e) {
   // 바닥 클릭 → 캐릭터 이동
   const floorPlane = new THREE.Plane(new THREE.Vector3(0,1,0), 1.2);
   const target = new THREE.Vector3();
-  raycaster.ray.intersectPlane(floorPlane, target);
-  if(target) {
+  const hit = raycaster.ray.intersectPlane(floorPlane, target);
+  if(hit) {
     target.x = Math.max(ROOM_BOUNDS.xMin, Math.min(ROOM_BOUNDS.xMax, target.x));
     target.z = Math.max(ROOM_BOUNDS.zMin, Math.min(ROOM_BOUNDS.zMax, target.z));
     avatarTargetPos = target.clone();
@@ -1498,8 +1500,8 @@ function onTouchEnd(e) {
         // 바닥 탭 → 이동
         const floorPlane = new THREE.Plane(new THREE.Vector3(0,1,0), 1.2);
         const target = new THREE.Vector3();
-        raycaster.ray.intersectPlane(floorPlane, target);
-        if(target) {
+        const hit = raycaster.ray.intersectPlane(floorPlane, target);
+        if(hit) {
           target.x = Math.max(ROOM_BOUNDS.xMin, Math.min(ROOM_BOUNDS.xMax, target.x));
           target.z = Math.max(ROOM_BOUNDS.zMin, Math.min(ROOM_BOUNDS.zMax, target.z));
           avatarTargetPos = target.clone();
@@ -2507,10 +2509,8 @@ function startArtistWander(){
   artistWanderTarget = new THREE.Vector3(0, -1.2, 0.5);
   // 30~50초마다 랜덤 위치로 이동
   artistWanderTimer = setInterval(function(){
-    var rx = (Math.random()-0.5) * 5;  // -2.5 ~ 2.5
-    var rz = (Math.random()-0.5) * 4;  // -2 ~ 2
-    rx = Math.max(-3, Math.min(3, rx));
-    rz = Math.max(-2.5, Math.min(2.5, rz));
+    var rx = ROOM_BOUNDS.xMin + Math.random() * (ROOM_BOUNDS.xMax - ROOM_BOUNDS.xMin);
+    var rz = ROOM_BOUNDS.zMin + Math.random() * (ROOM_BOUNDS.zMax - ROOM_BOUNDS.zMin);
     artistWanderTarget = new THREE.Vector3(rx, -1.2, rz);
   }, 30000 + Math.random()*20000);
 }
