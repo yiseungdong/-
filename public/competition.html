@@ -160,6 +160,19 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
   color:var(--gold);letter-spacing:0.5px;
 }
 
+/* ── 헥사곤 배틀 ── */
+.hex-player{text-align:center;min-width:90px}
+.hex-stat-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.hex-stat-label{font-size:10px;font-weight:700;width:36px;text-align:right;color:var(--muted)}
+.hex-bar-wrap{flex:1;height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;position:relative}
+.hex-bar-me{position:absolute;left:0;top:0;height:100%;border-radius:4px;background:#38bdf8;transition:width .6s ease}
+.hex-bar-opp{position:absolute;right:0;top:0;height:100%;border-radius:4px;background:#ef4444;transition:width .6s ease}
+.hex-stat-val{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;width:60px;display:flex;justify-content:space-between}
+.hex-stat-val .me{color:#38bdf8}.hex-stat-val .opp{color:#ef4444}
+
+/* ── 패널 전환 ── */
+.comp-panel{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
 /* ── Toast & 애니메이션 ── */
 @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
@@ -189,15 +202,15 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 
   <!-- 경쟁 콘텐츠 탭 -->
   <div class="tab-bar" id="compTabBar">
-    <button class="tab-btn active" onclick="switchCompTab('statking', this)">⚡ 스탯킹</button>
-    <button class="tab-btn" onclick="switchCompTab('villagemap', this)">🗺️ 마을맵</button>
-    <button class="tab-btn" onclick="switchCompTab('firefront', this)">🔥 화력전선</button>
-    <button class="tab-btn" onclick="switchCompTab('seasonmvp', this)">🏆 시즌MVP</button>
-    <button class="tab-btn" onclick="switchCompTab('report', this)">📰 제보소</button>
+    <button class="tab-btn active" data-tab="statking" onclick="switchCompTab('statking', this)">⚡ 스탯킹</button>
+    <button class="tab-btn" data-tab="hexagon" onclick="switchCompTab('hexagon', this)">🔷 헥사곤</button>
+    <button class="tab-btn" data-tab="statrace" onclick="switchCompTab('statrace', this)">🏁 스탯레이스</button>
+    <button class="tab-btn" data-tab="marathon" onclick="switchCompTab('marathon', this)">🌱 성장마라톤</button>
+    <button class="tab-btn" data-tab="challenge" onclick="switchCompTab('challenge', this)">🎯 도전과제</button>
   </div>
 
-  <!-- 스탯킹 패널 -->
-  <div id="panel-statking">
+  <!-- ═══ 스탯킹 패널 ═══ -->
+  <div class="comp-panel" id="panel-statking">
 
     <!-- 리그 필터 -->
     <div class="league-filter" id="leagueFilter">
@@ -228,6 +241,59 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
     </div>
 
   </div><!-- /panel-statking -->
+
+  <!-- ═══ 헥사곤 배틀 패널 ═══ -->
+  <div class="comp-panel" id="panel-hexagon" style="display:none">
+
+    <div style="text-align:center;padding:16px 16px 8px">
+      <div style="font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:#ffffff;letter-spacing:1px;margin-bottom:4px">🔷 HEXAGON BATTLE</div>
+      <div style="font-size:11px;color:var(--muted)">6대 스탯 균형 대결 — 누가 더 완벽한 헥사곤?</div>
+    </div>
+
+    <!-- 대전 상대 선택 -->
+    <div style="display:flex;align-items:center;justify-content:center;gap:12px;padding:12px 16px">
+      <div class="hex-player" id="hexPlayerMe">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:4px">나</div>
+        <div style="font-size:13px;font-weight:700;color:#38bdf8" id="hexMyName">별빛탐험가</div>
+      </div>
+      <div style="font-family:'Orbitron',monospace;font-size:16px;font-weight:900;color:var(--gold)">VS</div>
+      <div class="hex-player" id="hexPlayerOpp">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:4px">상대</div>
+        <div style="font-size:13px;font-weight:700;color:#ef4444" id="hexOppName">은하전사</div>
+      </div>
+    </div>
+
+    <!-- 레이더 차트 Canvas -->
+    <div style="display:flex;justify-content:center;padding:0 16px">
+      <canvas id="hexCanvas" width="320" height="300" style="max-width:100%"></canvas>
+    </div>
+
+    <!-- 스탯 비교 바 -->
+    <div id="hexStatBars" style="padding:8px 20px 16px"></div>
+
+    <!-- 결과 영역 -->
+    <div id="hexResult" style="text-align:center;padding:8px 16px 80px">
+      <div style="font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:var(--gold);margin-bottom:4px" id="hexWinner"></div>
+      <div style="font-size:11px;color:var(--muted)" id="hexSummary"></div>
+    </div>
+
+    <!-- 랜덤 매칭 버튼 -->
+    <div style="text-align:center;padding:0 16px 20px">
+      <button onclick="randomHexMatch()" style="padding:10px 28px;border-radius:20px;border:1px solid var(--gold);background:rgba(240,192,64,.1);color:var(--gold);font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .2s">🎲 랜덤 매칭</button>
+    </div>
+
+  </div><!-- /panel-hexagon -->
+
+  <!-- ═══ 준비중 패널들 ═══ -->
+  <div class="comp-panel" id="panel-statrace" style="display:none">
+    <div style="text-align:center;padding:80px 20px;color:var(--muted);font-size:14px">🔒 준비중인 콘텐츠예요</div>
+  </div>
+  <div class="comp-panel" id="panel-marathon" style="display:none">
+    <div style="text-align:center;padding:80px 20px;color:var(--muted);font-size:14px">🔒 준비중인 콘텐츠예요</div>
+  </div>
+  <div class="comp-panel" id="panel-challenge" style="display:none">
+    <div style="text-align:center;padding:80px 20px;color:var(--muted);font-size:14px">🔒 준비중인 콘텐츠예요</div>
+  </div>
 
 </div><!-- /app -->
 
@@ -298,18 +364,32 @@ var currentLeague = 'dust';
 var currentStat   = 'total';
 
 /* ── 경쟁 콘텐츠 탭 전환 ── */
+var activeTabs = ['statking','hexagon']; // 활성화된 탭
 function switchCompTab(tabName, btn) {
-  /* 탭 버튼 활성 */
   document.querySelectorAll('#compTabBar .tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 
-  /* 스탯킹 외 탭은 준비 중 토스트 */
-  if (tabName !== 'statking') {
-    showToast('🔜 준비 중입니다!');
-    /* 첫 번째 탭(스탯킹)을 다시 활성화 */
-    document.querySelectorAll('#compTabBar .tab-btn')[0].classList.add('active');
+  // 준비중 탭
+  if (activeTabs.indexOf(tabName) === -1) {
+    showToast('곧 오픈될 콘텐츠예요! 기대해주세요 ✨');
+    // 현재 보이는 패널 유지
     btn.classList.remove('active');
+    var visiblePanel = document.querySelector('.comp-panel[style*="display: flex"],.comp-panel:not([style*="display:none"]):not([style*="display: none"])');
+    if(visiblePanel) {
+      var visibleTab = visiblePanel.id.replace('panel-','');
+      var tabBtn = document.querySelector('#compTabBar .tab-btn[data-tab="'+visibleTab+'"]');
+      if(tabBtn) tabBtn.classList.add('active');
+    }
+    return;
   }
+
+  // 패널 전환
+  document.querySelectorAll('.comp-panel').forEach(p => p.style.display = 'none');
+  var panel = document.getElementById('panel-' + tabName);
+  if(panel) panel.style.display = 'flex';
+
+  // 헥사곤 탭 진입 시 캔버스 렌더
+  if(tabName === 'hexagon') drawHexChart();
 }
 
 /* ── 리그 필터 전환 ── */
@@ -415,6 +495,166 @@ function renderRankings() {
   list.querySelectorAll('.rank-item').forEach(function(el, i) {
     el.style.animationDelay = (i * 0.04) + 's';
   });
+}
+
+/* ═══════════════════════════════════
+   헥사곤 배틀 — Canvas 레이더 차트
+   ═══════════════════════════════════ */
+var HEX_STATS = ['LOY','ACT','SOC','CRE','INT','LCK'];
+var HEX_LABELS = ['❤️ LOY','⚡ ACT','💬 SOC','🎨 CRE','🧠 INT','🍀 LCK'];
+
+var hexMyStats  = [78, 65, 82, 55, 71, 60];
+var hexOppStats = [62, 88, 54, 73, 67, 80];
+
+var HEX_OPPONENTS = [
+  {name:'은하전사',   stats:[62,88,54,73,67,80]},
+  {name:'별빛수호자', stats:[85,60,78,50,90,55]},
+  {name:'우주탐험가', stats:[70,72,68,80,65,70]},
+  {name:'퀘이사빛',   stats:[55,95,45,60,50,92]},
+  {name:'노바폭풍',   stats:[90,50,85,40,80,42]},
+  {name:'달빛소녀',   stats:[68,58,92,75,55,65]},
+];
+
+function drawHexChart() {
+  var canvas = document.getElementById('hexCanvas');
+  if(!canvas) return;
+  var ctx2 = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height;
+  var cx = W/2, cy = H/2 + 5;
+  var R = Math.min(W,H) * 0.38;
+
+  ctx2.clearRect(0,0,W,H);
+
+  // 배경 그리드 (3단계)
+  [1.0, 0.66, 0.33].forEach(function(scale) {
+    ctx2.beginPath();
+    for(var i=0;i<6;i++){
+      var angle = (Math.PI*2/6)*i - Math.PI/2;
+      var x = cx + R*scale*Math.cos(angle);
+      var y = cy + R*scale*Math.sin(angle);
+      if(i===0) ctx2.moveTo(x,y); else ctx2.lineTo(x,y);
+    }
+    ctx2.closePath();
+    ctx2.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx2.lineWidth = 1;
+    ctx2.stroke();
+  });
+
+  // 축선
+  for(var i=0;i<6;i++){
+    var angle = (Math.PI*2/6)*i - Math.PI/2;
+    ctx2.beginPath();
+    ctx2.moveTo(cx,cy);
+    ctx2.lineTo(cx+R*Math.cos(angle), cy+R*Math.sin(angle));
+    ctx2.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx2.lineWidth = 1;
+    ctx2.stroke();
+  }
+
+  // 내 스탯 (파랑)
+  drawHexPolygon(ctx2, cx, cy, R, hexMyStats, 'rgba(56,189,248,0.25)', 'rgba(56,189,248,0.9)');
+  // 상대 스탯 (빨강)
+  drawHexPolygon(ctx2, cx, cy, R, hexOppStats, 'rgba(239,68,68,0.18)', 'rgba(239,68,68,0.8)');
+
+  // 라벨
+  ctx2.font = '700 11px "Noto Sans KR", sans-serif';
+  ctx2.textAlign = 'center';
+  ctx2.textBaseline = 'middle';
+  for(var i=0;i<6;i++){
+    var angle = (Math.PI*2/6)*i - Math.PI/2;
+    var lx = cx + (R+22)*Math.cos(angle);
+    var ly = cy + (R+22)*Math.sin(angle);
+    ctx2.fillStyle = '#ffffff';
+    ctx2.fillText(HEX_LABELS[i], lx, ly);
+  }
+
+  // 스탯 비교 바 렌더
+  renderHexBars();
+  // 결과 판정
+  renderHexResult();
+}
+
+function drawHexPolygon(ctx2, cx, cy, R, stats, fillColor, strokeColor) {
+  ctx2.beginPath();
+  for(var i=0;i<6;i++){
+    var angle = (Math.PI*2/6)*i - Math.PI/2;
+    var val = Math.min(stats[i],100)/100;
+    var x = cx + R*val*Math.cos(angle);
+    var y = cy + R*val*Math.sin(angle);
+    if(i===0) ctx2.moveTo(x,y); else ctx2.lineTo(x,y);
+  }
+  ctx2.closePath();
+  ctx2.fillStyle = fillColor;
+  ctx2.fill();
+  ctx2.strokeStyle = strokeColor;
+  ctx2.lineWidth = 2;
+  ctx2.stroke();
+
+  // 꼭짓점 점
+  for(var i=0;i<6;i++){
+    var angle = (Math.PI*2/6)*i - Math.PI/2;
+    var val = Math.min(stats[i],100)/100;
+    var x = cx + R*val*Math.cos(angle);
+    var y = cy + R*val*Math.sin(angle);
+    ctx2.beginPath();
+    ctx2.arc(x,y,3,0,Math.PI*2);
+    ctx2.fillStyle = strokeColor;
+    ctx2.fill();
+  }
+}
+
+function renderHexBars() {
+  var el = document.getElementById('hexStatBars');
+  if(!el) return;
+  var html = '';
+  for(var i=0;i<6;i++){
+    var me = hexMyStats[i], opp = hexOppStats[i];
+    var maxVal = Math.max(me,opp,1);
+    var meW = (me/100)*50, oppW = (opp/100)*50;
+    var win = me > opp ? 'me' : me < opp ? 'opp' : '';
+    html += '<div class="hex-stat-row">' +
+      '<span class="hex-stat-label">' + HEX_STATS[i] + '</span>' +
+      '<div class="hex-bar-wrap">' +
+        '<div class="hex-bar-me" style="width:'+meW+'%"></div>' +
+        '<div class="hex-bar-opp" style="width:'+oppW+'%"></div>' +
+      '</div>' +
+      '<span class="hex-stat-val"><span class="me">' + me + '</span><span class="opp">' + opp + '</span></span>' +
+      '</div>';
+  }
+  el.innerHTML = html;
+}
+
+function renderHexResult() {
+  var myTotal=0, oppTotal=0, myWins=0, oppWins=0;
+  for(var i=0;i<6;i++){
+    myTotal += hexMyStats[i]; oppTotal += hexOppStats[i];
+    if(hexMyStats[i]>hexOppStats[i]) myWins++;
+    else if(hexOppStats[i]>hexMyStats[i]) oppWins++;
+  }
+  var winnerEl = document.getElementById('hexWinner');
+  var summaryEl = document.getElementById('hexSummary');
+  if(myWins > oppWins) {
+    winnerEl.textContent = '🏆 승리! — YOU WIN';
+    winnerEl.style.color = '#38bdf8';
+  } else if(oppWins > myWins) {
+    winnerEl.textContent = '💔 패배 — YOU LOSE';
+    winnerEl.style.color = '#ef4444';
+  } else {
+    winnerEl.textContent = '⚖️ 무승부 — DRAW';
+    winnerEl.style.color = '#fbbf24';
+  }
+  summaryEl.textContent = myWins + '승 ' + oppWins + '패 · 총점 ' + myTotal + ' vs ' + oppTotal;
+}
+
+function randomHexMatch() {
+  var idx = Math.floor(Math.random() * HEX_OPPONENTS.length);
+  var opp = HEX_OPPONENTS[idx];
+  hexOppStats = opp.stats.slice();
+  document.getElementById('hexOppName').textContent = opp.name;
+  // 내 스탯도 약간 랜덤 변동
+  hexMyStats = hexMyStats.map(function(v){ return Math.max(20, Math.min(100, v + Math.floor(Math.random()*11)-5)); });
+  drawHexChart();
+  showToast('🎲 ' + opp.name + '와(과) 대결!');
 }
 
 /* ── 초기 렌더 ── */
