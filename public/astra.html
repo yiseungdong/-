@@ -580,6 +580,11 @@ body::-webkit-scrollbar { width:0; }
   flex-shrink:0;
   overflow:hidden;
 }
+/* 브레드크럼 */
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);flex-wrap:wrap;justify-content:center;margin:6px 0;}
+.breadcrumb-item{color:var(--text);}
+.breadcrumb-sep{color:var(--gold);font-size:10px;}
+.breadcrumb-item:last-child{color:var(--gold);font-weight:600;}
 </style>
 <script src="/js/avatar-svgs.js"></script>
 </head>
@@ -652,7 +657,7 @@ body::-webkit-scrollbar { width:0; }
 
       <!-- ═══ 패널 1: 캐릭터 ═══ -->
       <div class="tab-panel" id="panel-character">
-
+        <div class="breadcrumb" id="bc-character"></div>
         <!-- 2. 아바타 스테이지 (핵심) -->
         <div class="avatar-stage" id="avatarStage">
           <div class="stage-bg" id="stageBg"></div>
@@ -749,6 +754,7 @@ body::-webkit-scrollbar { width:0; }
 
       <!-- ═══ 패널 2: 성궤 ═══ -->
       <div class="tab-panel" id="panel-orbit">
+        <div class="breadcrumb" id="bc-orbit" style="padding:8px 16px 0;"></div>
         <div class="orbit-card-container" style="padding:16px;">
           <div class="orbit-card" style="background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;">
             <div id="orbitAvatarCard" style="margin-bottom:16px;"></div>
@@ -903,6 +909,27 @@ let state={
 let currentTab='character';
 
 // ═══ 탭 전환 ═══
+// 소속 모임 브레드크럼
+function renderMoimBreadcrumb(containerId){
+  const el=document.getElementById(containerId);if(!el)return;
+  try{
+    const user=JSON.parse(localStorage.getItem('asteria_user')||'{}');
+    const fandom=user.fandomName||'BTS ARMY';
+    const league=user.league||'star';
+    const MY_ORG={dust:['게더링','포인트'],star:['테리토리','베이스','유닛'],planet:['테리토리','베이스','유닛'],nova:['프로빈스','디스트릭트','스퀘어','라운지'],quasar:['엠파이어','도미니언','섹터','클러스터','오빗']};
+    const orgs=MY_ORG[league]||MY_ORG['star'];
+    const myOrgs=[];
+    orgs.forEach((name,i)=>{
+      const saved=localStorage.getItem('asteria_moim_depth'+(i+1));
+      myOrgs.push(saved||name+(Math.floor(Math.random()*20)+1));
+    });
+    const parts=[fandom,...myOrgs];
+    el.innerHTML=parts.map((p,i)=>'<span class="breadcrumb-item">'+p+'</span>'+(i<parts.length-1?'<span class="breadcrumb-sep">›</span>':'')).join('');
+  }catch(e){
+    el.innerHTML='<span class="breadcrumb-item">BTS ARMY</span><span class="breadcrumb-sep">›</span><span class="breadcrumb-item">테리토리3</span><span class="breadcrumb-sep">›</span><span class="breadcrumb-item">베이스12</span><span class="breadcrumb-sep">›</span><span class="breadcrumb-item">유닛47</span>';
+  }
+}
+
 function switchTab(tabId){
   currentTab=tabId;
   const tabs=['character','orbit','record'];
@@ -1367,6 +1394,9 @@ function renderAstraId(el, serial) {
     '<span style="color:#c084fc;font-family:\'Orbitron\',monospace;font-weight:700;">' + prefix + '</span>' +
     '<span style="color:#f0c040;font-family:\'Orbitron\',monospace;font-weight:700;">' + num + '</span>';
 }
+// 브레드크럼 초기화
+renderMoimBreadcrumb('bc-character');
+renderMoimBreadcrumb('bc-orbit');
 </script>
 </body>
 </html>
