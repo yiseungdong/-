@@ -3242,7 +3242,7 @@ function renderVoteList(){
   }
 }
 
-// ===== 별빛 제보소 =====
+// ===== 별빛 제보소 v3 (완성) =====
 const REPORTER_GRADES=[
   {name:'새내기 기자',icon:'🌱',minApproved:0,nextCond:'승인 제보 5건'},
   {name:'수습 기자',icon:'✏️',minApproved:5,nextCond:'승인 20건+검증50회'},
@@ -3252,219 +3252,158 @@ const REPORTER_GRADES=[
 ];
 const SR_CAT_LABELS={schedule:'📅 일정',goods:'💿 굿즈',media:'🎬 영상',rumor:'⚠️ 루머',global:'🌏 해외',statement:'💬 발언'};
 let MOCK_REPORTS=[
-  {id:0,type:'leader',category:'schedule',urgent:false,title:'[리더 공지] 4월 팬미팅 공식 확정',body:'4월 20일 서울 KSPO돔에서 팬미팅이 확정되었습니다. 공식 팬클럽 회원 우선 예매 진행 예정.',url:'',author:'팬클럽대표',authorGrade:4,status:'leader',createdAt:'3시간 전',trueVotes:0,falseVotes:0,unsureVotes:0,bubbleLevel:0,verifyDeadline:null},
-  {id:1,type:'report',category:'schedule',urgent:false,title:'다음 주 음방 출연 일정 제보',body:'KBS 뮤직뱅크 3월 15일 출연 확정. 리허설 오전 7시 시작.',url:'https://twitter.com/kbs_schedule/1234',author:'스케줄마스터',authorGrade:2,status:'confirmed',createdAt:'5시간 전',trueVotes:24,falseVotes:1,unsureVotes:2,bubbleLevel:2,verifyDeadline:null},
-  {id:2,type:'report',category:'goods',urgent:false,title:'신규 포토카드 세트 출시 정보',body:'4월 컴백 앨범에 신규 포토카드 세트(8종) 포함 예정.',url:'',author:'굿즈헌터',authorGrade:1,status:'verifying',createdAt:'12시간 전',trueVotes:8,falseVotes:3,unsureVotes:2,bubbleLevel:0,verifyDeadline:'47시간 후'},
-  {id:3,type:'report',category:'global',urgent:false,title:'미국 라디오 인터뷰 일정 입수',body:'LA 현지 팬 제보. 현지시간 3월 20일 오전 10시 iHeart Radio 인터뷰 예정.',url:'',author:'해외특파원',authorGrade:3,status:'bubbled',createdAt:'1일 전',trueVotes:18,falseVotes:2,unsureVotes:3,bubbleLevel:1,verifyDeadline:null},
-  {id:4,type:'report',category:'rumor',urgent:false,title:'컴백 날짜 루머 팩트체크',body:'온라인에 퍼지는 4월 컴백설에 대한 팩트체크입니다. 현재 공식 미확인 상태.',url:'',author:'팩트체커',authorGrade:2,status:'unconfirmed',createdAt:'2일 전',trueVotes:3,falseVotes:8,unsureVotes:5,bubbleLevel:0,verifyDeadline:null}
+  {id:0,type:'leader',category:'schedule',urgent:false,title:'[리더 공지] 4월 팬미팅 공식 확정',body:'4월 20일 서울 KSPO돔에서 팬미팅이 확정되었습니다. 공식 팬클럽 회원 우선 예매 진행 예정.',url:'',author:'팬클럽대표',authorGrade:4,status:'leader',createdAt:'3시간 전',trueVotes:0,falseVotes:0,unsureVotes:0,likes:45,likedByMe:false,bubbleLevel:0,verifyDeadline:null},
+  {id:1,type:'report',category:'schedule',urgent:false,title:'다음 주 음방 출연 일정 제보',body:'KBS 뮤직뱅크 3월 15일 출연 확정. 리허설 오전 7시 시작.',url:'https://twitter.com/kbs_schedule/1234',author:'스케줄마스터',authorGrade:2,status:'confirmed',createdAt:'5시간 전',trueVotes:24,falseVotes:1,unsureVotes:2,likes:31,likedByMe:false,bubbleLevel:2,verifyDeadline:null},
+  {id:2,type:'report',category:'goods',urgent:false,title:'신규 포토카드 세트 출시 정보',body:'4월 컴백 앨범에 신규 포토카드 세트(8종) 포함 예정.',url:'',author:'굿즈헌터',authorGrade:1,status:'verifying',createdAt:'12시간 전',trueVotes:8,falseVotes:3,unsureVotes:2,likes:12,likedByMe:false,bubbleLevel:0,verifyDeadline:'47시간 후'},
+  {id:3,type:'report',category:'global',urgent:false,title:'미국 라디오 인터뷰 일정 입수',body:'LA 현지 팬 제보. 현지시간 3월 20일 오전 10시 iHeart Radio 인터뷰 예정.',url:'',author:'해외특파원',authorGrade:3,status:'bubbled',createdAt:'1일 전',trueVotes:18,falseVotes:2,unsureVotes:3,likes:23,likedByMe:false,bubbleLevel:1,verifyDeadline:null},
+  {id:4,type:'report',category:'rumor',urgent:false,title:'컴백 날짜 루머 팩트체크',body:'온라인에 퍼지는 4월 컴백설에 대한 팩트체크입니다. 현재 공식 미확인 상태.',url:'',author:'팩트체커',authorGrade:2,status:'unconfirmed',createdAt:'2일 전',trueVotes:3,falseVotes:8,unsureVotes:5,likes:2,likedByMe:false,bubbleLevel:0,verifyDeadline:null}
 ];
 function getMyReporterData(){
   const saved=localStorage.getItem('asteria_reporter');
   if(saved)return JSON.parse(saved);
-  return{approvedCount:0,verifyCount:0,leaderNoticeUsed:0,leaderNoticeMonth:''};
+  return{approvedCount:0,verifyCount:0,falseCount:0,banUntil:null,leaderWarningCount:0,leaderBanUntil:null,leaderNoticeUsed:0,leaderNoticeMonth:'',pendingAppeal:null};
 }
 function saveMyReporterData(data){localStorage.setItem('asteria_reporter',JSON.stringify(data));}
-function getMyGrade(approvedCount){
-  let grade=0;
-  for(let i=0;i<REPORTER_GRADES.length;i++){if(approvedCount>=REPORTER_GRADES[i].minApproved)grade=i;}
-  return grade;
-}
-function closeSrPanel(){
-  const panel=document.getElementById('panel-starreport');
-  if(panel)panel.style.display='none';
-}
+function getMyGrade(c){let g=0;for(let i=0;i<REPORTER_GRADES.length;i++){if(c>=REPORTER_GRADES[i].minApproved)g=i;}return g;}
+function isReportBanned(){const d=getMyReporterData();if(!d.banUntil)return false;return new Date()<new Date(d.banUntil);}
+function isLeaderNoticeBanned(){const d=getMyReporterData();if(!d.leaderBanUntil)return false;return new Date()<new Date(d.leaderBanUntil);}
+function closeSrPanel(){const panel=document.getElementById('panel-starreport');if(panel)panel.style.display='none';}
 function openStarReport(){
-  // 다른 패널 닫기
   const chatPanel=document.getElementById('chatPanel');if(chatPanel)chatPanel.classList.remove('open');
   const boardPanel=document.getElementById('board-panel');if(boardPanel)boardPanel.style.display='none';
   const votePanel=document.getElementById('vote-panel');if(votePanel)votePanel.style.display='none';
-
-  const panel=document.getElementById('panel-starreport');
-  if(!panel)return;
-  panel.style.display='flex';
+  const panel=document.getElementById('panel-starreport');if(!panel)return;
+  panel.style.display='flex';panel.style.flexDirection='column';
   updateReporterBadge();
   const isLeader=localStorage.getItem('asteria_is_leader')==='true';
-  const leaderBar=document.getElementById('leaderNoticeBar');
-  if(leaderBar)leaderBar.style.display=isLeader?'flex':'none';
-  renderSrOrgTabs();
-  switchSrCat('list');
+  const leaderBar=document.getElementById('leaderNoticeBar');if(leaderBar)leaderBar.style.display=isLeader?'flex':'none';
+  const banNotice=document.getElementById('srBanNotice');const submitForm=document.getElementById('srSubmitForm');
+  if(isReportBanned()){const d=getMyReporterData();const until=new Date(d.banUntil).toLocaleDateString('ko-KR');banNotice.style.display='block';banNotice.innerHTML='🚫 제보 금지 중<br><strong>'+until+'</strong>까지 제보가 제한됩니다.<br>허위 제보 패널티가 적용됐습니다.';submitForm.style.display='none';}
+  else{if(banNotice)banNotice.style.display='none';if(submitForm)submitForm.style.display='block';}
+  renderSrOrgTabs();switchSrCat('list');
 }
 function updateReporterBadge(){
-  const data=getMyReporterData();
-  const gradeIdx=getMyGrade(data.approvedCount);
-  const grade=REPORTER_GRADES[gradeIdx];
-  const next=REPORTER_GRADES[gradeIdx+1];
-  const badgeName=document.getElementById('myBadgeName');
-  const badgeProgress=document.getElementById('myBadgeProgress');
-  const badgeHint=document.getElementById('myBadgeHint');
-  if(badgeName)badgeName.textContent=grade.icon+' '+grade.name;
-  if(badgeProgress){
-    if(next)badgeProgress.textContent='제보 '+data.approvedCount+'/'+next.minApproved+'건';
-    else badgeProgress.textContent='최고 등급 달성! ⭐';
-  }
-  if(badgeHint){
-    if(next)badgeHint.textContent='다음 등급: '+next.name+' ('+next.nextCond+')';
-    else badgeHint.textContent='수석 기자 — 아스테리아 최고의 취재원입니다';
-  }
+  const data=getMyReporterData();const gradeIdx=getMyGrade(data.approvedCount);const grade=REPORTER_GRADES[gradeIdx];const next=REPORTER_GRADES[gradeIdx+1];
+  const bn=document.getElementById('myBadgeName'),bp=document.getElementById('myBadgeProgress'),bh=document.getElementById('myBadgeHint');
+  if(bn)bn.textContent=grade.icon+' '+grade.name;
+  if(bp)bp.textContent=next?'제보 '+data.approvedCount+'/'+next.minApproved+'건':'최고 등급 달성! ⭐';
+  if(bh)bh.textContent=next?'다음 등급: '+next.name+' ('+next.nextCond+')':'수석 기자 — 아스테리아 최고의 취재원입니다';
 }
 let srCurrentOrgTab='all';
 function renderSrOrgTabs(){
-  const league=getMyLeague();
-  const tabs=LEAGUE_CHAT_TABS[league]||LEAGUE_CHAT_TABS['star'];
-  const container=document.getElementById('srOrgTabs');
-  if(!container)return;
-  const isMultiRow=tabs.length>=6;
-  container.style.flexWrap=isMultiRow?'wrap':'nowrap';
-  container.innerHTML=tabs.map(tab=>`
-    <button class="fc-chat-tab ${tab.id===srCurrentOrgTab?'active':''}"
-      onclick="switchSrOrg('${tab.id}')"
-      style="${isMultiRow?'flex:0 0 calc(33% - 4px);':''}"
-    >${currentLang==='ko'?tab.ko:tab.en}</button>
-  `).join('');
+  const league=getMyLeague();const tabs=LEAGUE_CHAT_TABS[league]||LEAGUE_CHAT_TABS['star'];
+  const container=document.getElementById('srOrgTabs');if(!container)return;
+  const isMultiRow=tabs.length>=6;container.style.flexWrap=isMultiRow?'wrap':'nowrap';
+  container.innerHTML=tabs.map(tab=>`<button class="fc-chat-tab ${tab.id===srCurrentOrgTab?'active':''}" onclick="switchSrOrg('${tab.id}')" style="${isMultiRow?'flex:0 0 calc(33% - 4px);':''}">${currentLang==='ko'?tab.ko:tab.en}</button>`).join('');
 }
 function switchSrOrg(tabId){srCurrentOrgTab=tabId;renderSrOrgTabs();renderCurrentSrCat();}
 let srCurrentCat='list';
 function switchSrCat(cat){
   srCurrentCat=cat;
-  // 카테고리 버튼 활성화 (panel-starreport 안의 vote-cat-btn)
-  document.querySelectorAll('#panel-starreport .vote-cat-btn').forEach(btn=>{
-    btn.classList.toggle('active',btn.dataset.cat===cat);
-  });
-  // 탭 콘텐츠 전환
-  ['sr-list','sr-verify','sr-submit','sr-rank'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el)el.style.display=(id==='sr-'+cat)?'block':'none';
-  });
+  document.querySelectorAll('#panel-starreport .vote-cat-btn').forEach(btn=>{btn.classList.toggle('active',btn.dataset.cat===cat);});
+  ['sr-list','sr-verify','sr-submit','sr-rank'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=(id==='sr-'+cat)?'block':'none';});
   renderCurrentSrCat();
 }
-function renderCurrentSrCat(){
-  if(srCurrentCat==='list')renderSrList();
-  if(srCurrentCat==='verify')renderSrVerify();
-  if(srCurrentCat==='rank')renderSrRank();
-}
+function renderCurrentSrCat(){if(srCurrentCat==='list')renderSrList();if(srCurrentCat==='verify')renderSrVerify();if(srCurrentCat==='rank')renderSrRank();}
 function renderSrList(){
-  const catFilter=document.getElementById('srCategoryFilter')?.value||'all';
-  const statusFilter=document.getElementById('srStatusFilter')?.value||'all';
-  let reports=[...MOCK_REPORTS];
-  reports.sort((a,b)=>(b.type==='leader')-(a.type==='leader'));
-  if(catFilter!=='all')reports=reports.filter(r=>r.category===catFilter);
-  if(statusFilter!=='all')reports=reports.filter(r=>r.status===statusFilter);
-  const container=document.getElementById('srListItems');
-  if(!container)return;
-  if(!reports.length){container.innerHTML='<div style="color:var(--muted);font-size:12px;text-align:center;padding:20px">해당 조건의 제보가 없습니다</div>';return;}
-  container.innerHTML=reports.map(r=>renderSrCard(r)).join('');
+  const catF=document.getElementById('srCategoryFilter')?.value||'all';const stF=document.getElementById('srStatusFilter')?.value||'all';
+  let reports=[...MOCK_REPORTS];reports.sort((a,b)=>(b.type==='leader')-(a.type==='leader'));
+  if(catF!=='all')reports=reports.filter(r=>r.category===catF);if(stF!=='all')reports=reports.filter(r=>r.status===stF);
+  const c=document.getElementById('srListItems');if(!c)return;
+  if(!reports.length){c.innerHTML='<div style="color:var(--muted);font-size:12px;text-align:center;padding:20px">해당 조건의 제보가 없습니다</div>';return;}
+  c.innerHTML=reports.map(r=>renderSrCard(r)).join('');
 }
 function renderSrCard(r){
-  const isLeader=r.type==='leader';
-  const statusLabels={verifying:'<span class="sr-card-status status-verifying">🔬 검증중</span>',confirmed:'<span class="sr-card-status status-confirmed">✅ 확정</span>',bubbled:'<span class="sr-card-status status-bubbled">🔼 상위전달</span>',unconfirmed:'<span class="sr-card-status status-unconfirmed">❓ 미확인</span>',leader:'<span class="sr-card-status status-leader">👑 리더공지</span>'};
-  const gradeIcons=['🌱','✏️','📝','🗞️','⭐'];
-  let bubbleBadge=r.bubbleLevel>0?'<div class="bubble-up-badge">🔼 '+r.bubbleLevel+'단계 상위 전달됨</div>':'';
-  let urlHtml=r.url?'<div class="sr-card-url">🔗 <a href="'+r.url+'" target="_blank" style="color:#818cf8">'+r.url+'</a></div>':'';
-  let urgentBadge=r.urgent?'<span class="sr-urgent-badge">🚨 긴급</span>':'';
-  return '<div class="sr-card'+(isLeader?' leader-card':'')+'">'+
-    '<div class="sr-card-header">'+'<span class="sr-card-cat">'+(SR_CAT_LABELS[r.category]||r.category)+'</span>'+urgentBadge+(statusLabels[r.status]||'')+'</div>'+
-    '<div class="sr-card-title">'+r.title+'</div>'+
-    '<div class="sr-card-body">'+r.body+'</div>'+urlHtml+bubbleBadge+
-    '<div class="sr-card-meta">'+'<span>'+(gradeIcons[r.authorGrade]||'🌱')+' '+r.author+'</span>'+'<span>'+r.createdAt+'</span>'+(r.status==='verifying'?'<span>👍'+r.trueVotes+' 👎'+r.falseVotes+'</span>':'')+'</div></div>';
+  const isL=r.type==='leader';
+  const sl={verifying:'<span class="sr-card-status status-verifying">🔬 검증중</span>',confirmed:'<span class="sr-card-status status-confirmed">✅ 확정</span>',bubbled:'<span class="sr-card-status status-bubbled">🔼 상위전달</span>',unconfirmed:'<span class="sr-card-status status-unconfirmed">❓ 미확인</span>',leader:'<span class="sr-card-status status-leader">👑 리더공지</span>'};
+  const gi=['🌱','✏️','📝','🗞️','⭐'];
+  const bb=r.bubbleLevel>0?'<div class="bubble-up-badge">🔼 '+r.bubbleLevel+'단계 상위 전달됨</div>':'';
+  const uh=r.url?'<div class="sr-card-url">🔗 <a href="'+r.url+'" target="_blank" style="color:#818cf8">'+r.url+'</a></div>':'';
+  const ub=r.urgent?'<span class="sr-urgent-badge">🚨 긴급</span>':'';
+  const lc=r.likedByMe?' liked':'';
+  const myNick=localStorage.getItem('asteria_nick')||'';
+  const canLike=r.author!==myNick;
+  const likeHtml=canLike?'<button class="sr-like-btn'+lc+'" onclick="toggleSrLike('+r.id+')">👍 '+r.likes+'</button>':'<span style="font-size:10px;color:var(--muted)">👍 '+r.likes+'</span>';
+  return '<div class="sr-card'+(isL?' leader-card':'')+'">'+'<div class="sr-card-header"><span class="sr-card-cat">'+(SR_CAT_LABELS[r.category]||r.category)+'</span>'+ub+(sl[r.status]||'')+'</div>'+'<div class="sr-card-title">'+r.title+'</div><div class="sr-card-body">'+r.body+'</div>'+uh+bb+'<div class="sr-card-meta"><span>'+(gi[r.authorGrade]||'🌱')+' '+r.author+'</span><span>'+r.createdAt+'</span>'+(r.status==='verifying'?'<span>👍'+r.trueVotes+' 👎'+r.falseVotes+'</span>':'')+likeHtml+'</div></div>';
 }
+function toggleSrLike(id){const r=MOCK_REPORTS.find(x=>x.id===id);if(!r)return;if(r.likedByMe){r.likes--;r.likedByMe=false;}else{r.likes++;r.likedByMe=true;showToast('👍 추천 완료! INT+1 획득');}renderSrList();}
 function renderSrVerify(){
-  const verifying=MOCK_REPORTS.filter(r=>r.status==='verifying');
-  const container=document.getElementById('srVerifyItems');
-  if(!container)return;
-  if(!verifying.length){container.innerHTML='<div style="color:var(--muted);font-size:12px;text-align:center;padding:20px">현재 검증 중인 제보가 없습니다</div>';return;}
-  container.innerHTML=verifying.map(r=>{
-    const total=r.trueVotes+r.falseVotes+r.unsureVotes;
-    const truePct=total?Math.round(r.trueVotes/total*100):0;
-    const falsePct=total?Math.round(r.falseVotes/total*100):0;
-    const needMore=total<10?(10-total)+'명 더 필요':'결과 집계 중';
-    return '<div class="verify-card">'+
-      '<div class="verify-timer">⏱️ 마감: '+(r.verifyDeadline||'집계중')+' · '+needMore+'</div>'+
-      '<div class="sr-card-title">'+r.title+'</div><div class="sr-card-body">'+r.body+'</div>'+
-      '<div class="verify-count-bar"><span>✅ 진실 '+truePct+'% ('+r.trueVotes+'명)</span><span>❌ 허위 '+falsePct+'% ('+r.falseVotes+'명)</span><span>⚠️ '+r.unsureVotes+'명</span></div>'+
-      '<div class="verify-vote-row">'+
-        '<button class="vote-btn vote-true" onclick="castVerifyVote('+r.id+',\'true\')">✅ 진실</button>'+
-        '<button class="vote-btn vote-false" onclick="castVerifyVote('+r.id+',\'false\')">❌ 허위</button>'+
-        '<button class="vote-btn vote-unsure" onclick="castVerifyVote('+r.id+',\'unsure\')">⚠️ 확인중</button>'+
-      '</div></div>';
+  const vf=MOCK_REPORTS.filter(r=>r.status==='verifying');const c=document.getElementById('srVerifyItems');if(!c)return;
+  if(!vf.length){c.innerHTML='<div style="color:var(--muted);font-size:12px;text-align:center;padding:20px">현재 검증 중인 제보가 없습니다</div>';return;}
+  c.innerHTML=vf.map(r=>{const t=r.trueVotes+r.falseVotes+r.unsureVotes;const tp=t?Math.round(r.trueVotes/t*100):0;const fp=t?Math.round(r.falseVotes/t*100):0;const nm=t<10?(10-t)+'명 더 필요':'결과 집계 중';
+    return '<div class="verify-card"><div class="verify-timer">⏱️ 마감: '+(r.verifyDeadline||'집계중')+' · '+nm+'</div><div class="sr-card-title">'+r.title+'</div><div class="sr-card-body">'+r.body+'</div><div class="verify-count-bar"><span>✅ 진실 '+tp+'% ('+r.trueVotes+'명)</span><span>❌ 허위 '+fp+'% ('+r.falseVotes+'명)</span><span>⚠️ '+r.unsureVotes+'명</span></div><div class="verify-vote-row"><button class="vote-btn vote-true" onclick="castVerifyVote('+r.id+',\'true\')">✅ 진실</button><button class="vote-btn vote-false" onclick="castVerifyVote('+r.id+',\'false\')">❌ 허위</button><button class="vote-btn vote-unsure" onclick="castVerifyVote('+r.id+',\'unsure\')">⚠️ 확인중</button></div></div>';
   }).join('');
 }
-function castVerifyVote(reportId,voteType){
-  const report=MOCK_REPORTS.find(r=>r.id===reportId);
-  if(!report)return;
-  if(voteType==='true')report.trueVotes++;
-  if(voteType==='false')report.falseVotes++;
-  if(voteType==='unsure')report.unsureVotes++;
-  const data=getMyReporterData();data.verifyCount++;saveMyReporterData(data);
-  showToast('검증 참여 완료! INT+1 획득 ✅');
-  checkBubbleUp(report);
-  renderSrVerify();
+function castVerifyVote(id,type){
+  const r=MOCK_REPORTS.find(x=>x.id===id);if(!r)return;
+  if(type==='true')r.trueVotes++;if(type==='false')r.falseVotes++;if(type==='unsure')r.unsureVotes++;
+  const d=getMyReporterData();d.verifyCount++;saveMyReporterData(d);showToast('검증 참여 완료! INT+1 획득 ✅');checkBubbleUp(r);renderSrVerify();
 }
-function checkBubbleUp(report){
-  const total=report.trueVotes+report.falseVotes+report.unsureVotes;
-  if(total<10)return;
-  const truePct=report.trueVotes/total;
-  if(truePct>=0.6&&report.bubbleLevel===0){report.bubbleLevel=1;report.status='bubbled';showToast('🔼 버블업! 상위 소모임으로 제보가 전달됐습니다');}
-  else if(truePct>=0.8&&report.bubbleLevel===1){report.bubbleLevel=2;report.status='confirmed';showToast('🌟 공식 확정! 리그 전체에 제보가 공유됩니다');}
-  else if(truePct<0.3&&total>=10){report.status='unconfirmed';}
+function checkBubbleUp(r){
+  const t=r.trueVotes+r.falseVotes+r.unsureVotes;if(t<10)return;const tp=r.trueVotes/t;
+  if(tp>=0.8&&r.bubbleLevel===1){r.bubbleLevel=2;r.status='confirmed';showToast('🌟 공식 확정! 리그 전체에 공유됩니다');}
+  else if(tp>=0.6&&r.bubbleLevel===0){r.bubbleLevel=1;r.status='bubbled';showToast('🔼 버블업! 상위 소모임으로 전달됐습니다');}
+  else if(tp<0.3&&t>=10){r.status='unconfirmed';applyFalsePenalty(r.author);}
+}
+function applyFalsePenalty(author){
+  const myNick=localStorage.getItem('asteria_nick')||'';if(author!==myNick)return;
+  const d=getMyReporterData();d.falseCount=(d.falseCount||0)+1;const now=new Date();
+  if(d.falseCount===1){if(d.approvedCount>=5)d.approvedCount=Math.max(0,d.approvedCount-5);showToast('⚠️ 허위 제보 패널티: 기자 등급이 1단계 강등됐습니다');}
+  else if(d.falseCount===2){d.banUntil=new Date(now.getTime()+7*86400000).toISOString();showToast('🚫 허위 제보 2회: 7일간 제보가 금지됩니다');}
+  else{d.banUntil=new Date(now.getTime()+30*86400000).toISOString();showToast('🚫 허위 제보 '+d.falseCount+'회: 30일간 제보가 금지됩니다');}
+  saveMyReporterData(d);updateReporterBadge();
 }
 function renderSrRank(){
-  const mockRankers=[
-    {rank:1,grade:4,nick:'수석기자별빛',score:'제보 87건 · 통과율 94%'},
-    {rank:2,grade:3,nick:'특파원하늘',score:'제보 52건 · 통과율 89%'},
-    {rank:3,grade:3,nick:'정기자달빛',score:'제보 31건 · 통과율 82%'},
-    {rank:4,grade:2,nick:'수습이슬',score:'제보 12건 · 통과율 75%'},
-    {rank:5,grade:1,nick:'새내기팬123',score:'제보 3건 · 통과율 67%'}
-  ];
-  const gradeIcons=['🌱','✏️','📝','🗞️','⭐'];
-  const medals=['🥇','🥈','🥉'];
-  const container=document.getElementById('srRankItems');
-  if(!container)return;
-  container.innerHTML=mockRankers.map(r=>
-    '<div class="rank-item"><span class="rank-num">'+(medals[r.rank-1]||r.rank)+'</span><span class="rank-grade-icon">'+(gradeIcons[r.grade]||'🌱')+'</span><span class="rank-nick">'+r.nick+'</span><span class="rank-score">'+r.score+'</span></div>'
-  ).join('');
+  const rk=[{rank:1,grade:4,nick:'수석기자별빛',score:'제보 87건 · 통과율 94% · 추천 312'},{rank:2,grade:3,nick:'특파원하늘',score:'제보 52건 · 통과율 89% · 추천 187'},{rank:3,grade:3,nick:'정기자달빛',score:'제보 31건 · 통과율 82% · 추천 94'},{rank:4,grade:2,nick:'수습이슬',score:'제보 12건 · 통과율 75% · 추천 41'},{rank:5,grade:1,nick:'새내기팬123',score:'제보 3건 · 통과율 67% · 추천 8'}];
+  const gi=['🌱','✏️','📝','🗞️','⭐'];const md=['🥇','🥈','🥉'];const c=document.getElementById('srRankItems');if(!c)return;
+  c.innerHTML=rk.map(r=>'<div class="rank-item"><span class="rank-num">'+(md[r.rank-1]||r.rank)+'</span><span class="rank-grade-icon">'+(gi[r.grade]||'🌱')+'</span><span class="rank-nick">'+r.nick+'</span><span class="rank-score">'+r.score+'</span></div>').join('');
 }
 function submitReport(){
-  const title=document.getElementById('submitTitle')?.value.trim();
-  const body=document.getElementById('submitBody')?.value.trim();
-  const category=document.getElementById('submitCategory')?.value;
-  const url=document.getElementById('submitUrl')?.value.trim();
+  if(isReportBanned()){showToast('🚫 제보 금지 기간입니다');return;}
+  const title=document.getElementById('submitTitle')?.value.trim();const body=document.getElementById('submitBody')?.value.trim();
+  const category=document.getElementById('submitCategory')?.value;const url=document.getElementById('submitUrl')?.value.trim();
   const urgent=document.getElementById('submitUrgent')?.checked||false;
   if(!title||!body){showToast('제목과 내용을 입력해주세요');return;}
-  const data=getMyReporterData();const gradeIdx=getMyGrade(data.approvedCount);
-  if(urgent&&gradeIdx<4){showToast('긴급 제보는 수석기자만 사용 가능합니다');return;}
-  MOCK_REPORTS.unshift({id:MOCK_REPORTS.length+1,type:'report',category,urgent,title,body,url,author:localStorage.getItem('asteria_nick')||'익명팬',authorGrade:gradeIdx,status:'verifying',createdAt:'방금 전',trueVotes:0,falseVotes:0,unsureVotes:0,bubbleLevel:0,verifyDeadline:'72시간 후'});
+  const d=getMyReporterData();const gi=getMyGrade(d.approvedCount);
+  if(urgent&&gi<4){showToast('긴급 제보는 수석기자만 가능합니다');return;}
+  MOCK_REPORTS.unshift({id:MOCK_REPORTS.length+1,type:'report',category,urgent,title,body,url,author:localStorage.getItem('asteria_nick')||'익명팬',authorGrade:gi,status:'verifying',createdAt:'방금 전',trueVotes:0,falseVotes:0,unsureVotes:0,likes:0,likedByMe:false,bubbleLevel:0,verifyDeadline:'72시간 후'});
   ['submitTitle','submitBody','submitUrl'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  showToast('📡 제보가 접수됐습니다! 검증 투표가 시작됩니다');
-  switchSrCat('list');
+  showToast('📡 제보 접수 완료! 검증 투표가 시작됩니다');switchSrCat('list');
 }
 function openLeaderNotice(){
-  const data=getMyReporterData();const nowMonth=new Date().toISOString().slice(0,7);
-  if(data.leaderNoticeMonth!==nowMonth){data.leaderNoticeUsed=0;data.leaderNoticeMonth=nowMonth;saveMyReporterData(data);}
-  const limitEl=document.getElementById('leaderNoticeLimit');
-  if(limitEl)limitEl.textContent='이번 달 공지 사용 횟수: '+data.leaderNoticeUsed+' / 5회';
+  if(isLeaderNoticeBanned()){const d=getMyReporterData();showToast('🚫 공지 기능이 '+new Date(d.leaderBanUntil).toLocaleDateString('ko-KR')+'까지 제한됩니다');return;}
+  const d=getMyReporterData();const nm=new Date().toISOString().slice(0,7);
+  if(d.leaderNoticeMonth!==nm){d.leaderNoticeUsed=0;d.leaderNoticeMonth=nm;saveMyReporterData(d);}
+  const le=document.getElementById('leaderNoticeLimit');if(le)le.textContent='이번 달 공지 사용: '+d.leaderNoticeUsed+' / 5회';
   const modal=document.getElementById('leaderNoticeModal');if(modal)modal.style.display='flex';
 }
-function closeLeaderNotice(){const modal=document.getElementById('leaderNoticeModal');if(modal)modal.style.display='none';}
-function closeAppealModal(){const modal=document.getElementById('leaderAppealModal');if(modal)modal.style.display='none';}
-function submitAppeal(){
-  const body=document.getElementById('appealBody')?.value.trim();
-  if(!body){showToast('소명 내용을 입력해주세요');return;}
-  closeAppealModal();
-  showToast('📨 소명이 제출됐습니다. 운영진 검토 후 결과가 통보됩니다.');
-}
+function closeLeaderNotice(){const m=document.getElementById('leaderNoticeModal');if(m)m.style.display='none';}
 function submitLeaderNotice(){
-  const title=document.getElementById('leaderTitle')?.value.trim();
-  const body=document.getElementById('leaderBody')?.value.trim();
-  const category=document.getElementById('leaderCategory')?.value;
-  const url=document.getElementById('leaderUrl')?.value.trim();
+  const title=document.getElementById('leaderTitle')?.value.trim();const body=document.getElementById('leaderBody')?.value.trim();
+  const category=document.getElementById('leaderCategory')?.value;const url=document.getElementById('leaderUrl')?.value.trim();
   if(!title||!body){showToast('제목과 내용을 입력해주세요');return;}
-  const data=getMyReporterData();const nowMonth=new Date().toISOString().slice(0,7);
-  if(data.leaderNoticeMonth!==nowMonth){data.leaderNoticeUsed=0;data.leaderNoticeMonth=nowMonth;}
-  if(data.leaderNoticeUsed>=5){showToast('이번 달 공지 한도(5회)를 초과했습니다');return;}
-  data.leaderNoticeUsed++;saveMyReporterData(data);
-  MOCK_REPORTS.unshift({id:MOCK_REPORTS.length+1,type:'leader',category,urgent:false,title:'[리더 공지] '+title,body,url,author:localStorage.getItem('asteria_nick')||'전체리더',authorGrade:4,status:'leader',createdAt:'방금 전',trueVotes:0,falseVotes:0,unsureVotes:0,bubbleLevel:0,verifyDeadline:null});
+  const d=getMyReporterData();const nm=new Date().toISOString().slice(0,7);
+  if(d.leaderNoticeMonth!==nm){d.leaderNoticeUsed=0;d.leaderNoticeMonth=nm;}
+  if(d.leaderNoticeUsed>=5){showToast('이번 달 공지 한도(5회)를 초과했습니다');return;}
+  d.leaderNoticeUsed++;saveMyReporterData(d);
+  MOCK_REPORTS.unshift({id:MOCK_REPORTS.length+1,type:'leader',category,urgent:false,title:'[리더 공지] '+title,body,url,author:localStorage.getItem('asteria_nick')||'전체리더',authorGrade:4,status:'leader',createdAt:'방금 전',trueVotes:0,falseVotes:0,unsureVotes:0,likes:0,likedByMe:false,bubbleLevel:0,verifyDeadline:null});
   closeLeaderNotice();['leaderTitle','leaderBody','leaderUrl'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   showToast('👑 전체 공지가 발행됐습니다!');switchSrCat('list');
+}
+function triggerLeaderWarning(noticeTitle){
+  const d=getMyReporterData();d.leaderWarningCount=(d.leaderWarningCount||0)+1;
+  if(d.leaderWarningCount>=2){d.leaderBanUntil=new Date(Date.now()+30*86400000).toISOString();saveMyReporterData(d);showToast('🚫 허위 공지 2회: 30일간 공지 기능이 제한됩니다');}
+  else{d.pendingAppeal={noticeTitle,issuedAt:new Date().toISOString()};saveMyReporterData(d);openAppealModal(noticeTitle);}
+}
+function openAppealModal(title){
+  const card=document.getElementById('appealWarningCard');if(card)card.innerHTML='⚠️ 경고 대상 공지: <strong>"'+title+'"</strong><br>팬덤 검증 결과 허위로 판정됐습니다.<br>72시간 내 소명하지 않으면 경고 1회가 확정됩니다.';
+  const m=document.getElementById('leaderAppealModal');if(m)m.style.display='flex';
+}
+function closeAppealModal(){const m=document.getElementById('leaderAppealModal');if(m)m.style.display='none';}
+function submitAppeal(){
+  const body=document.getElementById('appealBody')?.value.trim();if(!body){showToast('소명 내용을 입력해주세요');return;}
+  const d=getMyReporterData();d.pendingAppeal=null;saveMyReporterData(d);closeAppealModal();
+  showToast('📨 소명이 제출됐습니다. 운영진 검토 후 결과를 알려드립니다.');
 }
 
 function openBoardPanel(){
