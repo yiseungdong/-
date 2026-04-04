@@ -1903,6 +1903,24 @@ function drawBuildings(){
       return;
     }
 
+    /* starreport 건물 별도 처리 */
+    if(b.id==='starreport'){
+      ctx.fillStyle='rgba(0,0,0,.25)';
+      ctx.beginPath();ctx.ellipse(x+w/2,y+h+8,w*.5,10,0,0,Math.PI*2);ctx.fill();
+      const wg=ctx.createLinearGradient(x,y,x,y+h);
+      wg.addColorStop(0,b.wall||'#1a1035');wg.addColorStop(1,b.wallD||'#120b28');
+      ctx.fillStyle=wg;ctx.beginPath();ctx.roundRect(x,y+h*.3,w,h*.7,[0,0,3,3]);ctx.fill();
+      ctx.fillStyle=b.roof||'#7c3aed';
+      ctx.beginPath();ctx.moveTo(x-4,y+h*.3);ctx.lineTo(x+w/2,y);ctx.lineTo(x+w+4,y+h*.3);ctx.closePath();ctx.fill();
+      ctx.fillStyle=b.roofP||'#c084fc';ctx.globalAlpha=0.3;
+      ctx.beginPath();ctx.moveTo(x+w*.2,y+h*.3);ctx.lineTo(x+w/2,y+4);ctx.lineTo(x+w*.5,y+h*.3);ctx.closePath();ctx.fill();
+      ctx.globalAlpha=1;
+      ctx.font='14px sans-serif';ctx.textAlign='center';
+      ctx.fillText(b.symbol||'🌟',x+w/2,y+h*.65);
+      ctx.textAlign='start';
+      return;
+    }
+
     const s=t.buildings[i];
     if(!s) return; /* 안전장치 */
     const league=DM.league;
