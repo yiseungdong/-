@@ -88,7 +88,8 @@ html,body {
 
 /* 꾸미기 도구바 */
 .edit-toolbar {
-  display:none; position:fixed; bottom:0; left:0; right:0; z-index:500;
+  display:none; position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+  width:100%; max-width:900px; z-index:500;
   background:rgba(5,8,20,.95); border-top:1px solid var(--border);
   backdrop-filter:blur(12px); flex-direction:column; max-height:40vh; overflow-y:auto;
 }
@@ -876,7 +877,7 @@ const keysPressed = {};
 
 // ── 방 크기 상수 ──
 const RW = 8, RH = 5, RD = 7;
-const ROOM_BOUNDS = { xMin:-(RW/2-0.6), xMax:RW/2-0.6, zMin:-(RD/2-2.0), zMax:RD/2-0.3 };
+const ROOM_BOUNDS = { xMin:-(RW/2-0.8), xMax:RW/2-0.8, zMin:-(RD/2-1.2), zMax:RD/2-0.5 };
 
 // ══════════════════════════════════════════
 //  THREE.JS 초기화
