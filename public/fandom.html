@@ -1145,7 +1145,7 @@ const BLD_BASE=[
   {id:'vote',rx:.72,ry:.49,rw:.055,rh:.063,nK:'투표소',nE:'Vote Center'},
   {id:'event',rx:.24,ry:.69,rw:.065,rh:.063,nK:'이벤트 광장',nE:'Event Plaza'},
   {id:'honor',rx:.64,ry:.69,rw:.06,rh:.066,nK:'명예의 전당',nE:'Hall of Honor'},
-  {id:'org_chat',rx:.44,ry:.69,rw:.07,rh:.075,nK:'모임 채팅',nE:'Org Chat'},
+  {id:'org_chat',rx:.36,ry:.69,rw:.13,rh:.12,nK:'모임 채팅',nE:'Org Chat'},
   {id:'starreport',rx:.56,ry:.24,rw:.055,rh:.060,nK:'별빛 제보소',nE:'Star Report',
    wall:'#1a1035',wallD:'#120b28',roof:'#7c3aed',roofP:'#c084fc',winB:'#e9d5ff',chimney:false,sign:'#f0c040',
    symbol:'🌟',vName:'별빛 제보소'}
@@ -2119,7 +2119,7 @@ function drawParticles(){
 
 // 게이트/소품은 Part 2에서 구현 예정 — 임시 stub
 function drawGate(){
-  const gx=W/2,gy=H*.69;
+  const gx=W*.50,gy=H*.69;
   const league=DM.league;
   const time=Date.now()/1000;
   if(league==='dust'){
