@@ -757,6 +757,16 @@ canvas{position:absolute;inset:0;z-index:1}
 .submit-btn{width:100%;padding:10px;background:linear-gradient(135deg,var(--lp),#818cf8);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-top:4px;}
 .submit-btn:hover{filter:brightness(1.1);}
 .submit-reward-hint{font-size:10px;color:var(--muted);text-align:center;margin-top:6px;}
+.submit-penalty-hint{font-size:10px;color:#fca5a5;text-align:center;margin-top:4px;}
+.sr-ban-notice{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:14px;color:#fca5a5;font-size:12px;line-height:1.6;text-align:center;margin-bottom:10px;}
+.grade-penalty-guide{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+.penalty-title{font-size:11px;font-weight:700;color:#fca5a5;margin-bottom:5px;}
+.penalty-row{font-size:10px;color:var(--muted);margin-bottom:3px;}
+.appeal-desc{border-left-color:#fca5a5;background:rgba(239,68,68,0.05);}
+.appeal-warning-card{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:8px;padding:10px 12px;font-size:11px;color:#fca5a5;margin-bottom:12px;line-height:1.5;}
+.sr-like-btn{display:inline-flex;align-items:center;gap:3px;font-size:11px;background:rgba(192,132,252,0.1);color:var(--lp);border:1px solid rgba(192,132,252,0.2);border-radius:12px;padding:3px 8px;cursor:pointer;transition:all 0.2s;}
+.sr-like-btn:hover{background:rgba(192,132,252,0.25);}
+.sr-like-btn.liked{background:rgba(192,132,252,0.3);border-color:var(--lp);font-weight:700;}
 .submit-urgent-row{margin-bottom:8px;}
 .urgent-label{font-size:12px;color:#fca5a5;cursor:pointer;}
 .rank-grade-guide{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:12px;}
@@ -894,8 +904,8 @@ canvas{position:absolute;inset:0;z-index:1}
   </div>
   <div id="vote-list" style="flex:1;overflow-y:auto;padding:4px 12px;"></div>
 </div>
-<!-- 별빛 제보소 패널 -->
-<div id="panel-starreport" class="side-panel" style="display:none;position:fixed;top:0;right:0;width:320px;height:100vh;background:var(--panel);border-left:1px solid var(--border);z-index:500;flex-direction:column;overflow:hidden;">
+<!-- 별빛 제보소 패널 v2 -->
+<div id="panel-starreport" style="display:none;position:fixed;top:0;right:0;width:320px;height:100vh;background:var(--panel);border-left:1px solid var(--border);z-index:500;flex-direction:column;overflow:hidden;">
   <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
     <span style="font-size:15px;font-weight:700;color:var(--text);">📡 별빛 제보소 · STARLIGHT TRIBUNE</span>
     <button onclick="closeSrPanel()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;">✕</button>
@@ -910,7 +920,7 @@ canvas{position:absolute;inset:0;z-index:1}
   </div>
   <div id="leaderNoticeBar" style="display:none" class="leader-notice-bar">
     <span>👑 전체 리더 공지</span>
-    <button class="leader-notice-btn" onclick="openLeaderNotice()">+ 공지 제보 작성</button>
+    <button class="leader-notice-btn" onclick="openLeaderNotice()">+ 공지 작성</button>
   </div>
   <div style="background:rgba(0,0,0,0.3);border-bottom:1px solid var(--border);padding:10px 12px;flex-shrink:0;">
     <div style="font-size:10px;color:var(--muted);margin-bottom:7px;letter-spacing:0.6px;">조직 · ORGANIZATION</div>
@@ -938,7 +948,8 @@ canvas{position:absolute;inset:0;z-index:1}
       <div id="srVerifyItems"></div>
     </div>
     <div id="sr-submit" style="display:none">
-      <div class="submit-form">
+      <div id="srBanNotice" style="display:none" class="sr-ban-notice"></div>
+      <div id="srSubmitForm" class="submit-form">
         <div class="form-group"><label>카테고리</label><select id="submitCategory" class="sr-select" style="width:100%"><option value="schedule">📅 일정/스케줄</option><option value="goods">💿 음반·굿즈</option><option value="media">🎬 영상·사진</option><option value="rumor">⚠️ 루머 팩트체크</option><option value="global">🌏 해외 활동</option><option value="statement">💬 멤버 공식 발언</option></select></div>
         <div class="form-group"><label>제목</label><input type="text" id="submitTitle" class="sr-input" placeholder="제보 제목을 입력하세요" maxlength="60"></div>
         <div class="form-group"><label>내용</label><textarea id="submitBody" class="sr-textarea" placeholder="제보 내용을 상세히 입력하세요" rows="4" maxlength="500"></textarea></div>
@@ -946,6 +957,7 @@ canvas{position:absolute;inset:0;z-index:1}
         <div id="urgentRow" style="display:none" class="submit-urgent-row"><label class="urgent-label"><input type="checkbox" id="submitUrgent"> 🚨 긴급 제보 (수석기자 전용)</label></div>
         <button class="submit-btn" onclick="submitReport()">📡 제보 전송</button>
         <div class="submit-reward-hint">제보 승인 시 INT+3 · 버블업 달성 시 INT+5 추가</div>
+        <div class="submit-penalty-hint">⚠️ 허위 제보 시 등급 강등 및 제보 금지 패널티가 부여됩니다</div>
       </div>
     </div>
     <div id="sr-rank" style="display:none">
@@ -956,6 +968,12 @@ canvas{position:absolute;inset:0;z-index:1}
         <div class="grade-row"><span class="grade-icon">📝</span><span class="grade-name">정기자</span><span class="grade-cond">승인 20건 + 검증 참여 50회</span></div>
         <div class="grade-row"><span class="grade-icon">🗞️</span><span class="grade-name">특파원</span><span class="grade-cond">승인 50건 + 높은 통과율</span></div>
         <div class="grade-row"><span class="grade-icon">⭐</span><span class="grade-name">수석 기자</span><span class="grade-cond">제보수+통과율+추천수 최상위</span></div>
+        <div class="grade-penalty-guide">
+          <div class="penalty-title">⚠️ 패널티 규정</div>
+          <div class="penalty-row">허위 제보 1회 → 등급 1단계 강등</div>
+          <div class="penalty-row">허위 제보 2회 → 7일 제보 금지</div>
+          <div class="penalty-row">허위 제보 3회+ → 30일 제보 금지</div>
+        </div>
       </div>
       <div class="rank-list-title">🏆 이번 달 기자 랭킹</div>
       <div id="srRankItems"></div>
@@ -964,13 +982,23 @@ canvas{position:absolute;inset:0;z-index:1}
   <div id="leaderNoticeModal" class="sr-modal" style="display:none">
     <div class="sr-modal-box">
       <div class="sr-modal-header"><span>👑 전체 리더 공지 제보</span><button onclick="closeLeaderNotice()" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;">✕</button></div>
-      <div class="sr-modal-desc">리더가 직접 확인한 정보를 팬덤 전체에 즉시 공개합니다. 검증 절차 없이 최상단에 표시되며, 공지 이력은 투명하게 기록됩니다. (월 5회 제한)</div>
+      <div class="sr-modal-desc">리더가 직접 확인한 정보를 팬덤 전체에 즉시 공개합니다. 검증 절차 없이 최상단에 표시되며, 허위 공지 시 경고 및 30일 공지 제한 패널티가 부여됩니다. (월 5회 제한)</div>
       <div class="form-group"><label>카테고리</label><select id="leaderCategory" class="sr-select" style="width:100%"><option value="schedule">📅 일정/스케줄</option><option value="goods">💿 음반·굿즈</option><option value="media">🎬 영상·사진</option><option value="rumor">⚠️ 루머 팩트체크</option><option value="global">🌏 해외 활동</option><option value="statement">💬 멤버 공식 발언</option></select></div>
       <div class="form-group"><label>제목</label><input type="text" id="leaderTitle" class="sr-input" placeholder="공지 제목" maxlength="60"></div>
       <div class="form-group"><label>내용</label><textarea id="leaderBody" class="sr-textarea" rows="4" placeholder="팬덤 전체에 알릴 내용을 입력하세요" maxlength="500"></textarea></div>
       <div class="form-group"><label>출처/근거 (선택)</label><input type="text" id="leaderUrl" class="sr-input" placeholder="https://..."></div>
-      <div class="leader-notice-limit" id="leaderNoticeLimit">이번 달 공지 사용 횟수: 0 / 5회</div>
+      <div class="leader-notice-limit" id="leaderNoticeLimit">이번 달 공지 사용: 0 / 5회</div>
       <button class="submit-btn" onclick="submitLeaderNotice()">👑 전체 공지 발행</button>
+    </div>
+  </div>
+  <div id="leaderAppealModal" class="sr-modal" style="display:none">
+    <div class="sr-modal-box">
+      <div class="sr-modal-header"><span>⚠️ 허위 공지 경고 · 소명 기회</span><button onclick="closeAppealModal()" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;">✕</button></div>
+      <div class="sr-modal-desc appeal-desc">팬덤 검증 결과 해당 공지가 허위로 판정됐습니다.<br>72시간 내 소명 이유를 제출하면 운영진이 검토 후 경고를 철회할 수 있습니다.<br>소명 없이 72시간 경과 시 경고 1회가 확정됩니다.</div>
+      <div class="appeal-warning-card" id="appealWarningCard"></div>
+      <div class="form-group"><label>소명 내용</label><textarea id="appealBody" class="sr-textarea" rows="4" placeholder="해당 공지가 사실인 근거나 오류가 발생한 경위를 설명해주세요" maxlength="500"></textarea></div>
+      <div class="form-group"><label>근거 링크 (선택)</label><input type="text" id="appealUrl" class="sr-input" placeholder="https://..."></div>
+      <button class="submit-btn" onclick="submitAppeal()">📨 소명 제출</button>
     </div>
   </div>
 </div>
@@ -3417,6 +3445,13 @@ function openLeaderNotice(){
   const modal=document.getElementById('leaderNoticeModal');if(modal)modal.style.display='flex';
 }
 function closeLeaderNotice(){const modal=document.getElementById('leaderNoticeModal');if(modal)modal.style.display='none';}
+function closeAppealModal(){const modal=document.getElementById('leaderAppealModal');if(modal)modal.style.display='none';}
+function submitAppeal(){
+  const body=document.getElementById('appealBody')?.value.trim();
+  if(!body){showToast('소명 내용을 입력해주세요');return;}
+  closeAppealModal();
+  showToast('📨 소명이 제출됐습니다. 운영진 검토 후 결과가 통보됩니다.');
+}
 function submitLeaderNotice(){
   const title=document.getElementById('leaderTitle')?.value.trim();
   const body=document.getElementById('leaderBody')?.value.trim();
