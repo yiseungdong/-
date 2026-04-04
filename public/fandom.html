@@ -810,6 +810,44 @@ canvas{position:absolute;inset:0;z-index:1}
 .promotion-fill{background:linear-gradient(90deg,var(--gold),#fbbf24);}
 .safe-fill{background:linear-gradient(90deg,#86efac,#34d399);}
 .fc-rank-bar-val{font-size:10px;color:var(--muted);min-width:60px;text-align:right;}
+/* ===== 명예의 전당 ===== */
+#honor-panel{display:none;position:fixed;top:0;right:0;width:320px;height:100vh;background:var(--panel);border-left:1px solid var(--border);z-index:500;flex-direction:column;overflow:hidden;}
+.honor-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.honor-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;}
+.honor-tab{flex:1;padding:9px 4px;font-size:10px;font-weight:700;color:var(--muted);background:none;border:none;cursor:pointer;letter-spacing:0.3px;transition:all 0.2s;border-bottom:2px solid transparent;}
+.honor-tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.honor-body{flex:1;overflow-y:auto;padding:12px;}
+.honor-trophy{display:flex;flex-direction:column;align-items:center;background:linear-gradient(135deg,rgba(240,192,64,0.08),rgba(10,10,22,0));border:1px solid rgba(240,192,64,0.2);border-radius:12px;padding:14px 10px;margin-bottom:10px;position:relative;overflow:hidden;}
+.honor-trophy::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.honor-trophy-rank{font-size:28px;margin-bottom:4px;}
+.honor-trophy-title{font-size:10px;color:var(--gold);font-weight:700;letter-spacing:0.5px;margin-bottom:2px;}
+.honor-trophy-name{font-size:14px;font-weight:900;color:var(--text);margin-bottom:1px;}
+.honor-trophy-sub{font-size:9px;color:var(--muted);}
+.honor-trophy-score{font-family:'Orbitron',monospace;font-size:11px;color:var(--lp);margin-top:6px;}
+.honor-season-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;margin-bottom:6px;background:rgba(255,255,255,0.02);border:1px solid var(--border);}
+.honor-season-badge{font-size:16px;width:28px;text-align:center;}
+.honor-season-info{flex:1;}
+.honor-season-name{font-size:11px;font-weight:700;color:var(--text);}
+.honor-season-detail{font-size:9px;color:var(--muted);margin-top:1px;}
+.honor-season-val{font-family:'Orbitron',monospace;font-size:10px;color:var(--gold);font-weight:700;}
+.honor-wall-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;margin-bottom:6px;background:rgba(255,255,255,0.02);border-left:3px solid var(--gold);}
+.honor-wall-medal{font-size:18px;}
+.honor-wall-info{flex:1;}
+.honor-wall-title{font-size:10px;color:var(--gold);font-weight:700;letter-spacing:0.3px;}
+.honor-wall-name{font-size:12px;font-weight:700;color:var(--text);}
+.honor-wall-reason{font-size:9px;color:var(--muted);margin-top:1px;}
+.honor-record-item{padding:10px 12px;border-radius:8px;margin-bottom:8px;background:rgba(255,255,255,0.02);border:1px solid var(--border);}
+.honor-record-label{font-size:9px;color:var(--muted);letter-spacing:0.5px;margin-bottom:3px;}
+.honor-record-value{font-family:'Orbitron',monospace;font-size:15px;font-weight:900;color:var(--gold);}
+.honor-record-holder{font-size:10px;color:var(--lp);margin-top:2px;}
+.honor-record-date{font-size:9px;color:var(--muted);margin-top:1px;}
+.honor-section-title{font-size:10px;font-weight:700;color:var(--gold);letter-spacing:0.5px;margin:12px 0 8px;display:flex;align-items:center;gap:6px;}
+.honor-section-title::after{content:'';flex:1;height:1px;background:rgba(240,192,64,0.2);}
+.honor-my-badge{background:linear-gradient(135deg,rgba(240,192,64,0.1),rgba(192,132,252,0.05));border:1px solid rgba(240,192,64,0.3);border-radius:10px;padding:10px 12px;margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+.honor-my-icon{font-size:22px;}
+.honor-my-info{flex:1;}
+.honor-my-title{font-size:11px;color:var(--gold);font-weight:700;}
+.honor-my-sub{font-size:9px;color:var(--muted);margin-top:2px;}
 </style>
 </head>
 <body>
@@ -911,6 +949,20 @@ canvas{position:absolute;inset:0;z-index:1}
     </div>
   </div>
   <div id="board-list" style="flex:1;overflow-y:auto;padding:4px 12px;"></div>
+</div>
+<!-- 명예의 전당 패널 -->
+<div id="honor-panel">
+  <div class="honor-header">
+    <span style="font-size:15px;font-weight:700;color:var(--gold);">🏛️ 명예의 전당 · HALL OF HONOR</span>
+    <button onclick="closeHonorPanel()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;">✕</button>
+  </div>
+  <div class="honor-tabs">
+    <button class="honor-tab active" onclick="switchHonorTab('monthly')" id="htab-monthly">이달의 전당</button>
+    <button class="honor-tab" onclick="switchHonorTab('season')" id="htab-season">시즌 기록</button>
+    <button class="honor-tab" onclick="switchHonorTab('forever')" id="htab-forever">영구 명예</button>
+    <button class="honor-tab" onclick="switchHonorTab('record')" id="htab-record">기록 경신</button>
+  </div>
+  <div class="honor-body" id="honor-body"></div>
 </div>
 <!-- 투표소 패널 -->
 <div id="vote-panel" style="display:none;position:fixed;top:0;right:0;width:320px;height:100vh;background:var(--panel);border-left:1px solid var(--border);z-index:500;flex-direction:column;">
@@ -2778,7 +2830,6 @@ vote:()=>`<div class="mo-h"><div class="mo-t">🗳️ 투표소</div><div class=
 wish:()=>`<div class="mo-h"><div class="mo-t">⭐ 소원의 신전</div><div class="mo-x" onclick="closeMo()">✕</div></div><div class="mc"><div class="mc-t">🌟 메인 소원</div><div class="mc-c"><div style="text-align:center;font-size:28px;padding:8px">⭐</div><div style="text-align:center"><div style="font-size:12px;font-weight:700;color:var(--gold)">팬 생일 카페 이벤트</div><div class="pb" style="margin-top:6px;height:6px"><div class="pf" style="width:64%"></div></div><div style="font-size:9px;color:var(--lp);margin-top:3px;font-family:Orbitron">128,000/200,000</div></div></div></div>`,
 org:()=>`<div class="mo-h"><div class="mo-t">🏗️ 조직도</div><div class="mo-x" onclick="closeMo()">✕</div></div><div class="mc"><div class="mc-t">📊 구조</div><div class="mc-c">${[{i:'🏰',n:'팬클럽',c:'98,432',m:0},{i:'🏘️',n:'테리토리',c:'~20K',m:10},{i:'🏠',n:'베이스',c:'~2K',m:20},{i:'👥',n:'유닛(내소속)',c:'~200',m:30,my:1},{i:'⭐',n:'나',c:'',m:40}].map(o=>'<div style="display:flex;align-items:center;gap:6px;padding:4px 6px;margin-left:'+o.m+'px;margin-bottom:3px;border-radius:5px;background:rgba(255,255,255,'+(o.my?'.06':'.02')+');border-left:2px solid '+(o.my?'var(--gold)':'var(--lp)')+';font-size:10px"><span>'+o.i+'</span><b>'+o.n+'</b><span style="font-size:8px;color:var(--muted);margin-left:auto">'+o.c+'</span></div>').join('')}</div></div>`,
 event:()=>`<div class="mo-h"><div class="mo-t">🎪 이벤트</div><div class="mo-x" onclick="closeMo()">✕</div></div><div class="mc"><div class="mc-t">🔥 진행 중</div><div class="mc-c"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:20px">⚔️</span><div style="flex:1"><div style="font-weight:700">라이벌 & 스탯킹</div><div style="font-size:8px;color:var(--muted)">3주차!</div></div><span style="font-family:Orbitron;font-size:9px;color:var(--lp)">D-2</span></div></div></div><div class="mc"><div class="mc-t">📊 화력</div><div class="mc-c"><div class="pb" style="height:6px"><div class="pf" style="width:${DM.energy}%"></div></div><div style="font-size:9px;color:var(--lp);margin-top:2px">${DM.energy}%</div></div></div>`,
-honor:()=>`<div class="mo-h"><div class="mo-t">🏛️ 명예의 전당</div><div class="mo-x" onclick="closeMo()">✕</div></div><div class="mc"><div class="mc-t">🏆 MVP</div><div class="mc-c">${[{m:'🥇',t:'S3 활동왕',n:'StarWarrior'},{m:'🥇',t:'S3 성장왕',n:'RisingStar'},{m:'🌟',t:'S3 신인상',n:'BrightNewbie'}].map(h=>'<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:14px">'+h.m+'</span><div><div style="font-weight:700;font-size:10px">'+h.t+'</div><div style="font-size:8px;color:var(--muted)">'+h.n+'</div></div></div>').join('')}</div></div>`,
 starreport:()=>`
 <div class="mo-h">
   <div class="mo-t">🌟 별빛 제보소</div>
@@ -2920,11 +2971,12 @@ function openMo(k){
   if(k==='board'){openBoardPanel();return;}
   if(k==='vote'){openVotePanel();return;}
   if(k==='starreport'){openStarReport();return;}
+  if(k==='honor'){openHonorPanel();return;}
   if(!MO[k])return;document.getElementById('moC').innerHTML=MO[k]();document.getElementById('mo').classList.add('show');setTimeout(()=>{document.querySelectorAll('.pf').forEach(el=>{const w=el.style.width;el.style.width='0%';setTimeout(()=>el.style.width=w,50)})},100);if(k==='hq')renderFcHqOrg();}
 function closeMo(e){if(e&&e.target!==e.currentTarget)return;document.getElementById('mo').classList.remove('show')}
 function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3000)}
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){closeMo();closeChatPanel();closeBoardPanel();closeVotePanel();closeSrPanel();}
+  if(e.key==='Escape'){closeMo();closeChatPanel();closeBoardPanel();closeVotePanel();closeSrPanel();closeHonorPanel();}
   if(e.key==='Enter'&&document.activeElement===document.getElementById('chatInput')){sendChatMsg();}
 });
 
@@ -3297,6 +3349,68 @@ function renderVoteList(){
       </div>`;
     }).join('');
   }
+}
+
+// ===== 명예의 전당 패널 =====
+let honorTab='monthly';
+function openHonorPanel(){
+  closeMo({target:document.getElementById('mo'),currentTarget:document.getElementById('mo')});
+  const bp=document.getElementById('board-panel');if(bp)bp.style.display='none';
+  const vp=document.getElementById('vote-panel');if(vp)vp.style.display='none';
+  closeSrPanel();
+  const cp=document.getElementById('chatPanel');if(cp)cp.classList.remove('open');
+  const panel=document.getElementById('honor-panel');
+  if(panel){panel.style.display='flex';panel.style.flexDirection='column';}
+  switchHonorTab('monthly');
+}
+function closeHonorPanel(){const p=document.getElementById('honor-panel');if(p)p.style.display='none';}
+function switchHonorTab(tab){
+  honorTab=tab;
+  document.querySelectorAll('.honor-tab').forEach(b=>b.classList.remove('active'));
+  const el=document.getElementById('htab-'+tab);if(el)el.classList.add('active');
+  renderHonorBody();
+}
+function renderHonorBody(){
+  const body=document.getElementById('honor-body');if(!body)return;
+  const league=getMyLeague();
+  const leagueKo={dust:'더스트',star:'스타',planet:'플래닛',nova:'노바',quasar:'퀘이사'}[league]||'스타';
+  if(honorTab==='monthly')body.innerHTML=renderHonorMonthly(leagueKo);
+  else if(honorTab==='season')body.innerHTML=renderHonorSeason(leagueKo);
+  else if(honorTab==='forever')body.innerHTML=renderHonorForever(leagueKo);
+  else if(honorTab==='record')body.innerHTML=renderHonorRecord(leagueKo);
+  setTimeout(()=>{document.querySelectorAll('.honor-bar-fill').forEach(el=>{const w=el.dataset.w;el.style.width='0%';setTimeout(()=>el.style.width=w,50)})},50);
+}
+function renderHonorMonthly(league){
+  return `<div class="honor-my-badge"><div class="honor-my-icon">🌟</div><div class="honor-my-info"><div class="honor-my-title">이달 나의 순위: #127위</div><div class="honor-my-sub">상위 23% · 전월 대비 ↑42</div></div></div>
+    <div class="honor-section-title">🏆 이달의 전설 · THIS MONTH'S LEGENDS</div>
+    <div class="honor-trophy"><div class="honor-trophy-rank">🥇</div><div class="honor-trophy-title">이달의 활동왕</div><div class="honor-trophy-name">StarWarrior</div><div class="honor-trophy-sub">${league} 리그 · 유닛 "새벽별"</div><div class="honor-trophy-score">QP 12,847 · LOY+ACT 최고점</div></div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <div class="honor-trophy" style="flex:1;padding:10px 6px;"><div class="honor-trophy-rank" style="font-size:20px;">🥈</div><div class="honor-trophy-title" style="font-size:9px;">성장왕</div><div class="honor-trophy-name" style="font-size:12px;">RisingStar</div><div class="honor-trophy-score" style="font-size:10px;">+4,231 성장</div></div>
+      <div class="honor-trophy" style="flex:1;padding:10px 6px;"><div class="honor-trophy-rank" style="font-size:20px;">🥉</div><div class="honor-trophy-title" style="font-size:9px;">화제왕</div><div class="honor-trophy-name" style="font-size:12px;">BuzzMaker</div><div class="honor-trophy-score" style="font-size:10px;">SOC 9,102</div></div>
+    </div>
+    <div class="honor-section-title">🏅 부문별 MVP · CATEGORY MVP</div>
+    ${[{icon:'📡',title:'최다 제보왕',name:'TruthSeeker',val:'제보 42건'},{icon:'🎨',title:'창작 여왕',name:'ArtQueen',val:'CRE 8,941'},{icon:'💰',title:'경제 기여왕',name:'EcoKing',val:'ECO 11,200'},{icon:'🧠',title:'지성 선구자',name:'BrainStar',val:'INT 7,654'},{icon:'🌐',title:'신인상',name:'BrightNewbie',val:'D+47 첫 진입'}].map(m=>'<div class="honor-season-row"><div class="honor-season-badge">'+m.icon+'</div><div class="honor-season-info"><div class="honor-season-name">'+m.title+'</div><div class="honor-season-detail">'+m.name+'</div></div><div class="honor-season-val">'+m.val+'</div></div>').join('')}`;
+}
+function renderHonorSeason(league){
+  const seasons=[{s:'S5',emoji:'🌌',fc:'ARMY Korea',winner:'StarWarrior',month:'2026.03',score:'98,432'},{s:'S4',emoji:'⚡',fc:'ARMY Korea',winner:'MoonLighter',month:'2026.02',score:'94,100'},{s:'S3',emoji:'🔥',fc:'EXO Planet',winner:'PhoenixRise',month:'2026.01',score:'87,234'},{s:'S2',emoji:'💫',fc:'NCT Dream FC',winner:'NovaStar',month:'2025.12',score:'79,801'},{s:'S1',emoji:'🌟',fc:'ARMY Korea',winner:'Originator',month:'2025.11',score:'68,420'}];
+  return `<div class="honor-my-badge"><div class="honor-my-icon">📜</div><div class="honor-my-info"><div class="honor-my-title">역대 시즌 챔피언 기록</div><div class="honor-my-sub">S1 ~ S5 · 총 5시즌 아카이브</div></div></div>
+    <div class="honor-section-title">🏆 시즌별 챔피언 · SEASON CHAMPIONS</div>
+    ${seasons.map(s=>'<div class="honor-season-row"><div class="honor-season-badge">'+s.emoji+'</div><div class="honor-season-info"><div class="honor-season-name">'+s.s+' · '+s.fc+'</div><div class="honor-season-detail">MVP: '+s.winner+' · '+s.month+'</div></div><div style="text-align:right;"><div class="honor-season-val">#1위</div><div style="font-size:9px;color:var(--muted);">QP '+Number(s.score).toLocaleString()+'</div></div></div>').join('')}
+    <div class="honor-section-title">📊 나의 시즌 성적</div>
+    ${[{s:'S5',rank:'#127',grade:'상위23%',bar:77},{s:'S4',rank:'#203',grade:'상위31%',bar:69},{s:'S3',rank:'#412',grade:'상위62%',bar:38}].map(r=>'<div style="padding:8px 10px;border-radius:8px;margin-bottom:6px;background:rgba(255,255,255,0.02);border:1px solid var(--border);"><div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span style="font-size:11px;font-weight:700;color:var(--text);">'+r.s+'</span><span style="font-family:Orbitron,monospace;font-size:11px;color:var(--gold);">'+r.rank+'</span></div><div style="height:4px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;"><div class="honor-bar-fill" data-w="'+r.bar+'%" style="height:100%;width:0%;background:linear-gradient(90deg,var(--gold),var(--lp));border-radius:4px;transition:width 0.7s ease;"></div></div><div style="font-size:9px;color:var(--muted);margin-top:3px;">'+r.grade+'</div></div>').join('')}`;
+}
+function renderHonorForever(){
+  const items=[{medal:'👑',title:'아스테리아 창립 공헌자',name:'Originator',reason:'플랫폼 초기 설계 기여 · S1 챔피언',date:'2025.11'},{medal:'⭐',title:'전설의 시작 · 최초 퀘이사 달성',name:'NovaBreaker',reason:'사상 최초 퀘이사 리그 승격 달성',date:'2025.12'},{medal:'🔥',title:'불멸의 기록 · 최장 연속 출석',name:'LoyalStar',reason:'365일 연속 출석 최초 달성',date:'2026.01'},{medal:'🌐',title:'글로벌 연결자',name:'WorldBridge',reason:'해외 팬덤 최초 교류 이벤트 주도',date:'2026.02'},{medal:'🎖️',title:'명예 수호자',name:'GuardianX',reason:'부정 제보 3건 적발 · 팬덤 보호 공로',date:'2026.03'}];
+  return `<div class="honor-my-badge"><div class="honor-my-icon">🏛️</div><div class="honor-my-info"><div class="honor-my-title">영구 명예의 전당</div><div class="honor-my-sub">삭제되지 않는 역사 · 영원히 기록됩니다</div></div></div>
+    <div class="honor-section-title">🎖️ 별빛 훈장 수여자 · STARLIGHT MEDALS</div>
+    ${items.map(i=>'<div class="honor-wall-item"><div class="honor-wall-medal">'+i.medal+'</div><div class="honor-wall-info"><div class="honor-wall-title">'+i.title+'</div><div class="honor-wall-name">'+i.name+'</div><div class="honor-wall-reason">'+i.reason+' · '+i.date+'</div></div></div>').join('')}
+    <div style="text-align:center;padding:16px 0 4px;color:var(--muted);font-size:10px;border-top:1px solid var(--border);margin-top:8px;">✨ 아스테리아는 당신의 헌신을 영원히 기억합니다</div>`;
+}
+function renderHonorRecord(){
+  const records=[{label:'최고 QP 단일 시즌',value:'12,847 QP',holder:'StarWarrior',date:'2026.03 S5'},{label:'최장 연속 출석',value:'365일',holder:'LoyalStar',date:'2026.01'},{label:'최다 단일일 제보',value:'12건',holder:'TruthSeeker',date:'2026.02.14'},{label:'최고 SOC 단월',value:'9,102점',holder:'BuzzMaker',date:'2026.03'},{label:'최단 퀘이사 달성',value:'D+183',holder:'SpeedStar',date:'2025.12'},{label:'최다 시즌 연속 MVP',value:'3시즌',holder:'StarWarrior',date:'S3~S5'}];
+  return `<div class="honor-my-badge"><div class="honor-my-icon">📈</div><div class="honor-my-info"><div class="honor-my-title">아스테리아 역대 최고 기록</div><div class="honor-my-sub">경신될 때까지 영원히 빛납니다</div></div></div>
+    <div class="honor-section-title">🚀 역대 기록 · ALL-TIME RECORDS</div>
+    ${records.map(r=>'<div class="honor-record-item"><div class="honor-record-label">📌 '+r.label+'</div><div class="honor-record-value">'+r.value+'</div><div class="honor-record-holder">👤 '+r.holder+'</div><div class="honor-record-date">📅 '+r.date+'</div></div>').join('')}`;
 }
 
 // ===== 별빛 제보소 v3 (완성) =====
