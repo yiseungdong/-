@@ -581,10 +581,10 @@ body::-webkit-scrollbar { width:0; }
   overflow:hidden;
 }
 /* 브레드크럼 */
-.breadcrumb{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);flex-wrap:wrap;justify-content:center;margin:6px 0;}
-.breadcrumb-item{color:var(--text);}
-.breadcrumb-sep{color:var(--gold);font-size:10px;}
-.breadcrumb-item:last-child{color:var(--gold);font-weight:600;}
+.astra-breadcrumb{display:flex;align-items:center;justify-content:center;gap:5px;font-size:11px;flex-wrap:wrap;margin:6px 0;}
+.astra-breadcrumb span{color:var(--muted);}
+.astra-breadcrumb .bc-sep{color:var(--gold);font-size:10px;}
+.astra-breadcrumb span:last-child{color:var(--gold);font-weight:700;}
 </style>
 <script src="/js/avatar-svgs.js"></script>
 </head>
@@ -657,7 +657,6 @@ body::-webkit-scrollbar { width:0; }
 
       <!-- ═══ 패널 1: 캐릭터 ═══ -->
       <div class="tab-panel" id="panel-character">
-        <div class="breadcrumb" id="bc-character"></div>
         <!-- 2. 아바타 스테이지 (핵심) -->
         <div class="avatar-stage" id="avatarStage">
           <div class="stage-bg" id="stageBg"></div>
@@ -680,6 +679,7 @@ body::-webkit-scrollbar { width:0; }
               <div class="level-fill" id="levelFill" style="width:0%"></div>
             </div>
           </div>
+          <div class="astra-breadcrumb" id="bc-character" style="margin:8px 0;"></div>
         </div>
 
         <!-- 3. 리그 전환 탭 (테스트용) -->
@@ -754,10 +754,10 @@ body::-webkit-scrollbar { width:0; }
 
       <!-- ═══ 패널 2: 성궤 ═══ -->
       <div class="tab-panel" id="panel-orbit">
-        <div class="breadcrumb" id="bc-orbit" style="padding:8px 16px 0;"></div>
         <div class="orbit-card-container" style="padding:16px;">
           <div class="orbit-card" style="background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;">
             <div id="orbitAvatarCard" style="margin-bottom:16px;"></div>
+            <div class="astra-breadcrumb" id="bc-orbit" style="margin:6px 0 8px;"></div>
             <div style="font-size:9px;color:var(--muted);text-align:right;" id="oscNumber">OSC-2026-0001</div>
           </div>
           <div class="section-title" style="margin-bottom:12px;">✦ STATS 스탯 현황</div>
@@ -921,12 +921,12 @@ function renderMoimBreadcrumb(containerId){
     const myOrgs=[];
     orgs.forEach((name,i)=>{
       const saved=localStorage.getItem('asteria_moim_depth'+(i+1));
-      myOrgs.push(saved||name+(Math.floor(Math.random()*20)+1));
+      myOrgs.push(saved||name+[3,12,47,8,2][i]);
     });
     const parts=[fandom,...myOrgs];
-    el.innerHTML=parts.map((p,i)=>'<span class="breadcrumb-item">'+p+'</span>'+(i<parts.length-1?'<span class="breadcrumb-sep">›</span>':'')).join('');
+    el.innerHTML=parts.map((p,i)=>'<span>'+p+'</span>'+(i<parts.length-1?'<span class="bc-sep">›</span>':'')).join('');
   }catch(e){
-    el.innerHTML='<span class="breadcrumb-item">BTS ARMY</span><span class="breadcrumb-sep">›</span><span class="breadcrumb-item">테리토리3</span><span class="breadcrumb-sep">›</span><span class="breadcrumb-item">베이스12</span><span class="breadcrumb-sep">›</span><span class="breadcrumb-item">유닛47</span>';
+    el.innerHTML='<span>BTS ARMY</span><span class="bc-sep">›</span><span>테리토리3</span><span class="bc-sep">›</span><span>베이스12</span><span class="bc-sep">›</span><span>유닛47</span>';
   }
 }
 
