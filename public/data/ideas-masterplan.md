@@ -6,7 +6,7 @@
 - #17 캐릭터/아바타 시스템 UI ✅
 - #18 채팅 UI ✅ (별빛다이어리+레어대사+감정이모지+분위기파티클)
 - #19 리그 랭킹 + 미러 랭킹 UI ✅ (5개 리그맵+팬클럽크기차등+1등광채+승격강등비교)
-- #20 방주(Ark) 3D 룸 UI — 진행중 (2.5D 기본구현, 별똥별+선물함 배치완료, 디테일 추후)
+- #20 방주(Ark) 3D 룸 UI — 진행중 (2.5D 기본구현, 별똥별+선물함 배치완료, 리그뱃지+PBR강화 완료, 디테일 추후)
 - #21 스탯 대시보드 + 헥사곤 차트 ✅
 - #22 아키타입 프로필 카드 + SNS 카드 ✅ (15종아키타입+시즌뱃지+SNS공유)
 - #23 상점/경제 UI ✅ (6카테고리+거래소+뽑기+NPC상인)
@@ -1422,9 +1422,11 @@ bcrypt, JWT, 최소수집(이메일+닉네임), 소셜로그인2FA, 욕설필터
 ### 다음 작업 순서 (업데이트)
 1. ~~아바타 전 페이지 통일~~ — 완료
 2. ~~shop.html 아바타 SVG 렌더링~~ — 완료
-3. 리그별 아바타 차별화 (테두리/글로우/뱃지)
+3. ~~리그별 아바타 차별화 (테두리/글로우/뱃지)~~ — 완료 (2026.04.04)
 4. 아티스트 꾸미기 (프리셋 방식 — 머리색/옷색)
 5. 아바타 헤어/의상 확장 (SVG 레이어 분리 — 큰 작업)
+6. astra.html 탭 겹침 버그 수정
+7. 모바일 반응형 점검
 
 ### 2026.04.03 작업 내역
 - avatar-svgs.js 업그레이드: AVATAR_SIZE_PRESETS(xs/sm/md/lg/xl/full), renderAvatarCard(), getAuraCSS(), initAvatarCardSync()
@@ -1434,3 +1436,28 @@ bcrypt, JWT, 최소수집(이메일+닉네임), 소셜로그인2FA, 욕설필터
 - avatar.html SVG 180x225 축소 + preview-section 380px + margin-top:20px
 - fandom 아바타 renderAvatarCard md + 채팅버튼 우측이동
 - astra 성궤탭 renderAvatarCard sm horizontal
+
+### 2026.04.04 작업 내역
+- 기존 보류 버그 4건 수정 (fe095c7):
+  - avatar.html: avatar-svgs.js 스크립트 로드 태그 추가
+  - avatar.html: 내부 getBaseSVG() 중복 함수 삭제 (avatar-svgs.js로 통일)
+  - room3d.html: edit-toolbar 중앙정렬 (left:50%+translateX(-50%)+max-width:900px)
+  - room3d.html: ROOM_BOUNDS 여백 조정 (벽타기 방지)
+- avatar.html renderAvatarLayers 폴백 강화 (1a62bb7):
+  - getStyledSVG 로드 여부 typeof 체크
+  - 로드 실패 시 getBaseSVGInline() 인라인 SVG 폴백 + 수동 색상교체
+- 리그별 아바타 차별화 구현 (335a336):
+  - LEAGUE_VISUAL 상수 (5리그별 icon/color/nameShadow/avatarGlow/bgColor)
+  - applyLeagueVisual() 함수: 뱃지 장식 + 닉네임 글로우 + 아바타 테두리 글로우
+  - CSS .league-badge 스타일 + 펄스 애니메이션
+  - KO_TO_EN 한국어→영어 리그키 자동변환
+  - buildAvatar()와 BroadcastChannel 수신 시 자동 적용
+- 3D 렌더링 PBR 품질 강화 (335a336):
+  - 천장 PointLight → SpotLight (angle 45도, penumbra 0.35)
+  - 그림자 맵 512→1024, 모든 조명 decay=2 물리감쇠
+  - PMREMGenerator 환경맵 (scene.environment) 추가
+  - sRGB 출력 인코딩 (renderer.outputEncoding)
+  - 바닥 roughness 0.55→0.4, 벽 metalness 0.05→0.02, envMapIntensity 추가
+  - 파티클 300→450개, size 0.02→0.03, opacity 시간변동
+  - CSS 캔버스 필터 contrast(1.05)+saturate(1.12)
+  - 안개 밀도 0.008→0.006
