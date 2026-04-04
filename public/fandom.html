@@ -2657,13 +2657,13 @@ function openFcChat(type, orgPath) {
   panel.classList.add('open');
   currentChatRoom = type;
 
+  // 모임채팅/전체채팅 모두 탭 표시
+  title.textContent = '🏠 모임 채팅';
+  breadcrumb.style.display = 'flex';
   if (type === 'all') {
-    title.textContent = '💬 팬클럽 전체 채팅';
-    breadcrumb.style.display = 'none';
+    renderBreadcrumb(0); // 전체 탭 활성
     loadMockMsgs(body, 'all');
   } else {
-    title.textContent = '🏠 모임 채팅';
-    breadcrumb.style.display = 'flex';
     renderBreadcrumb(orgPath || 0);
     loadMockMsgs(body, 'org');
   }
