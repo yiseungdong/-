@@ -173,6 +173,20 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 /* ── 패널 전환 ── */
 .comp-panel{flex:1;display:flex;flex-direction:column;overflow:hidden}
 
+/* ── 스탯레이스 내 현황 카드 ── */
+.race-my-card{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:520px;
+  padding:14px 20px;
+  background:rgba(5,12,30,.98);
+  backdrop-filter:blur(12px);
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;gap:16px;
+  z-index:300;
+}
+.race-me-row{background:rgba(56,189,248,.08) !important;border-color:rgba(56,189,248,.3) !important;}
+.race-me-row .rank-name::after{content:' ← 나';font-size:9px;color:#38bdf8;font-weight:700;margin-left:6px;}
+
 /* ── Toast & 애니메이션 ── */
 @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
@@ -286,7 +300,57 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 
   <!-- ═══ 준비중 패널들 ═══ -->
   <div class="comp-panel" id="panel-statrace" style="display:none">
-    <div style="text-align:center;padding:80px 20px;color:var(--muted);font-size:14px">🔒 준비중인 콘텐츠예요</div>
+
+    <!-- 타이틀 -->
+    <div style="text-align:center;padding:16px 16px 4px">
+      <div style="font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:#ffffff;letter-spacing:1px;margin-bottom:4px">🏁 STAT RACE</div>
+      <div style="font-size:11px;color:var(--muted)">이번 주 스탯별 레이스 — 실시간 순위 변동</div>
+    </div>
+
+    <!-- 스탯 선택 칩 -->
+    <div class="stat-bar" id="raceStatBar">
+      <button class="stat-chip active" onclick="switchRaceStat('act',this)">⚡ ACT</button>
+      <button class="stat-chip" onclick="switchRaceStat('loy',this)">❤️ LOY</button>
+      <button class="stat-chip" onclick="switchRaceStat('soc',this)">💬 SOC</button>
+      <button class="stat-chip" onclick="switchRaceStat('cre',this)">🎨 CRE</button>
+      <button class="stat-chip" onclick="switchRaceStat('int',this)">🧠 INT</button>
+      <button class="stat-chip" onclick="switchRaceStat('eco',this)">💰 ECO</button>
+    </div>
+
+    <!-- 기간 표시 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 16px">
+      <span style="font-size:10px;color:var(--muted);font-weight:600">📅 4월 1주차 (04.01~04.07)</span>
+      <span style="font-size:9px;color:var(--accent)">종료까지 D-3</span>
+    </div>
+
+    <!-- 레이스 리스트 -->
+    <div class="rank-section" style="padding-bottom:120px">
+      <div class="rank-header">
+        <span id="raceStatTitle">⚡ ACT 레이스</span>
+        <span class="rank-updated">실시간</span>
+      </div>
+      <div id="raceList"></div>
+    </div>
+
+    <!-- 내 레이스 현황 카드 -->
+    <div class="race-my-card" id="raceMyCard" style="display:none"
+      <div style="display:flex;align-items:center;gap:12px;flex:1">
+        <div>
+          <div style="font-size:9px;color:var(--muted);font-weight:600;margin-bottom:2px">내 순위</div>
+          <div style="font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:#ffffff" id="raceMyRank">#5</div>
+        </div>
+        <div style="width:1px;height:28px;background:var(--border)"></div>
+        <div>
+          <div style="font-size:9px;color:var(--muted);font-weight:600;margin-bottom:2px" id="raceMyStatLabel">내 ACT 점수</div>
+          <div style="font-family:'Orbitron',monospace;font-size:16px;font-weight:700;color:var(--gold)" id="raceMyScore">7,200</div>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:2px">1위까지 <span style="color:#ffffff;font-weight:700" id="raceGap">2,640</span>점</div>
+        <div style="font-size:10px;color:#34d399;font-weight:700" id="raceDelta">전날 대비: +340 ↑</div>
+      </div>
+    </div>
+
   </div>
   <div class="comp-panel" id="panel-marathon" style="display:none">
     <div style="text-align:center;padding:80px 20px;color:var(--muted);font-size:14px">🔒 준비중인 콘텐츠예요</div>
@@ -364,7 +428,7 @@ var currentLeague = 'dust';
 var currentStat   = 'total';
 
 /* ── 경쟁 콘텐츠 탭 전환 ── */
-var activeTabs = ['statking','hexagon']; // 활성화된 탭
+var activeTabs = ['statking','hexagon','statrace']; // 활성화된 탭
 function switchCompTab(tabName, btn) {
   document.querySelectorAll('#compTabBar .tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
@@ -388,8 +452,13 @@ function switchCompTab(tabName, btn) {
   var panel = document.getElementById('panel-' + tabName);
   if(panel) panel.style.display = 'flex';
 
-  // 헥사곤 탭 진입 시 캔버스 렌더
+  // 하단 바 표시/숨김
+  document.querySelector('.my-rank-bar').style.display = (tabName === 'statking') ? 'flex' : 'none';
+  document.getElementById('raceMyCard').style.display = (tabName === 'statrace') ? 'flex' : 'none';
+
+  // 탭별 초기화
   if(tabName === 'hexagon') drawHexChart();
+  if(tabName === 'statrace') renderRace();
 }
 
 /* ── 리그 필터 전환 ── */
@@ -655,6 +724,144 @@ function randomHexMatch() {
   hexMyStats = hexMyStats.map(function(v){ return Math.max(20, Math.min(100, v + Math.floor(Math.random()*11)-5)); });
   drawHexChart();
   showToast('🎲 ' + opp.name + '와(과) 대결!');
+}
+
+/* ═══════════════════════════════════
+   스탯 레이스
+   ═══════════════════════��═══════════ */
+var RACE_DATA = {
+  act: [
+    {rank:1,name:'열정맨_제이',score:9840,delta:'+520'},
+    {rank:2,name:'파이어볼',score:8720,delta:'+380'},
+    {rank:3,name:'스파크',score:8100,delta:'+290'},
+    {rank:4,name:'액션히어로',score:7650,delta:'+210'},
+    {rank:5,name:'별빛탐험가',score:7200,delta:'+340',me:true},
+    {rank:6,name:'러너킹',score:6800,delta:'+180'},
+    {rank:7,name:'퀘스트마스터',score:6400,delta:'+150'},
+    {rank:8,name:'데일리챌',score:5900,delta:'-60'},
+    {rank:9,name:'미션클리어',score:5200,delta:'+90'},
+    {rank:10,name:'활동왕',score:4800,delta:'+40'},
+  ],
+  loy: [
+    {rank:1,name:'영원한별',score:11200,delta:'+600'},
+    {rank:2,name:'충성의빛',score:10500,delta:'+420'},
+    {rank:3,name:'별빛탐험가',score:9800,delta:'+380',me:true},
+    {rank:4,name:'수호자K',score:9100,delta:'+310'},
+    {rank:5,name:'매일출석',score:8400,delta:'+270'},
+    {rank:6,name:'팬심가득',score:7900,delta:'+200'},
+    {rank:7,name:'로열티킹',score:7300,delta:'+160'},
+    {rank:8,name:'한결같은',score:6800,delta:'+120'},
+    {rank:9,name:'꾸준한별',score:6200,delta:'+80'},
+    {rank:10,name:'일일덕질',score:5700,delta:'+50'},
+  ],
+  soc: [
+    {rank:1,name:'수다쟁이',score:8900,delta:'+440'},
+    {rank:2,name:'별빛탐험가',score:8200,delta:'+360',me:true},
+    {rank:3,name:'소통왕',score:7600,delta:'+280'},
+    {rank:4,name:'친구백명',score:7100,delta:'+220'},
+    {rank:5,name:'댓글요정',score:6500,delta:'+190'},
+    {rank:6,name:'공감천재',score:5900,delta:'+140'},
+    {rank:7,name:'리플마스터',score:5400,delta:'+100'},
+    {rank:8,name:'하트폭격',score:4800,delta:'+70'},
+    {rank:9,name:'채팅달인',score:4300,delta:'+40'},
+    {rank:10,name:'소셜나비',score:3800,delta:'+20'},
+  ],
+  cre: [
+    {rank:1,name:'아트마스터',score:7800,delta:'+350'},
+    {rank:2,name:'창작의신',score:7200,delta:'+290'},
+    {rank:3,name:'일러장인',score:6700,delta:'+240'},
+    {rank:4,name:'별빛탐험가',score:6100,delta:'+200',me:true},
+    {rank:5,name:'팬아트왕',score:5600,delta:'+160'},
+    {rank:6,name:'영상편집',score:5100,delta:'+130'},
+    {rank:7,name:'글솜씨',score:4600,delta:'+90'},
+    {rank:8,name:'밈제조기',score:4100,delta:'+60'},
+    {rank:9,name:'포토그래퍼',score:3600,delta:'+30'},
+    {rank:10,name:'디자이너',score:3100,delta:'+10'},
+  ],
+  int: [
+    {rank:1,name:'위키마스터',score:9200,delta:'+480'},
+    {rank:2,name:'정보통',score:8600,delta:'+390'},
+    {rank:3,name:'분석왕',score:8000,delta:'+320'},
+    {rank:4,name:'데이터맨',score:7400,delta:'+260'},
+    {rank:5,name:'퀴즈왕',score:6800,delta:'+210'},
+    {rank:6,name:'별빛탐험가',score:6300,delta:'+170',me:true},
+    {rank:7,name:'리서처',score:5700,delta:'+130'},
+    {rank:8,name:'학구파',score:5200,delta:'+90'},
+    {rank:9,name:'지식인',score:4600,delta:'+50'},
+    {rank:10,name:'공부벌레',score:4100,delta:'+20'},
+  ],
+  eco: [
+    {rank:1,name:'재벌탐험���',score:12400,delta:'+700'},
+    {rank:2,name:'투자의신',score:11200,delta:'+580'},
+    {rank:3,name:'별빛탐험가',score:10100,delta:'+450',me:true},
+    {rank:4,name:'절약왕',score:9200,delta:'+360'},
+    {rank:5,name:'경매달인',score:8400,delta:'+280'},
+    {rank:6,name:'거래소마스터',score:7600,delta:'+210'},
+    {rank:7,name:'스타더스트',score:6900,delta:'+150'},
+    {rank:8,name:'알뜰한별',score:6200,delta:'+100'},
+    {rank:9,name:'코인수집가',score:5500,delta:'+60'},
+    {rank:10,name:'경제인',score:4800,delta:'+30'},
+  ],
+};
+
+var RACE_STAT_ICONS = {act:'⚡',loy:'❤️',soc:'💬',cre:'🎨',int:'🧠',eco:'💰'};
+var currentRaceStat = 'act';
+
+function switchRaceStat(statId, btn) {
+  currentRaceStat = statId;
+  document.querySelectorAll('#raceStatBar .stat-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderRace();
+}
+
+function renderRace() {
+  var data = RACE_DATA[currentRaceStat] || RACE_DATA['act'];
+  var icon = RACE_STAT_ICONS[currentRaceStat] || '⚡';
+  var statUp = currentRaceStat.toUpperCase();
+
+  document.getElementById('raceStatTitle').textContent = icon + ' ' + statUp + ' 레이스';
+
+  var medals = ['🥇','🥈','🥉'];
+  var html = '';
+  var myEntry = null;
+
+  data.forEach(function(r) {
+    var isMe = r.me === true;
+    if(isMe) myEntry = r;
+    var rankClass = r.rank===1?'gold':r.rank===2?'silver':r.rank===3?'bronze':'';
+    var meClass = isMe ? ' race-me-row' : '';
+    var medalHtml = r.rank<=3 ? '<span class="rank-medal">'+medals[r.rank-1]+'</span>' : '<span class="rank-medal" style="font-size:0"></span>';
+    var numHtml = r.rank<=3 ? '' : '<span class="rank-num" style="font-size:13px;color:var(--muted)">'+r.rank+'</span>';
+
+    var dv = r.delta;
+    var dClass, dText;
+    if(dv.startsWith('+')){ dClass='up'; dText='↑'+dv.slice(1); }
+    else if(dv.startsWith('-')){ dClass='down'; dText='↓'+dv.slice(1); }
+    else { dClass='same'; dText='—'; }
+
+    html += '<div class="rank-item '+rankClass+meClass+'" style="animation-delay:'+(r.rank*0.04)+'s">' +
+      medalHtml + numHtml +
+      '<span class="rank-name">'+r.name+'</span>' +
+      '<span class="rank-score">'+r.score.toLocaleString()+'</span>' +
+      '<span class="rank-change '+dClass+'">'+dText+'</span>' +
+      '</div>';
+  });
+
+  document.getElementById('raceList').innerHTML = html;
+
+  // 내 현황 카드 업데이트
+  if(myEntry) {
+    document.getElementById('raceMyRank').textContent = '#' + myEntry.rank;
+    document.getElementById('raceMyStatLabel').textContent = '내 ' + statUp + ' 점수';
+    document.getElementById('raceMyScore').textContent = myEntry.score.toLocaleString();
+    var gap = data[0].score - myEntry.score;
+    document.getElementById('raceGap').textContent = gap.toLocaleString();
+    var dv = myEntry.delta;
+    var deltaEl = document.getElementById('raceDelta');
+    if(dv.startsWith('+')){ deltaEl.textContent='전날 대비: '+dv+' ↑'; deltaEl.style.color='#34d399'; }
+    else if(dv.startsWith('-')){ deltaEl.textContent='전날 대비: '+dv+' ↓'; deltaEl.style.color='#ef4444'; }
+    else { deltaEl.textContent='전날 대비: 변동 없음'; deltaEl.style.color='var(--muted)'; }
+  }
 }
 
 /* ── 초기 렌더 ── */
