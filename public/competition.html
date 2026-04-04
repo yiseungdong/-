@@ -362,43 +362,48 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 
   </div>
   <div class="comp-panel" id="panel-marathon" style="display:none">
+    <div style="padding:16px;overflow-y:auto;flex:1;padding-bottom:80px">
 
-    <!-- 타이틀 -->
-    <div style="text-align:center;padding:16px 16px 4px">
-      <div style="font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:#ffffff;letter-spacing:1px;margin-bottom:4px">🌱 GROWTH MARATHON</div>
-      <div style="font-size:11px;color:var(--muted)">30일간의 성장 여정 — 꾸준함이 승리!</div>
-    </div>
-
-    <!-- 마라톤 진행률 카드 -->
-    <div style="margin:12px 16px;padding:16px;background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.2);border-radius:14px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <span style="font-size:12px;font-weight:700;color:#34d399">🏃 내 마라톤 현황</span>
-        <span style="font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:#ffffff">DAY 18 / 30</span>
+      <!-- 타이틀 -->
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:#ffffff;letter-spacing:1px;margin-bottom:4px">🌱 GROWTH MARATHON</div>
+        <div style="font-size:11px;color:var(--muted)">30일간의 성장 여정 — 꾸준함이 승리!</div>
       </div>
-      <div style="height:10px;background:rgba(255,255,255,.06);border-radius:5px;overflow:hidden;margin-bottom:8px">
-        <div style="width:60%;height:100%;background:linear-gradient(90deg,#34d399,#10b981);border-radius:5px;transition:width .6s ease"></div>
-      </div>
-      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted)">
-        <span>총 성장: <span style="color:#ffffff;font-weight:700">+2,840점</span></span>
-        <span>일평균: <span style="color:#34d399;font-weight:700">+158점/일</span></span>
-      </div>
-    </div>
 
-    <!-- 일별 성장 기록 -->
-    <div style="padding:0 16px 4px">
-      <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1px;margin-bottom:8px">📊 일별 성장 기록</div>
-      <div id="marathonDays" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px"></div>
-    </div>
-
-    <!-- 마라톤 랭킹 -->
-    <div class="rank-section" style="padding-bottom:80px">
-      <div class="rank-header">
-        <span>🏆 마라톤 랭킹 — 누적 성장량</span>
-        <span class="rank-updated">DAY 18</span>
+      <!-- 성장 현황 -->
+      <div style="background:rgba(10,10,22,0.96);border:1px solid rgba(180,150,255,0.13);border-radius:16px;padding:20px;margin-bottom:24px;">
+        <div style="font-size:14px;color:rgba(220,210,240,0.85);margin-bottom:16px;">내 이번 달 성장량</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;justify-content:space-between;"><span style="color:#c084fc;">💜 LOY</span><span style="color:rgba(220,210,240,0.7);">1,200 → 1,458</span><span style="color:#4ade80;font-weight:700;">+258</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:#f59e0b;">⚡ ACT</span><span style="color:rgba(220,210,240,0.7);">1,900 → 2,340</span><span style="color:#4ade80;font-weight:700;">+440 ⭐</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:#34d399;">🌐 SOC</span><span style="color:rgba(220,210,240,0.7);">780 → 890</span><span style="color:#4ade80;font-weight:700;">+110</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:#fbbf24;">💰 ECO</span><span style="color:rgba(220,210,240,0.7);">2,800 → 3,120</span><span style="color:#4ade80;font-weight:700;">+320</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:#f472b6;">✨ CRE</span><span style="color:rgba(220,210,240,0.7);">450 → 560</span><span style="color:#4ade80;font-weight:700;">+110</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:#38bdf8;">📚 INT</span><span style="color:rgba(220,210,240,0.7);">1,700 → 1,980</span><span style="color:#4ade80;font-weight:700;">+280</span></div>
+        </div>
+        <div style="border-top:1px solid rgba(180,150,255,0.13);margin-top:16px;padding-top:16px;text-align:center;">
+          <span style="font-family:Orbitron;color:#f0c040;font-size:22px;font-weight:700;">총 성장량 +1,518</span>
+          <div style="color:#4ade80;font-size:13px;margin-top:6px;">🌱 현재 리그 내 3위 성장 중!</div>
+        </div>
       </div>
-      <div id="marathonRankList"></div>
-    </div>
 
+      <!-- 랭킹 -->
+      <div style="font-size:14px;color:rgba(220,210,240,0.85);margin-bottom:12px;">🏆 성장 랭킹 — 더스트 리그</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(240,192,64,0.1);border:1px solid rgba(240,192,64,0.3);border-radius:12px;"><span style="color:#f0c040;font-weight:900;width:24px;">👑</span><span style="color:#fff;font-weight:700;flex:1;">뉴비챔피언</span><span style="color:#4ade80;font-weight:700;">+2,840</span><span style="color:rgba(220,210,240,0.5);font-size:12px;margin-left:8px;">ACT↑</span></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(148,163,184,0.1);border:1px solid rgba(148,163,184,0.2);border-radius:12px;"><span style="color:#94a3b8;font-weight:900;width:24px;">🥈</span><span style="color:#fff;font-weight:700;flex:1;">성장왕_코코</span><span style="color:#4ade80;font-weight:700;">+2,210</span><span style="color:rgba(220,210,240,0.5);font-size:12px;margin-left:8px;">LOY↑</span></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(192,132,252,0.15);border:1px solid rgba(192,132,252,0.4);border-radius:12px;"><span style="color:#cd7f32;font-weight:900;width:24px;">🥉</span><span style="color:#c084fc;font-weight:900;flex:1;">별빛탐험가 ← 나</span><span style="color:#4ade80;font-weight:700;">+1,518</span><span style="color:rgba(220,210,240,0.5);font-size:12px;margin-left:8px;">ACT↑</span></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(10,10,22,0.96);border:1px solid rgba(180,150,255,0.13);border-radius:12px;"><span style="color:rgba(220,210,240,0.5);width:24px;">4</span><span style="color:#fff;flex:1;">열정신인</span><span style="color:#4ade80;font-weight:700;">+1,320</span><span style="color:rgba(220,210,240,0.5);font-size:12px;margin-left:8px;">ECO↑</span></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(10,10,22,0.96);border:1px solid rgba(180,150,255,0.13);border-radius:12px;"><span style="color:rgba(220,210,240,0.5);width:24px;">5</span><span style="color:#fff;flex:1;">급성장러</span><span style="color:#4ade80;font-weight:700;">+1,180</span><span style="color:rgba(220,210,240,0.5);font-size:12px;margin-left:8px;">CRE↑</span></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(10,10,22,0.96);border:1px solid rgba(180,150,255,0.13);border-radius:12px;"><span style="color:rgba(220,210,240,0.5);width:24px;">6</span><span style="color:#fff;flex:1;">노력파</span><span style="color:#4ade80;font-weight:700;">+980</span><span style="color:rgba(220,210,240,0.5);font-size:12px;margin-left:8px;">INT↑</span></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(10,10,22,0.96);border:1px solid rgba(180,150,255,0.13);border-radius:12px;"><span style="color:rgba(220,210,240,0.5);width:24px;">7</span><span style="color:#fff;flex:1;">꾸준히가자</span><span style="color:#4ade80;font-weight:700;">+870</span><span style="color:rgba(220,210,240,0.5);font-size:12px;margin-left:8px;">SOC↑</span></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(10,10,22,0.96);border:1px solid rgba(180,150,255,0.13);border-radius:12px;"><span style="color:rgba(220,210,240,0.5);width:24px;">8</span><span style="color:#fff;flex:1;">매일매일</span><span style="color:#4ade80;font-weight:700;">+750</span><span style="color:rgba(220,210,240,0.5);font-size:12px;margin-left:8px;">ACT↑</span></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(10,10,22,0.96);border:1px solid rgba(180,150,255,0.13);border-radius:12px;"><span style="color:rgba(220,210,240,0.5);width:24px;">9</span><span style="color:#fff;flex:1;">성실함의힘</span><span style="color:#4ade80;font-weight:700;">+640</span><span style="color:rgba(220,210,240,0.5);font-size:12px;margin-left:8px;">LOY↑</span></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(10,10,22,0.96);border:1px solid rgba(180,150,255,0.13);border-radius:12px;"><span style="color:rgba(220,210,240,0.5);width:24px;">10</span><span style="color:#fff;flex:1;">한걸음씩</span><span style="color:#4ade80;font-weight:700;">+520</span><span style="color:rgba(220,210,240,0.5);font-size:12px;margin-left:8px;">ECO↑</span></div>
+      </div>
+
+      <p style="text-align:center;color:rgba(220,210,240,0.5);font-size:12px;margin-top:24px;">💡 매일 꾸준히 활동하면 누구든 성장왕이 될 수 있어요!</p>
+    </div>
   </div>
   <div class="comp-panel" id="panel-challenge" style="display:none">
     <div style="text-align:center;padding:80px 20px;color:var(--muted);font-size:14px">🔒 준비중인 콘텐츠예요</div>
@@ -913,64 +918,7 @@ function renderRace() {
 /* ═══════════════════════════════════
    성장 마라톤
    ═══════════════════════════════════ */
-var MARATHON_DAYS = 30;
-var MARATHON_TODAY = 18;
-// 일별 성장점수 (1~18일차)
-var MARATHON_DAILY = [120,180,95,210,160,200,140,175,190,155,220,130,185,170,205,145,195,165];
-// 연속 출석 구간: 15~18일차
-var MARATHON_STREAK_START = 15;
-
-function renderMarathon() {
-  // 일별 셀 렌더
-  var daysEl = document.getElementById('marathonDays');
-  var html = '';
-  for(var d=1; d<=MARATHON_DAYS; d++) {
-    var cls = 'mday';
-    if(d < MARATHON_TODAY) {
-      cls += ' done';
-      if(d >= MARATHON_STREAK_START) cls += ' streak';
-    } else if(d === MARATHON_TODAY) {
-      cls += ' today';
-    } else {
-      cls += ' future';
-    }
-    var pts = d <= MARATHON_TODAY && MARATHON_DAILY[d-1] ? '+'+MARATHON_DAILY[d-1] : '';
-    html += '<div class="'+cls+'" title="Day '+d+(pts?' '+pts+'점':'')+'">' + d + '</div>';
-  }
-  daysEl.innerHTML = html;
-
-  // 마라톤 랭킹
-  var MARATHON_RANK = [
-    {rank:1,name:'꾸준왕',growth:3420,days:18,streak:18},
-    {rank:2,name:'매일성장',growth:3180,days:18,streak:14},
-    {rank:3,name:'별빛탐험가',growth:2840,days:18,streak:4,me:true},
-    {rank:4,name:'성장러너',growth:2650,days:17,streak:8},
-    {rank:5,name:'데일리히어로',growth:2480,days:16,streak:6},
-    {rank:6,name:'출석의신',growth:2300,days:18,streak:12},
-    {rank:7,name:'무한도전',growth:2100,days:15,streak:5},
-    {rank:8,name:'조금씩매일',growth:1950,days:14,streak:3},
-    {rank:9,name:'마라톤러',growth:1780,days:13,streak:7},
-    {rank:10,name:'슬로우앤스테디',growth:1600,days:12,streak:2},
-  ];
-
-  var medals = ['🥇','🥈','🥉'];
-  var rhtml = '';
-  MARATHON_RANK.forEach(function(r) {
-    var rankClass = r.rank===1?'gold':r.rank===2?'silver':r.rank===3?'bronze':'';
-    var meClass = r.me ? ' marathon-me-row' : '';
-    var medalHtml = r.rank<=3 ? '<span class="rank-medal">'+medals[r.rank-1]+'</span>' : '<span class="rank-medal" style="font-size:0"></span>';
-    var numHtml = r.rank<=3 ? '' : '<span class="rank-num" style="font-size:13px;color:var(--muted)">'+r.rank+'</span>';
-
-    rhtml += '<div class="rank-item '+rankClass+meClass+'" style="animation-delay:'+(r.rank*0.04)+'s">' +
-      medalHtml + numHtml +
-      '<span class="rank-name" style="flex:1">'+r.name+'</span>' +
-      '<span style="font-size:9px;color:var(--muted);margin-right:8px">'+r.days+'일 | 🔥'+r.streak+'연속</span>' +
-      '<span class="rank-score">+'+r.growth.toLocaleString()+'</span>' +
-      '</div>';
-  });
-
-  document.getElementById('marathonRankList').innerHTML = rhtml;
-}
+function renderMarathon() { /* 정적 HTML — 별도 렌더 불필요 */ }
 
 /* ── 초기 렌더 ── */
 renderRankings();
