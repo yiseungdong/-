@@ -173,6 +173,15 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 /* ── 패널 전환 ── */
 .comp-panel{flex:1;display:flex;flex-direction:column;overflow:hidden}
 
+/* ── 마라톤 일별 셀 ── */
+.mday{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#ffffff;position:relative;cursor:default}
+.mday.done{background:rgba(52,211,153,.25);border:1px solid rgba(52,211,153,.4)}
+.mday.today{background:rgba(56,189,248,.2);border:1px solid rgba(56,189,248,.5);box-shadow:0 0 8px rgba(56,189,248,.3)}
+.mday.future{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.3)}
+.mday.streak{background:rgba(240,192,64,.2);border:1px solid rgba(240,192,64,.4)}
+.marathon-me-row{background:rgba(52,211,153,.08) !important;border-color:rgba(52,211,153,.3) !important;}
+.marathon-me-row .rank-name::after{content:' ← 나';font-size:9px;color:#34d399;font-weight:700;margin-left:6px;}
+
 /* ── 스탯레이스 내 현황 카드 ── */
 .race-my-card{
   position:fixed;bottom:0;left:50%;transform:translateX(-50%);
@@ -353,7 +362,43 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 
   </div>
   <div class="comp-panel" id="panel-marathon" style="display:none">
-    <div style="text-align:center;padding:80px 20px;color:var(--muted);font-size:14px">🔒 준비중인 콘텐츠예요</div>
+
+    <!-- 타이틀 -->
+    <div style="text-align:center;padding:16px 16px 4px">
+      <div style="font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:#ffffff;letter-spacing:1px;margin-bottom:4px">🌱 GROWTH MARATHON</div>
+      <div style="font-size:11px;color:var(--muted)">30일간의 성장 여정 — 꾸준함이 승리!</div>
+    </div>
+
+    <!-- 마라톤 진행률 카드 -->
+    <div style="margin:12px 16px;padding:16px;background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.2);border-radius:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <span style="font-size:12px;font-weight:700;color:#34d399">🏃 내 마라톤 현황</span>
+        <span style="font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:#ffffff">DAY 18 / 30</span>
+      </div>
+      <div style="height:10px;background:rgba(255,255,255,.06);border-radius:5px;overflow:hidden;margin-bottom:8px">
+        <div style="width:60%;height:100%;background:linear-gradient(90deg,#34d399,#10b981);border-radius:5px;transition:width .6s ease"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted)">
+        <span>총 성장: <span style="color:#ffffff;font-weight:700">+2,840점</span></span>
+        <span>일평균: <span style="color:#34d399;font-weight:700">+158점/일</span></span>
+      </div>
+    </div>
+
+    <!-- 일별 성장 기록 -->
+    <div style="padding:0 16px 4px">
+      <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1px;margin-bottom:8px">📊 일별 성장 기록</div>
+      <div id="marathonDays" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px"></div>
+    </div>
+
+    <!-- 마라톤 랭킹 -->
+    <div class="rank-section" style="padding-bottom:80px">
+      <div class="rank-header">
+        <span>🏆 마라톤 랭킹 — 누적 성장량</span>
+        <span class="rank-updated">DAY 18</span>
+      </div>
+      <div id="marathonRankList"></div>
+    </div>
+
   </div>
   <div class="comp-panel" id="panel-challenge" style="display:none">
     <div style="text-align:center;padding:80px 20px;color:var(--muted);font-size:14px">🔒 준비중인 콘텐츠예요</div>
@@ -428,7 +473,7 @@ var currentLeague = 'dust';
 var currentStat   = 'total';
 
 /* ── 경쟁 콘텐츠 탭 전환 ── */
-var activeTabs = ['statking','hexagon','statrace']; // 활성화된 탭
+var activeTabs = ['statking','hexagon','statrace','marathon']; // 활성화된 탭
 function switchCompTab(tabName, btn) {
   document.querySelectorAll('#compTabBar .tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
@@ -459,6 +504,7 @@ function switchCompTab(tabName, btn) {
   // 탭별 초기화
   if(tabName === 'hexagon') drawHexChart();
   if(tabName === 'statrace') renderRace();
+  if(tabName === 'marathon') renderMarathon();
 }
 
 /* ── 리그 필터 전환 ── */
@@ -862,6 +908,68 @@ function renderRace() {
     else if(dv.startsWith('-')){ deltaEl.textContent='전날 대비: '+dv+' ↓'; deltaEl.style.color='#ef4444'; }
     else { deltaEl.textContent='전날 대비: 변동 없음'; deltaEl.style.color='var(--muted)'; }
   }
+}
+
+/* ═══════════════════════════════════
+   성장 마라톤
+   ═══════════════════════════════════ */
+var MARATHON_DAYS = 30;
+var MARATHON_TODAY = 18;
+// 일별 성장점수 (1~18일차)
+var MARATHON_DAILY = [120,180,95,210,160,200,140,175,190,155,220,130,185,170,205,145,195,165];
+// 연속 출석 구간: 15~18일차
+var MARATHON_STREAK_START = 15;
+
+function renderMarathon() {
+  // 일별 셀 렌더
+  var daysEl = document.getElementById('marathonDays');
+  var html = '';
+  for(var d=1; d<=MARATHON_DAYS; d++) {
+    var cls = 'mday';
+    if(d < MARATHON_TODAY) {
+      cls += ' done';
+      if(d >= MARATHON_STREAK_START) cls += ' streak';
+    } else if(d === MARATHON_TODAY) {
+      cls += ' today';
+    } else {
+      cls += ' future';
+    }
+    var pts = d <= MARATHON_TODAY && MARATHON_DAILY[d-1] ? '+'+MARATHON_DAILY[d-1] : '';
+    html += '<div class="'+cls+'" title="Day '+d+(pts?' '+pts+'점':'')+'">' + d + '</div>';
+  }
+  daysEl.innerHTML = html;
+
+  // 마라톤 랭킹
+  var MARATHON_RANK = [
+    {rank:1,name:'꾸준왕',growth:3420,days:18,streak:18},
+    {rank:2,name:'매일성장',growth:3180,days:18,streak:14},
+    {rank:3,name:'별빛탐험가',growth:2840,days:18,streak:4,me:true},
+    {rank:4,name:'성장러너',growth:2650,days:17,streak:8},
+    {rank:5,name:'데일리히어로',growth:2480,days:16,streak:6},
+    {rank:6,name:'출석의신',growth:2300,days:18,streak:12},
+    {rank:7,name:'무한도전',growth:2100,days:15,streak:5},
+    {rank:8,name:'조금씩매일',growth:1950,days:14,streak:3},
+    {rank:9,name:'마라톤러',growth:1780,days:13,streak:7},
+    {rank:10,name:'슬로우앤스테디',growth:1600,days:12,streak:2},
+  ];
+
+  var medals = ['🥇','🥈','🥉'];
+  var rhtml = '';
+  MARATHON_RANK.forEach(function(r) {
+    var rankClass = r.rank===1?'gold':r.rank===2?'silver':r.rank===3?'bronze':'';
+    var meClass = r.me ? ' marathon-me-row' : '';
+    var medalHtml = r.rank<=3 ? '<span class="rank-medal">'+medals[r.rank-1]+'</span>' : '<span class="rank-medal" style="font-size:0"></span>';
+    var numHtml = r.rank<=3 ? '' : '<span class="rank-num" style="font-size:13px;color:var(--muted)">'+r.rank+'</span>';
+
+    rhtml += '<div class="rank-item '+rankClass+meClass+'" style="animation-delay:'+(r.rank*0.04)+'s">' +
+      medalHtml + numHtml +
+      '<span class="rank-name" style="flex:1">'+r.name+'</span>' +
+      '<span style="font-size:9px;color:var(--muted);margin-right:8px">'+r.days+'일 | 🔥'+r.streak+'연속</span>' +
+      '<span class="rank-score">+'+r.growth.toLocaleString()+'</span>' +
+      '</div>';
+  });
+
+  document.getElementById('marathonRankList').innerHTML = rhtml;
 }
 
 /* ── 초기 렌더 ── */
