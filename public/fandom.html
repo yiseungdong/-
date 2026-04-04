@@ -75,7 +75,7 @@ canvas{position:absolute;inset:0;z-index:1}
 }
 .top-nav-item {
   font-size:12px; font-weight:500;
-  color:rgba(200,190,220,0.45);
+  color:rgba(232,228,240,0.85);
   text-decoration:none;
   cursor:pointer;
   transition:all .2s;
@@ -452,12 +452,12 @@ canvas{position:absolute;inset:0;z-index:1}
 }
 .board-cat-btn {
   padding:5px 0; border-radius:6px;
-  border:1px solid rgba(240,192,64,0.3);
-  background:transparent; color:rgba(240,192,64,0.8);
+  border:1px solid rgba(240,192,64,0.4);
+  background:transparent; color:rgba(240,192,64,1);
   font-size:12px; cursor:pointer;
   transition:all 0.2s; font-family:'Noto Sans KR',sans-serif;
 }
-.board-cat-btn:hover { background:rgba(240,192,64,0.1); border-color:rgba(240,192,64,0.6); color:var(--gold); }
+.board-cat-btn:hover { background:rgba(240,192,64,0.15); border-color:rgba(240,192,64,0.7); color:var(--gold); }
 .board-cat-btn.active { background:var(--gold); border-color:var(--gold); color:#1a1200; font-weight:700; }
 .board-item { padding:10px 0; border-bottom:1px solid var(--border); cursor:pointer; transition:opacity 0.2s; }
 .board-item:hover { opacity:0.75; }
@@ -465,8 +465,8 @@ canvas{position:absolute;inset:0;z-index:1}
 .board-item-meta { font-size:11px; color:var(--muted); }
 .fc-chat-tab {
   padding:5px 12px; border-radius:20px;
-  border:1px solid rgba(180,150,255,0.25);
-  background:transparent; color:var(--muted);
+  border:1px solid rgba(180,150,255,0.35);
+  background:transparent; color:rgba(232,228,240,0.85);
   font-size:12px; cursor:pointer;
   transition:all 0.2s; white-space:nowrap;
   font-family:'Noto Sans KR',sans-serif;
@@ -781,7 +781,7 @@ canvas{position:absolute;inset:0;z-index:1}
     <div id="board-tabs" style="display:flex;flex-wrap:nowrap;gap:5px;"></div>
   </div>
   <div style="background:rgba(240,192,64,0.07);border-bottom:1px solid rgba(240,192,64,0.2);padding:8px 12px;flex-shrink:0;">
-    <div style="font-size:10px;color:rgba(240,192,64,0.7);margin-bottom:7px;letter-spacing:0.6px;">카테고리 · CATEGORY</div>
+    <div style="font-size:10px;color:rgba(240,192,64,0.9);margin-bottom:7px;letter-spacing:0.6px;">카테고리 · CATEGORY</div>
     <div style="display:flex;gap:6px;">
       <button class="board-cat-btn active" data-cat="org" onclick="switchBoardCat('org')" style="flex:1;">👥 모임</button>
       <button class="board-cat-btn" data-cat="notice" onclick="switchBoardCat('notice')" style="flex:1;">📢 공지</button>
