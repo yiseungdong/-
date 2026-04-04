@@ -1569,44 +1569,64 @@ function drawFlowers(){
 }
 
 function drawLeagueBuildings(){
-  const league=DM.league||'dust';
-  const blds=LEAGUE_BUILDINGS[league];
-  if(!blds||!blds.length)return;
-  leagueBuildingRects=[];
-  const bw=BLD[0]?BLD[0].w:60;
-  const bh=BLD[0]?BLD[0].h:70;
-  const gap=18;
-  const totalW=blds.length*bw+(blds.length-1)*gap;
-  const startX=Math.round((W-totalW)/2);
-  const startY=Math.round(H*0.88);
-  blds.forEach((lb,i)=>{
-    const bx=startX+i*(bw+gap);
-    const by=startY;
-    leagueBuildingRects.push({id:lb.id,nameKo:lb.nameKo,nameEn:lb.nameEn,emoji:lb.emoji,color:lb.color,x:bx,y:by,w:bw,h:bh});
-    // 그림자
-    ctx.fillStyle='rgba(0,0,0,.25)';
-    ctx.beginPath();ctx.ellipse(bx+bw/2,by+bh+8,bw*.5,10,0,0,Math.PI*2);ctx.fill();
-    // 본체
-    const wallGrd=ctx.createLinearGradient(bx,by+bh*.3,bx,by+bh);
-    wallGrd.addColorStop(0,lb.color+'44');wallGrd.addColorStop(1,lb.color+'22');
-    ctx.fillStyle=wallGrd;
-    ctx.beginPath();ctx.roundRect(bx,by+bh*.3,bw,bh*.7,[0,0,3,3]);ctx.fill();
-    ctx.strokeStyle=lb.color+'66';ctx.lineWidth=1;ctx.stroke();
+  const leagueKey=(window.currentFandom&&window.currentFandom.league)
+    ||(window.fandomData&&window.fandomData.league)
+    ||DM.league||'star';
+  const normalizedLeague=leagueKey.toLowerCase().replace(/\s/g,'');
+  const leagueMap={
+    '퀘이사':'quasar','quasar':'quasar',
+    '노바':'nova','nova':'nova',
+    '플래닛':'planet','planet':'planet',
+    '스타':'star','star':'star',
+    '더스트':'dust','dust':'dust'
+  };
+  const key=leagueMap[normalizedLeague]||'star';
+  const buildings=LEAGUE_BUILDINGS[key]||LEAGUE_BUILDINGS['star'];
+  if(!buildings||!buildings.length)return;
+
+  const bw=70,bh=60;
+  const totalW=buildings.length*(bw+20);
+  const startX=(W-totalW)/2;
+  const startY=H-160;
+
+  leagueBuildingRects.length=0;
+
+  buildings.forEach((b,i)=>{
+    const x=startX+i*(bw+20);
+    const y=startY;
+
     // 지붕 (삼각형)
-    ctx.fillStyle=lb.color;
-    ctx.beginPath();ctx.moveTo(bx-4,by+bh*.3);ctx.lineTo(bx+bw/2,by);ctx.lineTo(bx+bw+4,by+bh*.3);ctx.closePath();ctx.fill();
-    // 지붕 하이라이트
-    ctx.fillStyle='rgba(255,255,255,.15)';
-    ctx.beginPath();ctx.moveTo(bx+bw*.2,by+bh*.3);ctx.lineTo(bx+bw/2,by+4);ctx.lineTo(bx+bw*.5,by+bh*.3);ctx.closePath();ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(x+bw/2,y-28);
+    ctx.lineTo(x,y);
+    ctx.lineTo(x+bw,y);
+    ctx.closePath();
+    ctx.fillStyle=b.color;
+    ctx.fill();
+
+    // 건물 본체 (사각형)
+    ctx.fillStyle='rgba(20,20,40,0.9)';
+    ctx.fillRect(x,y,bw,bh);
+    ctx.strokeStyle=b.color+'88';
+    ctx.lineWidth=1.5;
+    ctx.strokeRect(x,y,bw,bh);
+
     // 이모지
-    ctx.font='16px sans-serif';ctx.textAlign='center';
-    ctx.fillText(lb.emoji,bx+bw/2,by+bh*.65);
-    // 이름
-    ctx.font='bold 9px sans-serif';ctx.fillStyle='#fff';ctx.textAlign='center';
-    ctx.fillText(lb.nameKo,bx+bw/2,by+bh+20);
-    ctx.font='7px sans-serif';ctx.fillStyle='rgba(220,210,240,.5)';
-    ctx.fillText(lb.nameEn,bx+bw/2,by+bh+30);
+    ctx.font='18px serif';
+    ctx.textAlign='center';
+    ctx.fillText(b.emoji,x+bw/2,y+28);
+
+    // 이름 텍스트
+    ctx.font='600 11px "Noto Sans KR",sans-serif';
+    ctx.fillStyle='#ffffff';
+    ctx.fillText(b.nameKo,x+bw/2,y+bh+16);
+    ctx.font='9px "Orbitron",monospace';
+    ctx.fillStyle=b.color;
+    ctx.fillText(b.nameEn,x+bw/2,y+bh+28);
     ctx.textAlign='start';
+
+    // 클릭 영역 저장
+    leagueBuildingRects.push({id:b.id,nameKo:b.nameKo,nameEn:b.nameEn,emoji:b.emoji,color:b.color,x:x,y:y-28,w:bw,h:bh+28});
   });
 }
 function drawBuildings(){
