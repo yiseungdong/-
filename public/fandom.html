@@ -707,6 +707,70 @@ canvas{position:absolute;inset:0;z-index:1}
   cursor: pointer;
 }
 .league-chat-send:hover { background: rgba(192,132,252,0.35); }
+/* ===== 별빛 제보소 패널 ===== */
+.reporter-badge-bar{padding:10px 14px;background:rgba(192,132,252,0.08);border-bottom:1px solid var(--border);}
+.reporter-badge{display:flex;align-items:center;gap:8px;}
+.badge-icon{font-size:18px}.badge-name{font-size:13px;font-weight:700;color:var(--lp);}
+.badge-progress{font-size:11px;color:var(--muted);margin-left:auto;}
+.reporter-grade-hint{font-size:10px;color:var(--muted);margin-top:4px;}
+.leader-notice-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:rgba(240,192,64,0.08);border-bottom:1px solid rgba(240,192,64,0.2);font-size:12px;font-weight:700;color:var(--gold);}
+.leader-notice-btn{font-size:11px;background:rgba(240,192,64,0.15);color:var(--gold);border:1px solid rgba(240,192,64,0.3);border-radius:6px;padding:4px 10px;cursor:pointer;}
+.leader-notice-btn:hover{background:rgba(240,192,64,0.3);}
+.leader-notice-limit{font-size:11px;color:var(--muted);margin-bottom:8px;text-align:right;}
+.sr-modal{position:absolute;inset:0;background:rgba(3,3,8,0.92);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;}
+.sr-modal-box{background:var(--panel);border:1px solid rgba(240,192,64,0.3);border-radius:12px;padding:16px;width:100%;max-height:90%;overflow-y:auto;}
+.sr-modal-header{display:flex;align-items:center;justify-content:space-between;font-size:14px;font-weight:700;color:var(--gold);margin-bottom:8px;}
+.sr-modal-desc{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:12px;padding:8px;background:rgba(240,192,64,0.05);border-radius:6px;border-left:2px solid var(--gold);}
+.sr-card{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;}
+.sr-card.leader-card{border-color:rgba(240,192,64,0.4);background:rgba(240,192,64,0.04);}
+.sr-card-header{display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;}
+.sr-card-cat{font-size:10px;background:rgba(192,132,252,0.15);color:var(--lp);padding:2px 6px;border-radius:10px;}
+.sr-card-status{font-size:10px;padding:2px 6px;border-radius:10px;margin-left:auto;}
+.status-verifying{background:rgba(59,130,246,0.2);color:#93c5fd;}
+.status-confirmed{background:rgba(34,197,94,0.2);color:#86efac;}
+.status-bubbled{background:rgba(240,192,64,0.2);color:var(--gold);}
+.status-unconfirmed{background:rgba(100,100,100,0.2);color:var(--muted);}
+.status-leader{background:rgba(240,192,64,0.25);color:var(--gold);font-weight:700;}
+.sr-card-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.sr-card-body{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:6px;}
+.sr-card-meta{display:flex;gap:10px;font-size:10px;color:var(--muted);align-items:center;flex-wrap:wrap;}
+.sr-card-url{font-size:10px;color:#818cf8;margin-bottom:4px;word-break:break-all;}
+.sr-urgent-badge{font-size:10px;background:rgba(239,68,68,0.2);color:#fca5a5;padding:2px 6px;border-radius:10px;}
+.bubble-up-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;background:rgba(240,192,64,0.15);color:var(--gold);border:1px solid rgba(240,192,64,0.3);padding:3px 8px;border-radius:10px;margin-top:4px;}
+.verify-card{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;}
+.verify-timer{font-size:10px;color:#fca5a5;margin-bottom:6px;}
+.verify-vote-row{display:flex;gap:6px;margin-top:8px;}
+.vote-btn{flex:1;padding:6px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:600;}
+.vote-true{background:rgba(34,197,94,0.2);color:#86efac;}
+.vote-false{background:rgba(239,68,68,0.2);color:#fca5a5;}
+.vote-unsure{background:rgba(234,179,8,0.2);color:#fde047;}
+.vote-btn:hover{filter:brightness(1.3);}
+.verify-count-bar{display:flex;gap:6px;font-size:11px;color:var(--muted);margin-top:6px;}
+.verify-info-bar{font-size:11px;color:var(--muted);background:rgba(255,255,255,0.03);border-radius:6px;padding:6px 10px;margin-bottom:10px;}
+.submit-form{padding:4px 0;}
+.form-group{margin-bottom:10px;}
+.form-group label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px;}
+.sr-input,.sr-select,.sr-textarea{background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:7px 10px;width:100%;box-sizing:border-box;}
+.sr-textarea{resize:vertical;font-family:inherit;}
+.sr-filter-row{display:flex;gap:6px;margin-bottom:10px;}
+.sr-filter-row .sr-select{flex:1;}
+.submit-btn{width:100%;padding:10px;background:linear-gradient(135deg,var(--lp),#818cf8);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-top:4px;}
+.submit-btn:hover{filter:brightness(1.1);}
+.submit-reward-hint{font-size:10px;color:var(--muted);text-align:center;margin-top:6px;}
+.submit-urgent-row{margin-bottom:8px;}
+.urgent-label{font-size:12px;color:#fca5a5;cursor:pointer;}
+.rank-grade-guide{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:12px;}
+.grade-guide-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;}
+.grade-row{display:flex;align-items:center;gap:8px;font-size:11px;margin-bottom:5px;}
+.grade-icon{width:16px;text-align:center;}
+.grade-name{color:var(--text);font-weight:600;min-width:70px;}
+.grade-cond{color:var(--muted);}
+.rank-list-title{font-size:12px;font-weight:700;color:var(--gold);margin-bottom:8px;}
+.rank-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;font-size:12px;}
+.rank-num{font-weight:700;color:var(--gold);min-width:20px;}
+.rank-grade-icon{font-size:14px;}
+.rank-nick{color:var(--text);flex:1;}
+.rank-score{color:var(--lp);font-size:11px;}
 </style>
 </head>
 <body>
@@ -829,6 +893,86 @@ canvas{position:absolute;inset:0;z-index:1}
     </div>
   </div>
   <div id="vote-list" style="flex:1;overflow-y:auto;padding:4px 12px;"></div>
+</div>
+<!-- 별빛 제보소 패널 -->
+<div id="panel-starreport" class="side-panel" style="display:none;position:fixed;top:0;right:0;width:320px;height:100vh;background:var(--panel);border-left:1px solid var(--border);z-index:500;flex-direction:column;overflow:hidden;">
+  <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+    <span style="font-size:15px;font-weight:700;color:var(--text);">📡 별빛 제보소 · STARLIGHT TRIBUNE</span>
+    <button onclick="closeSrPanel()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;">✕</button>
+  </div>
+  <div class="reporter-badge-bar">
+    <div class="reporter-badge">
+      <span class="badge-icon">🖊️</span>
+      <span class="badge-name" id="myBadgeName">새내기 기자</span>
+      <span class="badge-progress" id="myBadgeProgress">제보 0/5건</span>
+    </div>
+    <div class="reporter-grade-hint" id="myBadgeHint">다음 등급: 수습기자 (승인 제보 5건)</div>
+  </div>
+  <div id="leaderNoticeBar" style="display:none" class="leader-notice-bar">
+    <span>👑 전체 리더 공지</span>
+    <button class="leader-notice-btn" onclick="openLeaderNotice()">+ 공지 제보 작성</button>
+  </div>
+  <div style="background:rgba(0,0,0,0.3);border-bottom:1px solid var(--border);padding:10px 12px;flex-shrink:0;">
+    <div style="font-size:10px;color:var(--muted);margin-bottom:7px;letter-spacing:0.6px;">조직 · ORGANIZATION</div>
+    <div id="srOrgTabs" style="display:flex;flex-wrap:nowrap;gap:5px;"></div>
+  </div>
+  <div style="background:rgba(240,192,64,0.07);border-bottom:1px solid rgba(240,192,64,0.2);padding:8px 12px;flex-shrink:0;">
+    <div style="font-size:10px;color:rgba(240,192,64,0.9);margin-bottom:7px;letter-spacing:0.6px;">카테고리 · CATEGORY</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;">
+      <button class="vote-cat-btn active" data-cat="list" onclick="switchSrCat('list')" style="flex:1 1 calc(50% - 3px);">🔍 제보목록</button>
+      <button class="vote-cat-btn" data-cat="verify" onclick="switchSrCat('verify')" style="flex:1 1 calc(50% - 3px);">✅ 검증투표</button>
+      <button class="vote-cat-btn" data-cat="submit" onclick="switchSrCat('submit')" style="flex:1 1 calc(50% - 3px);">✍️ 제보하기</button>
+      <button class="vote-cat-btn" data-cat="rank" onclick="switchSrCat('rank')" style="flex:1 1 calc(50% - 3px);">🏆 기자랭킹</button>
+    </div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:8px 12px;" id="srContent">
+    <div id="sr-list">
+      <div class="sr-filter-row">
+        <select id="srCategoryFilter" onchange="renderSrList()" class="sr-select"><option value="all">전체 카테고리</option><option value="schedule">📅 일정/스케줄</option><option value="goods">💿 음반·굿즈</option><option value="media">🎬 영상·사진</option><option value="rumor">⚠️ 루머 팩트체크</option><option value="global">🌏 해외 활동</option><option value="statement">💬 멤버 공식 발언</option></select>
+        <select id="srStatusFilter" onchange="renderSrList()" class="sr-select"><option value="all">전체 상태</option><option value="verifying">🔬 검증중</option><option value="confirmed">✅ 확정</option><option value="bubbled">🔼 상위전달됨</option><option value="unconfirmed">❓ 미확인</option><option value="leader">👑 리더공지</option></select>
+      </div>
+      <div id="srListItems"></div>
+    </div>
+    <div id="sr-verify" style="display:none">
+      <div class="verify-info-bar"><span>⏱️ 72시간 내 10명 이상 투표 시 결과 확정 · 검증 참여 시 INT+1</span></div>
+      <div id="srVerifyItems"></div>
+    </div>
+    <div id="sr-submit" style="display:none">
+      <div class="submit-form">
+        <div class="form-group"><label>카테고리</label><select id="submitCategory" class="sr-select" style="width:100%"><option value="schedule">📅 일정/스케줄</option><option value="goods">💿 음반·굿즈</option><option value="media">🎬 영상·사진</option><option value="rumor">⚠️ 루머 팩트체크</option><option value="global">🌏 해외 활동</option><option value="statement">💬 멤버 공식 발언</option></select></div>
+        <div class="form-group"><label>제목</label><input type="text" id="submitTitle" class="sr-input" placeholder="제보 제목을 입력하세요" maxlength="60"></div>
+        <div class="form-group"><label>내용</label><textarea id="submitBody" class="sr-textarea" placeholder="제보 내용을 상세히 입력하세요" rows="4" maxlength="500"></textarea></div>
+        <div class="form-group"><label>증거 링크 (선택)</label><input type="text" id="submitUrl" class="sr-input" placeholder="https://... (트위터, 유튜브 등)"></div>
+        <div id="urgentRow" style="display:none" class="submit-urgent-row"><label class="urgent-label"><input type="checkbox" id="submitUrgent"> 🚨 긴급 제보 (수석기자 전용)</label></div>
+        <button class="submit-btn" onclick="submitReport()">📡 제보 전송</button>
+        <div class="submit-reward-hint">제보 승인 시 INT+3 · 버블업 달성 시 INT+5 추가</div>
+      </div>
+    </div>
+    <div id="sr-rank" style="display:none">
+      <div class="rank-grade-guide">
+        <div class="grade-guide-title">📋 기자 등급 기준</div>
+        <div class="grade-row"><span class="grade-icon">🌱</span><span class="grade-name">새내기 기자</span><span class="grade-cond">가입 즉시</span></div>
+        <div class="grade-row"><span class="grade-icon">✏️</span><span class="grade-name">수습 기자</span><span class="grade-cond">승인 제보 5건</span></div>
+        <div class="grade-row"><span class="grade-icon">📝</span><span class="grade-name">정기자</span><span class="grade-cond">승인 20건 + 검증 참여 50회</span></div>
+        <div class="grade-row"><span class="grade-icon">🗞️</span><span class="grade-name">특파원</span><span class="grade-cond">승인 50건 + 높은 통과율</span></div>
+        <div class="grade-row"><span class="grade-icon">⭐</span><span class="grade-name">수석 기자</span><span class="grade-cond">제보수+통과율+추천수 최상위</span></div>
+      </div>
+      <div class="rank-list-title">🏆 이번 달 기자 랭킹</div>
+      <div id="srRankItems"></div>
+    </div>
+  </div>
+  <div id="leaderNoticeModal" class="sr-modal" style="display:none">
+    <div class="sr-modal-box">
+      <div class="sr-modal-header"><span>👑 전체 리더 공지 제보</span><button onclick="closeLeaderNotice()" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;">✕</button></div>
+      <div class="sr-modal-desc">리더가 직접 확인한 정보를 팬덤 전체에 즉시 공개합니다. 검증 절차 없이 최상단에 표시되며, 공지 이력은 투명하게 기록됩니다. (월 5회 제한)</div>
+      <div class="form-group"><label>카테고리</label><select id="leaderCategory" class="sr-select" style="width:100%"><option value="schedule">📅 일정/스케줄</option><option value="goods">💿 음반·굿즈</option><option value="media">🎬 영상·사진</option><option value="rumor">⚠️ 루머 팩트체크</option><option value="global">🌏 해외 활동</option><option value="statement">💬 멤버 공식 발언</option></select></div>
+      <div class="form-group"><label>제목</label><input type="text" id="leaderTitle" class="sr-input" placeholder="공지 제목" maxlength="60"></div>
+      <div class="form-group"><label>내용</label><textarea id="leaderBody" class="sr-textarea" rows="4" placeholder="팬덤 전체에 알릴 내용을 입력하세요" maxlength="500"></textarea></div>
+      <div class="form-group"><label>출처/근거 (선택)</label><input type="text" id="leaderUrl" class="sr-input" placeholder="https://..."></div>
+      <div class="leader-notice-limit" id="leaderNoticeLimit">이번 달 공지 사용 횟수: 0 / 5회</div>
+      <button class="submit-btn" onclick="submitLeaderNotice()">👑 전체 공지 발행</button>
+    </div>
+  </div>
 </div>
 <div class="vc" id="vc"><div class="vw" id="vw"><canvas id="cv"></canvas><div id="bL"></div><div class="avatar" id="myAv" style="left:960px;top:760px"><div id="fandomMyAvBody" style="pointer-events:auto;cursor:pointer" onclick="openFcChat('all')"></div></div><div id="nL"></div><div id="miniEvts" style="position:absolute;z-index:25;pointer-events:none"></div></div></div>
 <div class="bot"><div class="bot-e"><div class="bot-eb"><div class="bot-ef" id="bE" style="width:72%"></div></div><div class="bot-el">에너지 <span id="bP">72%</span></div></div><div class="bot-d" id="bD">D-14</div></div>
@@ -2690,11 +2834,12 @@ function openMo(k){
   if(k==='org_chat'){openFcChat('org',0);return;}
   if(k==='board'){openBoardPanel();return;}
   if(k==='vote'){openVotePanel();return;}
+  if(k==='starreport'){openStarReport();return;}
   if(!MO[k])return;document.getElementById('moC').innerHTML=MO[k]();document.getElementById('mo').classList.add('show');setTimeout(()=>{document.querySelectorAll('.pf').forEach(el=>{const w=el.style.width;el.style.width='0%';setTimeout(()=>el.style.width=w,50)})},100)}
 function closeMo(e){if(e&&e.target!==e.currentTarget)return;document.getElementById('mo').classList.remove('show')}
 function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3000)}
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){closeMo();closeChatPanel();closeBoardPanel();closeVotePanel();}
+  if(e.key==='Escape'){closeMo();closeChatPanel();closeBoardPanel();closeVotePanel();closeSrPanel();}
   if(e.key==='Enter'&&document.activeElement===document.getElementById('chatInput')){sendChatMsg();}
 });
 
@@ -2944,6 +3089,7 @@ function openVotePanel(){
   if(fcPanel)fcPanel.classList.remove('open');
   const boardPanel=document.getElementById('board-panel');
   if(boardPanel)boardPanel.style.display='none';
+  closeSrPanel();
   const panel=document.getElementById('vote-panel');
   if(!panel)return;
   panel.style.display='flex';
@@ -3068,6 +3214,224 @@ function renderVoteList(){
   }
 }
 
+// ===== 별빛 제보소 =====
+const REPORTER_GRADES=[
+  {name:'새내기 기자',icon:'🌱',minApproved:0,nextCond:'승인 제보 5건'},
+  {name:'수습 기자',icon:'✏️',minApproved:5,nextCond:'승인 20건+검증50회'},
+  {name:'정기자',icon:'📝',minApproved:20,nextCond:'승인 50건+높은통과율'},
+  {name:'특파원',icon:'🗞️',minApproved:50,nextCond:'최상위 등급 달성'},
+  {name:'수석 기자',icon:'⭐',minApproved:100,nextCond:''}
+];
+const SR_CAT_LABELS={schedule:'📅 일정',goods:'💿 굿즈',media:'🎬 영상',rumor:'⚠️ 루머',global:'🌏 해외',statement:'💬 발언'};
+let MOCK_REPORTS=[
+  {id:0,type:'leader',category:'schedule',urgent:false,title:'[리더 공지] 4월 팬미팅 공식 확정',body:'4월 20일 서울 KSPO돔에서 팬미팅이 확정되었습니다. 공식 팬클럽 회원 우선 예매 진행 예정.',url:'',author:'팬클럽대표',authorGrade:4,status:'leader',createdAt:'3시간 전',trueVotes:0,falseVotes:0,unsureVotes:0,bubbleLevel:0,verifyDeadline:null},
+  {id:1,type:'report',category:'schedule',urgent:false,title:'다음 주 음방 출연 일정 제보',body:'KBS 뮤직뱅크 3월 15일 출연 확정. 리허설 오전 7시 시작.',url:'https://twitter.com/kbs_schedule/1234',author:'스케줄마스터',authorGrade:2,status:'confirmed',createdAt:'5시간 전',trueVotes:24,falseVotes:1,unsureVotes:2,bubbleLevel:2,verifyDeadline:null},
+  {id:2,type:'report',category:'goods',urgent:false,title:'신규 포토카드 세트 출시 정보',body:'4월 컴백 앨범에 신규 포토카드 세트(8종) 포함 예정.',url:'',author:'굿즈헌터',authorGrade:1,status:'verifying',createdAt:'12시간 전',trueVotes:8,falseVotes:3,unsureVotes:2,bubbleLevel:0,verifyDeadline:'47시간 후'},
+  {id:3,type:'report',category:'global',urgent:false,title:'미국 라디오 인터뷰 일정 입수',body:'LA 현지 팬 제보. 현지시간 3월 20일 오전 10시 iHeart Radio 인터뷰 예정.',url:'',author:'해외특파원',authorGrade:3,status:'bubbled',createdAt:'1일 전',trueVotes:18,falseVotes:2,unsureVotes:3,bubbleLevel:1,verifyDeadline:null},
+  {id:4,type:'report',category:'rumor',urgent:false,title:'컴백 날짜 루머 팩트체크',body:'온라인에 퍼지는 4월 컴백설에 대한 팩트체크입니다. 현재 공식 미확인 상태.',url:'',author:'팩트체커',authorGrade:2,status:'unconfirmed',createdAt:'2일 전',trueVotes:3,falseVotes:8,unsureVotes:5,bubbleLevel:0,verifyDeadline:null}
+];
+function getMyReporterData(){
+  const saved=localStorage.getItem('asteria_reporter');
+  if(saved)return JSON.parse(saved);
+  return{approvedCount:0,verifyCount:0,leaderNoticeUsed:0,leaderNoticeMonth:''};
+}
+function saveMyReporterData(data){localStorage.setItem('asteria_reporter',JSON.stringify(data));}
+function getMyGrade(approvedCount){
+  let grade=0;
+  for(let i=0;i<REPORTER_GRADES.length;i++){if(approvedCount>=REPORTER_GRADES[i].minApproved)grade=i;}
+  return grade;
+}
+function closeSrPanel(){
+  const panel=document.getElementById('panel-starreport');
+  if(panel)panel.style.display='none';
+}
+function openStarReport(){
+  // 다른 패널 닫기
+  const chatPanel=document.getElementById('chatPanel');if(chatPanel)chatPanel.classList.remove('open');
+  const boardPanel=document.getElementById('board-panel');if(boardPanel)boardPanel.style.display='none';
+  const votePanel=document.getElementById('vote-panel');if(votePanel)votePanel.style.display='none';
+
+  const panel=document.getElementById('panel-starreport');
+  if(!panel)return;
+  panel.style.display='flex';
+  updateReporterBadge();
+  const isLeader=localStorage.getItem('asteria_is_leader')==='true';
+  const leaderBar=document.getElementById('leaderNoticeBar');
+  if(leaderBar)leaderBar.style.display=isLeader?'flex':'none';
+  renderSrOrgTabs();
+  switchSrCat('list');
+}
+function updateReporterBadge(){
+  const data=getMyReporterData();
+  const gradeIdx=getMyGrade(data.approvedCount);
+  const grade=REPORTER_GRADES[gradeIdx];
+  const next=REPORTER_GRADES[gradeIdx+1];
+  const badgeName=document.getElementById('myBadgeName');
+  const badgeProgress=document.getElementById('myBadgeProgress');
+  const badgeHint=document.getElementById('myBadgeHint');
+  if(badgeName)badgeName.textContent=grade.icon+' '+grade.name;
+  if(badgeProgress){
+    if(next)badgeProgress.textContent='제보 '+data.approvedCount+'/'+next.minApproved+'건';
+    else badgeProgress.textContent='최고 등급 달성! ⭐';
+  }
+  if(badgeHint){
+    if(next)badgeHint.textContent='다음 등급: '+next.name+' ('+next.nextCond+')';
+    else badgeHint.textContent='수석 기자 — 아스테리아 최고의 취재원입니다';
+  }
+}
+let srCurrentOrgTab='all';
+function renderSrOrgTabs(){
+  const league=getMyLeague();
+  const tabs=LEAGUE_CHAT_TABS[league]||LEAGUE_CHAT_TABS['star'];
+  const container=document.getElementById('srOrgTabs');
+  if(!container)return;
+  const isMultiRow=tabs.length>=6;
+  container.style.flexWrap=isMultiRow?'wrap':'nowrap';
+  container.innerHTML=tabs.map(tab=>`
+    <button class="fc-chat-tab ${tab.id===srCurrentOrgTab?'active':''}"
+      onclick="switchSrOrg('${tab.id}')"
+      style="${isMultiRow?'flex:0 0 calc(33% - 4px);':''}"
+    >${currentLang==='ko'?tab.ko:tab.en}</button>
+  `).join('');
+}
+function switchSrOrg(tabId){srCurrentOrgTab=tabId;renderSrOrgTabs();renderCurrentSrCat();}
+let srCurrentCat='list';
+function switchSrCat(cat){
+  srCurrentCat=cat;
+  // 카테고리 버튼 활성화 (panel-starreport 안의 vote-cat-btn)
+  document.querySelectorAll('#panel-starreport .vote-cat-btn').forEach(btn=>{
+    btn.classList.toggle('active',btn.dataset.cat===cat);
+  });
+  // 탭 콘텐츠 전환
+  ['sr-list','sr-verify','sr-submit','sr-rank'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.style.display=(id==='sr-'+cat)?'block':'none';
+  });
+  renderCurrentSrCat();
+}
+function renderCurrentSrCat(){
+  if(srCurrentCat==='list')renderSrList();
+  if(srCurrentCat==='verify')renderSrVerify();
+  if(srCurrentCat==='rank')renderSrRank();
+}
+function renderSrList(){
+  const catFilter=document.getElementById('srCategoryFilter')?.value||'all';
+  const statusFilter=document.getElementById('srStatusFilter')?.value||'all';
+  let reports=[...MOCK_REPORTS];
+  reports.sort((a,b)=>(b.type==='leader')-(a.type==='leader'));
+  if(catFilter!=='all')reports=reports.filter(r=>r.category===catFilter);
+  if(statusFilter!=='all')reports=reports.filter(r=>r.status===statusFilter);
+  const container=document.getElementById('srListItems');
+  if(!container)return;
+  if(!reports.length){container.innerHTML='<div style="color:var(--muted);font-size:12px;text-align:center;padding:20px">해당 조건의 제보가 없습니다</div>';return;}
+  container.innerHTML=reports.map(r=>renderSrCard(r)).join('');
+}
+function renderSrCard(r){
+  const isLeader=r.type==='leader';
+  const statusLabels={verifying:'<span class="sr-card-status status-verifying">🔬 검증중</span>',confirmed:'<span class="sr-card-status status-confirmed">✅ 확정</span>',bubbled:'<span class="sr-card-status status-bubbled">🔼 상위전달</span>',unconfirmed:'<span class="sr-card-status status-unconfirmed">❓ 미확인</span>',leader:'<span class="sr-card-status status-leader">👑 리더공지</span>'};
+  const gradeIcons=['🌱','✏️','📝','🗞️','⭐'];
+  let bubbleBadge=r.bubbleLevel>0?'<div class="bubble-up-badge">🔼 '+r.bubbleLevel+'단계 상위 전달됨</div>':'';
+  let urlHtml=r.url?'<div class="sr-card-url">🔗 <a href="'+r.url+'" target="_blank" style="color:#818cf8">'+r.url+'</a></div>':'';
+  let urgentBadge=r.urgent?'<span class="sr-urgent-badge">🚨 긴급</span>':'';
+  return '<div class="sr-card'+(isLeader?' leader-card':'')+'">'+
+    '<div class="sr-card-header">'+'<span class="sr-card-cat">'+(SR_CAT_LABELS[r.category]||r.category)+'</span>'+urgentBadge+(statusLabels[r.status]||'')+'</div>'+
+    '<div class="sr-card-title">'+r.title+'</div>'+
+    '<div class="sr-card-body">'+r.body+'</div>'+urlHtml+bubbleBadge+
+    '<div class="sr-card-meta">'+'<span>'+(gradeIcons[r.authorGrade]||'🌱')+' '+r.author+'</span>'+'<span>'+r.createdAt+'</span>'+(r.status==='verifying'?'<span>👍'+r.trueVotes+' 👎'+r.falseVotes+'</span>':'')+'</div></div>';
+}
+function renderSrVerify(){
+  const verifying=MOCK_REPORTS.filter(r=>r.status==='verifying');
+  const container=document.getElementById('srVerifyItems');
+  if(!container)return;
+  if(!verifying.length){container.innerHTML='<div style="color:var(--muted);font-size:12px;text-align:center;padding:20px">현재 검증 중인 제보가 없습니다</div>';return;}
+  container.innerHTML=verifying.map(r=>{
+    const total=r.trueVotes+r.falseVotes+r.unsureVotes;
+    const truePct=total?Math.round(r.trueVotes/total*100):0;
+    const falsePct=total?Math.round(r.falseVotes/total*100):0;
+    const needMore=total<10?(10-total)+'명 더 필요':'결과 집계 중';
+    return '<div class="verify-card">'+
+      '<div class="verify-timer">⏱️ 마감: '+(r.verifyDeadline||'집계중')+' · '+needMore+'</div>'+
+      '<div class="sr-card-title">'+r.title+'</div><div class="sr-card-body">'+r.body+'</div>'+
+      '<div class="verify-count-bar"><span>✅ 진실 '+truePct+'% ('+r.trueVotes+'명)</span><span>❌ 허위 '+falsePct+'% ('+r.falseVotes+'명)</span><span>⚠️ '+r.unsureVotes+'명</span></div>'+
+      '<div class="verify-vote-row">'+
+        '<button class="vote-btn vote-true" onclick="castVerifyVote('+r.id+',\'true\')">✅ 진실</button>'+
+        '<button class="vote-btn vote-false" onclick="castVerifyVote('+r.id+',\'false\')">❌ 허위</button>'+
+        '<button class="vote-btn vote-unsure" onclick="castVerifyVote('+r.id+',\'unsure\')">⚠️ 확인중</button>'+
+      '</div></div>';
+  }).join('');
+}
+function castVerifyVote(reportId,voteType){
+  const report=MOCK_REPORTS.find(r=>r.id===reportId);
+  if(!report)return;
+  if(voteType==='true')report.trueVotes++;
+  if(voteType==='false')report.falseVotes++;
+  if(voteType==='unsure')report.unsureVotes++;
+  const data=getMyReporterData();data.verifyCount++;saveMyReporterData(data);
+  showToast('검증 참여 완료! INT+1 획득 ✅');
+  checkBubbleUp(report);
+  renderSrVerify();
+}
+function checkBubbleUp(report){
+  const total=report.trueVotes+report.falseVotes+report.unsureVotes;
+  if(total<10)return;
+  const truePct=report.trueVotes/total;
+  if(truePct>=0.6&&report.bubbleLevel===0){report.bubbleLevel=1;report.status='bubbled';showToast('🔼 버블업! 상위 소모임으로 제보가 전달됐습니다');}
+  else if(truePct>=0.8&&report.bubbleLevel===1){report.bubbleLevel=2;report.status='confirmed';showToast('🌟 공식 확정! 리그 전체에 제보가 공유됩니다');}
+  else if(truePct<0.3&&total>=10){report.status='unconfirmed';}
+}
+function renderSrRank(){
+  const mockRankers=[
+    {rank:1,grade:4,nick:'수석기자별빛',score:'제보 87건 · 통과율 94%'},
+    {rank:2,grade:3,nick:'특파원하늘',score:'제보 52건 · 통과율 89%'},
+    {rank:3,grade:3,nick:'정기자달빛',score:'제보 31건 · 통과율 82%'},
+    {rank:4,grade:2,nick:'수습이슬',score:'제보 12건 · 통과율 75%'},
+    {rank:5,grade:1,nick:'새내기팬123',score:'제보 3건 · 통과율 67%'}
+  ];
+  const gradeIcons=['🌱','✏️','📝','🗞️','⭐'];
+  const medals=['🥇','🥈','🥉'];
+  const container=document.getElementById('srRankItems');
+  if(!container)return;
+  container.innerHTML=mockRankers.map(r=>
+    '<div class="rank-item"><span class="rank-num">'+(medals[r.rank-1]||r.rank)+'</span><span class="rank-grade-icon">'+(gradeIcons[r.grade]||'🌱')+'</span><span class="rank-nick">'+r.nick+'</span><span class="rank-score">'+r.score+'</span></div>'
+  ).join('');
+}
+function submitReport(){
+  const title=document.getElementById('submitTitle')?.value.trim();
+  const body=document.getElementById('submitBody')?.value.trim();
+  const category=document.getElementById('submitCategory')?.value;
+  const url=document.getElementById('submitUrl')?.value.trim();
+  const urgent=document.getElementById('submitUrgent')?.checked||false;
+  if(!title||!body){showToast('제목과 내용을 입력해주세요');return;}
+  const data=getMyReporterData();const gradeIdx=getMyGrade(data.approvedCount);
+  if(urgent&&gradeIdx<4){showToast('긴급 제보는 수석기자만 사용 가능합니다');return;}
+  MOCK_REPORTS.unshift({id:MOCK_REPORTS.length+1,type:'report',category,urgent,title,body,url,author:localStorage.getItem('asteria_nick')||'익명팬',authorGrade:gradeIdx,status:'verifying',createdAt:'방금 전',trueVotes:0,falseVotes:0,unsureVotes:0,bubbleLevel:0,verifyDeadline:'72시간 후'});
+  ['submitTitle','submitBody','submitUrl'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  showToast('📡 제보가 접수됐습니다! 검증 투표가 시작됩니다');
+  switchSrCat('list');
+}
+function openLeaderNotice(){
+  const data=getMyReporterData();const nowMonth=new Date().toISOString().slice(0,7);
+  if(data.leaderNoticeMonth!==nowMonth){data.leaderNoticeUsed=0;data.leaderNoticeMonth=nowMonth;saveMyReporterData(data);}
+  const limitEl=document.getElementById('leaderNoticeLimit');
+  if(limitEl)limitEl.textContent='이번 달 공지 사용 횟수: '+data.leaderNoticeUsed+' / 5회';
+  const modal=document.getElementById('leaderNoticeModal');if(modal)modal.style.display='flex';
+}
+function closeLeaderNotice(){const modal=document.getElementById('leaderNoticeModal');if(modal)modal.style.display='none';}
+function submitLeaderNotice(){
+  const title=document.getElementById('leaderTitle')?.value.trim();
+  const body=document.getElementById('leaderBody')?.value.trim();
+  const category=document.getElementById('leaderCategory')?.value;
+  const url=document.getElementById('leaderUrl')?.value.trim();
+  if(!title||!body){showToast('제목과 내용을 입력해주세요');return;}
+  const data=getMyReporterData();const nowMonth=new Date().toISOString().slice(0,7);
+  if(data.leaderNoticeMonth!==nowMonth){data.leaderNoticeUsed=0;data.leaderNoticeMonth=nowMonth;}
+  if(data.leaderNoticeUsed>=5){showToast('이번 달 공지 한도(5회)를 초과했습니다');return;}
+  data.leaderNoticeUsed++;saveMyReporterData(data);
+  MOCK_REPORTS.unshift({id:MOCK_REPORTS.length+1,type:'leader',category,urgent:false,title:'[리더 공지] '+title,body,url,author:localStorage.getItem('asteria_nick')||'전체리더',authorGrade:4,status:'leader',createdAt:'방금 전',trueVotes:0,falseVotes:0,unsureVotes:0,bubbleLevel:0,verifyDeadline:null});
+  closeLeaderNotice();['leaderTitle','leaderBody','leaderUrl'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  showToast('👑 전체 공지가 발행됐습니다!');switchSrCat('list');
+}
+
 function openBoardPanel(){
   const panel=document.getElementById('board-panel');
   if(!panel)return;
@@ -3075,6 +3439,7 @@ function openBoardPanel(){
   if(fcPanel)fcPanel.classList.remove('open');
   const votePanel=document.getElementById('vote-panel');
   if(votePanel)votePanel.style.display='none';
+  closeSrPanel();
   panel.style.display='flex';
   boardCat='org';boardTabId='all';
   document.querySelectorAll('.board-cat-btn').forEach(b=>b.classList.remove('active'));
@@ -3134,6 +3499,7 @@ function openFcChat(type, orgPath) {
   if(boardPanel)boardPanel.style.display='none';
   const votePanel=document.getElementById('vote-panel');
   if(votePanel)votePanel.style.display='none';
+  closeSrPanel();
 
   const panel = document.getElementById('chatPanel');
   const title = document.getElementById('chatPanelTitle');
