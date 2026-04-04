@@ -1540,6 +1540,26 @@ CREATE TABLE moim_groups (
 
 ---
 
-## 📌 fandom.html 현재 보류 버그
-1. 별빛 제보소 — Canvas에 건물 이미지 없이 텍스트만 표시 (undefined 버그)
-2. 모임채팅 탭 — 현재 더미데이터, 실제 소모임 연동 미완료
+## 📌 현재 보류 버그
+1. 모임채팅 탭 — 현재 더미데이터, 실제 소모임 연동 미완료
+2. 별빛 제보소 — Canvas 건물 이미지 없음 (undefined 버그) — 보류
+3. avatar.html 헤어/의상/피부색 팔레트 SVG 색상 반영 안 됨 — 보류
+4. room3d.html 아바타 이동범위 벽타기 — 보류
+
+### 📋 소모임 계층 배정 시스템 (미구현 — 별도 기획 완료)
+→ 위 "소모임 계층 배정 시스템" 섹션 참고
+
+### 완료된 사항 (2026.04.04 세션)
+- competition.html 제목 칼 이모지 제거
+- 전 페이지(13개) 네비게이션에 경쟁(⚔️) 메뉴 추가
+- fandom.html 좌상단 패널에 화력전선 미니 위젯 추가 (D-day, 화력 게이지, MVP 3부문)
+- fandom.html 별빛 제보소 건물 + 팝업 구현 (기자 등급, 최신 제보, 제보하기 폼)
+- fandom.html icons 객체에 starreport 아이콘 추가 + undefined 버그 수정
+- fandom.html calcBLD ...b 스프레드로 전체 필드 복사 (undefined 방지)
+- fandom.html 건물 배치 재정렬: 조직도타워 삭제, 명예의전당→좌상단, 이벤트광장→좌중단, 모임채팅→좌하단, 게시판→우하단
+- fandom.html 모임채팅 건물 + 입구(Gate) 이벤트광장 선상(ry:.69) 정렬
+- fandom.html 리그별 소모임 탭 시스템 구현 (MY_ORG + renderBreadcrumb)
+- fandom.html openFcChat 전체탭 항상 표시되도록 수정
+- 리그별 소모임 탭 이름: 더스트(게더링/포인트), 스타(테리토리/베이스/유닛), 노바(프로빈스/디스트릭트/스퀘어/라운지), 퀘이사(엠파이어/도미니언/섹터/클러스터/오빗)
+- 소모임 DB 스키마 기획: users 테이블 moim_depth1~5 + moim_groups 테이블
+- 마스터플랜 업데이트: 리그별 소모임 인원 구성표, DB스키마, 모임채팅 탭구조, 구현 우선순위
