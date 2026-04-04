@@ -150,6 +150,8 @@ html,body {
 /* 3D 캔버스 */
 #threeCanvas {
   width:100%; height:100%; display:block; cursor:grab;
+  /* 미세한 후처리: 채도+대비 강화로 PBR 분위기 향상 */
+  filter: contrast(1.05) saturate(1.12);
 }
 #threeCanvas:active { cursor:grabbing; }
 
@@ -555,6 +557,31 @@ html,body {
 .acp-btns button { flex:1; padding:8px; border-radius:10px; font-size:12px; font-weight:700; cursor:pointer; border:none; font-family:'Noto Sans KR',sans-serif; }
 .acp-cancel { background:transparent; border:1px solid rgba(200,175,80,0.2) !important; color:#e8ecf4; }
 .acp-save { background:linear-gradient(90deg,#f0c040,#e6a800); color:#020a18; }
+
+/* ── 리그별 아바타 비주얼 ── */
+.league-badge {
+  position:absolute;
+  bottom:-8px; right:-8px;
+  width:22px; height:22px;
+  border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:12px;
+  line-height:1;
+  z-index:10;
+  pointer-events:none;
+  transition:box-shadow .3s;
+}
+@keyframes league-badge-pulse {
+  0%,100% { transform:scale(1); opacity:0.9; }
+  50%      { transform:scale(1.15); opacity:1; }
+}
+.league-badge.animated {
+  animation:league-badge-pulse 2.5s ease-in-out infinite;
+}
+.league-glow-wrap {
+  position:relative;
+  display:inline-block;
+}
 </style>
 </head>
 <body style="padding-top:44px">
@@ -888,7 +915,7 @@ function initThree() {
 
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x030310);
-  scene.fog = new THREE.FogExp2(0x030310, 0.008);
+  scene.fog = new THREE.FogExp2(0x030310, 0.006);
 
   const w = container.clientWidth || 800;
   const h = container.clientHeight || 500;
@@ -902,32 +929,51 @@ function initThree() {
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.2;
+  // sRGB 출력 인코딩 — PBR 색상 정확도 향상 (r128 호환)
+  renderer.outputEncoding = THREE.sRGBEncoding;
 
   // === 따뜻한 실내 조명 (방 안이 환하게) ===
   ambientLight = new THREE.AmbientLight(0x584030, 0.9);
   scene.add(ambientLight);
 
-  // 천장 중앙 메인 조명 (따뜻한 골드)
-  accentLight = new THREE.PointLight(0xffe4a0, 2.0, 16);
+  // 천장 중앙 메인 조명 — SpotLight (현실적인 그림자 + 스포트라이트 효과)
+  accentLight = new THREE.SpotLight(0xffe4a0, 2.2);
   accentLight.position.set(0, 2.5, -0.5);
+  accentLight.angle = Math.PI / 4;       // 45도 원뿔각
+  accentLight.penumbra = 0.35;           // 부드러운 가장자리
+  accentLight.decay = 2;                 // 물리적 감쇠
+  accentLight.distance = 18;
   accentLight.castShadow = true;
-  accentLight.shadow.mapSize.set(512, 512);
+  accentLight.shadow.mapSize.set(1024, 1024);
+  accentLight.shadow.camera.near = 0.5;
+  accentLight.shadow.camera.far = 20;
+  accentLight.target.position.set(0, -1.5, -0.5);
   scene.add(accentLight);
+  scene.add(accentLight.target);
 
-  // 왼쪽 벽 따뜻한 조명
-  pointLight1 = new THREE.PointLight(0xffd080, 1.2, 10);
+  // 왼쪽 벽 따뜻한 조명 (decay 2 물리적 감쇠)
+  pointLight1 = new THREE.PointLight(0xffd080, 1.4, 10, 2);
   pointLight1.position.set(-2.5, 1.5, -1.0);
   scene.add(pointLight1);
 
-  // 오른쪽 벽 보라 악센트
-  pointLight2 = new THREE.PointLight(0xc088ff, 0.5, 8);
+  // 오른쪽 벽 보라 악센트 (decay 2)
+  pointLight2 = new THREE.PointLight(0xc088ff, 0.6, 8, 2);
   pointLight2.position.set(2.5, 1.5, 0.5);
   scene.add(pointLight2);
 
-  // 앞쪽 채움 조명
-  pointLight3 = new THREE.PointLight(0xffeedd, 0.6, 12);
+  // 앞쪽 채움 조명 (decay 2)
+  pointLight3 = new THREE.PointLight(0xffeedd, 0.7, 12, 2);
   pointLight3.position.set(0, 0.5, 3);
   scene.add(pointLight3);
+
+  // PMREMGenerator — 씬 환경맵 생성 (PBR 표면 반사 향상, r128 호환)
+  const pmremGen = new THREE.PMREMGenerator(renderer);
+  pmremGen.compileEquirectangularShader();
+  const envScene = new THREE.Scene();
+  envScene.background = new THREE.Color(0x2a1a3a);
+  const envRT = pmremGen.fromScene(envScene);
+  scene.environment = envRT.texture;
+  pmremGen.dispose();
 
   buildRoom();
   buildItems();
@@ -992,7 +1038,7 @@ function buildRoom() {
   floorTex.repeat.set(2, 2);
   const floor = new THREE.Mesh(
     new THREE.PlaneGeometry(RW, RD),
-    new THREE.MeshStandardMaterial({ map:floorTex, color:0x6b4020, roughness:0.55, metalness:0.05 })
+    new THREE.MeshStandardMaterial({ map:floorTex, color:0x6b4020, roughness:0.4, metalness:0.05, envMapIntensity:0.6 })
   );
   floor.rotation.x = -Math.PI/2;
   floor.position.y = -1.5;
@@ -1021,7 +1067,7 @@ function buildRoom() {
   // ── 뒷벽 #1a1535 ──
   const backWall = new THREE.Mesh(
     new THREE.PlaneGeometry(RW, RH),
-    new THREE.MeshStandardMaterial({ color:0x1a1535, roughness:0.8, metalness:0.05, emissive:0x0d0a1a, emissiveIntensity:0.2 })
+    new THREE.MeshStandardMaterial({ color:0x1a1535, roughness:0.8, metalness:0.02, emissive:0x0d0a1a, emissiveIntensity:0.2, envMapIntensity:0.3 })
   );
   backWall.position.set(0, RH/2-1.5, -RD/2);
   backWall.receiveShadow = true;
@@ -1030,7 +1076,7 @@ function buildRoom() {
   // ── 왼쪽벽 #1a1535 ──
   const leftWall = new THREE.Mesh(
     new THREE.PlaneGeometry(RD, RH),
-    new THREE.MeshStandardMaterial({ color:0x1a1535, roughness:0.8, metalness:0.05, emissive:0x0d0a1a, emissiveIntensity:0.18 })
+    new THREE.MeshStandardMaterial({ color:0x1a1535, roughness:0.8, metalness:0.02, emissive:0x0d0a1a, emissiveIntensity:0.18, envMapIntensity:0.3 })
   );
   leftWall.rotation.y = Math.PI/2;
   leftWall.position.set(-RW/2, RH/2-1.5, 0);
@@ -1040,7 +1086,7 @@ function buildRoom() {
   // ── 오른쪽벽 #211845 ──
   const rightWall = new THREE.Mesh(
     new THREE.PlaneGeometry(RD, RH),
-    new THREE.MeshStandardMaterial({ color:0x211845, roughness:0.8, metalness:0.05, emissive:0x100d22, emissiveIntensity:0.18 })
+    new THREE.MeshStandardMaterial({ color:0x211845, roughness:0.8, metalness:0.02, emissive:0x100d22, emissiveIntensity:0.18, envMapIntensity:0.3 })
   );
   rightWall.rotation.y = -Math.PI/2;
   rightWall.position.set(RW/2, RH/2-1.5, 0);
@@ -1050,7 +1096,7 @@ function buildRoom() {
   // ── 앞벽 반투명 (opacity 0.2) ──
   const frontWall = new THREE.Mesh(
     new THREE.PlaneGeometry(RW, RH),
-    new THREE.MeshStandardMaterial({ color:0x1a1535, roughness:0.8, metalness:0.05, transparent:true, opacity:0.2, side:THREE.DoubleSide })
+    new THREE.MeshStandardMaterial({ color:0x1a1535, roughness:0.8, metalness:0.02, transparent:true, opacity:0.2, side:THREE.DoubleSide })
   );
   frontWall.rotation.y = Math.PI;
   frontWall.position.set(0, RH/2-1.5, RD/2);
@@ -1096,6 +1142,70 @@ function buildRoom() {
   buildAvatar();
 }
 
+// ══════════════════════════════════════════
+//  리그별 아바타 비주얼 시스템
+// ══════════════════════════════════════════
+var LEAGUE_VISUAL = {
+  'dust':   { icon:'✨', color:'#94a3b8', nameShadow:'0 0 4px #94a3b8',
+               avatarGlow:'drop-shadow(0 0 4px #94a3b866)',
+               bgColor:'rgba(148,163,184,0.15)', animated:false },
+  'star':   { icon:'🌟', color:'#fbbf24', nameShadow:'0 0 8px #fbbf24, 0 0 16px #fbbf2440',
+               avatarGlow:'drop-shadow(0 0 6px #fbbf2499) drop-shadow(0 0 12px #fbbf2433)',
+               bgColor:'rgba(251,191,36,0.18)', animated:true },
+  'planet': { icon:'🪐', color:'#34d399', nameShadow:'0 0 8px #34d399, 0 0 16px #34d39940',
+               avatarGlow:'drop-shadow(0 0 6px #34d39999) drop-shadow(0 0 12px #34d39933)',
+               bgColor:'rgba(52,211,153,0.18)', animated:true },
+  'nova':   { icon:'💥', color:'#c084fc', nameShadow:'0 0 10px #c084fc, 0 0 20px #c084fc50',
+               avatarGlow:'drop-shadow(0 0 8px #c084fcbb) drop-shadow(0 0 16px #c084fc44)',
+               bgColor:'rgba(192,132,252,0.20)', animated:true },
+  'quasar': { icon:'⚡', color:'#f0c040', nameShadow:'0 0 12px #f0c040, 0 0 24px #f0c04060, 0 0 36px #f0c04030',
+               avatarGlow:'drop-shadow(0 0 10px #f0c040cc) drop-shadow(0 0 20px #f0c04055) drop-shadow(0 0 30px #f0c04022)',
+               bgColor:'rgba(240,192,64,0.22)', animated:true }
+};
+
+// avatarOverlay 에 리그 비주얼 적용
+// renderAvatarCard 호출 직후에 실행 — DOM 구조(.asteria-ac-wrap, 이름 div)를 수정
+function applyLeagueVisual(overlayId) {
+  var overlay = document.getElementById(overlayId || 'avatarOverlay');
+  if(!overlay) return;
+
+  var leagueKey = localStorage.getItem('asteria_league') || 'dust';
+  // avatar-svgs.js 의 LEAGUE_INFO 는 영문 키 사용 — 한국어 키 보정
+  var KO_TO_EN = {'더스트':'dust','스타':'star','플래닛':'planet','노바':'nova','퀘이사':'quasar'};
+  if(KO_TO_EN[leagueKey]) leagueKey = KO_TO_EN[leagueKey];
+  var vis = LEAGUE_VISUAL[leagueKey] || LEAGUE_VISUAL['dust'];
+
+  // ① 아바타 SVG 래퍼에 글로우 필터 적용
+  var wrap = overlay.querySelector('.asteria-ac-wrap');
+  if(wrap) {
+    wrap.style.filter = vis.avatarGlow;
+    // 뱃지가 이미 있으면 업데이트, 없으면 생성
+    var badge = wrap.querySelector('.league-badge');
+    if(!badge) {
+      badge = document.createElement('div');
+      badge.className = 'league-badge' + (vis.animated ? ' animated' : '');
+      wrap.appendChild(badge);
+    } else {
+      badge.className = 'league-badge' + (vis.animated ? ' animated' : '');
+    }
+    badge.textContent = vis.icon;
+    badge.style.background = vis.bgColor;
+    badge.style.boxShadow = '0 0 8px ' + vis.color + '88, inset 0 0 4px ' + vis.color + '44';
+    badge.style.border = '1px solid ' + vis.color + '66';
+  }
+
+  // ② 닉네임 텍스트에 글로우 적용
+  //    renderAvatarCard는 이름을 첫 번째 div.asteria-ac-info > div 로 렌더링
+  var infoDiv = overlay.querySelector('.asteria-ac-info');
+  if(infoDiv) {
+    var nameEl = infoDiv.querySelector('div');
+    if(nameEl) {
+      nameEl.style.textShadow = vis.nameShadow;
+      nameEl.style.color = '#e8ecf4';
+    }
+  }
+}
+
 // ── SD 아바타 (2등신 귀여운 캐릭터) ──
 function buildAvatar() {
   if(myAvatarMesh) { roomGroup.remove(myAvatarMesh); myAvatarMesh=null; }
@@ -1127,6 +1237,8 @@ function buildAvatar() {
       showSerial: false,
       nameSize: '13px'
     });
+    // 리그별 뱃지 + 이름 글로우 + 아바타 글로우 적용
+    applyLeagueVisual('avatarOverlay');
   }
 
   // 기존 avatarTag 제거 — renderAvatarCard가 이름을 포함하므로
@@ -1223,19 +1335,23 @@ function buildItems() {
 let particleSystem;
 function buildParticles() {
   if(particleSystem) scene.remove(particleSystem);
-  const count = 300;
+  const count = 450;  // 300 → 450 (1.5배)
   const geo = new THREE.BufferGeometry();
   const pos = new Float32Array(count*3);
+  const phases = new Float32Array(count);  // 투명도 변동용 위상값
   for(let i=0;i<count;i++){
     pos[i*3]   = (Math.random()-0.5)*7;
     pos[i*3+1] = Math.random()*5-1.5;
     pos[i*3+2] = (Math.random()-0.5)*6;
+    phases[i]  = Math.random()*Math.PI*2;
   }
   geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  geo.setAttribute('phase', new THREE.BufferAttribute(phases,1));
   const mat = new THREE.PointsMaterial({
-    color: currentTheme.accent, size:0.02,
-    transparent:true, opacity:0.5,
+    color: currentTheme.accent, size:0.03,  // 0.02 → 0.03
+    transparent:true, opacity:0.55,
     blending: THREE.AdditiveBlending,
+    sizeAttenuation: true,
   });
   particleSystem = new THREE.Points(geo, mat);
   scene.add(particleSystem);
@@ -1371,7 +1487,7 @@ function animate() {
     s.material.transparent = true;
   });
 
-  // ── Particles drift ──
+  // ── Particles drift + 투명도 변동 ──
   if(particleSystem) {
     particleSystem.rotation.y += 0.0002;
     const pos = particleSystem.geometry.attributes.position.array;
@@ -1380,14 +1496,16 @@ function animate() {
       if(pos[i+1] > 3.5) pos[i+1] = -1.5;
     }
     particleSystem.geometry.attributes.position.needsUpdate = true;
+    // 파티클 전체 opacity를 시간에 따라 미세하게 변동
+    particleSystem.material.opacity = 0.45 + Math.sin(floatTime*0.4)*0.12;
   }
 
   // ── Memory Stars ──
   if(window._memoryStarUpdate) window._memoryStarUpdate(floatTime);
 
   // ── Lighting pulse ──
-  if(accentLight) accentLight.intensity = 1.8 + Math.sin(floatTime*0.8)*0.3;
-  if(pointLight1) pointLight1.intensity = 1.0 + Math.sin(floatTime*1.1+1)*0.2;
+  if(accentLight) accentLight.intensity = 2.0 + Math.sin(floatTime*0.8)*0.3;  // SpotLight 기준
+  if(pointLight1) pointLight1.intensity = 1.2 + Math.sin(floatTime*1.1+1)*0.25;
 
   renderer.render(scene, camera);
 }
@@ -2789,12 +2907,13 @@ if (typeof BroadcastChannel !== 'undefined') {
   const avatarCh = new BroadcastChannel('asteria_avatar_sync');
   avatarCh.onmessage = function(e) {
     if (e.data && e.data.type === 'AVATAR_UPDATED') {
-      // SVG 아바타 갱신
+      // SVG 아바타 갱신 + 리그 비주얼 재적용
       if(typeof renderAvatarCard === 'function') {
         renderAvatarCard('avatarOverlay', {
           size: 'lg', layout: 'vertical', showName: true, showLevel: true,
           showLeague: false, showAura: true, showSerial: false, nameSize: '13px'
         });
+        if(typeof applyLeagueVisual === 'function') applyLeagueVisual('avatarOverlay');
       }
     }
   };
