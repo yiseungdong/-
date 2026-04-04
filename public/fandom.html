@@ -450,6 +450,21 @@ canvas{position:absolute;inset:0;z-index:1}
   border-color:rgba(192,132,252,0.5);
   color:#c084fc; font-weight:700;
 }
+.fc-chat-tab {
+  padding:5px 12px; border-radius:20px;
+  border:1px solid rgba(180,150,255,0.25);
+  background:transparent; color:var(--muted);
+  font-size:12px; cursor:pointer;
+  transition:all 0.2s; white-space:nowrap;
+  font-family:'Noto Sans KR',sans-serif;
+}
+.fc-chat-tab:hover {
+  border-color:var(--lp); color:var(--lp);
+}
+.fc-chat-tab.active {
+  background:var(--lp); border-color:var(--lp);
+  color:#fff; font-weight:700;
+}
 
 /* 채팅 메시지 영역 */
 .chat-body {
@@ -663,6 +678,17 @@ canvas{position:absolute;inset:0;z-index:1}
 </style>
 </head>
 <body>
+<!-- 개발용 리그 선택기 (나중에 로그인 연동 후 제거) -->
+<div id="dev-league-selector" style="position:fixed;top:8px;right:8px;z-index:9999;background:rgba(240,192,64,0.15);border:1px solid rgba(240,192,64,0.4);border-radius:8px;padding:4px 8px;display:flex;align-items:center;gap:6px;">
+  <span style="font-size:10px;color:#f0c040;font-weight:700;">DEV</span>
+  <select id="dev-league-select" style="background:#0a0a16;color:#e8e4f0;border:1px solid rgba(180,150,255,0.3);border-radius:4px;padding:2px 6px;font-size:11px;cursor:pointer;">
+    <option value="dust">더스트 (Dust)</option>
+    <option value="star" selected>스타 (Star)</option>
+    <option value="planet">플래닛 (Planet)</option>
+    <option value="nova">노바 (Nova)</option>
+    <option value="quasar">퀘이사 (Quasar)</option>
+  </select>
+</div>
 <div class="ent" id="ent"><div class="ent-t" id="entT">STARIUM</div><div class="ent-s" id="entS">entering...</div></div>
 <!-- 헤더 제거됨 -->
 <!-- 리그 탭 제거됨 -->
@@ -766,6 +792,51 @@ const MAP_SIZE={
 };
 const DM={name:'BTS ARMY',league:'star',rank:3,members:98432,score:847,energy:72,dday:14,online:1234,
 ann:['🔥 시즌 종료 D-14!','📢 새로운 소원 제안!'],ld:{n:'StarCommander',lv:78,a:'전략가'}};
+
+// 리그별 모임채팅 탭 구성
+const LEAGUE_CHAT_TABS={
+  dust:[
+    {id:'all',ko:'전체',en:'All'},
+    {id:'gathering',ko:'게더링',en:'Gathering'},
+    {id:'point',ko:'포인트',en:'Point'}
+  ],
+  star:[
+    {id:'all',ko:'전체',en:'All'},
+    {id:'territory',ko:'테리토리',en:'Territory'},
+    {id:'base',ko:'베이스',en:'Base'},
+    {id:'unit',ko:'유닛',en:'Unit'}
+  ],
+  planet:[
+    {id:'all',ko:'전체',en:'All'},
+    {id:'territory',ko:'테리토리',en:'Territory'},
+    {id:'base',ko:'베이스',en:'Base'},
+    {id:'unit',ko:'유닛',en:'Unit'}
+  ],
+  nova:[
+    {id:'all',ko:'전체',en:'All'},
+    {id:'province',ko:'프로빈스',en:'Province'},
+    {id:'district',ko:'디스트릭트',en:'District'},
+    {id:'square',ko:'스퀘어',en:'Square'},
+    {id:'lounge',ko:'라운지',en:'Lounge'}
+  ],
+  quasar:[
+    {id:'all',ko:'전체',en:'All'},
+    {id:'empire',ko:'엠파이어',en:'Empire'},
+    {id:'dominion',ko:'도미니언',en:'Dominion'},
+    {id:'sector',ko:'섹터',en:'Sector'},
+    {id:'cluster',ko:'클러스터',en:'Cluster'},
+    {id:'orbit',ko:'오빗',en:'Orbit'}
+  ]
+};
+
+let currentLang=localStorage.getItem('asteria_lang')||'ko';
+
+function getMyLeague(){
+  try{
+    const user=JSON.parse(localStorage.getItem('asteria_user')||'{}');
+    return user.league||'star';
+  }catch(e){return 'star';}
+}
 
 /* Socket.IO 연결 */
 let socket = null;
@@ -2554,6 +2625,17 @@ document.addEventListener('keydown',e=>{
 
 window.addEventListener('DOMContentLoaded',()=>{
   init();
+  // 개발용 리그 드롭다운 초기화
+  const devSelect=document.getElementById('dev-league-select');
+  if(devSelect){
+    devSelect.value=getMyLeague();
+    devSelect.addEventListener('change',()=>{
+      const user=JSON.parse(localStorage.getItem('asteria_user')||'{}');
+      user.league=devSelect.value;
+      localStorage.setItem('asteria_user',JSON.stringify(user));
+      renderFcChatTabs();
+    });
+  }
   // 내 아바타 SVG 렌더 + BroadcastChannel 실시간 동기화
   if (typeof renderAvatarCard === 'function') {
     renderAvatarCard('fandomMyAvBody', {
@@ -2661,10 +2743,13 @@ function openFcChat(type, orgPath) {
   title.textContent = '🏠 모임 채팅';
   breadcrumb.style.display = 'flex';
   if (type === 'all') {
-    renderBreadcrumb(0); // 전체 탭 활성
+    renderFcChatTabs('all');
     loadMockMsgs(body, 'all');
   } else {
-    renderBreadcrumb(orgPath || 0);
+    const league=getMyLeague();
+    const tabs=LEAGUE_CHAT_TABS[league]||LEAGUE_CHAT_TABS['star'];
+    const tabId=(orgPath&&tabs[orgPath])?tabs[orgPath].id:'all';
+    renderFcChatTabs(tabId);
     loadMockMsgs(body, 'org');
   }
 
@@ -2675,6 +2760,31 @@ function openFcChat(type, orgPath) {
 
 function closeChatPanel() {
   document.getElementById('chatPanel').classList.remove('open');
+}
+
+function renderFcChatTabs(activeId='all'){
+  const league=getMyLeague();
+  const tabs=LEAGUE_CHAT_TABS[league]||LEAGUE_CHAT_TABS['star'];
+  const container=document.getElementById('chatBreadcrumb');
+  if(!container)return;
+  const isMultiRow=tabs.length>=6;
+  container.style.flexWrap=isMultiRow?'wrap':'nowrap';
+  container.innerHTML=tabs.map(tab=>`
+    <button class="fc-chat-tab ${tab.id===activeId?'active':''}"
+      data-tab="${tab.id}"
+      onclick="switchFcChatTab('${tab.id}')"
+      style="${isMultiRow?'flex:0 0 calc(33% - 4px);':''}"
+    >${currentLang==='ko'?tab.ko:tab.en}</button>
+  `).join('');
+}
+
+function switchFcChatTab(tabId){
+  renderFcChatTabs(tabId);
+  const body=document.getElementById('chatBody');
+  if(body){
+    if(tabId==='all') loadMockMsgs(body,'all');
+    else loadMockMsgs(body,'org');
+  }
 }
 
 function renderBreadcrumb(activeIdx) {
