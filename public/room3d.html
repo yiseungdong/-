@@ -905,7 +905,7 @@ const keysPressed = {};
 
 // ── 방 크기 상수 ──
 const RW = 8, RH = 5, RD = 7;
-const ROOM_BOUNDS = { xMin:-(RW/2-0.8), xMax:RW/2-0.8, zMin:-(RD/2-1.2), zMax:RD/2-0.5 };
+const ROOM_BOUNDS = { xMin:-(RW/2-0.8), xMax:RW/2-0.8, zMin:-(RD/2-1.7), zMax:RD/2-0.5 };
 
 // ══════════════════════════════════════════
 //  THREE.JS 초기화
@@ -1408,7 +1408,9 @@ function animate() {
 
     // ── idle 애니메이션 ──
     const breath = Math.sin(floatTime*0.8)*0.02;
-    myAvatarMesh.position.y = -1.2 + breath;
+    myAvatarMesh.position.y = -1.2 + breath; // y는 항상 바닥 고정
+    // z clamp 재확인 (position.y 리셋 후에도 bounds 보장)
+    myAvatarMesh.position.z = Math.max(ROOM_BOUNDS.zMin, Math.min(ROOM_BOUNDS.zMax, myAvatarMesh.position.z));
 
     // ── SVG 오버레이 위치 업데이트 ──
     var avatarOv = document.getElementById('avatarOverlay');
@@ -1422,6 +1424,8 @@ function animate() {
       var cvs = renderer.domElement;
       var sx = (avPos.x * 0.5 + 0.5) * cvs.clientWidth;
       var sy = (-avPos.y * 0.5 + 0.5) * cvs.clientHeight;
+      // 벽 위로 올라가지 않도록 sy 최솟값 제한 (캔버스 높이의 15%)
+      sy = Math.max(cvs.clientHeight * 0.15, sy);
       var dist = camera.position.distanceTo(myAvatarMesh.position);
       var scaleVal = Math.max(0.4, Math.min(1.5, 5.0 / dist));
       avatarOv.style.left = sx + 'px';
@@ -1459,6 +1463,8 @@ function animate() {
       var cvs = renderer.domElement;
       var asx = (aPos.x * 0.5 + 0.5) * cvs.clientWidth;
       var asy = (-aPos.y * 0.5 + 0.5) * cvs.clientHeight;
+      // 벽 위로 올라가지 않도록 asy 최솟값 제한
+      asy = Math.max(cvs.clientHeight * 0.15, asy);
       var adist = camera.position.distanceTo(artistMesh.position);
       var ascale = Math.max(0.4, Math.min(1.5, 5.0 / adist));
       artistOv.style.left = asx + 'px';
