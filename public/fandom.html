@@ -137,7 +137,7 @@ canvas{position:absolute;inset:0;z-index:1}
   max-height:0; overflow:hidden;
   transition:max-height .35s ease;
 }
-.fc-header-body.open { max-height:200px; }
+.fc-header-body.open { max-height:360px; }
 .fc-compare-row {
   padding:8px 12px;
   border-bottom:1px solid rgba(180,150,255,0.07);
@@ -587,6 +587,36 @@ canvas{position:absolute;inset:0;z-index:1}
   <div class="fc-header-body" id="fcBody">
     <div id="fcCompareTop" class="fc-compare-row"></div>
     <div id="fcCompareBot" class="fc-compare-row"></div>
+    <div id="fcFireLine" style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(180,150,255,0.13);">
+      <!-- D-데이 -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="font-size:9px;color:rgba(220,210,240,0.7);">📅 다음 이벤트</span>
+        <span id="fcDday" style="font-family:'Orbitron',monospace;font-size:10px;color:#f0c040;font-weight:700;">D-16</span>
+      </div>
+      <!-- 화력 게이지 -->
+      <div style="margin-bottom:6px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+          <span style="font-size:9px;color:rgba(220,210,240,0.7);">🔥 이달 화력</span>
+          <span id="fcEnergyPct" style="font-size:9px;color:#f59e0b;font-weight:700;">72%</span>
+        </div>
+        <div style="height:4px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;">
+          <div id="fcEnergyBar" style="height:100%;width:72%;background:linear-gradient(90deg,#f59e0b,#ef4444);border-radius:4px;transition:width 0.5s;"></div>
+        </div>
+      </div>
+      <!-- 시즌 MVP 3부문 -->
+      <div style="font-size:8px;color:rgba(220,210,240,0.5);margin-bottom:4px;">🏅 이달의 MVP</div>
+      <div style="display:flex;flex-direction:column;gap:2px;">
+        <div style="display:flex;justify-content:space-between;font-size:8px;">
+          <span>🔥 기여왕</span><span style="color:#f0c040;font-weight:700;">StarWarrior</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:8px;">
+          <span>🌱 성장왕</span><span style="color:#f0c040;font-weight:700;">RisingStar</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:8px;">
+          <span>💬 화제왕</span><span style="color:#f0c040;font-weight:700;">BuzzMaker</span>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 <div class="chat-panel" id="chatPanel">
@@ -2146,7 +2176,11 @@ function render(league){
   draw();
 }
 
-function showData(d){document.getElementById('bM').textContent=d.members.toLocaleString();document.getElementById('bS').textContent=d.score;document.getElementById('bE').style.width=d.energy+'%';document.getElementById('bP').textContent=d.energy+'%';document.getElementById('bD').textContent='D-'+d.dday;renderFcHeader(d.league);}
+function showData(d){document.getElementById('bM').textContent=d.members.toLocaleString();document.getElementById('bS').textContent=d.score;document.getElementById('bE').style.width=d.energy+'%';document.getElementById('bP').textContent=d.energy+'%';document.getElementById('bD').textContent='D-'+d.dday;renderFcHeader(d.league);
+// 화력전선 D-데이 업데이트
+const ddEl=document.getElementById('fcDday');if(ddEl)ddEl.textContent='D-'+d.dday;
+// 화력 게이지 업데이트
+const eb=document.getElementById('fcEnergyBar');const ep=document.getElementById('fcEnergyPct');if(eb)eb.style.width=d.energy+'%';if(ep)ep.textContent=d.energy+'%';}
 
 
 /* 드래그 */
