@@ -46,11 +46,11 @@ canvas{position:absolute;inset:0;z-index:1}
 /* 모달 */
 .mo{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;opacity:0;transition:opacity .3s}
 .mo.show{display:flex;opacity:1}
-.mo-c{width:88%;max-width:380px;max-height:76vh;background:var(--panel);border:1px solid var(--border);border-radius:16px;overflow-y:auto;padding:20px 16px;transform:translateY(14px) scale(.96);transition:transform .3s cubic-bezier(.34,1.56,.64,1);scrollbar-width:thin;scrollbar-color:var(--gold) transparent;}
+.mo-c{width:88%;max-width:380px;height:76vh;background:var(--panel);border:1px solid var(--border);border-radius:16px;overflow-y:auto;padding:20px 16px;transform:translateY(14px) scale(.96);transition:transform .3s cubic-bezier(.34,1.56,.64,1);scrollbar-width:thin;scrollbar-color:var(--gold) transparent;}
 .mo-c::-webkit-scrollbar{width:4px;}
 .mo-c::-webkit-scrollbar-thumb{background:var(--gold);border-radius:2px;}
 .mo-c::-webkit-scrollbar-track{background:transparent;}
-@media(max-width:600px){.mo-c{width:92vw;max-height:80vh;}}
+@media(max-width:600px){.mo-c{width:92vw;height:80vh;}}
 .mo.show .mo-c{transform:translateY(0) scale(1)}
 .mo-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .mo-t{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:var(--lp)}
