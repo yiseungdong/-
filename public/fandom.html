@@ -1029,7 +1029,7 @@ quasar:{name:'퀘이사',lp:'#f0c040',ls:'#e6a800',lg:'rgba(240,192,64,.4)',lr:2
 };
 
 /* 건물 위치 (광장 둘레에 넓게 분포한 단독주택) */
-const icons={dust:{hq:'⛺',board:'📌',vote:'📝',wish:'🕯️',org:'🏕️',event:'🔥',honor:'📜',org_chat:'🏕️'},star:{hq:'🏰',board:'📋',vote:'🗳️',wish:'⭐',org:'🏗️',event:'🎪',honor:'🏛️',org_chat:'🏰'},planet:{hq:'🏢',board:'📊',vote:'🗳️',wish:'💫',org:'🏙️',event:'🎪',honor:'🏛️',org_chat:'🏢'},nova:{hq:'🏗️',board:'💻',vote:'🗳️',wish:'🌟',org:'🗼',event:'🎆',honor:'🏛️',org_chat:'🗼'},quasar:{hq:'👑',board:'📡',vote:'🗳️',wish:'✨',org:'🏯',event:'🎊',honor:'🏛️',org_chat:'🏯'}};
+const icons={dust:{hq:'⛺',board:'📌',vote:'📝',wish:'🕯️',org:'🏕️',event:'🔥',honor:'📜',org_chat:'🏕️',starreport:'🌟'},star:{hq:'🏰',board:'📋',vote:'🗳️',wish:'⭐',org:'🏗️',event:'🎪',honor:'🏛️',org_chat:'🏰',starreport:'🌟'},planet:{hq:'🏢',board:'📊',vote:'🗳️',wish:'💫',org:'🏙️',event:'🎪',honor:'🏛️',org_chat:'🏢',starreport:'🌟'},nova:{hq:'🏗️',board:'💻',vote:'🗳️',wish:'🌟',org:'🗼',event:'🎆',honor:'🏛️',org_chat:'🗼',starreport:'🌟'},quasar:{hq:'👑',board:'📡',vote:'🗳️',wish:'✨',org:'🏯',event:'🎊',honor:'🏛️',org_chat:'🏯',starreport:'🌟'}};
 const BLD_BASE=[
   {id:'hq',rx:.43,ry:.24,rw:.07,rh:.075,nK:'팬클럽 본부',nE:'HQ'},
   {id:'org',rx:.21,ry:.30,rw:.055,rh:.075,nK:'조직도 타워',nE:'Org Tower'},
@@ -2154,7 +2154,7 @@ function render(league){
     d.style.cssText=`left:${b.x-8}px;top:${b.y-8}px;width:${b.w+30}px;height:${b.h+28}px`;
     d.onclick=()=>openMo(b.id);
     const badge=b.id==='board'?'<div class="bld-badge">5</div>':b.id==='vote'?'<div class="bld-badge">2</div>':b.id==='event'?'<div class="bld-badge">1</div>':b.id==='hq'?`<div class="bld-badge">${DM.ann.length}</div>`:'';
-    d.innerHTML=`${badge}<div class="bld-label"><div class="bld-name">${ic[b.id]} ${b.nK}</div><div class="bld-name-en">${b.nE}</div></div>`;
+    d.innerHTML=`${badge}<div class="bld-label"><div class="bld-name">${ic[b.id]||b.symbol||''} ${b.nK}</div><div class="bld-name-en">${b.nE}</div></div>`;
     bl.appendChild(d);
   });
 
