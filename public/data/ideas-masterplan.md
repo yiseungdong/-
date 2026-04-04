@@ -1461,3 +1461,7 @@ bcrypt, JWT, 최소수집(이메일+닉네임), 소셜로그인2FA, 욕설필터
   - 파티클 300→450개, size 0.02→0.03, opacity 시간변동
   - CSS 캔버스 필터 contrast(1.05)+saturate(1.12)
   - 안개 밀도 0.008→0.006
+- toggleLight() 조명 모드 버그 수정 (d277e41):
+  - 원인: animate 루프가 매 프레임 accentLight.intensity를 고정값으로 덮어씀
+  - 수정: animate에서 lightMode 기준값 배열 참조 (기본/밝은/무드 3모드)
+  - toggleLight()은 lightMode만 변경, 실제 intensity는 animate에서 적용
