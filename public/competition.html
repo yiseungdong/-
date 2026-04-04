@@ -11,7 +11,7 @@
 :root{
   --void:#030308;--panel:rgba(5,12,30,.96);
   --border:rgba(200,175,80,.13);--gold:#f0c040;
-  --accent:#4a90d9;--text:#e8ecf4;--muted:rgba(160,180,210,.5);
+  --accent:#4a90d9;--text:#ffffff;--muted:rgba(220,210,240,.85);
 }
 html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-family:'Noto Sans KR',sans-serif;overflow-x:hidden}
 #starCanvas{position:fixed;inset:0;z-index:0;pointer-events:none}
@@ -19,7 +19,7 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 
 /* ── 상단 네비게이션 ── */
 .top-nav{position:fixed;top:0;left:0;right:0;z-index:400;display:flex;align-items:center;justify-content:center;gap:28px;height:44px;background:rgba(10,10,22,0.96);backdrop-filter:blur(20px);border-bottom:1px solid rgba(180,150,255,0.13)}
-.top-nav-item{font-size:12px;font-weight:500;color:rgba(200,190,220,0.45);text-decoration:none;cursor:pointer;transition:all .2s;letter-spacing:0.5px;padding:4px 2px;border-bottom:2px solid transparent}
+.top-nav-item{font-size:12px;font-weight:500;color:rgba(255,255,255,0.7);text-decoration:none;cursor:pointer;transition:all .2s;letter-spacing:0.5px;padding:4px 2px;border-bottom:2px solid transparent}
 .top-nav-item:hover{color:#e8e4f0}
 .top-nav-item.active{color:#c084fc;border-bottom-color:#c084fc}
 
@@ -50,8 +50,8 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 /* ── 경쟁 콘텐츠 탭 ── */
 .tab-bar{display:flex;overflow-x:auto;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0}
 .tab-bar::-webkit-scrollbar{display:none}
-.tab-btn{flex-shrink:0;padding:10px 14px;font-size:10px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none;font-family:'Noto Sans KR',sans-serif}
-.tab-btn.active{color:var(--gold);border-bottom-color:var(--gold)}
+.tab-btn{flex-shrink:0;padding:10px 14px;font-size:10px;font-weight:600;color:rgba(255,255,255,0.7);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none;font-family:'Noto Sans KR',sans-serif}
+.tab-btn.active{color:#ffffff;font-weight:700;border-bottom-color:var(--gold)}
 
 /* ── 리그 필터 ── */
 .league-filter{
@@ -67,16 +67,16 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
   font-size:10px;font-weight:700;cursor:pointer;
   border:1px solid rgba(255,255,255,.1);
   background:rgba(255,255,255,.04);
-  color:var(--muted);transition:all .2s;
+  color:#ffffff;opacity:0.7;transition:all .2s;
   font-family:'Noto Sans KR',sans-serif;
   letter-spacing:0.3px;
 }
-.league-btn:hover{opacity:.85}
-.league-btn.active-dust{color:#94a3b8;border-color:#94a3b8;background:rgba(148,163,184,.1);}
-.league-btn.active-star{color:#fbbf24;border-color:#fbbf24;background:rgba(251,191,36,.1);}
-.league-btn.active-planet{color:#34d399;border-color:#34d399;background:rgba(52,211,153,.1);}
-.league-btn.active-nova{color:#c084fc;border-color:#c084fc;background:rgba(192,132,252,.1);}
-.league-btn.active-quasar{color:#f0c040;border-color:#f0c040;background:rgba(240,192,64,.1);}
+.league-btn:hover{opacity:.9}
+.league-btn.active-dust{color:#94a3b8;border-color:#94a3b8;background:rgba(148,163,184,.1);opacity:1;}
+.league-btn.active-star{color:#fbbf24;border-color:#fbbf24;background:rgba(251,191,36,.1);opacity:1;}
+.league-btn.active-planet{color:#34d399;border-color:#34d399;background:rgba(52,211,153,.1);opacity:1;}
+.league-btn.active-nova{color:#c084fc;border-color:#c084fc;background:rgba(192,132,252,.1);opacity:1;}
+.league-btn.active-quasar{color:#f0c040;border-color:#f0c040;background:rgba(240,192,64,.1);opacity:1;}
 
 /* ── 스탯 카테고리 칩 ── */
 .stat-bar{
@@ -90,11 +90,11 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
   font-size:10px;font-weight:700;cursor:pointer;
   border:1px solid rgba(255,255,255,.1);
   background:rgba(255,255,255,.04);
-  color:var(--muted);transition:all .2s;
+  color:rgba(255,255,255,0.7);transition:all .2s;
   font-family:'Noto Sans KR',sans-serif;
   white-space:nowrap;
 }
-.stat-chip.active{color:var(--gold);border-color:var(--gold);background:rgba(240,192,64,.1);}
+.stat-chip.active{color:#ffffff;font-weight:700;border-color:var(--gold);background:rgba(240,192,64,.1);}
 
 /* ── 랭킹 영역 ── */
 .rank-section{
@@ -126,10 +126,10 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 .rank-item.bronze{border-left:3px solid #cd7f32;background:rgba(205,127,50,.04);}
 
 .rank-medal{font-size:16px;width:22px;text-align:center;flex-shrink:0;}
-.rank-num{font-family:'Orbitron',monospace;font-size:16px;font-weight:900;width:32px;text-align:center;flex-shrink:0;}
-.rank-name{flex:1;font-size:13px;font-weight:600;}
+.rank-num{font-family:'Orbitron',monospace;font-size:16px;font-weight:900;width:32px;text-align:center;flex-shrink:0;color:#ffffff;}
+.rank-name{flex:1;font-size:13px;font-weight:700;color:#ffffff;}
 .rank-league{font-size:14px;flex-shrink:0;}
-.rank-score{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;color:var(--gold);flex-shrink:0;}
+.rank-score{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;color:#f0c040;flex-shrink:0;}
 .rank-change{font-size:10px;width:28px;text-align:center;flex-shrink:0;font-weight:700;}
 .rank-change.up{color:#34d399;}
 .rank-change.down{color:#ef4444;}
