@@ -781,6 +781,35 @@ canvas{position:absolute;inset:0;z-index:1}
 .rank-grade-icon{font-size:14px;}
 .rank-nick{color:var(--text);flex:1;}
 .rank-score{color:var(--lp);font-size:11px;}
+/* ===== 팬클럽 본부 개편 ===== */
+.fc-section{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:10px;}
+.fc-section-title{font-size:11px;font-weight:700;color:var(--gold);margin-bottom:10px;letter-spacing:0.5px;}
+.fc-org-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.fc-org-indent{padding-left:14px;}.fc-org-indent2{padding-left:28px;}
+.fc-org-level{display:flex;align-items:center;gap:6px;}
+.fc-org-name{font-size:12px;color:var(--text);font-weight:600;}
+.fc-org-count{font-size:11px;color:var(--lp);background:rgba(192,132,252,0.12);padding:1px 6px;border-radius:8px;}
+.fc-org-total{font-size:11px;color:var(--muted);}
+.fc-org-member-change{margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px;}
+.fc-change-pos{color:#86efac;font-weight:700;}.fc-change-neg{color:#fca5a5;font-weight:700;}
+.fc-activity-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.fc-activity-label{font-size:11px;color:var(--text);min-width:72px;}
+.fc-activity-bar-wrap{flex:1;height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;}
+.fc-activity-bar{height:100%;background:linear-gradient(90deg,var(--lp),#818cf8);border-radius:3px;transition:width 0.6s ease;}
+.fc-activity-pct{font-size:11px;color:var(--lp);min-width:30px;text-align:right;}
+.fc-activity-best{font-size:11px;color:var(--muted);margin-top:6px;padding-top:6px;border-top:1px solid var(--border);}
+.fc-rank-main{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.fc-rank-league{font-size:11px;color:var(--muted);}
+.fc-rank-num{font-size:20px;font-weight:900;color:var(--gold);font-family:'Orbitron',monospace;}
+.fc-rank-change{font-size:11px;color:#86efac;margin-left:auto;}
+.fc-rank-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.fc-rank-bar-label{font-size:10px;min-width:68px;}
+.fc-rank-bar-label.promotion{color:var(--gold);}.fc-rank-bar-label.safe{color:#86efac;}
+.fc-rank-bar-wrap{flex:1;height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;}
+.fc-rank-bar-fill{height:100%;border-radius:3px;transition:width 0.6s ease;}
+.promotion-fill{background:linear-gradient(90deg,var(--gold),#fbbf24);}
+.safe-fill{background:linear-gradient(90deg,#86efac,#34d399);}
+.fc-rank-bar-val{font-size:10px;color:var(--muted);min-width:60px;text-align:right;}
 </style>
 </head>
 <body>
@@ -2711,10 +2740,38 @@ hq: () => {
         ).join('')}
       </div>
     </div>
-    <div class="mc">
-      <div class="mc-t">💬 채팅방</div>
-      <div class="hq-chat-list">${btnsHtml}</div>
+    <!-- 조직 현황 -->
+    <div class="fc-section">
+      <div class="fc-section-title">📊 조직 현황 · ORGANIZATION STATUS</div>
+      <div id="fcOrgTree">
+        <div class="fc-org-row"><div class="fc-org-level"><span class="fc-org-name" id="fcOrgDepth1Name">테리토리</span><span class="fc-org-count" id="fcOrgDepth1Count">5개</span></div><div class="fc-org-total" id="fcOrgDepth1Total">총 98,432명</div></div>
+        <div class="fc-org-row fc-org-indent"><div class="fc-org-level"><span class="fc-org-name" id="fcOrgDepth2Name">베이스</span><span class="fc-org-count" id="fcOrgDepth2Count">50개</span></div><div class="fc-org-total" id="fcOrgDepth2Total">평균 1,968명/개</div></div>
+        <div class="fc-org-row fc-org-indent2"><div class="fc-org-level"><span class="fc-org-name" id="fcOrgDepth3Name">유닛</span><span class="fc-org-count" id="fcOrgDepth3Count">500개</span></div><div class="fc-org-total" id="fcOrgDepth3Total">평균 197명/개</div></div>
+        <div class="fc-org-member-change"><span id="fcMemberChangeIcon">📈</span> 지난주 대비 멤버 <span id="fcMemberChange" class="fc-change-pos">+234명</span></div>
+      </div>
+    </div>
+    <!-- 활성도 -->
+    <div class="fc-section">
+      <div class="fc-section-title">📡 모임 활성도 · ACTIVITY STATUS</div>
+      <div id="fcActivityList">
+        <div class="fc-activity-row"><span class="fc-activity-label" id="fcActLabel1">테리토리 5개</span><div class="fc-activity-bar-wrap"><div class="fc-activity-bar" id="fcActBar1" style="width:82%"></div></div><span class="fc-activity-pct" id="fcActPct1">82%</span></div>
+        <div class="fc-activity-row"><span class="fc-activity-label" id="fcActLabel2">베이스 50개</span><div class="fc-activity-bar-wrap"><div class="fc-activity-bar" id="fcActBar2" style="width:63%"></div></div><span class="fc-activity-pct" id="fcActPct2">63%</span></div>
+        <div class="fc-activity-row"><span class="fc-activity-label" id="fcActLabel3">유닛 500개</span><div class="fc-activity-bar-wrap"><div class="fc-activity-bar" id="fcActBar3" style="width:54%"></div></div><span class="fc-activity-pct" id="fcActPct3">54%</span></div>
+        <div class="fc-activity-best">🔥 이번 주 최우수 모임: <span id="fcBestMoim">유닛47 "새벽별"</span></div>
+      </div>
+    </div>
+    <!-- 리그 순위 -->
+    <div class="fc-section">
+      <div class="fc-section-title">🏆 리그 내 순위 · LEAGUE RANK</div>
+      <div class="fc-rank-board">
+        <div class="fc-rank-main"><span class="fc-rank-league" id="fcRankLeague">스타 리그</span><span class="fc-rank-num" id="fcRankNum">#3위</span><span class="fc-rank-change" id="fcRankChange">↑2 (지난주 #5위)</span></div>
+        <div class="fc-rank-bars">
+          <div class="fc-rank-bar-row"><span class="fc-rank-bar-label promotion">🔼 1위까지</span><div class="fc-rank-bar-wrap"><div class="fc-rank-bar-fill promotion-fill" id="fcPromoBar" style="width:96%"></div></div><span class="fc-rank-bar-val" id="fcPromoVal">3점 차이</span></div>
+          <div class="fc-rank-bar-row"><span class="fc-rank-bar-label safe">✅ 강등선까지</span><div class="fc-rank-bar-wrap"><div class="fc-rank-bar-fill safe-fill" id="fcDemoteBar" style="width:30%"></div></div><span class="fc-rank-bar-val" id="fcDemoteVal">147점 여유</span></div>
+        </div>
+      </div>
     </div>`;
+  // renderFcHqOrg 호출은 openMo에서 처리
 },
 board:()=>`<div class="mo-h"><div class="mo-t">📋 게시판 거리</div><div class="mo-x" onclick="closeMo()">✕</div></div><div class="mc"><div class="mc-t">🔥 핫 게시물</div><div class="mc-c">${[{t:'컴백 스밍 총공 전략!',a:'StreamQueen',l:234},{t:'팬아트 D-14 기념',a:'ArtStar',l:189},{t:'투표 현황 정리',a:'VoteGuard',l:156}].map(p=>'<div style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04)"><div style="font-weight:500">'+p.t+'</div><div style="font-size:9px;color:var(--muted)">'+p.a+' · ❤️'+p.l+'</div></div>').join('')}</div></div>`,
 vote:()=>`<div class="mo-h"><div class="mo-t">🗳️ 투표소</div><div class="mo-x" onclick="closeMo()">✕</div></div><div class="mc"><div class="mc-t">📌 진행 중</div><div class="mc-c">${[{s:'투표중',c:'#34d399',t:'생일 카페 장소',d:'18시간'},{s:'공감중',c:'#fbbf24',t:'슬로건 변경',d:'67/200'},{s:'확정',c:'#94a3b8',t:'총공 시간대',d:'82%'}].map(v=>'<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="padding:1px 5px;border-radius:6px;font-size:8px;font-weight:700;background:rgba(255,255,255,.06);color:'+v.c+'">'+v.s+'</span><div><div style="font-weight:500">'+v.t+'</div><div style="font-size:8px;color:var(--muted)">'+v.d+'</div></div></div>').join('')}</div></div>`,
@@ -2863,7 +2920,7 @@ function openMo(k){
   if(k==='board'){openBoardPanel();return;}
   if(k==='vote'){openVotePanel();return;}
   if(k==='starreport'){openStarReport();return;}
-  if(!MO[k])return;document.getElementById('moC').innerHTML=MO[k]();document.getElementById('mo').classList.add('show');setTimeout(()=>{document.querySelectorAll('.pf').forEach(el=>{const w=el.style.width;el.style.width='0%';setTimeout(()=>el.style.width=w,50)})},100)}
+  if(!MO[k])return;document.getElementById('moC').innerHTML=MO[k]();document.getElementById('mo').classList.add('show');setTimeout(()=>{document.querySelectorAll('.pf').forEach(el=>{const w=el.style.width;el.style.width='0%';setTimeout(()=>el.style.width=w,50)})},100);if(k==='hq')renderFcHqOrg();}
 function closeMo(e){if(e&&e.target!==e.currentTarget)return;document.getElementById('mo').classList.remove('show')}
 function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3000)}
 document.addEventListener('keydown',e=>{
@@ -3404,6 +3461,26 @@ function submitAppeal(){
   const body=document.getElementById('appealBody')?.value.trim();if(!body){showToast('소명 내용을 입력해주세요');return;}
   const d=getMyReporterData();d.pendingAppeal=null;saveMyReporterData(d);closeAppealModal();
   showToast('📨 소명이 제출됐습니다. 운영진 검토 후 결과를 알려드립니다.');
+}
+
+// 팬클럽 본부 조직 현황 렌더링
+function renderFcHqOrg(){
+  const league=DM.league;
+  const leagueKo={dust:'더스트',star:'스타',planet:'플래닛',nova:'노바',quasar:'퀘이사'}[league]||'스타';
+  const ORG_NAMES={더스트:['게더링','포인트'],스타:['테리토리','베이스','유닛'],플래닛:['테리토리','베이스','유닛'],노바:['프로빈스','디스트릭트','스퀘어','라운지'],퀘이사:['엠파이어','도미니언','섹터','클러스터','오빗']};
+  const ORG_DATA={더스트:[{count:10,total:20000,avg:2000},{count:100,total:20000,avg:200}],스타:[{count:5,total:98432,avg:19686},{count:50,total:98432,avg:1968},{count:500,total:98432,avg:197}],플래닛:[{count:20,total:500000,avg:25000},{count:200,total:500000,avg:2500},{count:2000,total:500000,avg:250}],노바:[{count:50,total:5000000,avg:100000},{count:500,total:5000000,avg:10000},{count:5000,total:5000000,avg:1000},{count:50000,total:5000000,avg:100}],퀘이사:[{count:50,total:10000000,avg:200000},{count:250,total:10000000,avg:40000},{count:1250,total:10000000,avg:8000},{count:10000,total:10000000,avg:1000},{count:100000,total:10000000,avg:100}]};
+  const names=ORG_NAMES[leagueKo]||ORG_NAMES['스타'];const data=ORG_DATA[leagueKo]||ORG_DATA['스타'];
+  const s=(id,txt)=>{const el=document.getElementById(id);if(el)el.textContent=txt;};
+  if(names[0]){s('fcOrgDepth1Name',names[0]);s('fcOrgDepth1Count',(data[0]?.count||0)+'개');s('fcOrgDepth1Total','총 '+(data[0]?.total||0).toLocaleString()+'명');}
+  if(names[1]){s('fcOrgDepth2Name',names[1]);s('fcOrgDepth2Count',(data[1]?.count||0)+'개');s('fcOrgDepth2Total','평균 '+(data[1]?.avg||0).toLocaleString()+'명/개');}
+  if(names[2]){s('fcOrgDepth3Name',names[2]);s('fcOrgDepth3Count',(data[2]?.count||0)+'개');s('fcOrgDepth3Total','평균 '+(data[2]?.avg||0).toLocaleString()+'명/개');}
+  const change=+234;s('fcMemberChange',(change>=0?'+':'')+change.toLocaleString()+'명');
+  const changeEl=document.getElementById('fcMemberChange');if(changeEl)changeEl.className=change>=0?'fc-change-pos':'fc-change-neg';
+  const iconEl=document.getElementById('fcMemberChangeIcon');if(iconEl)iconEl.textContent=change>=0?'📈':'📉';
+  const ACT_DATA={더스트:[{pct:71},{pct:55}],스타:[{pct:82},{pct:63},{pct:54}],플래닛:[{pct:78},{pct:69},{pct:61}],노바:[{pct:85},{pct:74},{pct:66},{pct:58}],퀘이사:[{pct:91},{pct:83},{pct:75},{pct:68},{pct:61}]};
+  const actData=ACT_DATA[leagueKo]||ACT_DATA['스타'];
+  actData.forEach((a,i)=>{const idx=i+1;s('fcActLabel'+idx,(names[i]||'')+' '+(data[i]?.count||0)+'개');const bar=document.getElementById('fcActBar'+idx);if(bar)bar.style.width=a.pct+'%';s('fcActPct'+idx,a.pct+'%');});
+  s('fcRankLeague',leagueKo+' 리그');
 }
 
 function openBoardPanel(){
