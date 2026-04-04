@@ -173,18 +173,19 @@ function getStyledSVG(base, options) {
   var map = AVATAR_COLOR_MAP[base] || AVATAR_COLOR_MAP['m1'];
   var opt = options || {};
   var hairColor = opt.hairColor || localStorage.getItem('asteria_avatar_hairColor') || '';
-  if (hairColor && hairColor !== map.hair) {
+  if (hairColor && hairColor.toLowerCase() !== map.hair.toLowerCase()) {
     var hairRegex = new RegExp('fill="' + map.hair + '"', 'gi');
     svg = svg.replace(hairRegex, 'fill="' + hairColor + '"');
   }
   var outfitColor = opt.outfitColor || localStorage.getItem('asteria_avatar_outfitColor') || '';
-  if (outfitColor && outfitColor !== map.outfit) {
+  if (outfitColor && outfitColor.toLowerCase() !== map.outfit.toLowerCase()) {
     var outfitRegex = new RegExp('fill="' + map.outfit + '"', 'gi');
     svg = svg.replace(outfitRegex, 'fill="' + outfitColor + '"');
   }
   var skinColor = opt.skinColor || localStorage.getItem('asteria_avatar_skin') || '';
   if (skinColor && skinColor.toLowerCase() !== map.skin.toLowerCase()) {
-    svg = svg.split('fill="' + map.skin + '"').join('fill="' + skinColor + '"');
+    var skinRegex = new RegExp('fill="' + map.skin + '"', 'gi');
+    svg = svg.replace(skinRegex, 'fill="' + skinColor + '"');
   }
   return svg;
 }
