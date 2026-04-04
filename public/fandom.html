@@ -429,34 +429,26 @@ canvas{position:absolute;inset:0;z-index:1}
 
 /* 모임 경로 브레드크럼 */
 .chat-breadcrumb {
-  display:flex; align-items:center;
-  padding:8px 14px; gap:4px;
+  display:flex; flex-direction:row; gap:6px;
+  overflow-x:auto; padding:8px 12px;
+  flex-shrink:0; scrollbar-width:none;
   border-bottom:1px solid rgba(180,150,255,0.1);
-  overflow-x:auto; -webkit-overflow-scrolling:touch;
-  flex-shrink:0;
+  -webkit-overflow-scrolling:touch;
 }
 .chat-breadcrumb::-webkit-scrollbar { display:none; }
-.chat-bc-item {
-  display:flex; align-items:center; gap:4px;
-  white-space:nowrap;
-}
 .chat-bc-btn {
-  padding:4px 10px; border-radius:12px;
-  font-size:9px; font-weight:600;
-  background:rgba(255,255,255,0.05);
-  border:1px solid rgba(180,150,255,0.15);
-  color:rgba(200,190,220,0.6);
-  cursor:pointer; transition:all .2s;
-  white-space:nowrap;
+  padding:4px 12px; border-radius:20px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(180,150,255,0.2);
+  color:rgba(200,190,220,0.7);
+  font-size:12px; cursor:pointer;
+  white-space:nowrap; flex-shrink:0;
+  transition:all .2s;
 }
-.chat-bc-btn:hover,
 .chat-bc-btn.active {
-  background:rgba(192,132,252,0.15);
-  border-color:var(--lp);
-  color:var(--lp);
-}
-.chat-bc-arrow {
-  font-size:8px; color:var(--muted);
+  background:rgba(192,132,252,0.2);
+  border-color:rgba(192,132,252,0.5);
+  color:#c084fc; font-weight:700;
 }
 
 /* 채팅 메시지 영역 */
@@ -2691,25 +2683,18 @@ function renderBreadcrumb(activeIdx) {
   const bc = document.getElementById('chatBreadcrumb');
   const body = document.getElementById('chatBody');
 
+  const tabs = ['전체', ...path];
+
   bc.innerHTML = '';
-  path.forEach((name, i) => {
-    if (i > 0) {
-      const arrow = document.createElement('span');
-      arrow.className = 'chat-bc-arrow';
-      arrow.textContent = '›';
-      bc.appendChild(arrow);
-    }
-    const item = document.createElement('div');
-    item.className = 'chat-bc-item';
+  tabs.forEach((name, i) => {
     const btn = document.createElement('div');
     btn.className = 'chat-bc-btn' + (i === activeIdx ? ' active' : '');
     btn.textContent = name;
     btn.onclick = () => {
       renderBreadcrumb(i);
-      loadMockMsgs(body, name);
+      loadMockMsgs(body, i === 0 ? 'all' : name);
     };
-    item.appendChild(btn);
-    bc.appendChild(item);
+    bc.appendChild(btn);
   });
 }
 
