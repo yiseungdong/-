@@ -503,6 +503,7 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
         <div class="rp-tab active" onclick="switchTab(0)">화력 순위</div>
         <div class="rp-tab" onclick="switchTab(1)">채팅</div>
         <div class="rp-tab" onclick="switchTab(2)">커뮤니티</div>
+        <div class="rp-tab" onclick="switchTab(3)">🔥 화력전선</div>
       </div>
       <div id="tp0" class="tp active"><div class="rp-body">
         <div class="ts">✦ 실시간 화력 순위</div>
@@ -530,6 +531,52 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
         <div class="ci"><span style="font-size:20px">📸</span><div><div style="font-size:13px;font-weight:600">포토 갤러리</div><div style="font-size:11px;color:var(--quasar3)">2,104명 활동 중</div></div></div>
         <div class="ci"><span style="font-size:20px">⚔️</span><div><div style="font-size:13px;font-weight:600">배틀 존</div><div style="font-size:11px;color:var(--quasar3)">891명 활동 중</div></div></div>
         <div class="ci"><span style="font-size:20px">🏆</span><div><div style="font-size:13px;font-weight:600">리그 본부</div><div style="font-size:11px;color:var(--quasar3)">512명 활동 중</div></div></div>
+      </div></div>
+      <div id="tp3" class="tp"><div class="rp-body">
+        <div class="ts">🔥 화력전선 — Fire Front</div>
+
+        <!-- [1] 실시간 화력 게이지 -->
+        <div style="margin:8px 0 12px">
+          <div style="font-size:11px;font-weight:700;color:rgba(220,210,240,.85);margin-bottom:8px">⚡ 실시간 화력 게이지</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:10px;width:70px;color:#fbbf24;font-weight:700">🌟 SERENADE</span><div style="flex:1;height:14px;background:rgba(255,255,255,.06);border-radius:7px;overflow:hidden"><div style="width:92%;height:100%;background:linear-gradient(90deg,#f59e0b,#f0c040);border-radius:7px;transition:width .6s"></div></div><span style="font-size:10px;font-weight:700;color:#f0c040;width:32px;text-align:right">92%</span></div>
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:10px;width:70px;color:#c084fc;font-weight:700">💜 NOVA CORE</span><div style="flex:1;height:14px;background:rgba(255,255,255,.06);border-radius:7px;overflow:hidden"><div style="width:78%;height:100%;background:linear-gradient(90deg,#a855f7,#c084fc);border-radius:7px;transition:width .6s"></div></div><span style="font-size:10px;font-weight:700;color:#c084fc;width:32px;text-align:right">78%</span></div>
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:10px;width:70px;color:#38bdf8;font-weight:700">🔵 ECLIPSE</span><div style="flex:1;height:14px;background:rgba(255,255,255,.06);border-radius:7px;overflow:hidden"><div style="width:65%;height:100%;background:linear-gradient(90deg,#0ea5e9,#38bdf8);border-radius:7px;transition:width .6s"></div></div><span style="font-size:10px;font-weight:700;color:#38bdf8;width:32px;text-align:right">65%</span></div>
+          </div>
+        </div>
+
+        <!-- [2] 내 기여 현황 -->
+        <div style="background:rgba(56,189,248,.06);border:1px solid rgba(56,189,248,.2);border-radius:12px;padding:12px;margin-bottom:12px">
+          <div style="font-size:11px;font-weight:700;color:#38bdf8;margin-bottom:8px">🎯 내 기여 현황</div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><div style="font-size:10px;color:rgba(220,210,240,.7)">오늘 기여</div><div style="font-family:'Orbitron',monospace;font-size:16px;font-weight:900;color:#f0c040">1,240 QP</div></div>
+            <div style="width:1px;height:24px;background:rgba(255,255,255,.1)"></div>
+            <div><div style="font-size:10px;color:rgba(220,210,240,.7)">누적 기여</div><div style="font-family:'Orbitron',monospace;font-size:16px;font-weight:900;color:#ffffff">8,720 QP</div></div>
+            <div style="width:1px;height:24px;background:rgba(255,255,255,.1)"></div>
+            <div><div style="font-size:10px;color:rgba(220,210,240,.7)">리그 내 순위</div><div style="font-size:14px;font-weight:900;color:#34d399">🏆 3위</div></div>
+          </div>
+        </div>
+
+        <!-- [3] 시즌 MVP -->
+        <div style="font-size:11px;font-weight:700;color:rgba(220,210,240,.85);margin-bottom:8px">🏅 이달의 MVP</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <div style="flex:1;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:10px;text-align:center"><div style="font-size:18px;margin-bottom:4px">🔥</div><div style="font-size:9px;color:rgba(220,210,240,.7)">기여왕</div><div style="font-size:11px;font-weight:700;color:#ffffff">StarWarrior</div><div style="font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:#f0c040">9,840</div></div>
+          <div style="flex:1;background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.2);border-radius:10px;padding:10px;text-align:center"><div style="font-size:18px;margin-bottom:4px">🌱</div><div style="font-size:9px;color:rgba(220,210,240,.7)">성장왕</div><div style="font-size:11px;font-weight:700;color:#ffffff">RisingStar</div><div style="font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:#f0c040">+2,840</div></div>
+          <div style="flex:1;background:rgba(56,189,248,.06);border:1px solid rgba(56,189,248,.2);border-radius:10px;padding:10px;text-align:center"><div style="font-size:18px;margin-bottom:4px">💬</div><div style="font-size:9px;color:rgba(220,210,240,.7)">화제왕</div><div style="font-size:11px;font-weight:700;color:#ffffff">BuzzMaker</div><div style="font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:#f0c040">1,234</div></div>
+        </div>
+
+        <!-- [4] 화력 히스토리 7일 -->
+        <div style="font-size:11px;font-weight:700;color:rgba(220,210,240,.85);margin-bottom:8px">📊 최근 7일 화력 추이</div>
+        <div style="display:flex;align-items:flex-end;gap:6px;height:100px;padding:0 4px;margin-bottom:4px">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><div style="width:100%;height:65px;background:linear-gradient(180deg,#f59e0b,#c084fc);border-radius:4px 4px 0 0;opacity:.8"></div><div style="font-size:8px;color:rgba(220,210,240,.5)">3/29</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><div style="width:100%;height:72px;background:linear-gradient(180deg,#f59e0b,#c084fc);border-radius:4px 4px 0 0;opacity:.85"></div><div style="font-size:8px;color:rgba(220,210,240,.5)">3/30</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><div style="width:100%;height:58px;background:linear-gradient(180deg,#f59e0b,#c084fc);border-radius:4px 4px 0 0;opacity:.75"></div><div style="font-size:8px;color:rgba(220,210,240,.5)">3/31</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><div style="width:100%;height:80px;background:linear-gradient(180deg,#f59e0b,#c084fc);border-radius:4px 4px 0 0;opacity:.9"></div><div style="font-size:8px;color:rgba(220,210,240,.5)">4/1</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><div style="width:100%;height:75px;background:linear-gradient(180deg,#f59e0b,#c084fc);border-radius:4px 4px 0 0;opacity:.88"></div><div style="font-size:8px;color:rgba(220,210,240,.5)">4/2</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><div style="width:100%;height:88px;background:linear-gradient(180deg,#f59e0b,#c084fc);border-radius:4px 4px 0 0;opacity:.95"></div><div style="font-size:8px;color:rgba(220,210,240,.5)">4/3</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><div style="width:100%;height:72px;background:linear-gradient(180deg,#f59e0b,#c084fc);border-radius:4px 4px 0 0;opacity:.85"></div><div style="font-size:8px;color:rgba(220,210,240,.5)">4/4</div></div>
+        </div>
+
       </div></div>
     </div>
   </div>
@@ -684,8 +731,9 @@ function moveAv(wx,wy){
 // ── 채팅 ──
 function switchTab(idx){
   document.querySelectorAll('.rp-tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
-  [0,1,2].forEach(i=>{
+  [0,1,2,3].forEach(i=>{
     const el=document.getElementById('tp'+i);
+    if(!el)return;
     el.classList.toggle('active',i===idx);
     if(i===1)el.style.display=idx===1?'flex':'none';
     else el.style.display=idx===i?'block':'none';
