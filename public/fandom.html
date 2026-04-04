@@ -821,10 +821,11 @@ canvas{position:absolute;inset:0;z-index:1}
   </div>
   <div style="background:rgba(240,192,64,0.07);border-bottom:1px solid rgba(240,192,64,0.2);padding:8px 12px;flex-shrink:0;">
     <div style="font-size:10px;color:rgba(240,192,64,0.9);margin-bottom:7px;letter-spacing:0.6px;">카테고리 · CATEGORY</div>
-    <div style="display:flex;gap:6px;">
-      <button class="vote-cat-btn active" data-cat="propose" onclick="switchVoteCat('propose')" style="flex:1;">📝 안건상정</button>
-      <button class="vote-cat-btn" data-cat="ongoing" onclick="switchVoteCat('ongoing')" style="flex:1;">🔥 진행중</button>
-      <button class="vote-cat-btn" data-cat="result" onclick="switchVoteCat('result')" style="flex:1;">📊 결과</button>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;">
+      <button class="vote-cat-btn active" data-cat="propose" onclick="switchVoteCat('propose')" style="flex:1 1 calc(50% - 3px);">📝 안건상정</button>
+      <button class="vote-cat-btn" data-cat="ongoing" onclick="switchVoteCat('ongoing')" style="flex:1 1 calc(50% - 3px);">🔥 진행중</button>
+      <button class="vote-cat-btn" data-cat="result" onclick="switchVoteCat('result')" style="flex:1 1 calc(50% - 3px);">📊 결과</button>
+      <button class="vote-cat-btn" data-cat="leader" onclick="switchVoteCat('leader')" style="flex:1 1 calc(50% - 3px);">👑 리더선출</button>
     </div>
   </div>
   <div id="vote-list" style="flex:1;overflow-y:auto;padding:4px 12px;"></div>
@@ -2865,55 +2866,72 @@ let voteCat='propose';
 let voteTabId='all';
 const MOCK_VOTE={
   propose:{
-    all:[{title:'생일 카페 장소 변경 건의',nick:'StreamQueen',time:'2시간 전',pct:0},{title:'스밍 총공 요일 변경',nick:'MoonChild',time:'5시간 전',pct:0},{title:'공식 굿즈 공동구매 진행',nick:'ArtStar',time:'어제',pct:0}],
-    empire:[{title:'[엠파이어] 제국 집회 장소 안건',nick:'EmpireLead',time:'3시간 전',pct:0}],
-    dominion:[{title:'[도미니언] 영토 확장 안건',nick:'DomLead',time:'6시간 전',pct:0}],
-    sector:[{title:'[섹터] 이번달 목표 조정',nick:'SectLead',time:'어제',pct:0}],
-    cluster:[{title:'[클러스터] 성단 행사 안건',nick:'ClusLead',time:'어제',pct:0}],
-    orbit:[{title:'[오빗] 궤도 미션 변경',nick:'OrbLead',time:'2일 전',pct:0}],
-    territory:[{title:'[테리토리] 거점 이동 안건',nick:'TerrLead',time:'4시간 전',pct:0}],
-    base:[{title:'[베이스] 기지 운영 안건',nick:'BaseLead',time:'어제',pct:0}],
-    unit:[{title:'[유닛] 부대 편성 변경',nick:'UnitLead',time:'어제',pct:0}],
-    province:[{title:'[프로빈스] 주 행사 기획',nick:'ProvLead',time:'3시간 전',pct:0}],
-    district:[{title:'[디스트릭트] 구 단위 안건',nick:'DistLead',time:'5시간 전',pct:0}],
-    square:[{title:'[스퀘어] 광장 행사 안건',nick:'SqLead',time:'어제',pct:0}],
-    lounge:[{title:'[라운지] 공간 개편 안건',nick:'LounLead',time:'2일 전',pct:0}],
-    gathering:[{title:'[게더링] 집회 장소 안건',nick:'GathLead',time:'4시간 전',pct:0}],
-    point:[{title:'[포인트] 지점 추가 안건',nick:'PointLead',time:'어제',pct:0}]
+    all:[{id:'p1',title:'생일 카페 장소 변경 건의',nick:'StreamQueen',time:'2시간 전',likes:72,total:100,bubbleUp:true},{id:'p2',title:'스밍 총공 요일 변경',nick:'MoonChild',time:'5시간 전',likes:18,total:100,bubbleUp:false},{id:'p3',title:'공식 굿즈 공동구매 진행',nick:'ArtStar',time:'어제',likes:45,total:100,bubbleUp:true}],
+    empire:[{id:'pe1',title:'[엠파이어] 제국 집회 장소 안건',nick:'EmpireLead',time:'3시간 전',likes:55,total:100,bubbleUp:true}],
+    dominion:[{id:'pd1',title:'[도미니언] 영토 확장 안건',nick:'DomLead',time:'6시간 전',likes:22,total:100,bubbleUp:false}],
+    sector:[{id:'ps1',title:'[섹터] 이번달 목표 조정',nick:'SectLead',time:'어제',likes:61,total:100,bubbleUp:true}],
+    cluster:[{id:'pc1',title:'[클러스터] 성단 행사 안건',nick:'ClusLead',time:'어제',likes:44,total:100,bubbleUp:false}],
+    orbit:[{id:'po1',title:'[오빗] 궤도 미션 변경',nick:'OrbLead',time:'2일 전',likes:82,total:100,bubbleUp:true}],
+    territory:[{id:'pt1',title:'[테리토리] 거점 이동 안건',nick:'TerrLead',time:'4시간 전',likes:38,total:100,bubbleUp:false}],
+    base:[{id:'pb1',title:'[베이스] 기지 운영 안건',nick:'BaseLead',time:'어제',likes:55,total:100,bubbleUp:false}],
+    unit:[{id:'pu1',title:'[유닛] 부대 편성 변경',nick:'UnitLead',time:'어제',likes:70,total:100,bubbleUp:true}],
+    province:[{id:'pv1',title:'[프로빈스] 주 행사 기획',nick:'ProvLead',time:'3시간 전',likes:33,total:100,bubbleUp:false}],
+    district:[{id:'pi1',title:'[디스트릭트] 구 단위 안건',nick:'DistLead',time:'5시간 전',likes:48,total:100,bubbleUp:false}],
+    square:[{id:'pq1',title:'[스퀘어] 광장 행사 안건',nick:'SqLead',time:'어제',likes:60,total:100,bubbleUp:true}],
+    lounge:[{id:'pl1',title:'[라운지] 공간 개편 안건',nick:'LounLead',time:'2일 전',likes:25,total:100,bubbleUp:false}],
+    gathering:[{id:'pg1',title:'[게더링] 집회 장소 안건',nick:'GathLead',time:'4시간 전',likes:50,total:100,bubbleUp:false}],
+    point:[{id:'pp1',title:'[포인트] 지점 추가 안건',nick:'PointLead',time:'어제',likes:77,total:100,bubbleUp:true}]
   },
   ongoing:{
-    all:[{title:'슬로건 변경 투표',nick:'VoteGuard',time:'18시간 남음',pct:67},{title:'총공 시간대 결정',nick:'TimeMaster',time:'6시간 남음',pct:82},{title:'공식 색상 투표',nick:'ColorFan',time:'3일 남음',pct:44}],
-    empire:[{title:'[엠파이어] 제국기 디자인 투표',nick:'EmpireVote',time:'12시간 남음',pct:55}],
-    dominion:[{title:'[도미니언] 영토명 투표',nick:'DomVote',time:'1일 남음',pct:38}],
-    sector:[{title:'[섹터] 섹터장 선출',nick:'SectVote',time:'2일 남음',pct:71}],
-    cluster:[{title:'[클러스터] 행사 날짜',nick:'ClusVote',time:'6시간 남음',pct:60}],
-    orbit:[{title:'[오빗] 궤도 번호 투표',nick:'OrbVote',time:'3일 남음',pct:29}],
-    territory:[{title:'[테리토리] 거점명 투표',nick:'TerrVote',time:'1일 남음',pct:77}],
-    base:[{title:'[베이스] 기지장 선출',nick:'BaseVote',time:'2일 남음',pct:51}],
-    unit:[{title:'[유닛] 유닛명 투표',nick:'UnitVote',time:'5시간 남음',pct:88}],
-    province:[{title:'[프로빈스] 주지사 선출',nick:'ProvVote',time:'3일 남음',pct:43}],
-    district:[{title:'[디스트릭트] 구청장 투표',nick:'DistVote',time:'1일 남음',pct:66}],
-    square:[{title:'[스퀘어] 광장명 투표',nick:'SqVote',time:'2일 남음',pct:35}],
-    lounge:[{title:'[라운지] 라운지장 선출',nick:'LounVote',time:'4시간 남음',pct:92}],
-    gathering:[{title:'[게더링] 집회 시간 투표',nick:'GathVote',time:'6시간 남음',pct:58}],
-    point:[{title:'[포인트] 포인트명 투표',nick:'PointVote',time:'1일 남음',pct:74}]
+    all:[{id:'o1',title:'슬로건 변경 투표',nick:'VoteGuard',timeLeft:'18시간 남음',pro:67,con:33,total:234},{id:'o2',title:'총공 시간대 결정',nick:'TimeMaster',timeLeft:'6시간 남음',pro:82,con:18,total:891},{id:'o3',title:'공식 색상 투표',nick:'ColorFan',timeLeft:'3일 남음',pro:44,con:56,total:156}],
+    empire:[{id:'oe1',title:'[엠파이어] 제국기 디자인 투표',nick:'EmpireVote',timeLeft:'12시간 남음',pro:55,con:45,total:320}],
+    dominion:[{id:'od1',title:'[도미니언] 영토명 투표',nick:'DomVote',timeLeft:'1일 남음',pro:38,con:62,total:180}],
+    sector:[{id:'os1',title:'[섹터] 섹터장 선출',nick:'SectVote',timeLeft:'2일 남음',pro:71,con:29,total:450}],
+    cluster:[{id:'oc1',title:'[클러스터] 행사 날짜 투표',nick:'ClusVote',timeLeft:'6시간 남음',pro:60,con:40,total:98}],
+    orbit:[{id:'oo1',title:'[오빗] 궤도 번호 투표',nick:'OrbVote',timeLeft:'3일 남음',pro:29,con:71,total:67}],
+    territory:[{id:'ot1',title:'[테리토리] 거점명 투표',nick:'TerrVote',timeLeft:'1일 남음',pro:77,con:23,total:512}],
+    base:[{id:'ob1',title:'[베이스] 기지장 선출',nick:'BaseVote',timeLeft:'2일 남음',pro:51,con:49,total:280}],
+    unit:[{id:'ou1',title:'[유닛] 유닛명 투표',nick:'UnitVote',timeLeft:'5시간 남음',pro:88,con:12,total:145}],
+    province:[{id:'ov1',title:'[프로빈스] 주지사 선출',nick:'ProvVote',timeLeft:'3일 남음',pro:43,con:57,total:670}],
+    district:[{id:'oi1',title:'[디스트릭트] 구청장 투표',nick:'DistVote',timeLeft:'1일 남음',pro:66,con:34,total:390}],
+    square:[{id:'oq1',title:'[스퀘어] 광장명 투표',nick:'SqVote',timeLeft:'2일 남음',pro:35,con:65,total:210}],
+    lounge:[{id:'ol1',title:'[라운지] 라운지장 선출',nick:'LounVote',timeLeft:'4시간 남음',pro:92,con:8,total:88}],
+    gathering:[{id:'og1',title:'[게더링] 집회 시간 투표',nick:'GathVote',timeLeft:'6시간 남음',pro:58,con:42,total:175}],
+    point:[{id:'opoint1',title:'[포인트] 포인트명 투표',nick:'PointVote',timeLeft:'1일 남음',pro:74,con:26,total:132}]
   },
   result:{
-    all:[{title:'공식 응원봉 색상 결정',nick:'ColorFan',time:'3일 전 종료',pct:91},{title:'팬클럽 창립기념일 행사',nick:'EventFan',time:'5일 전 종료',pct:78},{title:'스밍 플랫폼 우선순위',nick:'StreamQueen',time:'1주 전 종료',pct:63}],
-    empire:[{title:'[엠파이어] 전 제국 집회 결과',nick:'EmpireRes',time:'2일 전 종료',pct:85}],
-    dominion:[{title:'[도미니언] 영토 재편 결과',nick:'DomRes',time:'4일 전 종료',pct:72}],
-    sector:[{title:'[섹터] 섹터 합병 결과',nick:'SectRes',time:'1주 전 종료',pct:58}],
-    cluster:[{title:'[클러스터] 성단 행사 결과',nick:'ClusRes',time:'3일 전 종료',pct:94}],
-    orbit:[{title:'[오빗] 궤도 조정 결과',nick:'OrbRes',time:'5일 전 종료',pct:47}],
-    territory:[{title:'[테리토리] 거점 확장 결과',nick:'TerrRes',time:'2일 전 종료',pct:81}],
-    base:[{title:'[베이스] 기지 이전 결과',nick:'BaseRes',time:'6일 전 종료',pct:69}],
-    unit:[{title:'[유닛] 유닛 재편 결과',nick:'UnitRes',time:'1주 전 종료',pct:76}],
-    province:[{title:'[프로빈스] 주 행사 결과',nick:'ProvRes',time:'3일 전 종료',pct:88}],
-    district:[{title:'[디스트릭트] 구 재편 결과',nick:'DistRes',time:'4일 전 종료',pct:55}],
-    square:[{title:'[스퀘어] 광장 행사 결과',nick:'SqRes',time:'5일 전 종료',pct:79}],
-    lounge:[{title:'[라운지] 라운지 개편 결과',nick:'LounRes',time:'1주 전 종료',pct:83}],
-    gathering:[{title:'[게더링] 집회 결과',nick:'GathRes',time:'2일 전 종료',pct:91}],
-    point:[{title:'[포인트] 포인트 조정 결과',nick:'PointRes',time:'3일 전 종료',pct:67}]
+    all:[{id:'r1',title:'공식 응원봉 색상 결정',nick:'ColorFan',endTime:'3일 전 종료',pro:91,total:1240,passed:true,record:'2026.04 응원봉색상: 보라+골드 찬성91%'},{id:'r2',title:'팬클럽 창립기념일 행사',nick:'EventFan',endTime:'5일 전 종료',pro:78,total:980,passed:true,record:'2026.04 창립기념: 오프라인행사 찬성78%'},{id:'r3',title:'스밍 플랫폼 우선순위',nick:'StreamQueen',endTime:'1주 전 종료',pro:63,total:750,passed:true,record:'2026.03 스밍플랫폼: 멜론 찬성63%'}],
+    empire:[{id:'re1',title:'[엠파이어] 전 제국 집회 결과',nick:'EmpireRes',endTime:'2일 전 종료',pro:85,total:4200,passed:true,record:'2026.04 엠파이어집회: 서울광장 찬성85%'}],
+    dominion:[{id:'rd1',title:'[도미니언] 영토 재편 결과',nick:'DomRes',endTime:'4일 전 종료',pro:72,total:1800,passed:true,record:'2026.04 도미니언재편: 찬성72%'}],
+    sector:[{id:'rs1',title:'[섹터] 섹터 합병 결과',nick:'SectRes',endTime:'1주 전 종료',pro:45,total:900,passed:false,record:'2026.04 섹터합병: 부결 찬성45%'}],
+    cluster:[{id:'rc1',title:'[클러스터] 성단 행사 결과',nick:'ClusRes',endTime:'3일 전 종료',pro:94,total:320,passed:true,record:'2026.04 클러스터행사: 찬성94%'}],
+    orbit:[{id:'ro1',title:'[오빗] 궤도 조정 결과',nick:'OrbRes',endTime:'5일 전 종료',pro:47,total:88,passed:false,record:'2026.04 궤도조정: 부결 찬성47%'}],
+    territory:[{id:'rt1',title:'[테리토리] 거점 확장 결과',nick:'TerrRes',endTime:'2일 전 종료',pro:81,total:2100,passed:true,record:'2026.04 거점확장: 찬성81%'}],
+    base:[{id:'rb1',title:'[베이스] 기지 이전 결과',nick:'BaseRes',endTime:'6일 전 종료',pro:69,total:950,passed:true,record:'2026.04 기지이전: 찬성69%'}],
+    unit:[{id:'ru1',title:'[유닛] 유닛 재편 결과',nick:'UnitRes',endTime:'1주 전 종료',pro:76,total:180,passed:true,record:'2026.04 유닛재편: 찬성76%'}],
+    province:[{id:'rv1',title:'[프로빈스] 주 행사 결과',nick:'ProvRes',endTime:'3일 전 종료',pro:88,total:3400,passed:true,record:'2026.04 프로빈스행사: 찬성88%'}],
+    district:[{id:'ri1',title:'[디스트릭트] 구 재편 결과',nick:'DistRes',endTime:'4일 전 종료',pro:55,total:1600,passed:true,record:'2026.04 디스트릭트재편: 찬성55%'}],
+    square:[{id:'rq1',title:'[스퀘어] 광장 행사 결과',nick:'SqRes',endTime:'5일 전 종료',pro:79,total:780,passed:true,record:'2026.04 스퀘어행사: 찬성79%'}],
+    lounge:[{id:'rl1',title:'[라운지] 라운지 개편 결과',nick:'LounRes',endTime:'1주 전 종료',pro:83,total:290,passed:true,record:'2026.04 라운지개편: 찬성83%'}],
+    gathering:[{id:'rg1',title:'[게더링] 집회 결과',nick:'GathRes',endTime:'2일 전 종료',pro:91,total:1100,passed:true,record:'2026.04 게더링집회: 찬성91%'}],
+    point:[{id:'rpoint1',title:'[포인트] 포인트 조정 결과',nick:'PointRes',endTime:'3일 전 종료',pro:67,total:580,passed:true,record:'2026.04 포인트조정: 찬성67%'}]
+  },
+  leader:{
+    all:[{id:'l1',title:'팬클럽 대표 선출',phase:'투표중',timeLeft:'2일 남음',candidates:[{name:'StarLord',votes:412},{name:'MoonQueen',votes:387},{name:'NovaKing',votes:201}],total:1000},{id:'l2',title:'부대표 선출',phase:'후보등록',timeLeft:'후보등록 3일 남음',candidates:[{name:'ArtStar',votes:0},{name:'VoteGuard',votes:0}],total:0}],
+    empire:[{id:'le1',title:'엠파이어장 선출',phase:'투표중',timeLeft:'1일 남음',candidates:[{name:'EmpireKing',votes:1820},{name:'StarLord',votes:1540}],total:3360}],
+    dominion:[{id:'ld1',title:'도미니언장 선출',phase:'후보등록',timeLeft:'후보등록 2일 남음',candidates:[{name:'DomQueen',votes:0}],total:0}],
+    sector:[{id:'ls1',title:'섹터장 선출',phase:'투표중',timeLeft:'3일 남음',candidates:[{name:'SectLead',votes:310},{name:'NovaFan',votes:280},{name:'StarFan',votes:190}],total:780}],
+    cluster:[{id:'lc1',title:'클러스터장 선출',phase:'완료',timeLeft:'종료',candidates:[{name:'ClusKing',votes:88},{name:'PurpleFan',votes:45}],total:133}],
+    orbit:[{id:'lo1',title:'오빗장 선출',phase:'후보등록',timeLeft:'후보등록 1일 남음',candidates:[],total:0}],
+    territory:[{id:'lter1',title:'테리토리장 선출',phase:'투표중',timeLeft:'4일 남음',candidates:[{name:'TerrLead',votes:890},{name:'StarBase',votes:760}],total:1650}],
+    base:[{id:'lba1',title:'베이스장 선출',phase:'완료',timeLeft:'종료',candidates:[{name:'BaseLead',votes:540},{name:'MoonFan',votes:380}],total:920}],
+    unit:[{id:'lu1',title:'유닛장 선출',phase:'투표중',timeLeft:'1일 남음',candidates:[{name:'UnitLead',votes:72},{name:'GalaxyFan',votes:61}],total:133}],
+    province:[{id:'lv1',title:'프로빈스장 선출',phase:'후보등록',timeLeft:'후보등록 3일 남음',candidates:[{name:'ProvLead',votes:0}],total:0}],
+    district:[{id:'ldi1',title:'디스트릭트장 선출',phase:'투표중',timeLeft:'2일 남음',candidates:[{name:'DistLead',votes:420},{name:'NovaStar',votes:390}],total:810}],
+    square:[{id:'lsq1',title:'스퀘어장 선출',phase:'완료',timeLeft:'종료',candidates:[{name:'SqLead',votes:310},{name:'PlanetFan',votes:280}],total:590}],
+    lounge:[{id:'ll1',title:'라운지장 선출',phase:'투표중',timeLeft:'5시간 남음',candidates:[{name:'LounLead',votes:45},{name:'StarFan',votes:38}],total:83}],
+    gathering:[{id:'lga1',title:'게더링장 선출',phase:'후보등록',timeLeft:'후보등록 2일 남음',candidates:[{name:'GathLead',votes:0}],total:0}],
+    point:[{id:'lpo1',title:'포인트장 선출',phase:'투표중',timeLeft:'3일 남음',candidates:[{name:'PointLead',votes:88},{name:'DustFan',votes:72}],total:160}]
   }
 };
 function getVoteBadge(cat){
@@ -2943,7 +2961,8 @@ function closeVotePanel(){
 function switchVoteCat(cat){
   voteCat=cat;
   document.querySelectorAll('.vote-cat-btn').forEach(b=>b.classList.remove('active'));
-  document.querySelector(`.vote-cat-btn[data-cat="${cat}"]`).classList.add('active');
+  const btn=document.querySelector(`.vote-cat-btn[data-cat="${cat}"]`);
+  if(btn)btn.classList.add('active');
   renderVoteList();
 }
 function renderVoteTabs(activeId='all'){
@@ -2970,16 +2989,83 @@ function renderVoteList(){
   if(!list)return;
   const catData=MOCK_VOTE[voteCat]||MOCK_VOTE['propose'];
   const items=catData[voteTabId]||catData['all']||[];
-  const badge=getVoteBadge(voteCat);
-  if(!items.length){list.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px 0;font-size:13px;">투표 항목이 없습니다</div>';return;}
-  list.innerHTML=items.map(v=>`
-    <div class="vote-item">
-      <span class="vote-item-badge ${badge.cls}">${badge.label}</span>
+  if(!items.length){list.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px 0;font-size:13px;">항목이 없습니다</div>';return;}
+
+  if(voteCat==='propose'){
+    list.innerHTML=items.map(v=>{
+      const pct=Math.round((v.likes/v.total)*100);
+      return `<div class="vote-item">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">
+          <span class="vote-item-badge propose">안건상정</span>
+          ${v.bubbleUp?'<span style="font-size:10px;color:#fbbf24;font-weight:700;">⬆️ 상위단계 상정중</span>':''}
+        </div>
+        <div class="vote-item-title">${v.title}</div>
+        <div class="vote-item-meta">${v.nick} · ${v.time}</div>
+        <div style="margin-top:7px;">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:3px;"><span>👍 추천 ${v.likes}/${v.total}</span><span>${pct}%</span></div>
+          <div class="vote-item-bar"><div class="vote-item-bar-fill" style="width:${pct}%;background:${pct>=30?'var(--lp)':'var(--muted)'};"></div></div>
+          <div style="font-size:10px;color:var(--muted);margin-top:3px;">${pct>=30?'✅ 버블업 조건 충족 → 상위 모임으로 상향 가능':'버블업까지 '+(30-pct)+'% 더 필요'}</div>
+        </div>
+        <button onclick="alert('추천하기 기능은 로그인 후 이용 가능합니다!')" style="margin-top:8px;width:100%;padding:5px;border-radius:6px;border:1px solid var(--lp);background:transparent;color:var(--lp);font-size:11px;cursor:pointer;">👍 추천하기 · ACT+2 / SOC+3</button>
+      </div>`;
+    }).join('');
+  }else if(voteCat==='ongoing'){
+    list.innerHTML=items.map(v=>`<div class="vote-item">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">
+        <span class="vote-item-badge ongoing">진행중</span>
+        <span style="font-size:10px;color:#fbbf24;">⏰ ${v.timeLeft}</span>
+      </div>
       <div class="vote-item-title">${v.title}</div>
-      <div class="vote-item-meta">${v.nick} · ${v.time}</div>
-      ${v.pct>0?`<div class="vote-item-bar"><div class="vote-item-bar-fill" style="width:${v.pct}%"></div></div><div style="font-size:10px;color:var(--lp);margin-top:3px;text-align:right;">${v.pct}% 찬성</div>`:''}
-    </div>
-  `).join('');
+      <div class="vote-item-meta">${v.nick} · 총 ${v.total.toLocaleString()}명 참여</div>
+      <div style="margin-top:8px;">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:#34d399;margin-bottom:2px;"><span>찬성</span><span>${v.pro}%</span></div>
+        <div class="vote-item-bar" style="margin-bottom:5px;"><div class="vote-item-bar-fill" style="width:${v.pro}%;background:#34d399;"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:#f87171;margin-bottom:2px;"><span>반대</span><span>${v.con}%</span></div>
+        <div class="vote-item-bar"><div class="vote-item-bar-fill" style="width:${v.con}%;background:#f87171;"></div></div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:8px;">
+        <button onclick="alert('찬성 투표! ACT+2 적립')" style="flex:1;padding:5px;border-radius:6px;border:1px solid #34d399;background:transparent;color:#34d399;font-size:11px;cursor:pointer;">👍 찬성</button>
+        <button onclick="alert('반대 투표! ACT+2 적립')" style="flex:1;padding:5px;border-radius:6px;border:1px solid #f87171;background:transparent;color:#f87171;font-size:11px;cursor:pointer;">👎 반대</button>
+      </div>
+    </div>`).join('');
+  }else if(voteCat==='result'){
+    list.innerHTML=items.map(v=>`<div class="vote-item">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">
+        <span class="vote-item-badge result">결과</span>
+        <span style="font-size:11px;font-weight:700;color:${v.passed?'#34d399':'#f87171'};">${v.passed?'✅ 가결':'❌ 부결'}</span>
+      </div>
+      <div class="vote-item-title">${v.title}</div>
+      <div class="vote-item-meta">${v.nick} · ${v.endTime}</div>
+      <div style="margin-top:6px;">
+        <div class="vote-item-bar"><div class="vote-item-bar-fill" style="width:${v.pro}%;background:${v.passed?'#34d399':'var(--muted)'};"></div></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px;">찬성 ${v.pro}% · 총 ${v.total.toLocaleString()}명</div>
+      </div>
+      <div style="margin-top:6px;padding:6px 8px;background:rgba(240,192,64,0.07);border-radius:6px;border-left:2px solid var(--gold);">
+        <div style="font-size:10px;color:var(--gold);">📜 영구기록</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">${v.record}</div>
+      </div>
+    </div>`).join('');
+  }else if(voteCat==='leader'){
+    list.innerHTML=items.map(v=>{
+      const maxVotes=v.candidates.length>0?Math.max(...v.candidates.map(c=>c.votes),1):1;
+      const phaseColor=v.phase==='투표중'?'#fbbf24':v.phase==='후보등록'?'#818cf8':'var(--muted)';
+      return `<div class="vote-item">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">
+          <span class="vote-item-badge" style="background:rgba(240,192,64,0.15);color:var(--gold);">👑 리더선출</span>
+          <span style="font-size:10px;color:${phaseColor};font-weight:700;">${v.phase}</span>
+        </div>
+        <div class="vote-item-title">${v.title}</div>
+        <div class="vote-item-meta">⏰ ${v.timeLeft}</div>
+        ${v.candidates.length>0?`<div style="margin-top:8px;">${v.candidates.map((c,i)=>`<div style="margin-bottom:6px;">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text);margin-bottom:2px;"><span>${i===0?'🥇':i===1?'🥈':'🥉'} ${c.name}</span><span style="color:var(--muted);">${v.total>0?c.votes.toLocaleString()+'표':'등록중'}</span></div>
+          ${v.total>0?`<div class="vote-item-bar"><div class="vote-item-bar-fill" style="width:${Math.round((c.votes/maxVotes)*100)}%;background:var(--gold);"></div></div>`:''}</div>`).join('')}</div>`:'<div style="font-size:12px;color:var(--muted);margin-top:6px;">아직 후보가 없습니다</div>'}
+        <div style="display:flex;gap:6px;margin-top:8px;">
+          ${v.phase==='후보등록'?'<button onclick="alert(\'후보 등록하기! (로그인 필요)\')" style="flex:1;padding:5px;border-radius:6px;border:1px solid var(--lp);background:transparent;color:var(--lp);font-size:11px;cursor:pointer;">✋ 후보 등록</button>':''}
+          ${v.phase==='투표중'?'<button onclick="alert(\'투표하기! ACT+2 적립\')" style="flex:1;padding:5px;border-radius:6px;border:1px solid var(--gold);background:transparent;color:var(--gold);font-size:11px;cursor:pointer;">👑 투표하기</button>':''}
+        </div>
+      </div>`;
+    }).join('');
+  }
 }
 
 function openBoardPanel(){
