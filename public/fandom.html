@@ -1211,6 +1211,25 @@ function calcBLD(league){
       }
     }
   });
+
+  // 상단 건물 자동 균등 배치
+  const topRowAll=['hq','starreport','wish','league_bld_1','league_bld_2','league_bld_3','league_bld_4','league_bld_5'];
+  const topRowIds=topRowAll.filter(id=>{
+    const b=BLD.find(b=>b.id===id);
+    return b&&!b.hidden;
+  });
+  const topY=Math.round(H*0.12);
+  const bldW=BLD.find(b=>b.id==='hq')?.w||Math.round(W*0.07);
+  const startX=Math.round(W*0.10);
+  const endX=Math.round(W*0.90);
+  const spacing=Math.round((endX-startX)/(topRowIds.length+1));
+  topRowIds.forEach((id,i)=>{
+    const b=BLD.find(b=>b.id===id);
+    if(b){
+      b.x=startX+spacing*(i+1)-Math.round(bldW/2);
+      b.y=topY;
+    }
+  });
 }
 
 let cv,ctx,t,anim;
