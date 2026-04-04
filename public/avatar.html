@@ -798,7 +798,22 @@ function renderAvatarLayers(){
   document.getElementById('layer-top').innerHTML = '';
   document.getElementById('layer-bottom').innerHTML = '';
   document.getElementById('layer-hair').innerHTML = '';
-  document.getElementById('layer-acc').innerHTML = '';
+
+  // 액세서리 레이어: 선택된 아이템 이모지 오버레이
+  var accHtml = '';
+  if(avatar.acc_crown){
+    var ac=(ACCESSORIES.crown||[]).find(x=>x.id===avatar.acc_crown);
+    if(ac) accHtml += '<div style="position:absolute;top:0;left:50%;transform:translateX(-50%);font-size:28px;line-height:1;z-index:6;">'+ac.emoji+'</div>';
+  }
+  if(avatar.acc_wing){
+    var aw=(ACCESSORIES.wing||[]).find(x=>x.id===avatar.acc_wing);
+    if(aw) accHtml += '<div style="position:absolute;top:50%;left:50%;transform:translate(-80%,-40%);font-size:24px;line-height:1;z-index:6;">'+aw.emoji+'</div>';
+  }
+  if(avatar.acc_weapon){
+    var awp=(ACCESSORIES.weapon||[]).find(x=>x.id===avatar.acc_weapon);
+    if(awp) accHtml += '<div style="position:absolute;bottom:20px;right:10px;font-size:22px;line-height:1;z-index:6;">'+awp.emoji+'</div>';
+  }
+  document.getElementById('layer-acc').innerHTML = accHtml;
 }
 
 // ════════════════════════════════════
@@ -946,7 +961,7 @@ function selectSkin(color){
 }
 function selectHair(id){
   const h=HAIRS.find(x=>x.id===id);
-  if(!h||!h.unlocked){showToast(`🔒 ${h.req} 달성 시 해금!`);return;}
+  if(!h||!h.unlocked){showToast(`🔒 ${h?.req||'조건'} 달성 시 해금!`);return;}
   avatar.hair=id; renderHair(); renderAvatarLayers(); burst(); showToast('헤어스타일 변경!');
 }
 function selectHairColor(color){
@@ -968,7 +983,7 @@ function renderOutfitColors(){
 }
 function selectOutfit(type,id){
   const o=(OUTFITS[type]||[]).find(x=>x.id===id);
-  if(!o||!o.unlocked){showToast(`🔒 ${o.req} 달성 시 해금!`);return;}
+  if(!o||!o.unlocked){showToast(`🔒 ${o?.req||'조건'} 달성 시 해금!`);return;}
   // 착용중 업데이트
   (OUTFITS[type]||[]).forEach(x=>x.equipped=false);
   o.equipped=true;
@@ -984,7 +999,7 @@ function selectAura(id){
 function selectAcc(type,id){
   const items=ACCESSORIES[type]||[];
   const a=items.find(x=>x.id===id);
-  if(!a||!a.unlocked){showToast(`🔒 ${a.req} 달성 시 해금!`);return;}
+  if(!a||!a.unlocked){showToast(`🔒 ${a?.req||'조건'} 달성 시 해금!`);return;}
   // 토글 (같은 거 클릭하면 해제)
   avatar['acc_'+type] = avatar['acc_'+type]===id ? null : id;
   renderAcc(); renderAvatarLayers(); burst();
@@ -992,13 +1007,13 @@ function selectAcc(type,id){
 }
 function selectEmotion(id){
   const e=EMOTIONS.find(x=>x.id===id);
-  if(!e||!e.unlocked){showToast(`🔒 ${e.req} 달성 시 해금!`);return;}
+  if(!e||!e.unlocked){showToast(`🔒 ${e?.req||'조건'} 달성 시 해금!`);return;}
   avatar.emotion=id; renderEmotion(); renderAvatarLayers(); burst();
   showToast(`${e.emoji} 표정 변경!`);
 }
 function selectMotion(id){
   const m=MOTIONS.find(x=>x.id===id);
-  if(!m||!m.unlocked){showToast(`🔒 ${m.req} 달성 시 해금!`);return;}
+  if(!m||!m.unlocked){showToast(`🔒 ${m?.req||'조건'} 달성 시 해금!`);return;}
   avatar.motion=id; renderEmotion(); renderAvatarLayers(); burst();
   showToast(`${m.emoji} 모션 변경!`);
 }
