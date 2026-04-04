@@ -1038,6 +1038,7 @@ const BLD_BASE=[
   {id:'event',rx:.24,ry:.69,rw:.065,rh:.063,nK:'이벤트 광장',nE:'Event Plaza'},
   {id:'honor',rx:.64,ry:.69,rw:.06,rh:.066,nK:'명예의 전당',nE:'Hall of Honor'},
   {id:'org_chat',rx:.44,ry:.88,rw:.07,rh:.075,nK:'모임 채팅',nE:'Org Chat'},
+  {id:'starreport',rx:.44,ry:.70,rw:.055,rh:.060,nK:'별빛 제보소',nE:'Star Report'}
 ];
 let BLD=[];
 const SCALE={dust:.8,star:.9,planet:1,nova:1.1,quasar:1.2};
@@ -2282,7 +2283,87 @@ vote:()=>`<div class="mo-h"><div class="mo-t">🗳️ 투표소</div><div class=
 wish:()=>`<div class="mo-h"><div class="mo-t">⭐ 소원의 신전</div><div class="mo-x" onclick="closeMo()">✕</div></div><div class="mc"><div class="mc-t">🌟 메인 소원</div><div class="mc-c"><div style="text-align:center;font-size:28px;padding:8px">⭐</div><div style="text-align:center"><div style="font-size:12px;font-weight:700;color:var(--gold)">팬 생일 카페 이벤트</div><div class="pb" style="margin-top:6px;height:6px"><div class="pf" style="width:64%"></div></div><div style="font-size:9px;color:var(--lp);margin-top:3px;font-family:Orbitron">128,000/200,000</div></div></div></div>`,
 org:()=>`<div class="mo-h"><div class="mo-t">🏗️ 조직도</div><div class="mo-x" onclick="closeMo()">✕</div></div><div class="mc"><div class="mc-t">📊 구조</div><div class="mc-c">${[{i:'🏰',n:'팬클럽',c:'98,432',m:0},{i:'🏘️',n:'테리토리',c:'~20K',m:10},{i:'🏠',n:'베이스',c:'~2K',m:20},{i:'👥',n:'유닛(내소속)',c:'~200',m:30,my:1},{i:'⭐',n:'나',c:'',m:40}].map(o=>'<div style="display:flex;align-items:center;gap:6px;padding:4px 6px;margin-left:'+o.m+'px;margin-bottom:3px;border-radius:5px;background:rgba(255,255,255,'+(o.my?'.06':'.02')+');border-left:2px solid '+(o.my?'var(--gold)':'var(--lp)')+';font-size:10px"><span>'+o.i+'</span><b>'+o.n+'</b><span style="font-size:8px;color:var(--muted);margin-left:auto">'+o.c+'</span></div>').join('')}</div></div>`,
 event:()=>`<div class="mo-h"><div class="mo-t">🎪 이벤트</div><div class="mo-x" onclick="closeMo()">✕</div></div><div class="mc"><div class="mc-t">🔥 진행 중</div><div class="mc-c"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:20px">⚔️</span><div style="flex:1"><div style="font-weight:700">라이벌 & 스탯킹</div><div style="font-size:8px;color:var(--muted)">3주차!</div></div><span style="font-family:Orbitron;font-size:9px;color:var(--lp)">D-2</span></div></div></div><div class="mc"><div class="mc-t">📊 화력</div><div class="mc-c"><div class="pb" style="height:6px"><div class="pf" style="width:${DM.energy}%"></div></div><div style="font-size:9px;color:var(--lp);margin-top:2px">${DM.energy}%</div></div></div>`,
-honor:()=>`<div class="mo-h"><div class="mo-t">🏛️ 명예의 전당</div><div class="mo-x" onclick="closeMo()">✕</div></div><div class="mc"><div class="mc-t">🏆 MVP</div><div class="mc-c">${[{m:'🥇',t:'S3 활동왕',n:'StarWarrior'},{m:'🥇',t:'S3 성장왕',n:'RisingStar'},{m:'🌟',t:'S3 신인상',n:'BrightNewbie'}].map(h=>'<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:14px">'+h.m+'</span><div><div style="font-weight:700;font-size:10px">'+h.t+'</div><div style="font-size:8px;color:var(--muted)">'+h.n+'</div></div></div>').join('')}</div></div>`
+honor:()=>`<div class="mo-h"><div class="mo-t">🏛️ 명예의 전당</div><div class="mo-x" onclick="closeMo()">✕</div></div><div class="mc"><div class="mc-t">🏆 MVP</div><div class="mc-c">${[{m:'🥇',t:'S3 활동왕',n:'StarWarrior'},{m:'🥇',t:'S3 성장왕',n:'RisingStar'},{m:'🌟',t:'S3 신인상',n:'BrightNewbie'}].map(h=>'<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:14px">'+h.m+'</span><div><div style="font-weight:700;font-size:10px">'+h.t+'</div><div style="font-size:8px;color:var(--muted)">'+h.n+'</div></div></div>').join('')}</div></div>`,
+starreport:()=>`
+<div class="mo-h">
+  <div class="mo-t">🌟 별빛 제보소</div>
+  <div class="mo-x" onclick="closeMo()">✕</div>
+</div>
+<div class="mc">
+  <div class="mc-t">📋 내 기자 등급</div>
+  <div class="mc-c">
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;">
+      <span style="font-size:20px">📰</span>
+      <div>
+        <div style="font-weight:700;color:var(--gold)">수습기자</div>
+        <div style="font-size:8px;color:var(--muted)">제보 12건 · 검증통과율 75%</div>
+      </div>
+      <div style="margin-left:auto;font-size:8px;color:var(--lp)">다음: 정기자</div>
+    </div>
+    <div style="height:3px;background:rgba(255,255,255,0.08);border-radius:3px;margin-bottom:8px;">
+      <div style="height:100%;width:60%;background:linear-gradient(90deg,var(--lp),var(--gold));border-radius:3px;"></div>
+    </div>
+  </div>
+</div>
+<div class="mc">
+  <div class="mc-t">🔥 최신 제보</div>
+  <div class="mc-c" id="reportList">
+    ${[
+      {cat:'👀 목격',title:'홍대 카페 목격담',user:'StarEye99',trust:89,votes:34,verified:true},
+      {cat:'📅 일정',title:'5월 팬미팅 일정 유출?',user:'SchedHunter',trust:62,votes:18,verified:false},
+      {cat:'📰 소식',title:'신보 티저 분석',user:'NewsFlash',trust:95,votes:67,verified:true},
+      {cat:'❓ 루머',title:'컴백 날짜 루머',user:'RumorBuster',trust:41,votes:12,verified:false},
+      {cat:'🎁 굿즈',title:'생일 한정 굿즈 정보',user:'GoodsKing',trust:78,votes:29,verified:true}
+    ].map(r=>`
+      <div style="padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+        <div style="display:flex;align-items:center;gap:4px;margin-bottom:2px">
+          <span style="font-size:8px;padding:1px 4px;border-radius:4px;background:rgba(255,255,255,.06);color:var(--lp)">${r.cat}</span>
+          ${r.verified ? '<span style="font-size:7px;color:#34d399">✓ 검증됨</span>' : '<span style="font-size:7px;color:var(--muted)">검증중</span>'}
+        </div>
+        <div style="font-weight:500;font-size:10px">${r.title}</div>
+        <div style="display:flex;justify-content:space-between;margin-top:2px">
+          <span style="font-size:8px;color:var(--muted)">${r.user}</span>
+          <span style="font-size:8px;color:${r.trust>=70?'#34d399':r.trust>=50?'#fbbf24':'#ef4444'}">신뢰도 ${r.trust}%</span>
+        </div>
+      </div>
+    `).join('')}
+  </div>
+</div>
+<div class="mc">
+  <div class="mc-t">✏️ 제보하기</div>
+  <div class="mc-c">
+    <select style="width:100%;padding:5px 8px;background:rgba(255,255,255,.06);border:1px solid rgba(180,150,255,.2);border-radius:8px;color:var(--text);font-size:10px;margin-bottom:6px;">
+      <option>👀 목격</option>
+      <option>📅 일정</option>
+      <option>📰 소식</option>
+      <option>❓ 루머</option>
+      <option>🎁 굿즈</option>
+    </select>
+    <input placeholder="제보 내용을 입력하세요..." style="width:100%;padding:6px 8px;background:rgba(255,255,255,.06);border:1px solid rgba(180,150,255,.2);border-radius:8px;color:var(--text);font-size:10px;box-sizing:border-box;margin-bottom:6px;" />
+    <button onclick="showToast('제보가 등록되었습니다! 검증 투표가 시작됩니다 🌟')" style="width:100%;padding:6px;background:linear-gradient(135deg,var(--lp),var(--accent2));border:none;border-radius:8px;color:#fff;font-size:10px;font-weight:700;cursor:pointer;">🌟 제보 등록</button>
+  </div>
+</div>
+<div class="mc">
+  <div class="mc-t">⭐ 기자 등급 안내</div>
+  <div class="mc-c">
+    ${[
+      {grade:'새내기기자',icon:'🌱',cond:'제보 1건 이상'},
+      {grade:'수습기자',icon:'📝',cond:'제보 10건 + 통과율 50%'},
+      {grade:'정기자',icon:'📰',cond:'제보 30건 + 통과율 65%'},
+      {grade:'특파원',icon:'🎙️',cond:'제보 100건 + 통과율 75%'},
+      {grade:'수석기자',icon:'🏆',cond:'제보 300건 + 통과율 85%'}
+    ].map(g=>`
+      <div style="display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+        <span style="font-size:14px">${g.icon}</span>
+        <div>
+          <div style="font-weight:700;font-size:10px;color:var(--gold)">${g.grade}</div>
+          <div style="font-size:8px;color:var(--muted)">${g.cond}</div>
+        </div>
+      </div>
+    `).join('')}
+  </div>
+</div>
+`
 };
 function openMo(k){
   if(k==='org_chat'){openFcChat('org',0);return;}
@@ -2361,7 +2442,8 @@ const MINI_EVENTS=[
   {icon:'🔥',tpl:'우리 팬클럽 순위 상승!'},
   {icon:'🏅',tpl:'{name}님이 뱃지 획득!'},
   {icon:'💜',tpl:'{name}님이 팬아트 업로드!'},
-  {icon:'📊',tpl:'오늘 활동 에너지 +5%!'},];
+  {icon:'📊',tpl:'오늘 활동 에너지 +5%!'},
+  {icon:'🌟',tpl:'새 제보가 등록되었습니다! 검증에 참여하세요'}];
 const MINI_NAMES=['StarFan','MoonChild','ArmyLove','PurpleU','Dreamer','GalaxyHeart','NovaRider','CosmicSoul','StellarBoy','LightBeam','OrbitGirl','StarDust99','NeonWave','EchoStar','LunarFox'];
 let miniEvtTimer=null;
 
