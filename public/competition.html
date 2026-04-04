@@ -20,190 +20,101 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 /* ── 상단 네비게이션 ── */
 .top-nav{position:fixed;top:0;left:0;right:0;z-index:400;display:flex;align-items:center;justify-content:center;gap:28px;height:44px;background:rgba(10,10,22,0.96);backdrop-filter:blur(20px);border-bottom:1px solid rgba(180,150,255,0.13)}
 .top-nav-item{font-size:12px;font-weight:500;color:rgba(255,255,255,0.7);text-decoration:none;cursor:pointer;transition:all .2s;letter-spacing:0.5px;padding:4px 2px;border-bottom:2px solid transparent}
-.top-nav-item:hover{color:#e8e4f0}
+.top-nav-item:hover{color:#fff}
 .top-nav-item.active{color:#c084fc;border-bottom-color:#c084fc}
 
 /* ── 페이지 헤더 ── */
-.page-header{
-  padding:60px 20px 16px;
-  text-align:center;
-  position:relative;
-  transition:background .4s ease;
-  flex-shrink:0;
-}
-.page-header::after{
-  content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
-  background:var(--border);
-}
-.header-title{
-  font-family:'Orbitron',monospace;font-size:16px;font-weight:900;
-  color:var(--gold);letter-spacing:2px;margin-bottom:5px;
-}
-.header-sub{font-size:11px;color:var(--muted);margin-bottom:6px;}
-.header-season{
-  display:inline-block;
-  font-size:10px;font-weight:700;color:var(--accent);
-  background:rgba(74,144,217,.1);border:1px solid rgba(74,144,217,.25);
-  border-radius:10px;padding:2px 10px;letter-spacing:0.5px;
-}
+.page-header{padding:60px 20px 16px;text-align:center;position:relative;flex-shrink:0;border-bottom:1px solid var(--border)}
+.header-title{font-family:'Orbitron',monospace;font-size:16px;font-weight:900;color:var(--gold);letter-spacing:2px;margin-bottom:5px}
+.header-sub{font-size:11px;color:var(--muted);margin-bottom:6px}
+.header-badge{display:inline-block;font-size:10px;font-weight:700;border-radius:10px;padding:2px 10px;letter-spacing:0.5px;margin-right:6px}
+.badge-compete{color:#ef4444;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3)}
+.badge-free{color:#38bdf8;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3)}
+.header-season{display:inline-block;font-size:10px;font-weight:700;color:var(--accent);background:rgba(74,144,217,.1);border:1px solid rgba(74,144,217,.25);border-radius:10px;padding:2px 10px}
 
-/* ── 경쟁 콘텐츠 탭 ── */
+/* ── 경쟁 탭 ── */
 .tab-bar{display:flex;overflow-x:auto;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0}
 .tab-bar::-webkit-scrollbar{display:none}
-.tab-btn{flex-shrink:0;padding:10px 14px;font-size:10px;font-weight:600;color:rgba(255,255,255,0.7);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none;font-family:'Noto Sans KR',sans-serif}
-.tab-btn.active{color:#ffffff;font-weight:700;border-bottom-color:var(--gold)}
+.ctab{flex-shrink:0;padding:10px 14px;font-size:10px;font-weight:600;color:rgba(255,255,255,0.7);cursor:pointer;border:none;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;background:none;font-family:'Noto Sans KR',sans-serif}
+.ctab.active{color:#ffffff;font-weight:700;border-bottom-color:var(--gold)}
+
+/* ── 공통 섹션 ── */
+.sec{display:none;flex:1;flex-direction:column;overflow-y:auto;padding-bottom:80px}
+.sec.active{display:flex}
+.sec-title{text-align:center;padding:16px 16px 4px}
+.sec-title h2{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:#ffffff;letter-spacing:1px;margin-bottom:4px}
+.sec-title p{font-size:11px;color:var(--muted)}
 
 /* ── 리그 필터 ── */
-.league-filter{
-  display:flex;gap:6px;padding:12px 16px;
-  justify-content:center;flex-wrap:wrap;
-  background:rgba(5,12,30,.6);
-  border-bottom:1px solid var(--border);
-  flex-shrink:0;
-}
-.league-btn{
-  display:flex;align-items:center;gap:4px;
-  padding:5px 12px;border-radius:14px;
-  font-size:10px;font-weight:700;cursor:pointer;
-  border:1px solid rgba(255,255,255,.1);
-  background:rgba(255,255,255,.04);
-  color:#ffffff;opacity:0.7;transition:all .2s;
-  font-family:'Noto Sans KR',sans-serif;
-  letter-spacing:0.3px;
-}
+.league-filter{display:flex;gap:6px;padding:12px 16px;justify-content:center;flex-wrap:wrap;border-bottom:1px solid var(--border);flex-shrink:0}
+.league-btn{display:flex;align-items:center;gap:4px;padding:5px 12px;border-radius:14px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#ffffff;opacity:0.7;transition:all .2s;font-family:'Noto Sans KR',sans-serif}
 .league-btn:hover{opacity:.9}
-.league-btn.active-dust{color:#94a3b8;border-color:#94a3b8;background:rgba(148,163,184,.1);opacity:1;}
-.league-btn.active-star{color:#fbbf24;border-color:#fbbf24;background:rgba(251,191,36,.1);opacity:1;}
-.league-btn.active-planet{color:#34d399;border-color:#34d399;background:rgba(52,211,153,.1);opacity:1;}
-.league-btn.active-nova{color:#c084fc;border-color:#c084fc;background:rgba(192,132,252,.1);opacity:1;}
-.league-btn.active-quasar{color:#f0c040;border-color:#f0c040;background:rgba(240,192,64,.1);opacity:1;}
+.league-btn.on{opacity:1}
+.league-btn.on[data-l="dust"]{color:#94a3b8;border-color:#94a3b8;background:rgba(148,163,184,.12)}
+.league-btn.on[data-l="star"]{color:#fbbf24;border-color:#fbbf24;background:rgba(251,191,36,.12)}
+.league-btn.on[data-l="planet"]{color:#34d399;border-color:#34d399;background:rgba(52,211,153,.12)}
+.league-btn.on[data-l="nova"]{color:#c084fc;border-color:#c084fc;background:rgba(192,132,252,.12)}
+.league-btn.on[data-l="quasar"]{color:#f0c040;border-color:#f0c040;background:rgba(240,192,64,.12)}
 
-/* ── 스탯 카테고리 칩 ── */
-.stat-bar{
-  display:flex;overflow-x:auto;gap:8px;
-  padding:10px 16px;flex-shrink:0;
-}
+/* ── 스탯 칩 ── */
+.stat-bar{display:flex;overflow-x:auto;gap:8px;padding:10px 16px;flex-shrink:0}
 .stat-bar::-webkit-scrollbar{display:none}
-.stat-chip{
-  flex-shrink:0;display:flex;align-items:center;gap:4px;
-  padding:5px 12px;border-radius:14px;
-  font-size:10px;font-weight:700;cursor:pointer;
-  border:1px solid rgba(255,255,255,.1);
-  background:rgba(255,255,255,.04);
-  color:rgba(255,255,255,0.7);transition:all .2s;
-  font-family:'Noto Sans KR',sans-serif;
-  white-space:nowrap;
-}
-.stat-chip.active{color:#ffffff;font-weight:700;border-color:var(--gold);background:rgba(240,192,64,.1);}
+.schip{flex-shrink:0;display:flex;align-items:center;gap:4px;padding:5px 12px;border-radius:14px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(255,255,255,0.7);transition:all .2s;font-family:'Noto Sans KR',sans-serif;white-space:nowrap}
+.schip.on{color:#ffffff;border-color:var(--gold);background:rgba(240,192,64,.12)}
 
-/* ── 랭킹 영역 ── */
-.rank-section{
-  flex:1;overflow-y:auto;
-  padding:8px 0 80px;
-}
-.rank-section::-webkit-scrollbar{width:3px}
-.rank-section::-webkit-scrollbar-thumb{background:rgba(240,192,64,.3);border-radius:3px}
+/* ── 랭킹 아이템 ── */
+.ri{display:flex;align-items:center;gap:10px;padding:12px 16px;margin:0 12px 8px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;transition:all .2s;animation:fadeIn .3s ease both}
+.ri:hover{border-color:rgba(200,175,80,.3)}
+.ri.g{border-left:3px solid #f0c040;background:rgba(240,192,64,.06)}
+.ri.s{border-left:3px solid #c0c0c0;background:rgba(192,192,192,.04)}
+.ri.b{border-left:3px solid #cd7f32;background:rgba(205,127,50,.04)}
+.ri.me{background:rgba(56,189,248,.08);border-color:rgba(56,189,248,.3)}
+.ri .rk{font-family:'Orbitron',monospace;font-size:14px;font-weight:900;width:28px;text-align:center;color:#ffffff}
+.ri .nm{flex:1;font-size:13px;font-weight:700;color:#ffffff}
+.ri .sc{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:#f0c040}
+.ri .ch{font-size:10px;width:36px;text-align:center;font-weight:700}
+.ch.up{color:#34d399}.ch.dn{color:#ef4444}.ch.eq{color:var(--muted)}
+.ri .tag{font-size:9px;color:var(--muted);margin-left:4px}
 
-.rank-header{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:8px 16px 4px;
-  font-size:9px;color:var(--muted);letter-spacing:1px;font-weight:600;
-}
-.rank-updated{font-size:9px;color:var(--muted);}
+/* ── 하단 바 ── */
+.bottom-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;padding:12px 20px;background:rgba(5,12,30,.98);backdrop-filter:blur(12px);border-top:1px solid var(--border);display:flex;align-items:center;gap:12px;z-index:300;font-size:12px}
+.bottom-bar .blabel{font-size:9px;color:var(--muted);font-weight:600}
+.bottom-bar .bnum{font-family:'Orbitron',monospace;font-size:16px;font-weight:900;color:#ffffff}
+.bottom-bar .bscore{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;color:var(--gold)}
+.bottom-bar .bdiv{width:1px;height:24px;background:var(--border)}
 
-/* 랭킹 아이템 */
-.rank-item{
-  display:flex;align-items:center;gap:12px;
-  padding:12px 16px;margin:0 12px 8px;
-  background:rgba(255,255,255,.03);
-  border:1px solid var(--border);
-  border-radius:12px;
-  transition:all .2s;
-}
-.rank-item:hover{border-color:rgba(200,175,80,.3);}
-.rank-item.gold{border-left:3px solid #f0c040;background:rgba(240,192,64,.06);}
-.rank-item.silver{border-left:3px solid #c0c0c0;background:rgba(192,192,192,.04);}
-.rank-item.bronze{border-left:3px solid #cd7f32;background:rgba(205,127,50,.04);}
-
-.rank-medal{font-size:16px;width:22px;text-align:center;flex-shrink:0;}
-.rank-num{font-family:'Orbitron',monospace;font-size:16px;font-weight:900;width:32px;text-align:center;flex-shrink:0;color:#ffffff;}
-.rank-name{flex:1;font-size:13px;font-weight:700;color:#ffffff;}
-.rank-league{font-size:14px;flex-shrink:0;}
-.rank-score{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;color:#f0c040;flex-shrink:0;}
-.rank-change{font-size:10px;width:28px;text-align:center;flex-shrink:0;font-weight:700;}
-.rank-change.up{color:#34d399;}
-.rank-change.down{color:#ef4444;}
-.rank-change.same{color:var(--muted);}
-
-/* ── 내 순위 플로팅 바 ── */
-.my-rank-bar{
-  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
-  width:100%;max-width:520px;
-  padding:12px 20px;
-  background:rgba(5,12,30,.98);
-  backdrop-filter:blur(12px);
-  border-top:1px solid var(--border);
-  display:flex;align-items:center;gap:12px;
-  z-index:300;
-}
-.my-rank-label{font-size:10px;color:var(--muted);font-weight:600;letter-spacing:0.5px;}
-.my-rank-num{font-family:'Orbitron',monospace;font-size:14px;font-weight:900;color:var(--gold);}
-.my-rank-score{font-family:'Orbitron',monospace;font-size:12px;color:var(--text);}
-.my-rank-change{font-size:11px;color:#34d399;font-weight:700;}
-.my-rank-divider{width:1px;height:20px;background:var(--border);flex-shrink:0;}
-.my-rank-right{margin-left:auto;display:flex;align-items:center;gap:6px;}
-.my-rank-badge{
-  padding:3px 10px;border-radius:10px;
-  font-size:9px;font-weight:700;
-  background:rgba(240,192,64,.12);
-  border:1px solid rgba(240,192,64,.3);
-  color:var(--gold);letter-spacing:0.5px;
-}
-
-/* ── 헥사곤 배틀 ── */
+/* ── 헥사곤 ── */
 .hex-player{text-align:center;min-width:90px}
-.hex-stat-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.hex-stat-label{font-size:10px;font-weight:700;width:36px;text-align:right;color:var(--muted)}
+.hex-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;padding:0 20px}
+.hex-bar-label{font-size:10px;font-weight:700;width:36px;text-align:right;color:var(--muted)}
 .hex-bar-wrap{flex:1;height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;position:relative}
-.hex-bar-me{position:absolute;left:0;top:0;height:100%;border-radius:4px;background:#38bdf8;transition:width .6s ease}
-.hex-bar-opp{position:absolute;right:0;top:0;height:100%;border-radius:4px;background:#ef4444;transition:width .6s ease}
-.hex-stat-val{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;width:60px;display:flex;justify-content:space-between}
-.hex-stat-val .me{color:#38bdf8}.hex-stat-val .opp{color:#ef4444}
+.hex-bar-wrap .bme{position:absolute;left:0;top:0;height:100%;border-radius:4px;background:#38bdf8;transition:width .6s}
+.hex-bar-wrap .bop{position:absolute;right:0;top:0;height:100%;border-radius:4px;background:#ef4444;transition:width .6s}
+.hex-vals{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;width:60px;display:flex;justify-content:space-between}
+.hex-vals .vm{color:#38bdf8}.hex-vals .vo{color:#ef4444}
 
-/* ── 패널 전환 ── */
-.comp-panel{flex:1;display:flex;flex-direction:column;overflow:hidden}
+/* ── 도전과제 빙고 ── */
+.bingo{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:0 16px;margin-bottom:16px}
+.bcell{aspect-ratio:1;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:4px;font-size:8px;font-weight:600;line-height:1.2;transition:all .2s;cursor:default}
+.bcell.done{background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.4);color:#34d399}
+.bcell.prog{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.35);color:#fbbf24}
+.bcell.lock{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.3)}
 
-/* ── 마라톤 일별 셀 ── */
-.mday{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#ffffff;position:relative;cursor:default}
-.mday.done{background:rgba(52,211,153,.25);border:1px solid rgba(52,211,153,.4)}
-.mday.today{background:rgba(56,189,248,.2);border:1px solid rgba(56,189,248,.5);box-shadow:0 0 8px rgba(56,189,248,.3)}
-.mday.future{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);color:rgba(255,255,255,.3)}
-.mday.streak{background:rgba(240,192,64,.2);border:1px solid rgba(240,192,64,.4)}
-.marathon-me-row{background:rgba(52,211,153,.08) !important;border-color:rgba(52,211,153,.3) !important;}
-.marathon-me-row .rank-name::after{content:' ← 나';font-size:9px;color:#34d399;font-weight:700;margin-left:6px;}
+/* ── 카드 ── */
+.card{background:rgba(10,10,22,0.96);border:1px solid rgba(180,150,255,0.13);border-radius:16px;padding:16px;margin:0 16px 12px}
+.card-green{background:rgba(52,211,153,.06);border-color:rgba(52,211,153,.2)}
+.card-blue{background:rgba(56,189,248,.06);border-color:rgba(56,189,248,.2)}
 
-/* ── 스탯레이스 내 현황 카드 ── */
-.race-my-card{
-  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
-  width:100%;max-width:520px;
-  padding:14px 20px;
-  background:rgba(5,12,30,.98);
-  backdrop-filter:blur(12px);
-  border-top:1px solid var(--border);
-  display:flex;align-items:center;gap:16px;
-  z-index:300;
-}
-.race-me-row{background:rgba(56,189,248,.08) !important;border-color:rgba(56,189,248,.3) !important;}
-.race-me-row .rank-name::after{content:' ← 나';font-size:9px;color:#38bdf8;font-weight:700;margin-left:6px;}
+/* ── Toast ── */
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:10px 24px;background:rgba(20,15,40,.95);border:1px solid rgba(200,175,80,.3);border-radius:20px;color:#fff;font-size:12px;z-index:9999;pointer-events:none;opacity:0;transition:opacity .3s}
+#toast.show{opacity:1}
 
-/* ── Toast & 애니메이션 ── */
-@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-.rank-item{animation:fadeIn .3s ease both;}
 </style>
 </head>
 <body>
 <canvas id="starCanvas"></canvas>
+<div id="toast"></div>
 
 <nav class="top-nav">
   <a class="top-nav-item" href="/index.html">홈</a>
@@ -216,217 +127,154 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 
 <div id="app">
 
-  <!-- 페이지 헤더 -->
+  <!-- 헤더 -->
   <div class="page-header" id="pageHeader">
     <div class="header-title">⚔️ 경쟁 — COMPETITION</div>
-    <div class="header-sub">매월 1~15일 경쟁 기간</div>
+    <div class="header-sub" id="periodBadge"></div>
     <span class="header-season">시즌 1 · D-12</span>
   </div>
 
-  <!-- 경쟁 콘텐츠 탭 -->
-  <div class="tab-bar" id="compTabBar">
-    <button class="tab-btn active" data-tab="statking">⚡ 스탯킹</button>
-    <button class="tab-btn" data-tab="hexagon">🔷 헥사곤</button>
-    <button class="tab-btn" data-tab="statrace">🏁 스탯레이스</button>
-    <button class="tab-btn" data-tab="marathon">🌱 성장마라톤</button>
-    <button class="tab-btn" data-tab="challenge">🎯 도전과제</button>
+  <!-- 탭 -->
+  <div class="tab-bar">
+    <button class="ctab active" data-tab="statking">⚡ 스탯킹</button>
+    <button class="ctab" data-tab="hexagon">🔷 헥사곤</button>
+    <button class="ctab" data-tab="statrace">🏁 스탯레이스</button>
+    <button class="ctab" data-tab="marathon">🌱 성장마라톤</button>
+    <button class="ctab" data-tab="challenge">🎯 도전과제</button>
   </div>
 
-  <!-- ═══ 스탯킹 패널 ═══ -->
-  <div class="comp-panel" id="panel-statking">
+  <!-- ═══════════ sec-statking ═══════════ -->
+  <div id="sec-statking" class="sec active">
+    <div class="sec-title"><h2>👑 스탯킹 | Stat King</h2><p>6대 스탯 각 부문 1위에게 왕관이 주어집니다</p></div>
 
-    <!-- 리그 필터 -->
     <div class="league-filter" id="leagueFilter">
-      <button class="league-btn active-dust" data-league="dust" onclick="switchLeague('dust', this)">✨ 더스트</button>
-      <button class="league-btn" data-league="star" onclick="switchLeague('star', this)">🌟 스타</button>
-      <button class="league-btn" data-league="planet" onclick="switchLeague('planet', this)">🪐 플래닛</button>
-      <button class="league-btn" data-league="nova" onclick="switchLeague('nova', this)">💥 노바</button>
-      <button class="league-btn" data-league="quasar" onclick="switchLeague('quasar', this)">⚡ 퀘이사</button>
+      <button class="league-btn on" data-l="dust" onclick="pickLeague('dust',this)">✨ 더스트</button>
+      <button class="league-btn" data-l="star" onclick="pickLeague('star',this)">🌟 스타</button>
+      <button class="league-btn" data-l="planet" onclick="pickLeague('planet',this)">🪐 플래닛</button>
+      <button class="league-btn" data-l="nova" onclick="pickLeague('nova',this)">💥 노바</button>
+      <button class="league-btn" data-l="quasar" onclick="pickLeague('quasar',this)">⚡ 퀘이사</button>
     </div>
 
-    <!-- 스탯 카테고리 칩 -->
     <div class="stat-bar" id="statBar">
-      <button class="stat-chip active" data-stat="total" onclick="switchStat('total', this)">🏆 종합</button>
-      <button class="stat-chip" data-stat="loy" onclick="switchStat('loy', this)">❤️ LOY</button>
-      <button class="stat-chip" data-stat="act" onclick="switchStat('act', this)">⚡ ACT</button>
-      <button class="stat-chip" data-stat="soc" onclick="switchStat('soc', this)">💬 SOC</button>
-      <button class="stat-chip" data-stat="cre" onclick="switchStat('cre', this)">🎨 CRE</button>
-      <button class="stat-chip" data-stat="int" onclick="switchStat('int', this)">🧠 INT</button>
+      <button class="schip on" onclick="pickStat('total',this)">🏆 종합</button>
+      <button class="schip" onclick="pickStat('loy',this)">❤️ LOY</button>
+      <button class="schip" onclick="pickStat('act',this)">⚡ ACT</button>
+      <button class="schip" onclick="pickStat('soc',this)">💬 SOC</button>
+      <button class="schip" onclick="pickStat('eco',this)">💰 ECO</button>
+      <button class="schip" onclick="pickStat('cre',this)">🎨 CRE</button>
+      <button class="schip" onclick="pickStat('int',this)">🧠 INT</button>
     </div>
 
-    <!-- 랭킹 리스트 -->
-    <div class="rank-section">
-      <div class="rank-header">
-        <span>순위 — RANKING</span>
-        <span class="rank-updated">업데이트 5분 전</span>
-      </div>
-      <div id="rankList"></div>
-    </div>
+    <div style="padding:8px 0"><div id="skList"></div></div>
+  </div>
 
-  </div><!-- /panel-statking -->
+  <!-- ═══════════ sec-hexagon ═══════════ -->
+  <div id="sec-hexagon" class="sec">
+    <div class="sec-title"><h2>🔷 헥사곤 배틀 | Hexagon Battle</h2><p>6대 스탯 균형 대결 — 누가 더 완벽한 헥사곤?</p></div>
 
-  <!-- ═══ 헥사곤 배틀 패널 ═══ -->
-  <div class="comp-panel" id="panel-hexagon" style="display:none">
-
-    <div style="text-align:center;padding:16px 16px 8px">
-      <div style="font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:#ffffff;letter-spacing:1px;margin-bottom:4px">🔷 HEXAGON BATTLE</div>
-      <div style="font-size:11px;color:var(--muted)">6대 스탯 균형 대결 — 누가 더 완벽한 헥사곤?</div>
-    </div>
-
-    <!-- 대전 상대 선택 -->
     <div style="display:flex;align-items:center;justify-content:center;gap:12px;padding:12px 16px">
-      <div class="hex-player" id="hexPlayerMe">
-        <div style="font-size:10px;color:var(--muted);margin-bottom:4px">나</div>
-        <div style="font-size:13px;font-weight:700;color:#38bdf8" id="hexMyName">별빛탐험가</div>
-      </div>
+      <div class="hex-player"><div style="font-size:10px;color:var(--muted);margin-bottom:4px">나</div><div style="font-size:13px;font-weight:700;color:#38bdf8" id="hexMyName">별빛탐험가</div></div>
       <div style="font-family:'Orbitron',monospace;font-size:16px;font-weight:900;color:var(--gold)">VS</div>
-      <div class="hex-player" id="hexPlayerOpp">
-        <div style="font-size:10px;color:var(--muted);margin-bottom:4px">상대</div>
-        <div style="font-size:13px;font-weight:700;color:#ef4444" id="hexOppName">은하전사</div>
-      </div>
+      <div class="hex-player"><div style="font-size:10px;color:var(--muted);margin-bottom:4px">상대</div><div style="font-size:13px;font-weight:700;color:#ef4444" id="hexOppName">은하전사</div></div>
     </div>
 
-    <!-- 레이더 차트 Canvas -->
-    <div style="display:flex;justify-content:center;padding:0 16px">
-      <canvas id="hexCanvas" width="320" height="300" style="max-width:100%"></canvas>
-    </div>
-
-    <!-- 스탯 비교 바 -->
-    <div id="hexStatBars" style="padding:8px 20px 16px"></div>
-
-    <!-- 결과 영역 -->
-    <div id="hexResult" style="text-align:center;padding:8px 16px 80px">
+    <div style="display:flex;justify-content:center;padding:0 16px"><canvas id="hexCanvas" width="320" height="300" style="max-width:100%"></canvas></div>
+    <div id="hexBars" style="padding:8px 0 4px"></div>
+    <div style="text-align:center;padding:4px 16px">
       <div style="font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:var(--gold);margin-bottom:4px" id="hexWinner"></div>
       <div style="font-size:11px;color:var(--muted)" id="hexSummary"></div>
     </div>
-
-    <!-- 랜덤 매칭 버튼 -->
-    <div style="text-align:center;padding:0 16px 20px">
-      <button onclick="randomHexMatch()" style="padding:10px 28px;border-radius:20px;border:1px solid var(--gold);background:rgba(240,192,64,.1);color:var(--gold);font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .2s">🎲 랜덤 매칭</button>
-    </div>
-
-  </div><!-- /panel-hexagon -->
-
-  <!-- ═══ 준비중 패널들 ═══ -->
-  <div class="comp-panel" id="panel-statrace" style="display:none">
-
-    <!-- 타이틀 -->
-    <div style="text-align:center;padding:16px 16px 4px">
-      <div style="font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:#ffffff;letter-spacing:1px;margin-bottom:4px">🏁 STAT RACE</div>
-      <div style="font-size:11px;color:var(--muted)">이번 주 스탯별 레이스 — 실시간 순위 변동</div>
-    </div>
-
-    <!-- 스탯 선택 칩 -->
-    <div class="stat-bar" id="raceStatBar">
-      <button class="stat-chip active" onclick="switchRaceStat('act',this)">⚡ ACT</button>
-      <button class="stat-chip" onclick="switchRaceStat('loy',this)">❤️ LOY</button>
-      <button class="stat-chip" onclick="switchRaceStat('soc',this)">💬 SOC</button>
-      <button class="stat-chip" onclick="switchRaceStat('cre',this)">🎨 CRE</button>
-      <button class="stat-chip" onclick="switchRaceStat('int',this)">🧠 INT</button>
-      <button class="stat-chip" onclick="switchRaceStat('eco',this)">💰 ECO</button>
-    </div>
-
-    <!-- 기간 표시 -->
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 16px">
-      <span style="font-size:10px;color:var(--muted);font-weight:600">📅 4월 1주차 (04.01~04.07)</span>
-      <span style="font-size:9px;color:var(--accent)">종료까지 D-3</span>
-    </div>
-
-    <!-- 레이스 리스트 -->
-    <div class="rank-section" style="padding-bottom:120px">
-      <div class="rank-header">
-        <span id="raceStatTitle">⚡ ACT 레이스</span>
-        <span class="rank-updated">실시간</span>
-      </div>
-      <div id="raceList"></div>
-    </div>
-
-    <!-- 내 레이스 현황 카드 -->
-    <div class="race-my-card" id="raceMyCard" style="display:none"
-      <div style="display:flex;align-items:center;gap:12px;flex:1">
-        <div>
-          <div style="font-size:9px;color:var(--muted);font-weight:600;margin-bottom:2px">내 순위</div>
-          <div style="font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:#ffffff" id="raceMyRank">#5</div>
-        </div>
-        <div style="width:1px;height:28px;background:var(--border)"></div>
-        <div>
-          <div style="font-size:9px;color:var(--muted);font-weight:600;margin-bottom:2px" id="raceMyStatLabel">내 ACT 점수</div>
-          <div style="font-family:'Orbitron',monospace;font-size:16px;font-weight:700;color:var(--gold)" id="raceMyScore">7,200</div>
-        </div>
-      </div>
-      <div style="text-align:right">
-        <div style="font-size:10px;color:var(--muted);margin-bottom:2px">1위까지 <span style="color:#ffffff;font-weight:700" id="raceGap">2,640</span>점</div>
-        <div style="font-size:10px;color:#34d399;font-weight:700" id="raceDelta">전날 대비: +340 ↑</div>
-      </div>
-    </div>
-
+    <div style="text-align:center;padding:12px 16px"><button onclick="randomHex()" style="padding:10px 28px;border-radius:20px;border:1px solid var(--gold);background:rgba(240,192,64,.1);color:var(--gold);font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">🎲 랜덤 매칭</button></div>
   </div>
-  <div class="comp-panel" id="panel-marathon" style="display:none">
-    <div style="padding:16px;overflow-y:auto;flex:1;padding-bottom:80px">
 
-      <!-- 타이틀 -->
-      <div style="text-align:center;margin-bottom:20px">
-        <div style="font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:#ffffff;letter-spacing:1px;margin-bottom:4px">🌱 GROWTH MARATHON</div>
-        <div style="font-size:11px;color:var(--muted)">30일간의 성장 여정 — 꾸준함이 승리!</div>
-      </div>
+  <!-- ═══════════ sec-statrace ═══════════ -->
+  <div id="sec-statrace" class="sec">
+    <div class="sec-title"><h2>🏁 스탯 레이스 | Stat Race</h2><p>이번 달 지정 스탯을 집중 경쟁합니다</p></div>
 
-      <!-- 성장 현황 -->
-      <div style="background:rgba(10,10,22,0.96);border:1px solid rgba(180,150,255,0.13);border-radius:16px;padding:20px;margin-bottom:24px;">
-        <div style="font-size:14px;color:rgba(220,210,240,0.85);margin-bottom:16px;">내 이번 달 성장량</div>
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          <div style="display:flex;justify-content:space-between;"><span style="color:#c084fc;">💜 LOY</span><span style="color:rgba(220,210,240,0.7);">1,200 → 1,458</span><span style="color:#4ade80;font-weight:700;">+258</span></div>
-          <div style="display:flex;justify-content:space-between;"><span style="color:#f59e0b;">⚡ ACT</span><span style="color:rgba(220,210,240,0.7);">1,900 → 2,340</span><span style="color:#4ade80;font-weight:700;">+440 ⭐</span></div>
-          <div style="display:flex;justify-content:space-between;"><span style="color:#34d399;">🌐 SOC</span><span style="color:rgba(220,210,240,0.7);">780 → 890</span><span style="color:#4ade80;font-weight:700;">+110</span></div>
-          <div style="display:flex;justify-content:space-between;"><span style="color:#fbbf24;">💰 ECO</span><span style="color:rgba(220,210,240,0.7);">2,800 → 3,120</span><span style="color:#4ade80;font-weight:700;">+320</span></div>
-          <div style="display:flex;justify-content:space-between;"><span style="color:#f472b6;">✨ CRE</span><span style="color:rgba(220,210,240,0.7);">450 → 560</span><span style="color:#4ade80;font-weight:700;">+110</span></div>
-          <div style="display:flex;justify-content:space-between;"><span style="color:#38bdf8;">📚 INT</span><span style="color:rgba(220,210,240,0.7);">1,700 → 1,980</span><span style="color:#4ade80;font-weight:700;">+280</span></div>
-        </div>
-        <div style="border-top:1px solid rgba(180,150,255,0.13);margin-top:16px;padding-top:16px;text-align:center;">
-          <span style="font-family:Orbitron;color:#f0c040;font-size:22px;font-weight:700;">총 성장량 +1,518</span>
-          <div style="color:#4ade80;font-size:13px;margin-top:6px;">🌱 현재 리그 내 3위 성장 중!</div>
-        </div>
-      </div>
+    <div class="card" style="margin:12px 16px;text-align:center">
+      <div style="font-size:20px;margin-bottom:4px">⚡</div>
+      <div style="font-family:'Orbitron',monospace;font-size:16px;font-weight:900;color:var(--gold)">ACT — 행동력</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">이번 달 집중 경쟁 스탯</div>
+      <div style="font-size:12px;color:#ef4444;font-weight:700;margin-top:6px" id="raceCountdown"></div>
+    </div>
 
-      <!-- 랭킹 -->
-      <div style="font-size:14px;color:rgba(220,210,240,0.85);margin-bottom:12px;">🏆 성장 랭킹 — 더스트 리그</div>
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(240,192,64,0.1);border:1px solid rgba(240,192,64,0.3);border-radius:12px;"><span style="color:#f0c040;font-weight:900;width:24px;">👑</span><span style="color:#fff;font-weight:700;flex:1;">뉴비챔피언</span><span style="color:#4ade80;font-weight:700;">+2,840</span><span style="color:rgba(220,210,240,0.5);font-size:12px;margin-left:8px;">ACT↑</span></div>
-        <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(148,163,184,0.1);border:1px solid rgba(148,163,184,0.2);border-radius:12px;"><span style="color:#94a3b8;font-weight:900;width:24px;">🥈</span><span style="color:#fff;font-weight:700;flex:1;">성장왕_코코</span><span style="color:#4ade80;font-weight:700;">+2,210</span><span style="color:rgba(220,210,240,0.5);font-size:12px;margin-left:8px;">LOY↑</span></div>
-        <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(192,132,252,0.15);border:1px solid rgba(192,132,252,0.4);border-radius:12px;"><span style="color:#cd7f32;font-weight:900;width:24px;">🥉</span><span style="color:#c084fc;font-weight:900;flex:1;">별빛탐험가 ← 나</span><span style="color:#4ade80;font-weight:700;">+1,518</span><span style="color:rgba(220,210,240,0.5);font-size:12px;margin-left:8px;">ACT↑</span></div>
-        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(10,10,22,0.96);border:1px solid rgba(180,150,255,0.13);border-radius:12px;"><span style="color:rgba(220,210,240,0.5);width:24px;">4</span><span style="color:#fff;flex:1;">열정신인</span><span style="color:#4ade80;font-weight:700;">+1,320</span><span style="color:rgba(220,210,240,0.5);font-size:12px;margin-left:8px;">ECO↑</span></div>
-        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(10,10,22,0.96);border:1px solid rgba(180,150,255,0.13);border-radius:12px;"><span style="color:rgba(220,210,240,0.5);width:24px;">5</span><span style="color:#fff;flex:1;">급성장러</span><span style="color:#4ade80;font-weight:700;">+1,180</span><span style="color:rgba(220,210,240,0.5);font-size:12px;margin-left:8px;">CRE↑</span></div>
-        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(10,10,22,0.96);border:1px solid rgba(180,150,255,0.13);border-radius:12px;"><span style="color:rgba(220,210,240,0.5);width:24px;">6</span><span style="color:#fff;flex:1;">노력파</span><span style="color:#4ade80;font-weight:700;">+980</span><span style="color:rgba(220,210,240,0.5);font-size:12px;margin-left:8px;">INT↑</span></div>
-        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(10,10,22,0.96);border:1px solid rgba(180,150,255,0.13);border-radius:12px;"><span style="color:rgba(220,210,240,0.5);width:24px;">7</span><span style="color:#fff;flex:1;">꾸준히가자</span><span style="color:#4ade80;font-weight:700;">+870</span><span style="color:rgba(220,210,240,0.5);font-size:12px;margin-left:8px;">SOC↑</span></div>
-        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(10,10,22,0.96);border:1px solid rgba(180,150,255,0.13);border-radius:12px;"><span style="color:rgba(220,210,240,0.5);width:24px;">8</span><span style="color:#fff;flex:1;">매일매일</span><span style="color:#4ade80;font-weight:700;">+750</span><span style="color:rgba(220,210,240,0.5);font-size:12px;margin-left:8px;">ACT↑</span></div>
-        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(10,10,22,0.96);border:1px solid rgba(180,150,255,0.13);border-radius:12px;"><span style="color:rgba(220,210,240,0.5);width:24px;">9</span><span style="color:#fff;flex:1;">성실함의힘</span><span style="color:#4ade80;font-weight:700;">+640</span><span style="color:rgba(220,210,240,0.5);font-size:12px;margin-left:8px;">LOY↑</span></div>
-        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(10,10,22,0.96);border:1px solid rgba(180,150,255,0.13);border-radius:12px;"><span style="color:rgba(220,210,240,0.5);width:24px;">10</span><span style="color:#fff;flex:1;">한걸음씩</span><span style="color:#4ade80;font-weight:700;">+520</span><span style="color:rgba(220,210,240,0.5);font-size:12px;margin-left:8px;">ECO↑</span></div>
-      </div>
+    <div style="padding:0 0 8px"><div id="srList"></div></div>
 
-      <p style="text-align:center;color:rgba(220,210,240,0.5);font-size:12px;margin-top:24px;">💡 매일 꾸준히 활동하면 누구든 성장왕이 될 수 있어요!</p>
+    <div class="card card-blue" style="margin:8px 16px;display:flex;align-items:center;gap:16px">
+      <div><div style="font-size:9px;color:var(--muted);font-weight:600">내 ACT</div><div style="font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--gold)">7,200</div></div>
+      <div style="width:1px;height:28px;background:var(--border)"></div>
+      <div style="flex:1"><div style="font-size:10px;color:var(--muted)">1위���지 <span style="color:#fff;font-weight:700">2,640</span>점</div><div style="font-size:10px;color:#34d399;font-weight:700">전날 대비: +340 ↑</div></div>
     </div>
   </div>
-  <div class="comp-panel" id="panel-challenge" style="display:none">
-    <div style="text-align:center;padding:80px 20px;color:var(--muted);font-size:14px">🔒 준비중인 콘텐츠예요</div>
+
+  <!-- ═══════════ sec-marathon ═══════════ -->
+  <div id="sec-marathon" class="sec">
+    <div class="sec-title"><h2>🌱 성장 마라톤 | Growth Marathon</h2><p>이번 달 성장량(증가폭)으로 겨룹니다. 절대값이 아닌 성장률��� 승부를 결정해요</p></div>
+
+    <div class="card card-green" style="margin:12px 16px">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">📌 이번 달 1�� 기준 스탯과 오늘 스탯의 차이(��가량)로 순위를 매깁니다. 신규 팬도 열심히 하면 1위가 될 수 있어요!</div>
+    </div>
+
+    <div class="card" style="margin:0 16px 12px">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:12px">내 이번 달 성장량</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between"><span style="color:#c084fc">💜 LOY</span><span style="color:rgba(220,210,240,0.7)">1,200 → 1,458</span><span style="color:#4ade80;font-weight:700">+258</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:#f59e0b">⚡ ACT</span><span style="color:rgba(220,210,240,0.7)">1,900 → 2,340</span><span style="color:#4ade80;font-weight:700">+440 ⭐</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:#34d399">🌐 SOC</span><span style="color:rgba(220,210,240,0.7)">780 → 890</span><span style="color:#4ade80;font-weight:700">+110</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:#fbbf24">💰 ECO</span><span style="color:rgba(220,210,240,0.7)">2,800 → 3,120</span><span style="color:#4ade80;font-weight:700">+320</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:#f472b6">✨ CRE</span><span style="color:rgba(220,210,240,0.7)">450 → 560</span><span style="color:#4ade80;font-weight:700">+110</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:#38bdf8">📚 INT</span><span style="color:rgba(220,210,240,0.7)">1,700 → 1,980</span><span style="color:#4ade80;font-weight:700">+280</span></div>
+      </div>
+      <div style="border-top:1px solid rgba(180,150,255,0.13);margin-top:14px;padding-top:14px;text-align:center">
+        <span style="font-family:'Orbitron',monospace;color:#f0c040;font-size:22px;font-weight:700">총 성장량 +1,518</span>
+        <div style="color:#4ade80;font-size:13px;margin-top:6px">🌱 현재 리그 내 3위 성장 중!</div>
+      </div>
+    </div>
+
+    <div style="padding:0 0 8px"><div id="mrList"></div></div>
+    <p style="text-align:center;color:rgba(220,210,240,0.5);font-size:12px;padding:12px 16px">💡 매일 꾸준히 활동하면 누구든 성장왕이 될 수 있어요!</p>
+  </div>
+
+  <!-- ═══════════ sec-challenge ═══════════ -->
+  <div id="sec-challenge" class="sec">
+    <div class="sec-title"><h2>🎯 도전과제 보드 | Challenge Board</h2><p>다양한 도전과제를 ��료하고 점수를 쌓아요. 완료 칸수로 랭킹이 결정됩니다</p></div>
+
+    <div class="card" style="margin:12px 16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:12px;font-weight:700;color:#ffffff">완료한 도전과제</span>
+        <span style="font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:var(--gold)">12 / 25</span>
+      </div>
+      <div style="height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;margin-bottom:8px">
+        <div style="width:48%;height:100%;background:linear-gradient(90deg,#34d399,#10b981);border-radius:4px"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted)">
+        <span>획득 점수: <span style="color:#ffffff;font-weight:700">3,240점</span></span>
+        <span>리그 내 순위: <span style="color:var(--gold);font-weight:700">7위</span></span>
+      </div>
+    </div>
+
+    <!-- 빙고 5x5 -->
+    <div style="padding:0 16px 4px;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1px;margin-bottom:6px">📋 도전과제 빙고판</div>
+    <div class="bingo" id="bingoGrid"></div>
+
+    <!-- 도전과제 랭킹 -->
+    <div style="padding:4px 16px 4px;font-size:11px;font-weight:700;color:var(--muted)">🏆 도전과제 랭킹 TOP 7</div>
+    <div style="padding:0 0 8px" id="chList"></div>
   </div>
 
 </div><!-- /app -->
 
-<!-- 내 순위 플로팅 바 -->
-<div class="my-rank-bar">
-  <div>
-    <div class="my-rank-label">내 순위</div>
-  </div>
-  <div class="my-rank-num">#47</div>
-  <div class="my-rank-divider"></div>
-  <div class="my-rank-score">1,234점</div>
-  <div class="my-rank-change">↑12</div>
-  <div class="my-rank-right">
-    <span class="my-rank-badge">✨ DUST</span>
-  </div>
+<!-- 하단 바 -->
+<div class="bottom-bar" id="bottomBar">
+  <div><div class="blabel">내 순위</div><div class="bnum" id="bbRank">#5</div></div>
+  <div class="bdiv"></div>
+  <div><div class="blabel">점수</div><div class="bscore" id="bbScore">1,420</div></div>
+  <div class="bdiv"></div>
+  <div style="flex:1;text-align:right;font-size:10px;color:var(--muted)" id="bbExtra">DUST 리그</div>
 </div>
 
 <script>
-/* ── 별빛 배경 ── */
+/* ══���═════ 별빛 배경 ════════ */
 const sc=document.getElementById('starCanvas');
 const ctx=sc.getContext('2d');
 let stars=[];
@@ -437,481 +285,198 @@ resizeSC();initStars();
 window.addEventListener('resize',()=>{resizeSC();initStars();});
 setInterval(drawStars,50);
 
-/* ── Toast ── */
-function showToast(msg){
-  var t=document.createElement('div');
-  t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:10px 24px;background:rgba(20,15,40,.95);border:1px solid rgba(200,175,80,.3);border-radius:20px;color:#e8ecf4;font-size:12px;z-index:9999;pointer-events:none;animation:toastIn .3s ease';
-  t.textContent=msg;
-  document.body.appendChild(t);
-  setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300);},2000);
-}
+/* ════════ Toast ════════ */
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500);}
 
-/* ── 목업 데이터 ── */
-var MOCK_RANKINGS = [
-  {rank:1, name:'별빛수호자',    league:'star',   score:2847, change:'+3'},
-  {rank:2, name:'은하전사',      league:'nova',   score:2691, change:'+1'},
-  {rank:3, name:'우주탐험가',    league:'planet', score:2583, change:'-1'},
-  {rank:4, name:'별의여행자',    league:'star',   score:2401, change:'+5'},
-  {rank:5, name:'성운관측자',    league:'dust',   score:2298, change:'0'},
-  {rank:6, name:'퀘이사빛',     league:'quasar', score:2187, change:'-2'},
-  {rank:7, name:'혜성추적자',    league:'planet', score:2099, change:'+2'},
-  {rank:8, name:'노바폭풍',      league:'nova',   score:1987, change:'-1'},
-  {rank:9, name:'달빛소녀',      league:'star',   score:1876, change:'+4'},
-  {rank:10, name:'별가루모으기', league:'dust',   score:1754, change:'0'},
-];
-
-var LEAGUE_CONFIG = {
-  dust:   {color:'#94a3b8', icon:'✨', label:'DUST'},
-  star:   {color:'#fbbf24', icon:'🌟', label:'STAR'},
-  planet: {color:'#34d399', icon:'🪐', label:'PLANET'},
-  nova:   {color:'#c084fc', icon:'💥', label:'NOVA'},
-  quasar: {color:'#f0c040', icon:'⚡', label:'QUASAR'},
-};
-
-var STAT_LABELS = {
-  total:'종합', loy:'LOY 충성도', act:'ACT 활동력',
-  soc:'SOC 사교성', cre:'CRE 창작력', int:'INT 지성',
-};
-
-/* 현재 필터 상태 */
-var currentLeague = 'dust';
-var currentStat   = 'total';
-
-/* ── 경쟁 콘텐츠 탭 전환 ── */
-document.querySelectorAll('#compTabBar .tab-btn').forEach(function(tab) {
-  tab.addEventListener('click', function() {
-    var target = tab.getAttribute('data-tab');
-
-    // 모든 패널 숨기기
-    document.querySelectorAll('.comp-panel').forEach(function(p) { p.style.display = 'none'; });
-    var panel = document.getElementById('panel-' + target);
-    if(panel) panel.style.display = 'block';
-
-    // 탭 활성 상태
-    document.querySelectorAll('#compTabBar .tab-btn').forEach(function(t) { t.classList.remove('active'); });
-    tab.classList.add('active');
-
-    // 하단 바 표시/숨김
-    document.querySelector('.my-rank-bar').style.display = (target === 'statking') ? 'flex' : 'none';
-    document.getElementById('raceMyCard').style.display = (target === 'statrace') ? 'flex' : 'none';
-
-    // 탭별 초기화
-    if(target === 'hexagon') drawHexChart();
-    if(target === 'statrace') renderRace();
-    if(target === 'marathon') renderMarathon();
+/* ════════ 탭 전환 ════════ */
+function showTab(name){
+  ['statking','hexagon','statrace','marathon','challenge'].forEach(id=>{
+    document.getElementById('sec-'+id).style.display=(id===name)?'block':'none';
+    document.getElementById('sec-'+id).classList.toggle('active',id===name);
   });
+  document.querySelectorAll('.ctab').forEach(t=>{
+    t.classList.toggle('active',t.dataset.tab===name);
+  });
+  if(name==='hexagon') drawHex();
+  if(name==='statrace') renderSR();
+  if(name==='marathon') renderMR();
+  if(name==='challenge') renderCH();
+}
+document.querySelectorAll('.ctab').forEach(t=>{
+  t.addEventListener('click',()=>showTab(t.dataset.tab));
 });
 
-/* ── 리그 필터 전환 ── */
-function switchLeague(leagueId, btn) {
-  currentLeague = leagueId;
-  var cfg = LEAGUE_CONFIG[leagueId];
-
-  /* 리그 버튼 활성 */
-  document.querySelectorAll('.league-btn').forEach(b => {
-    b.className = 'league-btn';
-  });
-  btn.classList.add('active-' + leagueId);
-
-  /* 헤더 배경 그라데이션 변경 */
-  var header = document.getElementById('pageHeader');
-  header.style.background = 'linear-gradient(180deg, ' + cfg.color + '15 0%, transparent 100%)';
-
-  renderRankings();
-}
-
-/* ── 스탯 카테고리 전환 ── */
-function switchStat(statId, btn) {
-  currentStat = statId;
-
-  document.querySelectorAll('.stat-chip').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-
-  renderRankings();
-}
-
-/* ── 랭킹 렌더링 ── */
-function renderRankings() {
-  var list = document.getElementById('rankList');
-
-  /* 리그 필터 적용 */
-  var data = MOCK_RANKINGS.filter(function(r) {
-    return r.league === currentLeague;
-  });
-
-  /* 스탯별 점수 변형 (목업 시뮬레이션) */
-  var statMultipliers = {total:1.0, loy:0.85, act:0.72, soc:0.63, cre:0.58, int:0.49};
-  var mult = statMultipliers[currentStat] || 1.0;
-
-  /* 리그 내 결과가 없으면 전체에서 샘플 */
-  if (data.length === 0) {
-    data = MOCK_RANKINGS.slice(0, 5).map(function(r) {
-      return Object.assign({}, r, {league: currentLeague});
-    });
-  }
-
-  /* 재정렬 (점수 × mult 기준) */
-  data = data.map(function(r, i) {
-    return Object.assign({}, r, {
-      displayScore: Math.round(r.score * mult),
-      displayRank: i + 1,
-    });
-  }).sort(function(a, b) { return b.displayScore - a.displayScore; });
-  data.forEach(function(r, i) { r.displayRank = i + 1; });
-
-  /* HTML 생성 */
-  var html = '';
-  var medals = ['🥇','🥈','🥉'];
-
-  data.forEach(function(r) {
-    var rankClass = r.displayRank === 1 ? 'gold' : r.displayRank === 2 ? 'silver' : r.displayRank === 3 ? 'bronze' : '';
-    var medalHtml = r.displayRank <= 3
-      ? '<span class="rank-medal">' + medals[r.displayRank - 1] + '</span>'
-      : '<span class="rank-medal" style="font-size:0"></span>';
-    var numHtml = r.displayRank <= 3
-      ? ''
-      : '<span class="rank-num" style="font-size:13px;color:var(--muted)">' + r.displayRank + '</span>';
-
-    var changeVal = r.change;
-    var changeClass, changeText;
-    if (changeVal === '0') {
-      changeClass = 'same'; changeText = '—';
-    } else if (changeVal.startsWith('+')) {
-      changeClass = 'up'; changeText = '↑' + changeVal.slice(1);
-    } else {
-      changeClass = 'down'; changeText = '↓' + changeVal.slice(1);
-    }
-
-    var leagueCfg = LEAGUE_CONFIG[r.league] || LEAGUE_CONFIG['dust'];
-    var scoreFormatted = r.displayScore.toLocaleString();
-
-    html += '<div class="rank-item ' + rankClass + '">' +
-      medalHtml +
-      numHtml +
-      '<span class="rank-name">' + r.name + '</span>' +
-      '<span class="rank-league" title="' + leagueCfg.label + '">' + leagueCfg.icon + '</span>' +
-      '<span class="rank-score">' + scoreFormatted + '</span>' +
-      '<span class="rank-change ' + changeClass + '">' + changeText + '</span>' +
-      '</div>';
-  });
-
-  if (html === '') {
-    html = '<div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:12px;">이 리그에 아직 경쟁자가 없습니다.</div>';
-  }
-
-  list.innerHTML = html;
-
-  /* 애니메이션 딜레이 */
-  list.querySelectorAll('.rank-item').forEach(function(el, i) {
-    el.style.animationDelay = (i * 0.04) + 's';
-  });
-}
-
-/* ═══════════════════════════════════
-   헥사곤 배틀 — Canvas 레이더 차트
-   ═══════════════════════════════════ */
-var HEX_STATS = ['LOY','ACT','SOC','CRE','INT','ECO'];
-var HEX_LABELS = ['❤️ LOY','⚡ ACT','💬 SOC','🎨 CRE','🧠 INT','💰 ECO'];
-
-var hexMyStats  = [78, 65, 82, 55, 71, 60];
-var hexOppStats = [62, 88, 54, 73, 67, 80];
-
-var HEX_OPPONENTS = [
-  {name:'은하전사',   stats:[62,88,54,73,67,80]},
-  {name:'별빛수호자', stats:[85,60,78,50,90,55]},
-  {name:'우주탐험가', stats:[70,72,68,80,65,70]},
-  {name:'퀘이사빛',   stats:[55,95,45,60,50,92]},
-  {name:'노바폭풍',   stats:[90,50,85,40,80,42]},
-  {name:'달빛소녀',   stats:[68,58,92,75,55,65]},
-];
-
-function drawHexChart() {
-  var canvas = document.getElementById('hexCanvas');
-  if(!canvas) return;
-  var ctx2 = canvas.getContext('2d');
-  var W = canvas.width, H = canvas.height;
-  var cx = W/2, cy = H/2 + 5;
-  var R = Math.min(W,H) * 0.38;
-
-  ctx2.clearRect(0,0,W,H);
-
-  // 배경 그리드 (3단계)
-  [1.0, 0.66, 0.33].forEach(function(scale) {
-    ctx2.beginPath();
-    for(var i=0;i<6;i++){
-      var angle = (Math.PI*2/6)*i - Math.PI/2;
-      var x = cx + R*scale*Math.cos(angle);
-      var y = cy + R*scale*Math.sin(angle);
-      if(i===0) ctx2.moveTo(x,y); else ctx2.lineTo(x,y);
-    }
-    ctx2.closePath();
-    ctx2.strokeStyle = 'rgba(255,255,255,0.08)';
-    ctx2.lineWidth = 1;
-    ctx2.stroke();
-  });
-
-  // 축선
-  for(var i=0;i<6;i++){
-    var angle = (Math.PI*2/6)*i - Math.PI/2;
-    ctx2.beginPath();
-    ctx2.moveTo(cx,cy);
-    ctx2.lineTo(cx+R*Math.cos(angle), cy+R*Math.sin(angle));
-    ctx2.strokeStyle = 'rgba(255,255,255,0.06)';
-    ctx2.lineWidth = 1;
-    ctx2.stroke();
-  }
-
-  // 내 스탯 (파랑)
-  drawHexPolygon(ctx2, cx, cy, R, hexMyStats, 'rgba(56,189,248,0.25)', 'rgba(56,189,248,0.9)');
-  // 상대 스탯 (빨강)
-  drawHexPolygon(ctx2, cx, cy, R, hexOppStats, 'rgba(239,68,68,0.18)', 'rgba(239,68,68,0.8)');
-
-  // 라벨
-  ctx2.font = '700 11px "Noto Sans KR", sans-serif';
-  ctx2.textAlign = 'center';
-  ctx2.textBaseline = 'middle';
-  for(var i=0;i<6;i++){
-    var angle = (Math.PI*2/6)*i - Math.PI/2;
-    var lx = cx + (R+22)*Math.cos(angle);
-    var ly = cy + (R+22)*Math.sin(angle);
-    ctx2.fillStyle = '#ffffff';
-    ctx2.fillText(HEX_LABELS[i], lx, ly);
-  }
-
-  // 스탯 비교 바 렌더
-  renderHexBars();
-  // 결과 판정
-  renderHexResult();
-}
-
-function drawHexPolygon(ctx2, cx, cy, R, stats, fillColor, strokeColor) {
-  ctx2.beginPath();
-  for(var i=0;i<6;i++){
-    var angle = (Math.PI*2/6)*i - Math.PI/2;
-    var val = Math.min(stats[i],100)/100;
-    var x = cx + R*val*Math.cos(angle);
-    var y = cy + R*val*Math.sin(angle);
-    if(i===0) ctx2.moveTo(x,y); else ctx2.lineTo(x,y);
-  }
-  ctx2.closePath();
-  ctx2.fillStyle = fillColor;
-  ctx2.fill();
-  ctx2.strokeStyle = strokeColor;
-  ctx2.lineWidth = 2;
-  ctx2.stroke();
-
-  // 꼭짓점 점
-  for(var i=0;i<6;i++){
-    var angle = (Math.PI*2/6)*i - Math.PI/2;
-    var val = Math.min(stats[i],100)/100;
-    var x = cx + R*val*Math.cos(angle);
-    var y = cy + R*val*Math.sin(angle);
-    ctx2.beginPath();
-    ctx2.arc(x,y,3,0,Math.PI*2);
-    ctx2.fillStyle = strokeColor;
-    ctx2.fill();
-  }
-}
-
-function renderHexBars() {
-  var el = document.getElementById('hexStatBars');
-  if(!el) return;
-  var html = '';
-  for(var i=0;i<6;i++){
-    var me = hexMyStats[i], opp = hexOppStats[i];
-    var maxVal = Math.max(me,opp,1);
-    var meW = (me/100)*50, oppW = (opp/100)*50;
-    var win = me > opp ? 'me' : me < opp ? 'opp' : '';
-    html += '<div class="hex-stat-row">' +
-      '<span class="hex-stat-label">' + HEX_STATS[i] + '</span>' +
-      '<div class="hex-bar-wrap">' +
-        '<div class="hex-bar-me" style="width:'+meW+'%"></div>' +
-        '<div class="hex-bar-opp" style="width:'+oppW+'%"></div>' +
-      '</div>' +
-      '<span class="hex-stat-val"><span class="me">' + me + '</span><span class="opp">' + opp + '</span></span>' +
-      '</div>';
-  }
-  el.innerHTML = html;
-}
-
-function renderHexResult() {
-  var myTotal=0, oppTotal=0, myWins=0, oppWins=0;
-  for(var i=0;i<6;i++){
-    myTotal += hexMyStats[i]; oppTotal += hexOppStats[i];
-    if(hexMyStats[i]>hexOppStats[i]) myWins++;
-    else if(hexOppStats[i]>hexMyStats[i]) oppWins++;
-  }
-  var winnerEl = document.getElementById('hexWinner');
-  var summaryEl = document.getElementById('hexSummary');
-  if(myWins > oppWins) {
-    winnerEl.textContent = '🏆 승리! — YOU WIN';
-    winnerEl.style.color = '#38bdf8';
-  } else if(oppWins > myWins) {
-    winnerEl.textContent = '💔 패배 — YOU LOSE';
-    winnerEl.style.color = '#ef4444';
+/* ════════ 헤더 경쟁기간 배�� ════════ */
+(function(){
+  var d=new Date().getDate();
+  var el=document.getElementById('periodBadge');
+  if(d>=1&&d<=15){
+    el.innerHTML='<span class="header-badge badge-compete">🔥 경쟁 기간</span> 매월 1~15일';
   } else {
-    winnerEl.textContent = '⚖️ 무승부 — DRAW';
-    winnerEl.style.color = '#fbbf24';
+    el.innerHTML='<span class="header-badge badge-free">🌙 자유활동 기간</span> 매월 16~말일';
   }
-  summaryEl.textContent = myWins + '승 ' + oppWins + '패 · 총점 ' + myTotal + ' vs ' + oppTotal;
+})();
+
+/* ════════ 스탯킹 ════════ */
+var SK_DATA=[
+  {rk:1,nm:'성운관���자',sc:2298,ch:'+3'},{rk:2,nm:'별가루모으기',sc:1754,ch:'+1'},
+  {rk:3,nm:'스타��스트',sc:1632,ch:'-1'},{rk:4,nm:'은하수여��자',sc:1521,ch:'+2'},
+  {rk:5,nm:'별빛탐험가',sc:1420,ch:'+5',me:1},{rk:6,nm:'코스모스',sc:1380,ch:'0'},
+  {rk:7,nm:'행성수집가',sc:1290,ch:'-2'},{rk:8,nm:'혜성관찰자',sc:1180,ch:'+1'},
+  {rk:9,nm:'오로라헌터',sc:1050,ch:'+4'},{rk:10,nm:'성간���행자',sc:980,ch:'0'}
+];
+function pickLeague(id,btn){
+  document.querySelectorAll('.league-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  showToast(btn.textContent.trim()+' 리그');
 }
-
-function randomHexMatch() {
-  var idx = Math.floor(Math.random() * HEX_OPPONENTS.length);
-  var opp = HEX_OPPONENTS[idx];
-  hexOppStats = opp.stats.slice();
-  document.getElementById('hexOppName').textContent = opp.name;
-  // 내 스탯도 약간 랜덤 변동
-  hexMyStats = hexMyStats.map(function(v){ return Math.max(20, Math.min(100, v + Math.floor(Math.random()*11)-5)); });
-  drawHexChart();
-  showToast('🎲 ' + opp.name + '와(과) 대결!');
+function pickStat(id,btn){
+  document.querySelectorAll('#statBar .schip').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
 }
-
-/* ═══════════════════════════════════
-   스탯 레이스
-   ═══════════════════════��═══════════ */
-var RACE_DATA = {
-  act: [
-    {rank:1,name:'열정맨_제이',score:9840,delta:'+520'},
-    {rank:2,name:'파이어볼',score:8720,delta:'+380'},
-    {rank:3,name:'스파크',score:8100,delta:'+290'},
-    {rank:4,name:'액션히어로',score:7650,delta:'+210'},
-    {rank:5,name:'별빛탐험가',score:7200,delta:'+340',me:true},
-    {rank:6,name:'러너킹',score:6800,delta:'+180'},
-    {rank:7,name:'퀘스트마스터',score:6400,delta:'+150'},
-    {rank:8,name:'데일리챌',score:5900,delta:'-60'},
-    {rank:9,name:'미션클리어',score:5200,delta:'+90'},
-    {rank:10,name:'활동왕',score:4800,delta:'+40'},
-  ],
-  loy: [
-    {rank:1,name:'영원한별',score:11200,delta:'+600'},
-    {rank:2,name:'충성의빛',score:10500,delta:'+420'},
-    {rank:3,name:'별빛탐험가',score:9800,delta:'+380',me:true},
-    {rank:4,name:'수호자K',score:9100,delta:'+310'},
-    {rank:5,name:'매일출석',score:8400,delta:'+270'},
-    {rank:6,name:'팬심가득',score:7900,delta:'+200'},
-    {rank:7,name:'로열티킹',score:7300,delta:'+160'},
-    {rank:8,name:'한결같은',score:6800,delta:'+120'},
-    {rank:9,name:'꾸준한별',score:6200,delta:'+80'},
-    {rank:10,name:'일일덕질',score:5700,delta:'+50'},
-  ],
-  soc: [
-    {rank:1,name:'수다쟁이',score:8900,delta:'+440'},
-    {rank:2,name:'별빛탐험가',score:8200,delta:'+360',me:true},
-    {rank:3,name:'소통왕',score:7600,delta:'+280'},
-    {rank:4,name:'친구백명',score:7100,delta:'+220'},
-    {rank:5,name:'댓글요정',score:6500,delta:'+190'},
-    {rank:6,name:'공감천재',score:5900,delta:'+140'},
-    {rank:7,name:'리플마스터',score:5400,delta:'+100'},
-    {rank:8,name:'하트폭격',score:4800,delta:'+70'},
-    {rank:9,name:'채팅달인',score:4300,delta:'+40'},
-    {rank:10,name:'소셜나비',score:3800,delta:'+20'},
-  ],
-  cre: [
-    {rank:1,name:'아트마스터',score:7800,delta:'+350'},
-    {rank:2,name:'창작의신',score:7200,delta:'+290'},
-    {rank:3,name:'일러장인',score:6700,delta:'+240'},
-    {rank:4,name:'별빛탐험가',score:6100,delta:'+200',me:true},
-    {rank:5,name:'팬아트왕',score:5600,delta:'+160'},
-    {rank:6,name:'영상편집',score:5100,delta:'+130'},
-    {rank:7,name:'글솜씨',score:4600,delta:'+90'},
-    {rank:8,name:'밈제조기',score:4100,delta:'+60'},
-    {rank:9,name:'포토그래퍼',score:3600,delta:'+30'},
-    {rank:10,name:'디자이너',score:3100,delta:'+10'},
-  ],
-  int: [
-    {rank:1,name:'위키마스터',score:9200,delta:'+480'},
-    {rank:2,name:'정보통',score:8600,delta:'+390'},
-    {rank:3,name:'분석왕',score:8000,delta:'+320'},
-    {rank:4,name:'데이터맨',score:7400,delta:'+260'},
-    {rank:5,name:'퀴즈왕',score:6800,delta:'+210'},
-    {rank:6,name:'별빛탐험가',score:6300,delta:'+170',me:true},
-    {rank:7,name:'리서처',score:5700,delta:'+130'},
-    {rank:8,name:'학구파',score:5200,delta:'+90'},
-    {rank:9,name:'지식인',score:4600,delta:'+50'},
-    {rank:10,name:'공부벌레',score:4100,delta:'+20'},
-  ],
-  eco: [
-    {rank:1,name:'재벌탐험���',score:12400,delta:'+700'},
-    {rank:2,name:'투자의신',score:11200,delta:'+580'},
-    {rank:3,name:'별빛탐험가',score:10100,delta:'+450',me:true},
-    {rank:4,name:'절약왕',score:9200,delta:'+360'},
-    {rank:5,name:'경매달인',score:8400,delta:'+280'},
-    {rank:6,name:'거래소마스터',score:7600,delta:'+210'},
-    {rank:7,name:'스타더스트',score:6900,delta:'+150'},
-    {rank:8,name:'알뜰한별',score:6200,delta:'+100'},
-    {rank:9,name:'코인수집가',score:5500,delta:'+60'},
-    {rank:10,name:'경제인',score:4800,delta:'+30'},
-  ],
-};
-
-var RACE_STAT_ICONS = {act:'⚡',loy:'❤️',soc:'💬',cre:'🎨',int:'🧠',eco:'💰'};
-var currentRaceStat = 'act';
-
-function switchRaceStat(statId, btn) {
-  currentRaceStat = statId;
-  document.querySelectorAll('#raceStatBar .stat-chip').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderRace();
-}
-
-function renderRace() {
-  var data = RACE_DATA[currentRaceStat] || RACE_DATA['act'];
-  var icon = RACE_STAT_ICONS[currentRaceStat] || '⚡';
-  var statUp = currentRaceStat.toUpperCase();
-
-  document.getElementById('raceStatTitle').textContent = icon + ' ' + statUp + ' 레이스';
-
-  var medals = ['🥇','🥈','🥉'];
-  var html = '';
-  var myEntry = null;
-
-  data.forEach(function(r) {
-    var isMe = r.me === true;
-    if(isMe) myEntry = r;
-    var rankClass = r.rank===1?'gold':r.rank===2?'silver':r.rank===3?'bronze':'';
-    var meClass = isMe ? ' race-me-row' : '';
-    var medalHtml = r.rank<=3 ? '<span class="rank-medal">'+medals[r.rank-1]+'</span>' : '<span class="rank-medal" style="font-size:0"></span>';
-    var numHtml = r.rank<=3 ? '' : '<span class="rank-num" style="font-size:13px;color:var(--muted)">'+r.rank+'</span>';
-
-    var dv = r.delta;
-    var dClass, dText;
-    if(dv.startsWith('+')){ dClass='up'; dText='↑'+dv.slice(1); }
-    else if(dv.startsWith('-')){ dClass='down'; dText='↓'+dv.slice(1); }
-    else { dClass='same'; dText='—'; }
-
-    html += '<div class="rank-item '+rankClass+meClass+'" style="animation-delay:'+(r.rank*0.04)+'s">' +
-      medalHtml + numHtml +
-      '<span class="rank-name">'+r.name+'</span>' +
-      '<span class="rank-score">'+r.score.toLocaleString()+'</span>' +
-      '<span class="rank-change '+dClass+'">'+dText+'</span>' +
-      '</div>';
+function renderSK(){
+  var h='';var m=['🥇','🥈','🥉'];
+  SK_DATA.forEach(function(r,i){
+    var cls=i===0?'g':i===1?'s':i===2?'b':'';
+    if(r.me)cls+=' me';
+    var medal=i<3?m[i]:'';
+    var num=i>=3?r.rk:'';
+    var cv=r.ch,cc,ct;
+    if(cv==='0'){cc='eq';ct='—';}else if(cv.charAt(0)==='+'){cc='up';ct='↑'+cv.slice(1);}else{cc='dn';ct='↓'+cv.slice(1);}
+    h+='<div class="ri '+cls+'" style="animation-delay:'+(i*.04)+'s">';
+    h+='<span class="rk">'+(medal||num)+'</span>';
+    h+='<span class="nm">'+r.nm+(r.me?' <span style="font-size:9px;color:#38bdf8">← 나</span>':'')+'</span>';
+    h+='<span class="sc">'+r.sc.toLocaleString()+'</span>';
+    h+='<span class="ch '+cc+'">'+ct+'</span></div>';
   });
+  document.getElementById('skList').innerHTML=h;
+}
+renderSK();
 
-  document.getElementById('raceList').innerHTML = html;
-
-  // 내 현황 카드 업데이트
-  if(myEntry) {
-    document.getElementById('raceMyRank').textContent = '#' + myEntry.rank;
-    document.getElementById('raceMyStatLabel').textContent = '내 ' + statUp + ' 점수';
-    document.getElementById('raceMyScore').textContent = myEntry.score.toLocaleString();
-    var gap = data[0].score - myEntry.score;
-    document.getElementById('raceGap').textContent = gap.toLocaleString();
-    var dv = myEntry.delta;
-    var deltaEl = document.getElementById('raceDelta');
-    if(dv.startsWith('+')){ deltaEl.textContent='전날 대비: '+dv+' ↑'; deltaEl.style.color='#34d399'; }
-    else if(dv.startsWith('-')){ deltaEl.textContent='전날 대비: '+dv+' ↓'; deltaEl.style.color='#ef4444'; }
-    else { deltaEl.textContent='전날 대비: 변동 없음'; deltaEl.style.color='var(--muted)'; }
+/* ════════ 헥사곤 ════════ */
+var HEX_S=['LOY','ACT','SOC','ECO','CRE','INT'];
+var HEX_L=['❤️ LOY','⚡ ACT','💬 SOC','💰 ECO','🎨 CRE','🧠 INT'];
+var hMe=[78,65,82,60,55,71],hOp=[62,88,54,80,73,67];
+var HEX_OPP=[
+  {n:'은하전사',s:[62,88,54,80,73,67]},{n:'별빛수��자',s:[85,60,78,55,50,90]},
+  {n:'우주탐험가',s:[70,72,68,70,80,65]},{n:'퀘��사빛',s:[55,95,45,92,60,50]},
+  {n:'노바폭풍',s:[90,50,85,42,40,80]},{n:'달빛소녀',s:[68,58,92,65,75,55]}
+];
+function drawHex(){
+  var c=document.getElementById('hexCanvas');if(!c)return;
+  var x=c.getContext('2d'),W=c.width,H=c.height,cx=W/2,cy=H/2+5,R=Math.min(W,H)*.38;
+  x.clearRect(0,0,W,H);
+  [1,.66,.33].forEach(function(s){
+    x.beginPath();for(var i=0;i<6;i++){var a=Math.PI*2/6*i-Math.PI/2;var px=cx+R*s*Math.cos(a),py=cy+R*s*Math.sin(a);i===0?x.moveTo(px,py):x.lineTo(px,py);}
+    x.closePath();x.strokeStyle='rgba(255,255,255,0.08)';x.lineWidth=1;x.stroke();
+  });
+  for(var i=0;i<6;i++){var a=Math.PI*2/6*i-Math.PI/2;x.beginPath();x.moveTo(cx,cy);x.lineTo(cx+R*Math.cos(a),cy+R*Math.sin(a));x.strokeStyle='rgba(255,255,255,0.06)';x.stroke();}
+  drawPoly(x,cx,cy,R,hMe,'rgba(56,189,248,0.25)','rgba(56,189,248,0.9)');
+  drawPoly(x,cx,cy,R,hOp,'rgba(239,68,68,0.18)','rgba(239,68,68,0.8)');
+  x.font='700 11px "Noto Sans KR",sans-serif';x.textAlign='center';x.textBaseline='middle';
+  for(var i=0;i<6;i++){var a=Math.PI*2/6*i-Math.PI/2;x.fillStyle='#fff';x.fillText(HEX_L[i],cx+(R+22)*Math.cos(a),cy+(R+22)*Math.sin(a));}
+  // bars
+  var bh='';
+  for(var i=0;i<6;i++){
+    bh+='<div class="hex-bar-row"><span class="hex-bar-label">'+HEX_S[i]+'</span><div class="hex-bar-wrap"><div class="bme" style="width:'+hMe[i]/2+'%"></div><div class="bop" style="width:'+hOp[i]/2+'%"></div></div><span class="hex-vals"><span class="vm">'+hMe[i]+'</span><span class="vo">'+hOp[i]+'</span></span></div>';
   }
+  document.getElementById('hexBars').innerHTML=bh;
+  // result
+  var mw=0,ow=0;for(var i=0;i<6;i++){if(hMe[i]>hOp[i])mw++;else if(hOp[i]>hMe[i])ow++;}
+  var we=document.getElementById('hexWinner'),se=document.getElementById('hexSummary');
+  var mt=hMe.reduce(function(a,b){return a+b},0),ot=hOp.reduce(function(a,b){return a+b},0);
+  if(mw>ow){we.textContent='🏆 승리! ��� YOU WIN';we.style.color='#38bdf8';}
+  else if(ow>mw){we.textContent='💔 패배 — YOU LOSE';we.style.color='#ef4444';}
+  else{we.textContent='⚖️ 무승부 — DRAW';we.style.color='#fbbf24';}
+  se.textContent=mw+'승 '+ow+'패 · 총점 '+mt+' vs '+ot;
+}
+function drawPoly(x,cx,cy,R,st,fc,sc2){
+  x.beginPath();for(var i=0;i<6;i++){var a=Math.PI*2/6*i-Math.PI/2,v=Math.min(st[i],100)/100;var px=cx+R*v*Math.cos(a),py=cy+R*v*Math.sin(a);i===0?x.moveTo(px,py):x.lineTo(px,py);}
+  x.closePath();x.fillStyle=fc;x.fill();x.strokeStyle=sc2;x.lineWidth=2;x.stroke();
+  for(var i=0;i<6;i++){var a=Math.PI*2/6*i-Math.PI/2,v=Math.min(st[i],100)/100;x.beginPath();x.arc(cx+R*v*Math.cos(a),cy+R*v*Math.sin(a),3,0,Math.PI*2);x.fillStyle=sc2;x.fill();}
+}
+function randomHex(){
+  var o=HEX_OPP[Math.floor(Math.random()*HEX_OPP.length)];
+  hOp=o.s.slice();document.getElementById('hexOppName').textContent=o.n;
+  hMe=hMe.map(function(v){return Math.max(20,Math.min(100,v+Math.floor(Math.random()*11)-5));});
+  drawHex();showToast('🎲 '+o.n+'와(과) 대결!');
 }
 
-/* ═══════════════════════════════════
-   성장 마라톤
-   ═══════════════════════════════════ */
-function renderMarathon() { /* 정적 HTML — 별도 렌더 불필요 */ }
+/* ════════ 스탯레이스 ════════ */
+var SR_DATA=[
+  {rk:1,nm:'열정맨_제이',sc:9840,ch:'+520'},{rk:2,nm:'파이어볼',sc:8720,ch:'+380'},
+  {rk:3,nm:'스파크',sc:8100,ch:'+290'},{rk:4,nm:'액션히어로',sc:7650,ch:'+210'},
+  {rk:5,nm:'별빛탐험가',sc:7200,ch:'+340',me:1},{rk:6,nm:'러너킹',sc:6800,ch:'+180'},
+  {rk:7,nm:'퀘스트마스터',sc:6400,ch:'+150'},{rk:8,nm:'데일리챌',sc:5900,ch:'-60'},
+  {rk:9,nm:'미션��리어',sc:5200,ch:'+90'},{rk:10,nm:'활동왕',sc:4800,ch:'+40'}
+];
+function renderSR(){
+  var h='',m=['🥇','🥈','🥉'];
+  SR_DATA.forEach(function(r,i){
+    var cls=i===0?'g':i===1?'s':i===2?'b':'';if(r.me)cls+=' me';
+    var cv=r.ch,cc,ct;
+    if(cv==='0'){cc='eq';ct='—';}else if(cv.charAt(0)==='+'){cc='up';ct='↑'+cv.slice(1);}else{cc='dn';ct='↓'+cv.slice(1);}
+    h+='<div class="ri '+cls+'" style="animation-delay:'+(i*.04)+'s"><span class="rk">'+(i<3?m[i]:r.rk)+'</span><span class="nm">'+r.nm+(r.me?' <span style="font-size:9px;color:#38bdf8">← 나</span>':'')+'</span><span class="sc">'+r.sc.toLocaleString()+'</span><span class="ch '+cc+'">'+ct+'</span></div>';
+  });
+  document.getElementById('srList').innerHTML=h;
+  // countdown
+  var now=new Date(),end=new Date(now.getFullYear(),now.getMonth(),15,23,59,59);
+  if(now>end)end=new Date(now.getFullYear(),now.getMonth()+1,15,23,59,59);
+  var diff=Math.max(0,Math.ceil((end-now)/(1000*60*60*24)));
+  document.getElementById('raceCountdown').textContent='경쟁 종료까지 D-'+diff;
+}
 
-/* ── 초기 렌더 ── */
-renderRankings();
+/* ════════ 성장마라톤 ════════ */
+var MR_DATA=[
+  {rk:1,nm:'뉴비챔피언',sc:2840,tag:'ACT↑'},{rk:2,nm:'성장왕_코코',sc:2210,tag:'LOY↑'},
+  {rk:3,nm:'별빛탐험가',sc:1518,tag:'ACT↑',me:1},{rk:4,nm:'열정신인',sc:1320,tag:'ECO↑'},
+  {rk:5,nm:'급성장러',sc:1180,tag:'CRE↑'},{rk:6,nm:'노력��',sc:980,tag:'INT↑'},
+  {rk:7,nm:'꾸준히가자',sc:870,tag:'SOC↑'},{rk:8,nm:'매일매일',sc:750,tag:'ACT↑'},
+  {rk:9,nm:'성실함의힘',sc:640,tag:'LOY↑'},{rk:10,nm:'한걸음씩',sc:520,tag:'ECO↑'}
+];
+function renderMR(){
+  var h='',m=['👑','🥈','🥉'];
+  MR_DATA.forEach(function(r,i){
+    var cls=i===0?'g':i===1?'s':i===2?'b':'';if(r.me)cls+=' me';
+    h+='<div class="ri '+cls+'" style="animation-delay:'+(i*.04)+'s"><span class="rk">'+(i<3?m[i]:r.rk)+'</span><span class="nm">'+r.nm+(r.me?' <span style="font-size:9px;color:#34d399">← 나</span>':'')+'</span><span class="sc">+'+r.sc.toLocaleString()+'</span><span class="tag">'+r.tag+'</span></div>';
+  });
+  document.getElementById('mrList').innerHTML=h;
+}
+
+/* ════════ 도전과제 ════════ */
+var BINGO=[
+  {t:'7일 연속\n로그인',s:'done'},{t:'첫 팬아���\n등��',s:'done'},{t:'LOY\n1000달성',s:'done'},{t:'팬클럽\n가입',s:'done'},{t:'소모임\n참여',s:'done'},
+  {t:'첫 댓글\n작성',s:'done'},{t:'굿즈\n첫 구매',s:'done'},{t:'10명에��\n응원',s:'done'},{t:'아티스트\n대화 10회',s:'done'},{t:'아바타\n꾸미기',s:'done'},
+  {t:'제보소\n첫 제보',s:'done'},{t:'별빛\n100개',s:'done'},{t:'30일 연속\n로그인',s:'prog',p:'22/30'},{t:'ACT 5000\n달성',s:'prog',p:'완료!'},{t:'팬아트\n10개',s:'prog',p:'3/10'},
+  {t:'리그\n1위 ��성',s:'lock'},{t:'��사곤\n10승',s:'lock'},{t:'소모임\n개설',s:'lock'},{t:'시즌\nMVP',s:'lock'},{t:'퀘이사\n승격',s:'lock'},
+  {t:'마라톤\n1위',s:'lock'},{t:'레이스\n1위',s:'lock'},{t:'특파원\n달성',s:'lock'},{t:'굿즈\n10개',s:'lock'},{t:'모든\n과제 완료',s:'lock'}
+];
+var CH_DATA=[
+  {rk:1,nm:'도전왕_아리',sc:'23/25'},{rk:2,nm:'퀘스트킹',sc:'21/25'},
+  {rk:3,nm:'챌린저',sc:'19/25'},{rk:4,nm:'미���마스터',sc:'17/25'},
+  {rk:5,nm:'완��의신',sc:'15/25'},{rk:6,nm:'과제수집가',sc:'13/25'},
+  {rk:7,nm:'별빛탐험가',sc:'12/25',me:1}
+];
+function renderCH(){
+  // bingo
+  var g=document.getElementById('bingoGrid'),h='';
+  BINGO.forEach(function(c){
+    var icon=c.s==='done'?'✅':c.s==='prog'?'🔄':'🔒';
+    var sub=c.p?'<div style="font-size:7px;margin-top:1px;opacity:.8">'+c.p+'</div>':'';
+    h+='<div class="bcell '+c.s+'"><div>'+icon+'</div><div style="margin-top:2px">'+c.t.replace(/\n/g,'<br>')+'</div>'+sub+'</div>';
+  });
+  g.innerHTML=h;
+  // ranking
+  var rh='',m=['🥇','🥈','🥉'];
+  CH_DATA.forEach(function(r,i){
+    var cls=i===0?'g':i===1?'s':i===2?'b':'';if(r.me)cls+=' me';
+    rh+='<div class="ri '+cls+'" style="animation-delay:'+(i*.04)+'s"><span class="rk">'+(i<3?m[i]:r.rk)+'</span><span class="nm">'+r.nm+(r.me?' <span style="font-size:9px;color:#38bdf8">← 나</span>':'')+'</span><span class="sc">'+r.sc+'</span></div>';
+  });
+  document.getElementById('chList').innerHTML=rh;
+}
+
+/* ════════ 초기화 ════════ */
+showTab('statking');
 </script>
 </body>
 </html>
