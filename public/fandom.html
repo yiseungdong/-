@@ -1167,6 +1167,7 @@ const LEAGUE_BUILDINGS={
   ]
 };
 let leagueBuildingRects=[];
+const leagueMap_render={dust:'dust',star:'star',planet:'planet',nova:'nova',quasar:'quasar'};
 const BLD_BASE=[
   {id:'hq',rx:.43,ry:.24,rw:.07,rh:.075,nK:'팬클럽 본부',nE:'HQ'},
   {id:'org',rx:.21,ry:.30,rw:.055,rh:.075,nK:'조직도 타워',nE:'Org Tower'},
@@ -2353,6 +2354,26 @@ function render(league){
     d.onclick=()=>openMo(b.id);
     const badge=b.id==='board'?'<div class="bld-badge">5</div>':b.id==='vote'?'<div class="bld-badge">2</div>':b.id==='event'?'<div class="bld-badge">1</div>':b.id==='hq'?`<div class="bld-badge">${DM.ann.length}</div>`:'';
     d.innerHTML=`${badge}<div class="bld-label"><div class="bld-name">${ic[b.id]||b.symbol||''} ${b.nK}</div><div class="bld-name-en">${b.nE}</div></div>`;
+    bl.appendChild(d);
+  });
+
+  // 리그 모임 건물 HTML 오버레이
+  const lbKey=leagueMap_render[league]||league;
+  const lbList=LEAGUE_BUILDINGS[lbKey]||[];
+  const lbw=70,lbh=60,lbGap=20;
+  const lbTotalW=lbList.length*(lbw+lbGap);
+  const lbStartX=(W-lbTotalW)/2;
+  const lbStartY=H-160;
+  lbList.forEach((lb,i)=>{
+    const lx=lbStartX+i*(lbw+lbGap);
+    const ly=lbStartY-28;
+    const d=document.createElement('div');d.className='bld';
+    d.style.cssText=`left:${lx-4}px;top:${ly-4}px;width:${lbw+8}px;height:${lbh+36}px`;
+    d.onclick=()=>{
+      const rect={id:lb.id,nameKo:lb.nameKo,nameEn:lb.nameEn,emoji:lb.emoji,color:lb.color};
+      openLeagueChat(rect);
+    };
+    d.innerHTML=`<div class="bld-label"><div class="bld-name">${lb.emoji} ${lb.nameKo}</div><div class="bld-name-en">${lb.nameEn}</div></div>`;
     bl.appendChild(d);
   });
 
