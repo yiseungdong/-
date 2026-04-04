@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>경쟁 — ASTERIA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --void:#030308;--panel:rgba(5,12,30,.96);
+  --border:rgba(200,175,80,.13);--gold:#f0c040;
+  --accent:#4a90d9;--text:#e8ecf4;--muted:rgba(160,180,210,.5);
+}
+html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-family:'Noto Sans KR',sans-serif;overflow-x:hidden}
+#starCanvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+#app{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative;z-index:1}
+
+/* ── 상단 네비게이션 ── */
+.top-nav{position:fixed;top:0;left:0;right:0;z-index:400;display:flex;align-items:center;justify-content:center;gap:28px;height:44px;background:rgba(10,10,22,0.96);backdrop-filter:blur(20px);border-bottom:1px solid rgba(180,150,255,0.13)}
+.top-nav-item{font-size:12px;font-weight:500;color:rgba(200,190,220,0.45);text-decoration:none;cursor:pointer;transition:all .2s;letter-spacing:0.5px;padding:4px 2px;border-bottom:2px solid transparent}
+.top-nav-item:hover{color:#e8e4f0}
+.top-nav-item.active{color:#c084fc;border-bottom-color:#c084fc}
+
+/* ── 페이지 헤더 ── */
+.page-header{
+  padding:60px 20px 16px;
+  text-align:center;
+  position:relative;
+  transition:background .4s ease;
+  flex-shrink:0;
+}
+.page-header::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
+  background:var(--border);
+}
+.header-title{
+  font-family:'Orbitron',monospace;font-size:16px;font-weight:900;
+  color:var(--gold);letter-spacing:2px;margin-bottom:5px;
+}
+.header-sub{font-size:11px;color:var(--muted);margin-bottom:6px;}
+.header-season{
+  display:inline-block;
+  font-size:10px;font-weight:700;color:var(--accent);
+  background:rgba(74,144,217,.1);border:1px solid rgba(74,144,217,.25);
+  border-radius:10px;padding:2px 10px;letter-spacing:0.5px;
+}
+
+/* ── 경쟁 콘텐츠 탭 ── */
+.tab-bar{display:flex;overflow-x:auto;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0}
+.tab-bar::-webkit-scrollbar{display:none}
+.tab-btn{flex-shrink:0;padding:10px 14px;font-size:10px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none;font-family:'Noto Sans KR',sans-serif}
+.tab-btn.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+/* ── 리그 필터 ── */
+.league-filter{
+  display:flex;gap:6px;padding:12px 16px;
+  justify-content:center;flex-wrap:wrap;
+  background:rgba(5,12,30,.6);
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.league-btn{
+  display:flex;align-items:center;gap:4px;
+  padding:5px 12px;border-radius:14px;
+  font-size:10px;font-weight:700;cursor:pointer;
+  border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.04);
+  color:var(--muted);transition:all .2s;
+  font-family:'Noto Sans KR',sans-serif;
+  letter-spacing:0.3px;
+}
+.league-btn:hover{opacity:.85}
+.league-btn.active-dust{color:#94a3b8;border-color:#94a3b8;background:rgba(148,163,184,.1);}
+.league-btn.active-star{color:#fbbf24;border-color:#fbbf24;background:rgba(251,191,36,.1);}
+.league-btn.active-planet{color:#34d399;border-color:#34d399;background:rgba(52,211,153,.1);}
+.league-btn.active-nova{color:#c084fc;border-color:#c084fc;background:rgba(192,132,252,.1);}
+.league-btn.active-quasar{color:#f0c040;border-color:#f0c040;background:rgba(240,192,64,.1);}
+
+/* ── 스탯 카테고리 칩 ── */
+.stat-bar{
+  display:flex;overflow-x:auto;gap:8px;
+  padding:10px 16px;flex-shrink:0;
+}
+.stat-bar::-webkit-scrollbar{display:none}
+.stat-chip{
+  flex-shrink:0;display:flex;align-items:center;gap:4px;
+  padding:5px 12px;border-radius:14px;
+  font-size:10px;font-weight:700;cursor:pointer;
+  border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.04);
+  color:var(--muted);transition:all .2s;
+  font-family:'Noto Sans KR',sans-serif;
+  white-space:nowrap;
+}
+.stat-chip.active{color:var(--gold);border-color:var(--gold);background:rgba(240,192,64,.1);}
+
+/* ── 랭킹 영역 ── */
+.rank-section{
+  flex:1;overflow-y:auto;
+  padding:8px 0 80px;
+}
+.rank-section::-webkit-scrollbar{width:3px}
+.rank-section::-webkit-scrollbar-thumb{background:rgba(240,192,64,.3);border-radius:3px}
+
+.rank-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 16px 4px;
+  font-size:9px;color:var(--muted);letter-spacing:1px;font-weight:600;
+}
+.rank-updated{font-size:9px;color:var(--muted);}
+
+/* 랭킹 아이템 */
+.rank-item{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 16px;margin:0 12px 8px;
+  background:rgba(255,255,255,.03);
+  border:1px solid var(--border);
+  border-radius:12px;
+  transition:all .2s;
+}
+.rank-item:hover{border-color:rgba(200,175,80,.3);}
+.rank-item.gold{border-left:3px solid #f0c040;background:rgba(240,192,64,.06);}
+.rank-item.silver{border-left:3px solid #c0c0c0;background:rgba(192,192,192,.04);}
+.rank-item.bronze{border-left:3px solid #cd7f32;background:rgba(205,127,50,.04);}
+
+.rank-medal{font-size:16px;width:22px;text-align:center;flex-shrink:0;}
+.rank-num{font-family:'Orbitron',monospace;font-size:16px;font-weight:900;width:32px;text-align:center;flex-shrink:0;}
+.rank-name{flex:1;font-size:13px;font-weight:600;}
+.rank-league{font-size:14px;flex-shrink:0;}
+.rank-score{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;color:var(--gold);flex-shrink:0;}
+.rank-change{font-size:10px;width:28px;text-align:center;flex-shrink:0;font-weight:700;}
+.rank-change.up{color:#34d399;}
+.rank-change.down{color:#ef4444;}
+.rank-change.same{color:var(--muted);}
+
+/* ── 내 순위 플로팅 바 ── */
+.my-rank-bar{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:520px;
+  padding:12px 20px;
+  background:rgba(5,12,30,.98);
+  backdrop-filter:blur(12px);
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;
+  z-index:300;
+}
+.my-rank-label{font-size:10px;color:var(--muted);font-weight:600;letter-spacing:0.5px;}
+.my-rank-num{font-family:'Orbitron',monospace;font-size:14px;font-weight:900;color:var(--gold);}
+.my-rank-score{font-family:'Orbitron',monospace;font-size:12px;color:var(--text);}
+.my-rank-change{font-size:11px;color:#34d399;font-weight:700;}
+.my-rank-divider{width:1px;height:20px;background:var(--border);flex-shrink:0;}
+.my-rank-right{margin-left:auto;display:flex;align-items:center;gap:6px;}
+.my-rank-badge{
+  padding:3px 10px;border-radius:10px;
+  font-size:9px;font-weight:700;
+  background:rgba(240,192,64,.12);
+  border:1px solid rgba(240,192,64,.3);
+  color:var(--gold);letter-spacing:0.5px;
+}
+
+/* ── Toast & 애니메이션 ── */
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.rank-item{animation:fadeIn .3s ease both;}
+</style>
+</head>
+<body>
+<canvas id="starCanvas"></canvas>
+
+<nav class="top-nav">
+  <a class="top-nav-item" href="/index.html">홈</a>
+  <a class="top-nav-item" href="/fandom.html">팬덤</a>
+  <a class="top-nav-item" href="/astra.html">아스트라</a>
+  <a class="top-nav-item" href="/room3d.html">내방</a>
+  <a class="top-nav-item" href="/avatar.html">아바타</a>
+  <a class="top-nav-item" href="/shop.html">상점</a>
+</nav>
+
+<div id="app">
+
+  <!-- 페이지 헤더 -->
+  <div class="page-header" id="pageHeader">
+    <div class="header-title">⚔️ 경쟁 — COMPETITION</div>
+    <div class="header-sub">매월 1~15일 경쟁 기간</div>
+    <span class="header-season">시즌 1 · D-12</span>
+  </div>
+
+  <!-- 경쟁 콘텐츠 탭 -->
+  <div class="tab-bar" id="compTabBar">
+    <button class="tab-btn active" onclick="switchCompTab('statking', this)">⚡ 스탯킹</button>
+    <button class="tab-btn" onclick="switchCompTab('villagemap', this)">🗺️ 마을맵</button>
+    <button class="tab-btn" onclick="switchCompTab('firefront', this)">🔥 화력전선</button>
+    <button class="tab-btn" onclick="switchCompTab('seasonmvp', this)">🏆 시즌MVP</button>
+    <button class="tab-btn" onclick="switchCompTab('report', this)">📰 제보소</button>
+  </div>
+
+  <!-- 스탯킹 패널 -->
+  <div id="panel-statking">
+
+    <!-- 리그 필터 -->
+    <div class="league-filter" id="leagueFilter">
+      <button class="league-btn active-dust" data-league="dust" onclick="switchLeague('dust', this)">✨ 더스트</button>
+      <button class="league-btn" data-league="star" onclick="switchLeague('star', this)">🌟 스타</button>
+      <button class="league-btn" data-league="planet" onclick="switchLeague('planet', this)">🪐 플래닛</button>
+      <button class="league-btn" data-league="nova" onclick="switchLeague('nova', this)">💥 노바</button>
+      <button class="league-btn" data-league="quasar" onclick="switchLeague('quasar', this)">⚡ 퀘이사</button>
+    </div>
+
+    <!-- 스탯 카테고리 칩 -->
+    <div class="stat-bar" id="statBar">
+      <button class="stat-chip active" data-stat="total" onclick="switchStat('total', this)">🏆 종합</button>
+      <button class="stat-chip" data-stat="loy" onclick="switchStat('loy', this)">❤️ LOY</button>
+      <button class="stat-chip" data-stat="act" onclick="switchStat('act', this)">⚡ ACT</button>
+      <button class="stat-chip" data-stat="soc" onclick="switchStat('soc', this)">💬 SOC</button>
+      <button class="stat-chip" data-stat="cre" onclick="switchStat('cre', this)">🎨 CRE</button>
+      <button class="stat-chip" data-stat="int" onclick="switchStat('int', this)">🧠 INT</button>
+    </div>
+
+    <!-- 랭킹 리스트 -->
+    <div class="rank-section">
+      <div class="rank-header">
+        <span>순위 — RANKING</span>
+        <span class="rank-updated">업데이트 5분 전</span>
+      </div>
+      <div id="rankList"></div>
+    </div>
+
+  </div><!-- /panel-statking -->
+
+</div><!-- /app -->
+
+<!-- 내 순위 플로팅 바 -->
+<div class="my-rank-bar">
+  <div>
+    <div class="my-rank-label">내 순위</div>
+  </div>
+  <div class="my-rank-num">#47</div>
+  <div class="my-rank-divider"></div>
+  <div class="my-rank-score">1,234점</div>
+  <div class="my-rank-change">↑12</div>
+  <div class="my-rank-right">
+    <span class="my-rank-badge">✨ DUST</span>
+  </div>
+</div>
+
+<script>
+/* ── 별빛 배경 ── */
+const sc=document.getElementById('starCanvas');
+const ctx=sc.getContext('2d');
+let stars=[];
+function resizeSC(){sc.width=window.innerWidth;sc.height=window.innerHeight;}
+function initStars(){stars=[];for(let i=0;i<180;i++)stars.push({x:Math.random()*sc.width,y:Math.random()*sc.height,r:Math.random()*1.5+0.3,a:Math.random(),s:Math.random()*0.008+0.002});}
+function drawStars(){ctx.clearRect(0,0,sc.width,sc.height);stars.forEach(s=>{s.a+=s.s;if(s.a>1||s.a<0)s.s*=-1;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(200,180,255,${s.a})`;ctx.fill();});}
+resizeSC();initStars();
+window.addEventListener('resize',()=>{resizeSC();initStars();});
+setInterval(drawStars,50);
+
+/* ── Toast ── */
+function showToast(msg){
+  var t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:10px 24px;background:rgba(20,15,40,.95);border:1px solid rgba(200,175,80,.3);border-radius:20px;color:#e8ecf4;font-size:12px;z-index:9999;pointer-events:none;animation:toastIn .3s ease';
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300);},2000);
+}
+
+/* ── 목업 데이터 ── */
+var MOCK_RANKINGS = [
+  {rank:1, name:'별빛수호자',    league:'star',   score:2847, change:'+3'},
+  {rank:2, name:'은하전사',      league:'nova',   score:2691, change:'+1'},
+  {rank:3, name:'우주탐험가',    league:'planet', score:2583, change:'-1'},
+  {rank:4, name:'별의여행자',    league:'star',   score:2401, change:'+5'},
+  {rank:5, name:'성운관측자',    league:'dust',   score:2298, change:'0'},
+  {rank:6, name:'퀘이사빛',     league:'quasar', score:2187, change:'-2'},
+  {rank:7, name:'혜성추적자',    league:'planet', score:2099, change:'+2'},
+  {rank:8, name:'노바폭풍',      league:'nova',   score:1987, change:'-1'},
+  {rank:9, name:'달빛소녀',      league:'star',   score:1876, change:'+4'},
+  {rank:10, name:'별가루모으기', league:'dust',   score:1754, change:'0'},
+];
+
+var LEAGUE_CONFIG = {
+  dust:   {color:'#94a3b8', icon:'✨', label:'DUST'},
+  star:   {color:'#fbbf24', icon:'🌟', label:'STAR'},
+  planet: {color:'#34d399', icon:'🪐', label:'PLANET'},
+  nova:   {color:'#c084fc', icon:'💥', label:'NOVA'},
+  quasar: {color:'#f0c040', icon:'⚡', label:'QUASAR'},
+};
+
+var STAT_LABELS = {
+  total:'종합', loy:'LOY 충성도', act:'ACT 활동력',
+  soc:'SOC 사교성', cre:'CRE 창작력', int:'INT 지성',
+};
+
+/* 현재 필터 상태 */
+var currentLeague = 'dust';
+var currentStat   = 'total';
+
+/* ── 경쟁 콘텐츠 탭 전환 ── */
+function switchCompTab(tabName, btn) {
+  /* 탭 버튼 활성 */
+  document.querySelectorAll('#compTabBar .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  /* 스탯킹 외 탭은 준비 중 토스트 */
+  if (tabName !== 'statking') {
+    showToast('🔜 준비 중입니다!');
+    /* 첫 번째 탭(스탯킹)을 다시 활성화 */
+    document.querySelectorAll('#compTabBar .tab-btn')[0].classList.add('active');
+    btn.classList.remove('active');
+  }
+}
+
+/* ── 리그 필터 전환 ── */
+function switchLeague(leagueId, btn) {
+  currentLeague = leagueId;
+  var cfg = LEAGUE_CONFIG[leagueId];
+
+  /* 리그 버튼 활성 */
+  document.querySelectorAll('.league-btn').forEach(b => {
+    b.className = 'league-btn';
+  });
+  btn.classList.add('active-' + leagueId);
+
+  /* 헤더 배경 그라데이션 변경 */
+  var header = document.getElementById('pageHeader');
+  header.style.background = 'linear-gradient(180deg, ' + cfg.color + '15 0%, transparent 100%)';
+
+  renderRankings();
+}
+
+/* ── 스탯 카테고리 전환 ── */
+function switchStat(statId, btn) {
+  currentStat = statId;
+
+  document.querySelectorAll('.stat-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  renderRankings();
+}
+
+/* ── 랭킹 렌더링 ── */
+function renderRankings() {
+  var list = document.getElementById('rankList');
+
+  /* 리그 필터 적용 */
+  var data = MOCK_RANKINGS.filter(function(r) {
+    return r.league === currentLeague;
+  });
+
+  /* 스탯별 점수 변형 (목업 시뮬레이션) */
+  var statMultipliers = {total:1.0, loy:0.85, act:0.72, soc:0.63, cre:0.58, int:0.49};
+  var mult = statMultipliers[currentStat] || 1.0;
+
+  /* 리그 내 결과가 없으면 전체에서 샘플 */
+  if (data.length === 0) {
+    data = MOCK_RANKINGS.slice(0, 5).map(function(r) {
+      return Object.assign({}, r, {league: currentLeague});
+    });
+  }
+
+  /* 재정렬 (점수 × mult 기준) */
+  data = data.map(function(r, i) {
+    return Object.assign({}, r, {
+      displayScore: Math.round(r.score * mult),
+      displayRank: i + 1,
+    });
+  }).sort(function(a, b) { return b.displayScore - a.displayScore; });
+  data.forEach(function(r, i) { r.displayRank = i + 1; });
+
+  /* HTML 생성 */
+  var html = '';
+  var medals = ['🥇','🥈','🥉'];
+
+  data.forEach(function(r) {
+    var rankClass = r.displayRank === 1 ? 'gold' : r.displayRank === 2 ? 'silver' : r.displayRank === 3 ? 'bronze' : '';
+    var medalHtml = r.displayRank <= 3
+      ? '<span class="rank-medal">' + medals[r.displayRank - 1] + '</span>'
+      : '<span class="rank-medal" style="font-size:0"></span>';
+    var numHtml = r.displayRank <= 3
+      ? ''
+      : '<span class="rank-num" style="font-size:13px;color:var(--muted)">' + r.displayRank + '</span>';
+
+    var changeVal = r.change;
+    var changeClass, changeText;
+    if (changeVal === '0') {
+      changeClass = 'same'; changeText = '—';
+    } else if (changeVal.startsWith('+')) {
+      changeClass = 'up'; changeText = '↑' + changeVal.slice(1);
+    } else {
+      changeClass = 'down'; changeText = '↓' + changeVal.slice(1);
+    }
+
+    var leagueCfg = LEAGUE_CONFIG[r.league] || LEAGUE_CONFIG['dust'];
+    var scoreFormatted = r.displayScore.toLocaleString();
+
+    html += '<div class="rank-item ' + rankClass + '">' +
+      medalHtml +
+      numHtml +
+      '<span class="rank-name">' + r.name + '</span>' +
+      '<span class="rank-league" title="' + leagueCfg.label + '">' + leagueCfg.icon + '</span>' +
+      '<span class="rank-score">' + scoreFormatted + '</span>' +
+      '<span class="rank-change ' + changeClass + '">' + changeText + '</span>' +
+      '</div>';
+  });
+
+  if (html === '') {
+    html = '<div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:12px;">이 리그에 아직 경쟁자가 없습니다.</div>';
+  }
+
+  list.innerHTML = html;
+
+  /* 애니메이션 딜레이 */
+  list.querySelectorAll('.rank-item').forEach(function(el, i) {
+    el.style.animationDelay = (i * 0.04) + 's';
+  });
+}
+
+/* ── 초기 렌더 ── */
+renderRankings();
+</script>
+</body>
+</html>
