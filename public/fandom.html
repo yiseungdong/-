@@ -810,6 +810,55 @@ canvas{position:absolute;inset:0;z-index:1}
 .promotion-fill{background:linear-gradient(90deg,var(--gold),#fbbf24);}
 .safe-fill{background:linear-gradient(90deg,#86efac,#34d399);}
 .fc-rank-bar-val{font-size:10px;color:var(--muted);min-width:60px;text-align:right;}
+/* ===== 소원의 신전 패널 ===== */
+#wish-panel{display:none;position:fixed;top:0;right:0;width:320px;height:100vh;background:var(--panel);border-left:1px solid rgba(192,132,252,0.3);z-index:500;flex-direction:column;overflow:hidden;}
+.wish-header{padding:14px 16px;border-bottom:1px solid rgba(192,132,252,0.25);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:linear-gradient(135deg,rgba(192,132,252,0.08),rgba(10,10,22,0));}
+.wish-tabs{display:flex;background:rgba(0,0,0,0.3);border-bottom:1px solid var(--border);flex-shrink:0;}
+.wish-tab{flex:1;padding:9px 4px;font-size:10px;font-weight:700;color:var(--muted);background:none;border:none;cursor:pointer;letter-spacing:0.3px;transition:all 0.2s;border-bottom:2px solid transparent;}
+.wish-tab.active{color:var(--lp);border-bottom-color:var(--lp);}
+.wish-body{flex:1;overflow-y:auto;padding:12px;}
+.wish-main-card{background:linear-gradient(135deg,rgba(192,132,252,0.1),rgba(129,140,248,0.05));border:1px solid rgba(192,132,252,0.3);border-radius:14px;padding:16px;margin-bottom:12px;position:relative;overflow:hidden;}
+.wish-main-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--lp),transparent);}
+.wish-main-grade{font-size:9px;font-weight:700;letter-spacing:1px;margin-bottom:6px;}
+.wish-main-title{font-size:15px;font-weight:900;color:var(--text);margin-bottom:4px;}
+.wish-main-desc{font-size:10px;color:var(--muted);margin-bottom:12px;line-height:1.5;}
+.wish-gauge-wrap{height:8px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;margin-bottom:5px;}
+.wish-gauge-fill{height:100%;border-radius:4px;transition:width 0.8s ease;}
+.wish-gauge-label{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);}
+.wish-gauge-val{font-family:'Orbitron',monospace;font-size:10px;color:var(--lp);}
+.wish-contribute-btn{width:100%;margin-top:10px;padding:9px;border-radius:8px;border:none;background:linear-gradient(135deg,var(--lp),#818cf8);color:#fff;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:0.5px;}
+.wish-contribute-btn:active{opacity:0.8;}
+.wish-list-item{padding:11px 12px;border-radius:10px;margin-bottom:8px;background:rgba(255,255,255,0.02);border:1px solid var(--border);cursor:pointer;transition:border-color 0.2s;}
+.wish-list-item:hover{border-color:rgba(192,132,252,0.3);}
+.wish-list-top{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.wish-list-grade{font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;}
+.wish-list-title{font-size:12px;font-weight:700;color:var(--text);flex:1;}
+.wish-list-dday{font-family:'Orbitron',monospace;font-size:10px;color:var(--gold);}
+.wish-list-bar-wrap{height:5px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;margin-bottom:4px;}
+.wish-list-bar{height:100%;border-radius:3px;transition:width 0.7s ease;}
+.wish-list-meta{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);}
+.wish-form-label{font-size:10px;color:var(--gold);font-weight:700;margin-bottom:5px;margin-top:12px;display:block;}
+.wish-form-input{width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:11px;box-sizing:border-box;font-family:'Noto Sans KR',sans-serif;}
+.wish-form-input:focus{outline:none;border-color:var(--lp);}
+.wish-form-textarea{width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:11px;box-sizing:border-box;font-family:'Noto Sans KR',sans-serif;resize:none;height:70px;}
+.wish-form-textarea:focus{outline:none;border-color:var(--lp);}
+.wish-grade-btns{display:flex;gap:6px;margin-bottom:4px;}
+.wish-grade-btn{flex:1;padding:7px 4px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,0.02);color:var(--muted);font-size:10px;font-weight:700;cursor:pointer;transition:all 0.2s;}
+.wish-grade-btn.active{border-color:var(--lp);color:var(--lp);background:rgba(192,132,252,0.1);}
+.wish-submit-btn{width:100%;margin-top:14px;padding:10px;border-radius:8px;border:none;background:linear-gradient(135deg,var(--lp),#818cf8);color:#fff;font-size:12px;font-weight:700;cursor:pointer;}
+.wish-done-item{padding:10px 12px;border-radius:10px;margin-bottom:8px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-left:3px solid var(--lp);}
+.wish-done-top{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+.wish-done-badge{font-size:10px;padding:1px 7px;border-radius:8px;background:rgba(192,132,252,0.15);color:var(--lp);font-weight:700;}
+.wish-done-title{font-size:12px;font-weight:700;color:var(--text);}
+.wish-done-meta{font-size:9px;color:var(--muted);}
+.wish-done-reward{font-size:10px;color:var(--gold);margin-top:4px;font-weight:700;}
+.wish-section-title{font-size:10px;font-weight:700;color:var(--lp);letter-spacing:0.5px;margin:12px 0 8px;display:flex;align-items:center;gap:6px;}
+.wish-section-title::after{content:'';flex:1;height:1px;background:rgba(192,132,252,0.2);}
+.wish-my-badge{background:linear-gradient(135deg,rgba(192,132,252,0.1),rgba(10,10,22,0));border:1px solid rgba(192,132,252,0.25);border-radius:10px;padding:10px 12px;margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+.wish-my-icon{font-size:22px;}
+.wish-my-info{flex:1;}
+.wish-my-title{font-size:11px;color:var(--lp);font-weight:700;}
+.wish-my-sub{font-size:9px;color:var(--muted);margin-top:2px;}
 /* ===== 명예의 전당 ===== */
 #honor-panel{display:none;position:fixed;top:0;right:0;width:320px;height:100vh;background:var(--panel);border-left:1px solid var(--border);z-index:500;flex-direction:column;overflow:hidden;}
 .honor-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
@@ -949,6 +998,20 @@ canvas{position:absolute;inset:0;z-index:1}
     </div>
   </div>
   <div id="board-list" style="flex:1;overflow-y:auto;padding:4px 12px;"></div>
+</div>
+<!-- 소원의 신전 패널 -->
+<div id="wish-panel">
+  <div class="wish-header">
+    <span style="font-size:15px;font-weight:700;color:var(--lp);">⭐ 소원의 신전 · WISH TEMPLE</span>
+    <button onclick="closeWishPanel()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;">✕</button>
+  </div>
+  <div class="wish-tabs">
+    <button class="wish-tab active" onclick="switchWishTab('main')" id="wtab-main">메인 소원</button>
+    <button class="wish-tab" onclick="switchWishTab('list')" id="wtab-list">소원 목록</button>
+    <button class="wish-tab" onclick="switchWishTab('write')" id="wtab-write">소원 올리기</button>
+    <button class="wish-tab" onclick="switchWishTab('done')" id="wtab-done">달성 기록</button>
+  </div>
+  <div class="wish-body" id="wish-body"></div>
 </div>
 <!-- 명예의 전당 패널 -->
 <div id="honor-panel">
@@ -2827,7 +2890,6 @@ hq: () => {
 },
 board:()=>`<div class="mo-h"><div class="mo-t">📋 게시판 거리</div><div class="mo-x" onclick="closeMo()">✕</div></div><div class="mc"><div class="mc-t">🔥 핫 게시물</div><div class="mc-c">${[{t:'컴백 스밍 총공 전략!',a:'StreamQueen',l:234},{t:'팬아트 D-14 기념',a:'ArtStar',l:189},{t:'투표 현황 정리',a:'VoteGuard',l:156}].map(p=>'<div style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04)"><div style="font-weight:500">'+p.t+'</div><div style="font-size:9px;color:var(--muted)">'+p.a+' · ❤️'+p.l+'</div></div>').join('')}</div></div>`,
 vote:()=>`<div class="mo-h"><div class="mo-t">🗳️ 투표소</div><div class="mo-x" onclick="closeMo()">✕</div></div><div class="mc"><div class="mc-t">📌 진행 중</div><div class="mc-c">${[{s:'투표중',c:'#34d399',t:'생일 카페 장소',d:'18시간'},{s:'공감중',c:'#fbbf24',t:'슬로건 변경',d:'67/200'},{s:'확정',c:'#94a3b8',t:'총공 시간대',d:'82%'}].map(v=>'<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="padding:1px 5px;border-radius:6px;font-size:8px;font-weight:700;background:rgba(255,255,255,.06);color:'+v.c+'">'+v.s+'</span><div><div style="font-weight:500">'+v.t+'</div><div style="font-size:8px;color:var(--muted)">'+v.d+'</div></div></div>').join('')}</div></div>`,
-wish:()=>`<div class="mo-h"><div class="mo-t">⭐ 소원의 신전</div><div class="mo-x" onclick="closeMo()">✕</div></div><div class="mc"><div class="mc-t">🌟 메인 소원</div><div class="mc-c"><div style="text-align:center;font-size:28px;padding:8px">⭐</div><div style="text-align:center"><div style="font-size:12px;font-weight:700;color:var(--gold)">팬 생일 카페 이벤트</div><div class="pb" style="margin-top:6px;height:6px"><div class="pf" style="width:64%"></div></div><div style="font-size:9px;color:var(--lp);margin-top:3px;font-family:Orbitron">128,000/200,000</div></div></div></div>`,
 org:()=>`<div class="mo-h"><div class="mo-t">🏗️ 조직도</div><div class="mo-x" onclick="closeMo()">✕</div></div><div class="mc"><div class="mc-t">📊 구조</div><div class="mc-c">${[{i:'🏰',n:'팬클럽',c:'98,432',m:0},{i:'🏘️',n:'테리토리',c:'~20K',m:10},{i:'🏠',n:'베이스',c:'~2K',m:20},{i:'👥',n:'유닛(내소속)',c:'~200',m:30,my:1},{i:'⭐',n:'나',c:'',m:40}].map(o=>'<div style="display:flex;align-items:center;gap:6px;padding:4px 6px;margin-left:'+o.m+'px;margin-bottom:3px;border-radius:5px;background:rgba(255,255,255,'+(o.my?'.06':'.02')+');border-left:2px solid '+(o.my?'var(--gold)':'var(--lp)')+';font-size:10px"><span>'+o.i+'</span><b>'+o.n+'</b><span style="font-size:8px;color:var(--muted);margin-left:auto">'+o.c+'</span></div>').join('')}</div></div>`,
 event:()=>`<div class="mo-h"><div class="mo-t">🎪 이벤트</div><div class="mo-x" onclick="closeMo()">✕</div></div><div class="mc"><div class="mc-t">🔥 진행 중</div><div class="mc-c"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:20px">⚔️</span><div style="flex:1"><div style="font-weight:700">라이벌 & 스탯킹</div><div style="font-size:8px;color:var(--muted)">3주차!</div></div><span style="font-family:Orbitron;font-size:9px;color:var(--lp)">D-2</span></div></div></div><div class="mc"><div class="mc-t">📊 화력</div><div class="mc-c"><div class="pb" style="height:6px"><div class="pf" style="width:${DM.energy}%"></div></div><div style="font-size:9px;color:var(--lp);margin-top:2px">${DM.energy}%</div></div></div>`,
 starreport:()=>`
@@ -2972,11 +3034,12 @@ function openMo(k){
   if(k==='vote'){openVotePanel();return;}
   if(k==='starreport'){openStarReport();return;}
   if(k==='honor'){openHonorPanel();return;}
+  if(k==='wish'){openWishPanel();return;}
   if(!MO[k])return;document.getElementById('moC').innerHTML=MO[k]();document.getElementById('mo').classList.add('show');setTimeout(()=>{document.querySelectorAll('.pf').forEach(el=>{const w=el.style.width;el.style.width='0%';setTimeout(()=>el.style.width=w,50)})},100);if(k==='hq')renderFcHqOrg();}
 function closeMo(e){if(e&&e.target!==e.currentTarget)return;document.getElementById('mo').classList.remove('show')}
 function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3000)}
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){closeMo();closeChatPanel();closeBoardPanel();closeVotePanel();closeSrPanel();closeHonorPanel();}
+  if(e.key==='Escape'){closeMo();closeChatPanel();closeBoardPanel();closeVotePanel();closeSrPanel();closeHonorPanel();closeWishPanel();}
   if(e.key==='Enter'&&document.activeElement===document.getElementById('chatInput')){sendChatMsg();}
 });
 
@@ -3349,6 +3412,93 @@ function renderVoteList(){
       </div>`;
     }).join('');
   }
+}
+
+// ===== 소원의 신전 패널 =====
+let wishTab='main';let wishGrade='normal';
+const WISH_GRADES={normal:{label:'⭐ 보통 소원',color:'#fbbf24',bg:'rgba(251,191,36,0.12)'},big:{label:'🌟 큰 소원',color:'#c084fc',bg:'rgba(192,132,252,0.12)'},legend:{label:'✨ 전설 소원',color:'#38bdf8',bg:'rgba(56,189,248,0.12)'}};
+const WISH_LIST_DATA=[
+  {id:'w1',grade:'legend',title:'컴백 총공 1,000만 스트리밍',desc:'신보 발매 72시간 내 스트리밍 1,000만 달성',cur:6800000,max:10000000,dday:8,contributors:1243},
+  {id:'w2',grade:'big',title:'팬미팅 유치 청원 5만명',desc:'공식 팬미팅 유치를 위한 청원 서명',cur:38200,max:50000,dday:14,contributors:891},
+  {id:'w3',grade:'normal',title:'SNS 생일 트렌딩 달성',desc:'멤버 생일 당일 실트 1위 달성',cur:7200,max:10000,dday:3,contributors:412},
+  {id:'w4',grade:'big',title:'팬북 공동 제작 기금 모금',desc:'팬클럽 공식 팬북 제작을 위한 기금',cur:1200000,max:3000000,dday:21,contributors:334}
+];
+const WISH_DONE_DATA=[
+  {grade:'legend',title:'데뷔 기념 스트리밍 500만',date:'2026.03.15',reward:'스타더스트 +500 · 기념 뱃지',contributors:2341},
+  {grade:'big',title:'팬카페 가입자 10만 돌파',date:'2026.02.28',reward:'스타더스트 +200 · 특별 아바타 아이템',contributors:987},
+  {grade:'normal',title:'뮤비 댓글 1만개 달기',date:'2026.02.10',reward:'스타더스트 +80 · LOY +30',contributors:512},
+  {grade:'legend',title:'해외 팬덤 연합 이벤트',date:'2026.01.20',reward:'전설 뱃지 · 스타더스트 +1000',contributors:4201}
+];
+function openWishPanel(){
+  closeMo({target:document.getElementById('mo'),currentTarget:document.getElementById('mo')});
+  const bp=document.getElementById('board-panel');if(bp)bp.style.display='none';
+  const vp=document.getElementById('vote-panel');if(vp)vp.style.display='none';
+  const hp=document.getElementById('honor-panel');if(hp)hp.style.display='none';
+  closeSrPanel();
+  const cp=document.getElementById('chatPanel');if(cp)cp.classList.remove('open');
+  const panel=document.getElementById('wish-panel');
+  if(panel){panel.style.display='flex';panel.style.flexDirection='column';}
+  switchWishTab('main');
+}
+function closeWishPanel(){const p=document.getElementById('wish-panel');if(p)p.style.display='none';}
+function switchWishTab(tab){
+  wishTab=tab;
+  document.querySelectorAll('.wish-tab').forEach(b=>b.classList.remove('active'));
+  const el=document.getElementById('wtab-'+tab);if(el)el.classList.add('active');
+  renderWishBody();
+}
+function renderWishBody(){
+  const body=document.getElementById('wish-body');if(!body)return;
+  if(wishTab==='main')body.innerHTML=renderWishMain();
+  else if(wishTab==='list')body.innerHTML=renderWishList();
+  else if(wishTab==='write')body.innerHTML=renderWishWrite();
+  else if(wishTab==='done')body.innerHTML=renderWishDone();
+  setTimeout(()=>{document.querySelectorAll('.wish-gauge-fill[data-w],.wish-list-bar[data-w]').forEach(el=>{const w=el.dataset.w;el.style.width='0%';setTimeout(()=>el.style.width=w,60);});},50);
+}
+function renderWishMain(){
+  const w=WISH_LIST_DATA[0];const pct=Math.round(w.cur/w.max*100);const g=WISH_GRADES[w.grade];
+  const fN=n=>n>=10000?Math.round(n/10000)+'만':n.toLocaleString();
+  return `<div class="wish-my-badge"><div class="wish-my-icon">⭐</div><div class="wish-my-info"><div class="wish-my-title">내 이번 달 기여: 2,840 스타더스트</div><div class="wish-my-sub">기여 순위 #47위 · 전체 기여자 ${w.contributors.toLocaleString()}명</div></div></div>
+    <div class="wish-section-title">✨ 현재 메인 소원</div>
+    <div class="wish-main-card"><div class="wish-main-grade" style="color:${g.color};">${g.label}</div><div class="wish-main-title">${w.title}</div><div class="wish-main-desc">${w.desc}</div>
+      <div class="wish-gauge-wrap"><div class="wish-gauge-fill" data-w="${pct}%" style="width:0%;background:linear-gradient(90deg,var(--lp),#818cf8);"></div></div>
+      <div class="wish-gauge-label"><span>${fN(w.cur)} / ${fN(w.max)}</span><span class="wish-gauge-val">${pct}%</span></div>
+      <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:9px;color:var(--muted);"><span>👥 기여자 ${w.contributors.toLocaleString()}명</span><span style="color:var(--gold);font-family:Orbitron,monospace;">D-${w.dday}</span></div>
+      <button class="wish-contribute-btn" onclick="showToast('⭐ 스타더스트 100을 소원에 기여했습니다! (+LOY 5)')">⭐ 기여하기 · CONTRIBUTE</button>
+    </div>
+    <div class="wish-section-title">🔥 함께 진행 중인 소원</div>
+    ${WISH_LIST_DATA.slice(1).map(w=>{const p=Math.round(w.cur/w.max*100);const g=WISH_GRADES[w.grade];return `<div class="wish-list-item" onclick="switchWishTab('list')"><div class="wish-list-top"><span class="wish-list-grade" style="color:${g.color};background:${g.bg};">${g.label}</span><span class="wish-list-dday">D-${w.dday}</span></div><div class="wish-list-title" style="margin-bottom:6px;">${w.title}</div><div class="wish-list-bar-wrap"><div class="wish-list-bar" data-w="${p}%" style="width:0%;background:linear-gradient(90deg,${g.color},#818cf8);"></div></div><div class="wish-list-meta"><span>${p}%</span><span>👥 ${w.contributors.toLocaleString()}명</span></div></div>`;}).join('')}`;
+}
+function renderWishList(){
+  const fN=n=>n>=10000?Math.round(n/10000)+'만':n.toLocaleString();
+  return `<div class="wish-my-badge"><div class="wish-my-icon">📋</div><div class="wish-my-info"><div class="wish-my-title">진행 중인 소원 ${WISH_LIST_DATA.length}개</div><div class="wish-my-sub">등급별로 확인하고 기여해보세요</div></div></div>
+    <div class="wish-section-title">📋 전체 소원 목록</div>
+    ${WISH_LIST_DATA.map(w=>{const p=Math.round(w.cur/w.max*100);const g=WISH_GRADES[w.grade];return `<div class="wish-list-item"><div class="wish-list-top"><span class="wish-list-grade" style="color:${g.color};background:${g.bg};">${g.label}</span><span class="wish-list-dday">D-${w.dday}</span></div><div class="wish-list-title" style="margin-bottom:3px;">${w.title}</div><div style="font-size:9px;color:var(--muted);margin-bottom:7px;">${w.desc}</div><div class="wish-list-bar-wrap"><div class="wish-list-bar" data-w="${p}%" style="width:0%;background:linear-gradient(90deg,${g.color},#818cf8);"></div></div><div class="wish-list-meta"><span>${fN(w.cur)} / ${fN(w.max)} (${p}%)</span><span>👥 ${w.contributors.toLocaleString()}명</span></div><button class="wish-contribute-btn" style="margin-top:8px;" onclick="showToast('⭐ 기여 완료! +LOY 5')">⭐ 기여하기</button></div>`;}).join('')}`;
+}
+function renderWishWrite(){
+  return `<div class="wish-my-badge"><div class="wish-my-icon">✍️</div><div class="wish-my-info"><div class="wish-my-title">소원 제안하기</div><div class="wish-my-sub">채택되면 전체 소원 목록에 올라가요</div></div></div>
+    <div style="background:rgba(240,192,64,0.06);border:1px solid rgba(240,192,64,0.2);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:10px;color:rgba(240,192,64,0.85);line-height:1.6;">📌 소원 제안 후 48시간 투표 → 60% 이상 찬성 시 채택<br>채택된 소원은 리그 전체에 공개됩니다</div>
+    <label class="wish-form-label">소원 등급 · GRADE</label>
+    <div class="wish-grade-btns"><button class="wish-grade-btn active" id="wg-normal" onclick="selectWishGrade('normal')">⭐ 보통</button><button class="wish-grade-btn" id="wg-big" onclick="selectWishGrade('big')">🌟 큰 소원</button><button class="wish-grade-btn" id="wg-legend" onclick="selectWishGrade('legend')">✨ 전설</button></div>
+    <label class="wish-form-label">소원 제목 · TITLE</label>
+    <input class="wish-form-input" id="wish-input-title" placeholder="예: 컴백 스밍 500만 달성" maxlength="30">
+    <label class="wish-form-label">소원 설명 · DESCRIPTION</label>
+    <textarea class="wish-form-textarea" id="wish-input-desc" placeholder="소원의 목표와 방법을 간략히 설명해주세요" maxlength="100"></textarea>
+    <label class="wish-form-label">목표 수치 · TARGET</label>
+    <input class="wish-form-input" id="wish-input-target" placeholder="예: 5000000 (숫자만 입력)" type="number">
+    <button class="wish-submit-btn" onclick="submitWish()">✨ 소원 제안하기 · SUBMIT</button>`;
+}
+function renderWishDone(){
+  return `<div class="wish-my-badge"><div class="wish-my-icon">🏆</div><div class="wish-my-info"><div class="wish-my-title">달성한 소원 ${WISH_DONE_DATA.length}개</div><div class="wish-my-sub">함께 이뤄낸 기적의 기록</div></div></div>
+    <div class="wish-section-title">🏆 달성 기록 · COMPLETED WISHES</div>
+    ${WISH_DONE_DATA.map(w=>{const g=WISH_GRADES[w.grade];return `<div class="wish-done-item"><div class="wish-done-top"><span class="wish-done-badge" style="color:${g.color};background:${g.bg};">${g.label}</span></div><div class="wish-done-title">${w.title}</div><div class="wish-done-meta">📅 ${w.date} · 👥 ${w.contributors.toLocaleString()}명 참여</div><div class="wish-done-reward">🎁 ${w.reward}</div></div>`;}).join('')}
+    <div style="text-align:center;padding:16px 0 4px;color:var(--muted);font-size:10px;border-top:1px solid var(--border);margin-top:8px;">✨ 우리가 함께 만든 기적들입니다</div>`;
+}
+function selectWishGrade(grade){wishGrade=grade;document.querySelectorAll('.wish-grade-btn').forEach(b=>b.classList.remove('active'));const el=document.getElementById('wg-'+grade);if(el)el.classList.add('active');}
+function submitWish(){
+  const title=document.getElementById('wish-input-title')?.value.trim();const desc=document.getElementById('wish-input-desc')?.value.trim();const target=document.getElementById('wish-input-target')?.value.trim();
+  if(!title){showToast('⚠️ 소원 제목을 입력해주세요');return;}if(!desc){showToast('⚠️ 소원 설명을 입력해주세요');return;}if(!target||isNaN(target)){showToast('⚠️ 목표 수치를 숫자로 입력해주세요');return;}
+  showToast('✨ 소원이 제안됐습니다! 48시간 투표 후 채택 여부가 결정됩니다');setTimeout(()=>switchWishTab('list'),1000);
 }
 
 // ===== 명예의 전당 패널 =====
