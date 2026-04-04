@@ -2921,7 +2921,7 @@ function openMo(k){
   if(k==='vote'){openVotePanel();return;}
   if(k==='starreport'){openStarReport();return;}
   if(!MO[k])return;document.getElementById('moC').innerHTML=MO[k]();document.getElementById('mo').classList.add('show');setTimeout(()=>{document.querySelectorAll('.pf').forEach(el=>{const w=el.style.width;el.style.width='0%';setTimeout(()=>el.style.width=w,50)})},100);if(k==='hq')renderFcHqOrg();}
-function closeMo(e){if(e&&e.target!==e.currentTarget)return;document.getElementById('mo').classList.remove('show')}
+function closeMo(e){if(e&&e.target&&e.currentTarget&&e.target!==e.currentTarget)return;document.getElementById('mo').classList.remove('show')}
 function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3000)}
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){closeMo();closeChatPanel();closeBoardPanel();closeVotePanel();closeSrPanel();}
