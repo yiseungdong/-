@@ -1501,3 +1501,45 @@ bcrypt, JWT, 최소수집(이메일+닉네임), 소셜로그인2FA, 욕설필터
 ※ 인원은 리그구성.xlsx 기준 (단위당 인원 = 리그총인원 / 조직수)
 
 ### 소모임 선택 플로우 (회원가입 2단계)
+
+### DB 스키마 추가 (server.js / PostgreSQL)
+```sql
+-- users 테이블에 컬럼 추가
+ALTER TABLE users ADD COLUMN moim_depth1 VARCHAR(50);  -- 최상위 소모임 (테리토리/포인트/엠파이어 등)
+ALTER TABLE users ADD COLUMN moim_depth2 VARCHAR(50);  -- 2단계 소모임
+ALTER TABLE users ADD COLUMN moim_depth3 VARCHAR(50);  -- 3단계 소모임
+ALTER TABLE users ADD COLUMN moim_depth4 VARCHAR(50);  -- 4단계 소모임
+ALTER TABLE users ADD COLUMN moim_depth5 VARCHAR(50);  -- 5단계 소모임 (퀘이사만)
+ALTER TABLE users ADD COLUMN moim_assigned_at TIMESTAMP DEFAULT NOW();
+
+-- moim_groups 테이블 신규 생성
+CREATE TABLE moim_groups (
+  id SERIAL PRIMARY KEY,
+  fandom_id INTEGER REFERENCES fandoms(id),
+  league VARCHAR(20) NOT NULL,       -- dust/star/planet/nova/quasar
+  depth INTEGER NOT NULL,            -- 계층 단계 (1~5)
+  name VARCHAR(100) NOT NULL,        -- 예: 테리토리1, 베이스1-3
+  parent_id INTEGER REFERENCES moim_groups(id),  -- 상위 소모임 ID
+  max_members INTEGER NOT NULL,      -- 최대 인원
+  current_members INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### 모임채팅 탭 구조 (fandom.html)
+- 모임채팅 건물 클릭 시 본인 소속 소모임 기준으로 탭 열림
+- 탭 순서: [전체] [depth1명] [depth2명] [depth3명] ...
+- 다른 소모임 탭은 잠금(🔒) 또는 흐리게 표시
+- 탭 클릭 시 해당 소모임 채팅방 로드
+
+### 구현 우선순위
+1. DB 스키마 생성 (server.js)
+2. 회원가입 페이지에 소모임 선택 위젯 추가
+3. 자동배정 API (GET /api/moim/auto-assign)
+4. 모임채팅 탭 연동 (fandom.html openFcChat 수정)
+
+---
+
+## 📌 fandom.html 현재 보류 버그
+1. 별빛 제보소 — Canvas에 건물 이미지 없이 텍스트만 표시 (undefined 버그)
+2. 모임채팅 탭 — 현재 더미데이터, 실제 소모임 연동 미완료
