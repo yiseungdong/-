@@ -225,11 +225,11 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 
   <!-- 경쟁 콘텐츠 탭 -->
   <div class="tab-bar" id="compTabBar">
-    <button class="tab-btn active" data-tab="statking" onclick="switchCompTab('statking', this)">⚡ 스탯킹</button>
-    <button class="tab-btn" data-tab="hexagon" onclick="switchCompTab('hexagon', this)">🔷 헥사곤</button>
-    <button class="tab-btn" data-tab="statrace" onclick="switchCompTab('statrace', this)">🏁 스탯레이스</button>
-    <button class="tab-btn" data-tab="marathon" onclick="switchCompTab('marathon', this)">🌱 성장마라톤</button>
-    <button class="tab-btn" data-tab="challenge" onclick="switchCompTab('challenge', this)">🎯 도전과제</button>
+    <button class="tab-btn active" data-tab="statking">⚡ 스탯킹</button>
+    <button class="tab-btn" data-tab="hexagon">🔷 헥사곤</button>
+    <button class="tab-btn" data-tab="statrace">🏁 스탯레이스</button>
+    <button class="tab-btn" data-tab="marathon">🌱 성장마라톤</button>
+    <button class="tab-btn" data-tab="challenge">🎯 도전과제</button>
   </div>
 
   <!-- ═══ 스탯킹 패널 ═══ -->
@@ -478,39 +478,29 @@ var currentLeague = 'dust';
 var currentStat   = 'total';
 
 /* ── 경쟁 콘텐츠 탭 전환 ── */
-var activeTabs = ['statking','hexagon','statrace','marathon']; // 활성화된 탭
-function switchCompTab(tabName, btn) {
-  document.querySelectorAll('#compTabBar .tab-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+document.querySelectorAll('#compTabBar .tab-btn').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    var target = tab.getAttribute('data-tab');
 
-  // 준비중 탭
-  if (activeTabs.indexOf(tabName) === -1) {
-    showToast('곧 오픈될 콘텐츠예요! 기대해주세요 ✨');
-    // 현재 보이는 패널 유지
-    btn.classList.remove('active');
-    var visiblePanel = document.querySelector('.comp-panel[style*="display: flex"],.comp-panel:not([style*="display:none"]):not([style*="display: none"])');
-    if(visiblePanel) {
-      var visibleTab = visiblePanel.id.replace('panel-','');
-      var tabBtn = document.querySelector('#compTabBar .tab-btn[data-tab="'+visibleTab+'"]');
-      if(tabBtn) tabBtn.classList.add('active');
-    }
-    return;
-  }
+    // 모든 패널 숨기기
+    document.querySelectorAll('.comp-panel').forEach(function(p) { p.style.display = 'none'; });
+    var panel = document.getElementById('panel-' + target);
+    if(panel) panel.style.display = 'block';
 
-  // 패널 전환
-  document.querySelectorAll('.comp-panel').forEach(p => p.style.display = 'none');
-  var panel = document.getElementById('panel-' + tabName);
-  if(panel) panel.style.display = 'flex';
+    // 탭 활성 상태
+    document.querySelectorAll('#compTabBar .tab-btn').forEach(function(t) { t.classList.remove('active'); });
+    tab.classList.add('active');
 
-  // 하단 바 표시/숨김
-  document.querySelector('.my-rank-bar').style.display = (tabName === 'statking') ? 'flex' : 'none';
-  document.getElementById('raceMyCard').style.display = (tabName === 'statrace') ? 'flex' : 'none';
+    // 하단 바 표시/숨김
+    document.querySelector('.my-rank-bar').style.display = (target === 'statking') ? 'flex' : 'none';
+    document.getElementById('raceMyCard').style.display = (target === 'statrace') ? 'flex' : 'none';
 
-  // 탭별 초기화
-  if(tabName === 'hexagon') drawHexChart();
-  if(tabName === 'statrace') renderRace();
-  if(tabName === 'marathon') renderMarathon();
-}
+    // 탭별 초기화
+    if(target === 'hexagon') drawHexChart();
+    if(target === 'statrace') renderRace();
+    if(target === 'marathon') renderMarathon();
+  });
+});
 
 /* ── 리그 필터 전환 ── */
 function switchLeague(leagueId, btn) {
