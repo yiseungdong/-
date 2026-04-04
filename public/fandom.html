@@ -450,6 +450,19 @@ canvas{position:absolute;inset:0;z-index:1}
   border-color:rgba(192,132,252,0.5);
   color:#c084fc; font-weight:700;
 }
+.board-cat-btn {
+  padding:5px 10px; border-radius:8px;
+  border:1px solid rgba(180,150,255,0.25);
+  background:transparent; color:var(--muted);
+  font-size:12px; cursor:pointer;
+  transition:all 0.2s; font-family:'Noto Sans KR',sans-serif;
+}
+.board-cat-btn:hover { border-color:var(--lp); color:var(--lp); }
+.board-cat-btn.active { background:var(--lp); border-color:var(--lp); color:#fff; font-weight:700; }
+.board-item { padding:10px 0; border-bottom:1px solid var(--border); cursor:pointer; transition:opacity 0.2s; }
+.board-item:hover { opacity:0.75; }
+.board-item-title { font-size:13px; color:var(--text); font-weight:500; margin-bottom:4px; line-height:1.4; }
+.board-item-meta { font-size:11px; color:var(--muted); }
 .fc-chat-tab {
   padding:5px 12px; border-radius:20px;
   border:1px solid rgba(180,150,255,0.25);
@@ -756,6 +769,20 @@ canvas{position:absolute;inset:0;z-index:1}
       placeholder="메시지를 입력하세요..." maxlength="200">
     <button class="chat-send" onclick="sendChatMsg()">➤</button>
   </div>
+</div>
+<!-- 게시판 패널 -->
+<div id="board-panel" style="display:none;position:fixed;top:44px;right:0;bottom:44px;width:320px;z-index:300;background:rgba(10,10,22,0.97);backdrop-filter:blur(16px);border-left:1px solid rgba(180,150,255,0.15);flex-direction:column;overflow:hidden;">
+  <div style="display:flex;align-items:center;padding:10px 14px;gap:10px;border-bottom:1px solid rgba(180,150,255,0.13);background:rgba(255,255,255,0.03);min-height:48px;">
+    <div style="flex:1;font-size:14px;font-weight:700;color:var(--text);">📋 게시판 거리</div>
+    <button onclick="closeBoardPanel()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;">✕</button>
+  </div>
+  <div id="board-tabs" style="display:flex;flex-wrap:nowrap;gap:6px;padding:10px 12px 0;"></div>
+  <div style="display:flex;gap:6px;padding:8px 12px;">
+    <button class="board-cat-btn active" data-cat="org" onclick="switchBoardCat('org')" style="flex:1;">👥 모임</button>
+    <button class="board-cat-btn" data-cat="notice" onclick="switchBoardCat('notice')" style="flex:1;">📢 공지</button>
+    <button class="board-cat-btn" data-cat="free" onclick="switchBoardCat('free')" style="flex:1;">🗣️ 자유</button>
+  </div>
+  <div id="board-list" style="flex:1;overflow-y:auto;padding:8px 12px;"></div>
 </div>
 <div class="vc" id="vc"><div class="vw" id="vw"><canvas id="cv"></canvas><div id="bL"></div><div class="avatar" id="myAv" style="left:960px;top:760px"><div id="fandomMyAvBody" style="pointer-events:auto;cursor:pointer" onclick="openFcChat('all')"></div></div><div id="nL"></div><div id="miniEvts" style="position:absolute;z-index:25;pointer-events:none"></div></div></div>
 <div class="bot"><div class="bot-e"><div class="bot-eb"><div class="bot-ef" id="bE" style="width:72%"></div></div><div class="bot-el">에너지 <span id="bP">72%</span></div></div><div class="bot-d" id="bD">D-14</div></div>
@@ -2615,11 +2642,12 @@ function sendLeagueMsg(id){
 
 function openMo(k){
   if(k==='org_chat'){openFcChat('org',0);return;}
+  if(k==='board'){openBoardPanel();return;}
   if(!MO[k])return;document.getElementById('moC').innerHTML=MO[k]();document.getElementById('mo').classList.add('show');setTimeout(()=>{document.querySelectorAll('.pf').forEach(el=>{const w=el.style.width;el.style.width='0%';setTimeout(()=>el.style.width=w,50)})},100)}
 function closeMo(e){if(e&&e.target!==e.currentTarget)return;document.getElementById('mo').classList.remove('show')}
 function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3000)}
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){closeMo();closeChatPanel();}
+  if(e.key==='Escape'){closeMo();closeChatPanel();closeBoardPanel();}
   if(e.key==='Enter'&&document.activeElement===document.getElementById('chatInput')){sendChatMsg();}
 });
 
@@ -2730,7 +2758,95 @@ function startMiniEvents(){  const container=document.getElementById('miniEvts')
 }
 
 /* ═══ 채팅 시스템 ═══ */
+// 게시판
+let boardCat='org';
+let boardTabId='all';
+const MOCK_BOARD={
+  all:[
+    {title:'컴백 스밍 총공 전략!',nick:'StreamQueen',time:'23:14'},
+    {title:'오늘 라이브 같이 보실 분~',nick:'MoonChild',time:'22:50'},
+    {title:'팬아트 D-14 기념',nick:'ArtStar',time:'21:30'},
+    {title:'투표 현황 정리',nick:'VoteGuard',time:'20:10'},
+    {title:'신규 멤버 환영합니다!',nick:'WelcomeFan',time:'19:45'}
+  ],
+  notice:[
+    {title:'[공지] 이번주 미션 안내',nick:'운영진',time:'10:00'},
+    {title:'[공지] 리그 승격 기준 변경',nick:'운영진',time:'09:00'},
+    {title:'[공지] 스트리밍 가이드라인',nick:'운영진',time:'어제'}
+  ],
+  free:[
+    {title:'오늘 최애 직캠 봤는데 눈물남',nick:'PurpleU',time:'23:40'},
+    {title:'굿즈 공동구매 하실 분?',nick:'GalaxyHeart',time:'22:15'},
+    {title:'이 노래 뭔지 아시는 분',nick:'StarFan',time:'21:00'},
+    {title:'오늘 방송 다시보기 링크',nick:'NovaRider',time:'20:30'}
+  ]
+};
+function openBoardPanel(){
+  const boardPanel=document.getElementById('board-panel');
+  if(!boardPanel)return;
+  // 모임채팅이 열려있으면 닫기
+  const chatPanel=document.getElementById('chatPanel');
+  if(chatPanel)chatPanel.classList.remove('open');
+  boardPanel.style.display='flex';
+  boardCat='org';boardTabId='all';
+  document.querySelectorAll('.board-cat-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.board-cat-btn[data-cat="org"]')?.classList.add('active');
+  renderBoardTabs('all');
+  renderBoardList();
+}
+function closeBoardPanel(){
+  const panel=document.getElementById('board-panel');
+  if(panel)panel.style.display='none';
+}
+function switchBoardCat(cat){
+  boardCat=cat;
+  document.querySelectorAll('.board-cat-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector(`.board-cat-btn[data-cat="${cat}"]`)?.classList.add('active');
+  const tabsEl=document.getElementById('board-tabs');
+  if(cat==='org'){tabsEl.style.display='flex';renderBoardTabs(boardTabId);}
+  else{tabsEl.style.display='none';boardTabId='all';}
+  renderBoardList();
+}
+function renderBoardTabs(activeId='all'){
+  const league=getMyLeague();
+  const tabs=LEAGUE_CHAT_TABS[league]||LEAGUE_CHAT_TABS['star'];
+  const container=document.getElementById('board-tabs');
+  if(!container)return;
+  const isMultiRow=tabs.length>=6;
+  container.style.flexWrap=isMultiRow?'wrap':'nowrap';
+  container.innerHTML=tabs.map(tab=>`
+    <button class="fc-chat-tab ${tab.id===activeId?'active':''}"
+      data-tab="${tab.id}" onclick="switchBoardTab('${tab.id}')"
+      style="${isMultiRow?'flex:0 0 calc(33% - 4px);':''}"
+    >${currentLang==='ko'?tab.ko:tab.en}</button>
+  `).join('');
+}
+function switchBoardTab(tabId){
+  boardTabId=tabId;
+  renderBoardTabs(tabId);
+  renderBoardList();
+}
+function renderBoardList(){
+  const list=document.getElementById('board-list');
+  if(!list)return;
+  let posts=[];
+  if(boardCat==='notice')posts=MOCK_BOARD.notice;
+  else if(boardCat==='free')posts=MOCK_BOARD.free;
+  else posts=MOCK_BOARD.all;
+  if(!posts.length){list.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px 0;font-size:13px;">게시글이 없습니다</div>';return;}
+  list.innerHTML=posts.map(p=>`
+    <div class="board-item">
+      <div class="board-item-title">${p.title}</div>
+      <div class="board-item-meta">${p.nick} · ${p.time}</div>
+    </div>
+  `).join('');
+}
+
 function openFcChat(type, orgPath) {
+  // 게시판이 열려있으면 닫기
+  const boardPanel=document.getElementById('board-panel');
+  if(boardPanel)boardPanel.style.display='none';
+
   const panel = document.getElementById('chatPanel');
   const title = document.getElementById('chatPanelTitle');
   const breadcrumb = document.getElementById('chatBreadcrumb');
