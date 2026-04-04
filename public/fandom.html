@@ -561,6 +561,113 @@ canvas{position:absolute;inset:0;z-index:1}
   from { opacity:0; transform:translateX(-50%) translateY(4px); }
   to { opacity:1; transform:translateX(-50%) translateY(0); }
 }
+#league-chat-container {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 200;
+}
+.league-chat-panel {
+  position: fixed;
+  bottom: 80px;
+  width: 300px;
+  height: 420px;
+  background: rgba(10,10,22,0.97);
+  border: 1px solid rgba(180,150,255,0.2);
+  border-radius: 16px 0 0 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  pointer-events: all;
+  box-shadow: -4px 0 24px rgba(0,0,0,0.5);
+  transition: transform 0.3s ease;
+  animation: slideInChat 0.3s ease;
+}
+@keyframes slideInChat {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+.league-chat-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid;
+  flex-shrink: 0;
+}
+.league-chat-emoji { font-size: 22px; }
+.league-chat-title { flex: 1; }
+.league-chat-name  { font-size: 14px; font-weight: 700; color: #e8e4f0; }
+.league-chat-sub   { font-size: 11px; color: rgba(200,190,220,0.6); }
+.league-chat-close {
+  background: none; border: none; color: rgba(200,190,220,0.5);
+  font-size: 16px; cursor: pointer; padding: 4px;
+}
+.league-chat-close:hover { color: #fff; }
+.league-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.league-chat-messages::-webkit-scrollbar { width: 4px; }
+.league-chat-messages::-webkit-scrollbar-thumb { background: rgba(180,150,255,0.3); border-radius: 2px; }
+.chat-system-msg {
+  text-align: center;
+  font-size: 11px;
+  color: rgba(200,190,220,0.5);
+  padding: 6px;
+}
+.chat-msg-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.chat-msg-sender { font-size: 11px; color: rgba(200,190,220,0.6); }
+.chat-msg-bubble {
+  background: rgba(180,150,255,0.1);
+  border-radius: 10px;
+  padding: 7px 11px;
+  font-size: 13px;
+  color: #e8e4f0;
+  max-width: 90%;
+  word-break: break-all;
+}
+.chat-msg-bubble.mine {
+  background: rgba(192,132,252,0.2);
+  align-self: flex-end;
+}
+.league-chat-input-row {
+  display: flex;
+  gap: 6px;
+  padding: 10px 12px;
+  border-top: 1px solid rgba(180,150,255,0.1);
+  flex-shrink: 0;
+}
+.league-chat-input {
+  flex: 1;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(180,150,255,0.2);
+  border-radius: 8px;
+  color: #e8e4f0;
+  font-size: 13px;
+  padding: 7px 10px;
+  outline: none;
+}
+.league-chat-input:focus { border-color: rgba(192,132,252,0.5); }
+.league-chat-send {
+  background: rgba(192,132,252,0.2);
+  border: 1px solid rgba(192,132,252,0.3);
+  border-radius: 8px;
+  color: #c084fc;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 12px;
+  cursor: pointer;
+}
+.league-chat-send:hover { background: rgba(192,132,252,0.35); }
 </style>
 </head>
 <body>
@@ -1475,7 +1582,7 @@ function drawLeagueBuildings(){
   blds.forEach((lb,i)=>{
     const bx=startX+i*(bw+gap);
     const by=startY;
-    leagueBuildingRects.push({id:lb.id,nameKo:lb.nameKo,nameEn:lb.nameEn,x:bx,y:by,w:bw,h:bh});
+    leagueBuildingRects.push({id:lb.id,nameKo:lb.nameKo,nameEn:lb.nameEn,emoji:lb.emoji,color:lb.color,x:bx,y:by,w:bw,h:bh});
     // 그림자
     ctx.fillStyle='rgba(0,0,0,.25)';
     ctx.beginPath();ctx.ellipse(bx+bw/2,by+bh+8,bw*.5,10,0,0,Math.PI*2);ctx.fill();
@@ -2274,7 +2381,7 @@ function initDrag(){
     for(const rect of leagueBuildingRects){
       if(mx>=rect.x&&mx<=rect.x+rect.w&&my>=rect.y&&my<=rect.y+rect.h){
         console.log('리그건물클릭:',rect.id,rect.nameKo);
-        // Part 2에서 채팅창 열기 함수 호출 예정: openLeagueChat(rect)
+        openLeagueChat(rect);
         return;
       }
     }
@@ -2447,6 +2554,61 @@ starreport:()=>`
 </div>
 `
 };
+/* 리그 모임 채팅 */
+const openLeagueChats={};
+function openLeagueChat(rect){
+  if(openLeagueChats[rect.id])return;
+  const openCount=Object.keys(openLeagueChats).length;
+  const rightOffset=openCount*310;
+  const panel=document.createElement('div');
+  panel.className='league-chat-panel';
+  panel.id='chat-panel-'+rect.id;
+  panel.style.right=rightOffset+'px';
+  panel.innerHTML=`
+    <div class="league-chat-header" style="background:${rect.color}22;border-color:${rect.color}88">
+      <span class="league-chat-emoji">${rect.emoji}</span>
+      <div class="league-chat-title">
+        <div class="league-chat-name">${rect.nameKo}</div>
+        <div class="league-chat-sub">${rect.nameEn}</div>
+      </div>
+      <button class="league-chat-close" onclick="closeLeagueChat('${rect.id}')">✕</button>
+    </div>
+    <div class="league-chat-messages" id="chat-messages-${rect.id}">
+      <div class="chat-system-msg">💬 ${rect.nameKo} 모임 채팅방입니다</div>
+    </div>
+    <div class="league-chat-input-row">
+      <input class="league-chat-input" id="chat-input-${rect.id}" type="text"
+        placeholder="메시지 입력..." maxlength="200"
+        onkeydown="if(event.key==='Enter') sendLeagueMsg('${rect.id}')">
+      <button class="league-chat-send" onclick="sendLeagueMsg('${rect.id}')">전송</button>
+    </div>
+  `;
+  document.body.appendChild(panel);
+  openLeagueChats[rect.id]={rect,rightOffset};
+}
+function closeLeagueChat(id){
+  const panel=document.getElementById('chat-panel-'+id);
+  if(panel)panel.remove();
+  delete openLeagueChats[id];
+}
+function sendLeagueMsg(id){
+  const input=document.getElementById('chat-input-'+id);
+  const messages=document.getElementById('chat-messages-'+id);
+  if(!input||!messages)return;
+  const text=input.value.trim();
+  if(!text)return;
+  const myName=(window.currentChar&&window.currentChar.name)||'나';
+  const row=document.createElement('div');
+  row.className='chat-msg-row';
+  row.innerHTML=`
+    <div class="chat-msg-sender">${myName}</div>
+    <div class="chat-msg-bubble mine">${text}</div>
+  `;
+  messages.appendChild(row);
+  messages.scrollTop=messages.scrollHeight;
+  input.value='';
+}
+
 function openMo(k){
   if(k==='org_chat'){openFcChat('org',0);return;}
   if(!MO[k])return;document.getElementById('moC').innerHTML=MO[k]();document.getElementById('mo').classList.add('show');setTimeout(()=>{document.querySelectorAll('.pf').forEach(el=>{const w=el.style.width;el.style.width='0%';setTimeout(()=>el.style.width=w,50)})},100)}
@@ -2951,5 +3113,6 @@ function renderFcHeader(league){
 }
 </script>
 <script src="/js/avatar-svgs.js"></script>
+<div id="league-chat-container"></div>
 </body>
 </html>
