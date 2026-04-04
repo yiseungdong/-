@@ -2762,35 +2762,70 @@ function startMiniEvents(){  const container=document.getElementById('miniEvts')
 let boardCat='org';
 let boardTabId='all';
 const MOCK_BOARD={
-  all:[
-    {title:'컴백 스밍 총공 전략!',nick:'StreamQueen',time:'23:14'},
-    {title:'오늘 라이브 같이 보실 분~',nick:'MoonChild',time:'22:50'},
-    {title:'팬아트 D-14 기념',nick:'ArtStar',time:'21:30'},
-    {title:'투표 현황 정리',nick:'VoteGuard',time:'20:10'},
-    {title:'신규 멤버 환영합니다!',nick:'WelcomeFan',time:'19:45'}
-  ],
-  notice:[
-    {title:'[공지] 이번주 미션 안내',nick:'운영진',time:'10:00'},
-    {title:'[공지] 리그 승격 기준 변경',nick:'운영진',time:'09:00'},
-    {title:'[공지] 스트리밍 가이드라인',nick:'운영진',time:'어제'}
-  ],
-  free:[
-    {title:'오늘 최애 직캠 봤는데 눈물남',nick:'PurpleU',time:'23:40'},
-    {title:'굿즈 공동구매 하실 분?',nick:'GalaxyHeart',time:'22:15'},
-    {title:'이 노래 뭔지 아시는 분',nick:'StarFan',time:'21:00'},
-    {title:'오늘 방송 다시보기 링크',nick:'NovaRider',time:'20:30'}
-  ]
+  org:{
+    all:[{title:'컴백 스밍 총공 전략!',nick:'StreamQueen',time:'23:14'},{title:'오늘 라이브 같이 보실 분~',nick:'MoonChild',time:'22:50'},{title:'팬아트 D-14 기념',nick:'ArtStar',time:'21:30'},{title:'투표 현황 정리',nick:'VoteGuard',time:'20:10'},{title:'신규 멤버 환영합니다!',nick:'WelcomeFan',time:'19:45'}],
+    empire:[{title:'[엠파이어] 이번주 스밍 목표',nick:'EmpireKing',time:'22:00'},{title:'[엠파이어] 멤버 모집 중',nick:'StarLord',time:'20:30'}],
+    dominion:[{title:'[도미니언] 오늘 미션 완료!',nick:'DomQueen',time:'21:10'},{title:'[도미니언] 자유 스밍 시간',nick:'NovaStar',time:'19:00'}],
+    sector:[{title:'[섹터] 신입 환영해요',nick:'SectorFan',time:'20:45'}],
+    cluster:[{title:'[클러스터] 굿즈 공동구매',nick:'ClusterA',time:'18:30'}],
+    orbit:[{title:'[오빗] 오늘도 화이팅!',nick:'OrbitFan',time:'17:00'}],
+    territory:[{title:'[테리토리] 스밍 현황',nick:'TerriLead',time:'22:30'}],
+    base:[{title:'[베이스] 미션 공유',nick:'BaseFan',time:'21:00'}],
+    unit:[{title:'[유닛] 오늘 활동 인증',nick:'UnitFan',time:'20:00'}],
+    province:[{title:'[프로빈스] 이번달 목표',nick:'ProvFan',time:'19:30'}],
+    district:[{title:'[디스트릭트] 새 미션 안내',nick:'DistFan',time:'18:00'}],
+    square:[{title:'[스퀘어] 모임 후기',nick:'SqFan',time:'17:30'}],
+    lounge:[{title:'[라운지] 오늘의 수다',nick:'LoungeFan',time:'16:00'}],
+    gathering:[{title:'[게더링] 집결 완료!',nick:'GatherFan',time:'22:00'}],
+    point:[{title:'[포인트] 오늘 포인트 현황',nick:'PointFan',time:'21:00'}]
+  },
+  notice:{
+    all:[{title:'[공지] 이번주 미션 안내',nick:'운영진',time:'10:00'},{title:'[공지] 리그 승격 기준 변경',nick:'운영진',time:'09:00'},{title:'[공지] 스트리밍 가이드라인',nick:'운영진',time:'어제'}],
+    empire:[{title:'[엠파이어 공지] 제국 집회 일정',nick:'운영진',time:'11:00'}],
+    dominion:[{title:'[도미니언 공지] 영토 미션 변경',nick:'운영진',time:'10:30'}],
+    sector:[{title:'[섹터 공지] 이번주 목표',nick:'운영진',time:'09:30'}],
+    cluster:[{title:'[클러스터 공지] 성단 행사 안내',nick:'운영진',time:'09:00'}],
+    orbit:[{title:'[오빗 공지] 궤도 점검',nick:'운영진',time:'08:00'}],
+    territory:[{title:'[테리토리 공지] 거점 업데이트',nick:'운영진',time:'10:00'}],
+    base:[{title:'[베이스 공지] 기지 점검',nick:'운영진',time:'09:00'}],
+    unit:[{title:'[유닛 공지] 부대 미션',nick:'운영진',time:'08:30'}],
+    province:[{title:'[프로빈스 공지] 주 행사',nick:'운영진',time:'10:00'}],
+    district:[{title:'[디스트릭트 공지] 구 안내',nick:'운영진',time:'09:30'}],
+    square:[{title:'[스퀘어 공지] 광장 행사',nick:'운영진',time:'09:00'}],
+    lounge:[{title:'[라운지 공지] 공간 안내',nick:'운영진',time:'08:30'}],
+    gathering:[{title:'[게더링 공지] 집회 일정',nick:'운영진',time:'10:00'}],
+    point:[{title:'[포인트 공지] 지점 안내',nick:'운영진',time:'09:00'}]
+  },
+  free:{
+    all:[{title:'오늘 최애 직캠 봤는데 눈물남',nick:'PurpleU',time:'23:40'},{title:'굿즈 공동구매 하실 분?',nick:'GalaxyHeart',time:'22:15'},{title:'이 노래 뭔지 아시는 분',nick:'StarFan',time:'21:00'},{title:'오늘 방송 다시보기 링크',nick:'NovaRider',time:'20:30'}],
+    empire:[{title:'엠파이어 자유수다방',nick:'EmpireFree',time:'22:00'}],
+    dominion:[{title:'도미니언 잡담',nick:'DomFree',time:'21:00'}],
+    sector:[{title:'섹터 자유글',nick:'SectFree',time:'20:00'}],
+    cluster:[{title:'클러스터 수다',nick:'ClusFree',time:'19:00'}],
+    orbit:[{title:'오빗 잡담',nick:'OrbFree',time:'18:00'}],
+    territory:[{title:'테리토리 자유',nick:'TerrFree',time:'22:00'}],
+    base:[{title:'베이스 수다',nick:'BaseFree',time:'21:00'}],
+    unit:[{title:'유닛 잡담',nick:'UnitFree',time:'20:00'}],
+    province:[{title:'프로빈스 자유',nick:'ProvFree',time:'19:00'}],
+    district:[{title:'디스트릭트 수다',nick:'DistFree',time:'18:00'}],
+    square:[{title:'스퀘어 잡담',nick:'SqFree',time:'17:00'}],
+    lounge:[{title:'라운지 자유',nick:'LounFree',time:'16:00'}],
+    gathering:[{title:'게더링 수다',nick:'GathFree',time:'22:00'}],
+    point:[{title:'포인트 잡담',nick:'PointFree',time:'21:00'}]
+  }
 };
 function openBoardPanel(){
-  const boardPanel=document.getElementById('board-panel');
-  if(!boardPanel)return;
-  // 모임채팅이 열려있으면 닫기
-  const chatPanel=document.getElementById('chatPanel');
-  if(chatPanel)chatPanel.classList.remove('open');
-  boardPanel.style.display='flex';
+  const panel=document.getElementById('board-panel');
+  if(!panel)return;
+  const fcPanel=document.getElementById('fc-chat-panel');
+  if(fcPanel)fcPanel.style.display='none';
+  panel.style.display='flex';
   boardCat='org';boardTabId='all';
   document.querySelectorAll('.board-cat-btn').forEach(b=>b.classList.remove('active'));
-  document.querySelector('.board-cat-btn[data-cat="org"]')?.classList.add('active');
+  const orgBtn=document.querySelector('.board-cat-btn[data-cat="org"]');
+  if(orgBtn)orgBtn.classList.add('active');
+  const tabsEl=document.getElementById('board-tabs');
+  if(tabsEl)tabsEl.style.display='flex';
   renderBoardTabs('all');
   renderBoardList();
 }
@@ -2801,10 +2836,7 @@ function closeBoardPanel(){
 function switchBoardCat(cat){
   boardCat=cat;
   document.querySelectorAll('.board-cat-btn').forEach(b=>b.classList.remove('active'));
-  document.querySelector(`.board-cat-btn[data-cat="${cat}"]`)?.classList.add('active');
-  const tabsEl=document.getElementById('board-tabs');
-  if(cat==='org'){tabsEl.style.display='flex';renderBoardTabs(boardTabId);}
-  else{tabsEl.style.display='none';boardTabId='all';}
+  document.querySelector(`.board-cat-btn[data-cat="${cat}"]`).classList.add('active');
   renderBoardList();
 }
 function renderBoardTabs(activeId='all'){
@@ -2829,10 +2861,8 @@ function switchBoardTab(tabId){
 function renderBoardList(){
   const list=document.getElementById('board-list');
   if(!list)return;
-  let posts=[];
-  if(boardCat==='notice')posts=MOCK_BOARD.notice;
-  else if(boardCat==='free')posts=MOCK_BOARD.free;
-  else posts=MOCK_BOARD.all;
+  const catData=MOCK_BOARD[boardCat]||MOCK_BOARD['org'];
+  const posts=catData[boardTabId]||catData['all']||[];
   if(!posts.length){list.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px 0;font-size:13px;">게시글이 없습니다</div>';return;}
   list.innerHTML=posts.map(p=>`
     <div class="board-item">
