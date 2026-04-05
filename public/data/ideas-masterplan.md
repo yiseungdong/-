@@ -1715,3 +1715,55 @@ CREATE TABLE moim_groups (
 #### 보류 항목
 - 의상 종류 선택 SVG 연동 — 무료 SVG 소스 확보 후 진행
 - 표정/모션 레이어 — 다음 작업으로 진행 중
+
+---
+
+### 완료된 사항 (2026.04.06 세션)
+
+#### 아바타 레이어 시스템 구현 (3단계)
+- 1단계: 헤어 레이어 분리 구현
+  - AVATAR_HAIR_SVGS 객체 추가 (6종: short/long/neat/wave/up/twoblocks)
+  - getStyledHairSVG() 함수 추가 (헤어 색상 교체)
+  - avatar-layer-hair div 추가 + renderHairLayer() 함수
+  - 헤어 스타일 카드 클릭 → 즉시 반영 연결
+- 2단계: 의상 레이어 분리 구현
+  - AVATAR_OUTFIT_SVGS 객체 추가 (상의3/하의3/전신2)
+  - getStyledOutfitSVG() 함수 추가
+  - avatar-layer-outfit div 추가 + renderOutfitLayer() 함수
+  - 의상 카드 클릭 → 착용 반영 연결
+  - ⚠️ SVG 모양이 카드 이모지와 다름 → 무료 SVG 소스 확보 후 재작업 예정
+- 3단계: 표정/모션 이모지 오버레이 구현
+  - AVATAR_EXPRESSIONS 객체 (8종: smile/laugh/love/cool/excited/confident/cute/angel)
+  - AVATAR_MOTIONS 객체 (3종: dance/cheer/heart)
+  - avatar-layer-expression div 추가 + renderExpressionLayer() 함수
+  - 댄스/환호/하트 CSS 애니메이션 (avatarDance/avatarCheer/avatarHeart)
+  - 표정/모션 카드 클릭 → 즉시 반영 연결
+
+#### refreshAvatarPreview() 통합 함수
+- renderBaseLayer() + renderOutfitLayer() + renderExpressionLayer() + renderHairLayer() + renderMotion()
+- 페이지 로드 시 자동 초기화
+
+#### 전체 페이지 텍스트 가시성 개선
+- 9개 파일 전체 어두운 텍스트 밝게 수정
+- --muted CSS 변수값 밝게 조정
+- 네비게이션/탭/섹션제목/카드텍스트 가시성 개선
+
+#### 의상 SVG 방향 확정 (마스터플랜 기록)
+- 1단계 (현재): svgrepo.com 등 무료 SVG 소스 활용
+- 2단계 (추후): 전문 디자이너 고용 → 전체 아바타 시스템 리디자인
+
+---
+
+### 📌 현재 보류 버그 (2026.04.06 기준)
+1. 모임채팅 탭 — 더미데이터, 실제 소모임 연동 미완료
+2. avatar.html 헤어 레이어 위치 — 머리 위치에 정확히 맞지 않음 (위치 미세조정 필요)
+3. avatar.html 의상 SVG 모양 — 카드 이모지와 다름 (무료 SVG 소스 확보 후 재작업)
+4. room3d.html 아바타 벽타기 — 수정 시도했으나 미해결
+5. astra.html 브레드크럼 — 위치 버그 수정 시도했으나 미확인
+
+### 다음 세션 작업 순서
+1. avatar.html 헤어 레이어 위치 미세조정
+2. avatar.html 의상 SVG → svgrepo.com 무료 SVG 소스 적용
+3. room3d.html 벽타기 버그 재시도
+4. 로그인/회원가입 기능 테스트
+5. 모바일 반응형 점검
