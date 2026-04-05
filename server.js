@@ -1921,9 +1921,9 @@ app.post('/api/auth/register', async (req, res) => {
 
     // users 테이블 생성
     const result = await pool.query(
-      `INSERT INTO users (nickname, email, password, emoji, is_pioneer, pioneer_rank, stardust)
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-      [nickname, email, hashed, emoji || '🌟', isPioneer, pioneerRank,
+      `INSERT INTO users (nickname, email, password, is_pioneer, pioneer_rank, stardust)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+      [nickname, email, hashed, isPioneer, pioneerRank,
        isPioneer ? 2000 : 500]
     );
     const userId = result.rows[0].id;
