@@ -2085,12 +2085,18 @@ app.post('/api/auth/register', async (req, res) => {
     const pioneerRank = isPioneer ? userCount + 1 : null;
     const initialStardust = isPioneer ? 2000 : 0;
 
+    // fanclub rank → 실제 fanclubs.id 변환
+    const fanclubRow = fanclub_id
+      ? await pool.query('SELECT id FROM fanclubs WHERE rank = $1', [parseInt(fanclub_id)])
+      : null;
+    const realFandomId = fanclubRow?.rows?.[0]?.id || null;
+
     // users 테이블 INSERT
     const result = await pool.query(
       `INSERT INTO users (nickname, email, password, is_pioneer, pioneer_rank, stardust, fandom_id)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING id, nickname, email, league, stardust, fandom_id, created_at`,
-      [nickname, email, hashed, isPioneer, pioneerRank, initialStardust, fanclub_id ? parseInt(fanclub_id) : null]
+      [nickname, email, hashed, isPioneer, pioneerRank, initialStardust, realFandomId]
     );
     const userId = result.rows[0].id;
 
