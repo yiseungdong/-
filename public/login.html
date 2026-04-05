@@ -834,6 +834,24 @@
       errEl.textContent = '⚠️ 팬클럽을 선택해주세요';
       errEl.style.display = 'block'; return;
     }
+    // 소모임 선택 여부 체크
+    var moimSec = document.getElementById('moimSection');
+    if (moimSec && moimSec.style.display !== 'none' && Object.keys(selectedMoim).length === 0) {
+      errEl.textContent = '⚠️ 소모임을 선택해주세요 · Please select your group';
+      errEl.style.display = 'block';
+      var moimResult = document.getElementById('moimResult');
+      moimResult.innerHTML = '<div style="text-align:center; padding:8px;">' +
+        '<div style="color:var(--gold); margin-bottom:8px;">' +
+        '🏘️ 소모임을 선택하지 않으셨어요!<br>' +
+        '<span style="font-size:12px; color:var(--muted)">직접 선택하거나 자동배치를 이용하세요</span>' +
+        '</div>' +
+        '<button type="button" onclick="autoAssignMoim()" ' +
+        'style="padding:8px 20px; background:var(--gold); color:#000; border:none; ' +
+        'border-radius:8px; cursor:pointer; font-weight:700; font-family:\'Noto Sans KR\',sans-serif;">' +
+        '🎲 자동배치하기</button></div>';
+      moimResult.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
 
     btn.textContent = '가입 중...';
     btn.disabled = true;
