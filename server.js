@@ -1990,7 +1990,11 @@ app.post('/api/auth/register', async (req, res) => {
     });
   } catch (err) {
     console.error('회원가입 오류:', err);
-    res.status(500).json({ message: '서버 오류입니다.' });
+    res.status(500).json({
+      message: '서버 오류입니다.',
+      detail: err.message,
+      code: err.code
+    });
   }
 });
 
