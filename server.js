@@ -2120,11 +2120,12 @@ const apiLimiter = rateLimit({
 });
 app.use('/api/', apiLimiter);
 
-// 인증 API는 더 엄격하게 (1분에 10회)
+// 인증 API 속도 제한 (1분에 100회, 개발 시 skip)
 const authLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 10,
-  message: { message: '로그인 시도가 너무 많습니다. 1분 후 다시 시도해 주세요.', code: 'AUTH_RATE_LIMIT' }
+  max: 100,
+  message: { message: '로그인 시도가 너무 많습니다. 1분 후 다시 시도해 주세요.', code: 'AUTH_RATE_LIMIT' },
+  skip: (req) => process.env.NODE_ENV !== 'production'
 });
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
