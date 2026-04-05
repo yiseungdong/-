@@ -1767,3 +1767,49 @@ CREATE TABLE moim_groups (
 3. room3d.html 벽타기 버그 재시도
 4. 로그인/회원가입 기능 테스트
 5. 모바일 반응형 점검
+
+---
+
+### 완료된 사항 (2026.04.06 세션 2)
+
+#### 로그인/회원가입 시스템 구현
+- login.html 신규 생성 (779줄)
+  - 로그인 탭: 이메일+비밀번호, POST /api/auth/login 연동, 423 잠금 처리
+  - 회원가입 탭: 이메일/닉네임/비밀번호 + 팬클럽 100개 그리드 선택
+  - 소셜 로그인 버튼 (카카오/네이버/구글) — Coming Soon
+  - 별빛 배경 200개 별 반짝임 애니메이션
+  - 반응형 디자인 (모바일 92vw, 팬클럽 그리드 2열)
+
+#### 회원가입 API 정비 (server.js)
+- INSERT INTO users 필수 컬럼 단순화 후 복원
+- users 테이블 누락 컬럼 ALTER TABLE 자동 추가
+- 성궤번호(generateAstraId) + 개척자 판별 + nebulae INSERT 복원
+- 에러 상세 메시지 노출 (debug용 detail/code)
+
+#### 소모임 시스템 신규 구현
+- moim_groups 테이블 + moim_depth1~5 컬럼 추가
+- GET /api/moim/auto-assign API (리그별 깊이 자동배정)
+- login.html 소모임 단계별 선택 위젯 (리그별 계층 구조)
+- 자동배치 버튼 + 미선택 시 안내 메시지
+
+#### 추천인 코드 기능
+- 추천인 성궤번호 입력 필드 (대문자 자동변환 + "없음" 버튼)
+- 추천인 보상: 개척자 추천 1000 / 일반 추천 500 스타더스트
+- stardust_ledger 로그 기록 (테이블 없으면 무시)
+
+#### 팬클럽 리그 배분
+- kpop-fanclub-database.json 100개 팬클럽에 rank + league 필드 추가
+- quasar(1~5위): BTS, BLACKPINK, Stray Kids, SEVENTEEN, EXO
+- nova(6~15위): TWICE, NCT, ENHYPEN, TXT, ATEEZ 등 10팀
+
+#### 📌 현재 보류 버그
+1. 모임채팅 탭 — 더미데이터, 실제 소모임 연동 미완료
+2. avatar.html 아바타 꾸미기 대부분 미적용
+3. room3d.html 아바타 벽타기 미해결
+
+#### 다음 세션 작업 순서
+1. 로그인 테스트 (가입한 계정으로 로그인)
+2. index.html 리그맵 — 퀘이사/노바 원 안에 순위+팬클럽 심볼 표시
+3. 모바일 반응형 점검
+4. avatar.html 헤어 레이어 위치 미세조정
+5. avatar.html 의상 SVG → svgrepo.com 소스 적용
