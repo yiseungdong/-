@@ -1068,8 +1068,38 @@ const MAP_SIZE={
   nova:{w:2600,h:2000},
   quasar:{w:3000,h:2300}
 };
-const DM={name:'BTS ARMY',league:'star',rank:3,members:98432,score:847,energy:72,dday:14,online:1234,
-ann:['🔥 시즌 종료 D-14!','📢 새로운 소원 제안!'],ld:{n:'StarCommander',lv:78,a:'전략가'}};
+function buildDM() {
+  try {
+    const user = JSON.parse(localStorage.getItem('asteria_user') || '{}');
+    return {
+      name: user.fandomName || user.fandom_name || 'BTS ARMY',
+      league: user.league || 'star',
+      rank: user.fandomRank || user.fandom_rank || 3,
+      members: 98432, score: 847, energy: 72, dday: 14, online: 1234,
+      fandom_id: user.fandomId || user.fandom_id || 1,
+      myUserId: user.id || user.userId || null,
+      myNick: user.nickname || '나',
+      moim_depth1: user.moim_depth1 || null,
+      moim_depth2: user.moim_depth2 || null,
+      moim_depth3: user.moim_depth3 || null,
+      moim_depth4: user.moim_depth4 || null,
+      moim_depth5: user.moim_depth5 || null,
+      ann: ['🔥 시즌 종료 D-14!', '📢 새로운 소원 제안!'],
+      ld: { n: 'StarCommander', lv: 78, a: '전략가' }
+    };
+  } catch(e) {
+    return {
+      name:'BTS ARMY', league:'star', rank:3, members:98432,
+      score:847, energy:72, dday:14, online:1234,
+      fandom_id:1, myUserId:null, myNick:'나',
+      moim_depth1:null, moim_depth2:null, moim_depth3:null,
+      moim_depth4:null, moim_depth5:null,
+      ann:['🔥 시즌 종료 D-14!','📢 새로운 소원 제안!'],
+      ld:{n:'StarCommander',lv:78,a:'전략가'}
+    };
+  }
+}
+const DM = buildDM();
 
 // 리그별 모임채팅 탭 구성
 const LEAGUE_CHAT_TABS={
@@ -1135,6 +1165,23 @@ const MY_ORG = {
   nova:    ['프로빈스', '디스트릭트', '스퀘어', '라운지'],
   quasar:  ['엠파이어', '도미니언', '섹터', '클러스터', '오빗']
 };
+
+// 내 실제 소모임 이름 배열 반환
+function getMyMoimNames() {
+  const league = DM.league || 'star';
+  const depths = [DM.moim_depth1, DM.moim_depth2, DM.moim_depth3, DM.moim_depth4, DM.moim_depth5].filter(Boolean);
+  const defaultNames = MY_ORG[league] || MY_ORG['star'];
+  return defaultNames.map((defaultName, i) => depths[i] || defaultName + (i + 1));
+}
+
+// 소모임 Socket.IO 룸 ID 반환
+function getMoimRoomId(depthIdx) {
+  const fid = DM.fandom_id || 1;
+  const depths = [DM.moim_depth1, DM.moim_depth2, DM.moim_depth3, DM.moim_depth4, DM.moim_depth5];
+  const moimId = depths[depthIdx];
+  if (!moimId) return `fandom:${fid}:org${depthIdx}`;
+  return `fandom:${fid}:moim:${moimId}`;
+}
 
 /* 리그별 모임 건물 이름 */
 const ORG_BUILDING = {
@@ -2998,7 +3045,7 @@ window.addEventListener('DOMContentLoaded',()=>{
       setTimeout(()=>{
         ent.style.display='none';
         ent.remove();
-        startMiniEvents();startNpcChat();initSocket();
+        startMiniEvents();startNpcChat();initSocket();autoAssignMoimIfNeeded();
         showToast('🌟 '+DM.name+' STARIUM');
         setTimeout(()=>{
           document.getElementById('hint').classList.add('show');
@@ -3569,37 +3616,32 @@ function renderBoardList(){
 }
 
 function openFcChat(type, orgPath) {
-  // 다른 패널 닫기
-  const boardPanel=document.getElementById('board-panel');
-  if(boardPanel)boardPanel.style.display='none';
-  const votePanel=document.getElementById('vote-panel');
-  if(votePanel)votePanel.style.display='none';
+  const boardPanel = document.getElementById('board-panel');
+  if (boardPanel) boardPanel.style.display = 'none';
+  const votePanel = document.getElementById('vote-panel');
+  if (votePanel) votePanel.style.display = 'none';
   closeSrPanel();
-
   const panel = document.getElementById('chatPanel');
   const title = document.getElementById('chatPanelTitle');
   const breadcrumb = document.getElementById('chatBreadcrumb');
   const body = document.getElementById('chatBody');
-
   panel.classList.add('open');
-  currentChatRoom = type;
-
-  // 모임채팅/전체채팅 모두 탭 표시
   title.textContent = '🏠 모임 채팅';
   breadcrumb.style.display = 'flex';
-  if (type === 'all') {
+  const hasMoim = DM.moim_depth1 !== null && DM.moim_depth1 !== undefined;
+  if (type === 'all' || !hasMoim) {
     renderFcChatTabs('all');
-    loadMockMsgs(body, 'all');
+    switchFcChatTab('all');
   } else {
-    const league=getMyLeague();
-    const tabs=LEAGUE_CHAT_TABS[league]||LEAGUE_CHAT_TABS['star'];
-    const tabId=(orgPath&&tabs[orgPath])?tabs[orgPath].id:'all';
-    renderFcChatTabs(tabId);
-    loadMockMsgs(body, 'org');
+    const league = getMyLeague();
+    const tabs = LEAGUE_CHAT_TABS[league] || LEAGUE_CHAT_TABS['star'];
+    const lastTab = tabs[tabs.length - 1];
+    renderFcChatTabs(lastTab.id);
+    switchFcChatTab(lastTab.id);
   }
-
   setTimeout(() => {
-    document.getElementById('chatInput').focus();
+    const input = document.getElementById('chatInput');
+    if (input) input.focus();
   }, 400);
 }
 
@@ -3608,27 +3650,49 @@ function closeChatPanel() {
 }
 
 function renderFcChatTabs(activeId='all'){
-  const league=getMyLeague();
-  const tabs=LEAGUE_CHAT_TABS[league]||LEAGUE_CHAT_TABS['star'];
-  const container=document.getElementById('chatBreadcrumb');
-  if(!container)return;
-  const isMultiRow=tabs.length>=6;
-  container.style.flexWrap=isMultiRow?'wrap':'nowrap';
-  container.innerHTML=tabs.map(tab=>`
-    <button class="fc-chat-tab ${tab.id===activeId?'active':''}"
+  const league = getMyLeague();
+  const tabs = LEAGUE_CHAT_TABS[league] || LEAGUE_CHAT_TABS['star'];
+  const moimNames = getMyMoimNames();
+  const container = document.getElementById('chatBreadcrumb');
+  if (!container) return;
+  const isMultiRow = tabs.length >= 5;
+  container.style.flexWrap = isMultiRow ? 'wrap' : 'nowrap';
+  container.innerHTML = tabs.map((tab, i) => {
+    let displayName;
+    if (tab.id === 'all') {
+      displayName = currentLang === 'ko' ? '전체' : 'All';
+    } else {
+      const moimIdx = i - 1;
+      const moimName = moimNames[moimIdx];
+      displayName = moimName
+        ? `${currentLang === 'ko' ? tab.ko : tab.en} · ${moimName}`
+        : (currentLang === 'ko' ? tab.ko : tab.en);
+    }
+    return `<button class="fc-chat-tab ${tab.id === activeId ? 'active' : ''}"
       data-tab="${tab.id}"
       onclick="switchFcChatTab('${tab.id}')"
-      style="${isMultiRow?'flex:0 0 calc(33% - 4px);':''}"
-    >${currentLang==='ko'?tab.ko:tab.en}</button>
-  `).join('');
+      style="${isMultiRow ? 'flex:0 0 calc(50% - 4px);' : ''}"
+    >${displayName}</button>`;
+  }).join('');
 }
 
 function switchFcChatTab(tabId){
   renderFcChatTabs(tabId);
-  const body=document.getElementById('chatBody');
-  if(body){
-    if(tabId==='all') loadMockMsgs(body,'all');
-    else loadMockMsgs(body,'org');
+  currentChatRoom = tabId;
+  const body = document.getElementById('chatBody');
+  if (!body) return;
+  const league = getMyLeague();
+  const tabs = LEAGUE_CHAT_TABS[league] || LEAGUE_CHAT_TABS['star'];
+  const tabIdx = tabs.findIndex(t => t.id === tabId);
+  const depthIdx = tabIdx > 0 ? tabIdx - 1 : -1;
+  if (socket && socket.connected) {
+    const roomId = tabId === 'all' ? `fandom:${DM.fandom_id}` : getMoimRoomId(depthIdx);
+    socket.emit('join_room', { room: roomId });
+    socket.emit('get_history', { room: roomId, limit: 30 });
+    body.innerHTML = '<div class="chat-system-msg">📡 메시지 불러오는 중...</div>';
+  } else {
+    if (tabId === 'all') loadMockMsgs(body, 'all');
+    else loadMockMsgs(body, 'org');
   }
 }
 
@@ -3685,33 +3749,42 @@ function loadMockMsgs(body, roomType) {
   body.scrollTop = body.scrollHeight;
 }
 
+function renderChatMessage(body, data, isMe) {
+  const league = data.league || 'star';
+  const color = LEAGUE_COLORS[league] || '#c084fc';
+  const time = data.createdAt ? new Date(data.createdAt) : new Date();
+  const timeStr = time.getHours() + ':' + String(time.getMinutes()).padStart(2, '0');
+  const el = document.createElement('div');
+  el.className = 'chat-msg' + (isMe ? ' me' : '');
+  el.innerHTML = `
+    <div class="chat-msg-avatar" style="background:${color}22;border-color:${color}44">${isMe ? '🧑' : '👤'}</div>
+    <div class="chat-msg-body">
+      <div class="chat-msg-name" style="color:${color}">${isMe ? (DM.myNick || '나') : (data.nickname || data.name || '팬')}</div>
+      <div class="chat-msg-bubble">${data.msg || data.message || ''}</div>
+      <div class="chat-msg-time">${timeStr}</div>
+    </div>`;
+  body.appendChild(el);
+}
+
 function sendChatMsg() {
   const input = document.getElementById('chatInput');
   const msg = input.value.trim();
   if (!msg) return;
-
   const body = document.getElementById('chatBody');
-  const time = new Date();
-  const timeStr = time.getHours() + ':' +
-    String(time.getMinutes()).padStart(2, '0');
-
-  const el = document.createElement('div');
-  el.className = 'chat-msg me';
-  el.innerHTML = `
-    <div class="chat-msg-avatar"
-      style="background:rgba(192,132,252,0.2);border-color:rgba(192,132,252,0.4)">
-      🧑
-    </div>
-    <div class="chat-msg-body">
-      <div class="chat-msg-name" style="color:var(--lp)">나</div>
-      <div class="chat-msg-bubble">${msg}</div>
-      <div class="chat-msg-time">${timeStr}</div>
-    </div>`;
-  body.appendChild(el);
+  const league = getMyLeague();
+  const tabs = LEAGUE_CHAT_TABS[league] || LEAGUE_CHAT_TABS['star'];
+  const activeTabEl = document.querySelector('.fc-chat-tab.active');
+  const activeTabId = activeTabEl ? activeTabEl.dataset.tab : 'all';
+  const activeTabIdx = tabs.findIndex(t => t.id === activeTabId);
+  const depthIdx = activeTabIdx > 0 ? activeTabIdx - 1 : -1;
+  const roomId = activeTabId === 'all' ? `fandom:${DM.fandom_id}` : getMoimRoomId(depthIdx);
+  renderChatMessage(body, { msg, league: DM.league, createdAt: new Date().toISOString() }, true);
   body.scrollTop = body.scrollHeight;
   input.value = '';
-
-  showSpeechBubble('myAv', '나', msg, true);
+  if (socket && socket.connected) {
+    socket.emit('send_message', { room: roomId, msg, nickname: DM.myNick || '나', league: DM.league });
+  }
+  showSpeechBubble('myAv', DM.myNick || '나', msg, true);
 }
 
 function showSpeechBubble(avatarId, name, msg, isMe) {
@@ -3785,9 +3858,9 @@ function initSocket() {
 
     socket.on('connect', () => {
       console.log('✅ Socket.IO 연결됨:', socket.id);
-      /* 임시 토큰으로 인증 (실제 구현 시 JWT 토큰 사용) */
       const token = localStorage.getItem('asteria_token');
       if (token) socket.emit('authenticate', token);
+      joinMyMoimRooms();
     });
 
     socket.on('disconnect', () => {
@@ -3804,6 +3877,18 @@ function initSocket() {
       receiveSocketMessage(data);
     });
 
+    socket.on('chat_history', (data) => {
+      const body = document.getElementById('chatBody');
+      if (!body) return;
+      body.innerHTML = '';
+      if (!data.messages || data.messages.length === 0) {
+        body.innerHTML = '<div class="chat-system-msg">💬 아직 대화가 없어요. 첫 메시지를 남겨보세요!</div>';
+        return;
+      }
+      data.messages.forEach(m => renderChatMessage(body, m, false));
+      body.scrollTop = body.scrollHeight;
+    });
+
     /* 연결 실패 시 폴백 */
     socket.on('connect_error', () => {
       console.log('⚠️ Socket.IO 연결 실패 — 목업 모드로 전환');
@@ -3813,6 +3898,52 @@ function initSocket() {
   } catch (err) {
     console.log('⚠️ Socket.IO 초기화 실패 — 목업 모드');
     loadFallbackCounts();
+  }
+}
+
+function joinMyMoimRooms() {
+  if (!socket || !socket.connected) return;
+  const fandomRoom = `fandom:${DM.fandom_id || 1}`;
+  socket.emit('join_room', { room: fandomRoom });
+  const league = getMyLeague();
+  const depthCount = { dust:2, star:3, planet:3, nova:4, quasar:5 }[league] || 3;
+  for (let i = 0; i < depthCount; i++) {
+    const roomId = getMoimRoomId(i);
+    socket.emit('join_room', { room: roomId });
+    console.log(`📡 소모임 룸 조인: ${roomId}`);
+  }
+}
+
+async function autoAssignMoimIfNeeded() {
+  try {
+    const user = JSON.parse(localStorage.getItem('asteria_user') || '{}');
+    if (user.moim_depth1) return;
+    const token = localStorage.getItem('asteria_token');
+    if (!token) return;
+    console.log('📡 소모임 자동 배정 요청...');
+    const res = await fetch('/api/moim/auto-assign', {
+      method: 'GET',
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.moim_depth1) {
+      user.moim_depth1 = data.moim_depth1;
+      user.moim_depth2 = data.moim_depth2 || null;
+      user.moim_depth3 = data.moim_depth3 || null;
+      user.moim_depth4 = data.moim_depth4 || null;
+      user.moim_depth5 = data.moim_depth5 || null;
+      localStorage.setItem('asteria_user', JSON.stringify(user));
+      DM.moim_depth1 = data.moim_depth1;
+      DM.moim_depth2 = data.moim_depth2 || null;
+      DM.moim_depth3 = data.moim_depth3 || null;
+      DM.moim_depth4 = data.moim_depth4 || null;
+      DM.moim_depth5 = data.moim_depth5 || null;
+      showToast('🏠 소모임이 배정됐어요!');
+      console.log('✅ 소모임 자동 배정 완료:', data);
+    }
+  } catch (e) {
+    console.log('소모임 자동 배정 실패 (무시):', e);
   }
 }
 
@@ -3893,43 +4024,21 @@ function loadFallbackCounts() {
 }
 
 function receiveSocketMessage(data) {
-  /* 현재 열린 채팅창에서 해당 room 찾기 */
-  const league = DM.league;
-  const path = MY_ORG[league] || [];
-
-  let targetRoomId = null;
-  if (data.room === 'global' || data.room === `fandom:${DM.fandom_id}`) {
-    targetRoomId = 'all';
-  }
-
-  if (!targetRoomId) return;
-
-  const win = miniChatWindows.find(w => w.roomId === targetRoomId);
-  if (!win) return;
-
-  const body = win.el.querySelector('.mcw-body');
+  const body = document.getElementById('chatBody');
+  const panel = document.getElementById('chatPanel');
+  if (!panel || !panel.classList.contains('open')) return;
   if (!body) return;
-
-  /* 내 메시지는 이미 표시됨 — 다른 사람 메시지만 추가 */
-  if (data.userId === DM.myUserId) return;
-
-  const color = LEAGUE_COLORS['star'] || '#fbbf24';
-  const time = new Date(data.createdAt);
-  const timeStr = time.getHours() + ':' +
-    String(time.getMinutes()).padStart(2, '0');
-
-  const el = document.createElement('div');
-  el.className = 'mcw-msg other';
-  el.innerHTML = `
-    <div class="mcw-msg-name" style="color:${color}">${data.nickname}</div>
-    <div class="mcw-msg-bubble">${data.message}</div>
-    <div style="font-size:7px;color:var(--muted);margin-top:1px">${timeStr}</div>`;
-  body.appendChild(el);
+  if (data.userId && data.userId === DM.myUserId) return;
+  const league = getMyLeague();
+  const tabs = LEAGUE_CHAT_TABS[league] || LEAGUE_CHAT_TABS['star'];
+  const activeTabEl = document.querySelector('.fc-chat-tab.active');
+  const activeTabId = activeTabEl ? activeTabEl.dataset.tab : 'all';
+  const activeTabIdx = tabs.findIndex(t => t.id === activeTabId);
+  const depthIdx = activeTabIdx > 0 ? activeTabIdx - 1 : -1;
+  const expectedRoom = activeTabId === 'all' ? `fandom:${DM.fandom_id}` : getMoimRoomId(depthIdx);
+  if (data.room !== expectedRoom) return;
+  renderChatMessage(body, data, false);
   body.scrollTop = body.scrollHeight;
-
-  /* 상대방 NPC 말풍선 */
-  const npcIdx = Math.floor(Math.random() * 5);
-  showNpcBubble(npcIdx, data.message);
 }
 
 function toggleFcHeader(){
