@@ -1869,3 +1869,41 @@ CREATE TABLE moim_groups (
 3. 모바일 반응형 점검
 4. avatar.html 헤어/의상 레이어 개선
 5. 관리자 페이지 (팬클럽 신청 승인/거절)
+
+---
+
+### 완료된 사항 (2026.04.06 세션 4)
+
+#### 소모임 채팅 실제 연동
+- fandom.html: moim_depth1~5 기반 Socket.IO 룸 자동 조인
+- 탭에 실제 소모임 이름 표시, switchFcChatTab으로 룸 전환
+- server.js: join_room / send_message / get_history 소켓 핸들러 추가
+- moim_chat_messages 테이블 + 인덱스 자동 생성
+- login.html 회원가입 후 /api/moim/auto-assign await 호출 + localStorage 저장
+- auto-assign API 응답에 moim_depth1~5 최상위 레벨 노출
+
+#### 회원가입 멈춤 버그 수정
+- express.json() 미들웨어 순서 오류 수정 (rate limiter보다 먼저 선언)
+- DB pool 타임아웃 설정 (connectionTimeoutMillis:10000, statement_timeout:30000)
+- initDB() fire-and-forget → dbReady 플래그 + DB 준비 전 503 응답
+- seedMoimGroups try-catch 감싸기 (실패해도 initDB 계속 진행)
+- runFullPipeline 딜레이 10초→5분 (DB pool 점유 방지)
+- bcrypt 라운드 12→10 (Render 속도 개선)
+- register rate-limit 임시 우회
+- trust proxy app 선언 직후로 이동
+
+#### 전체 페이지 우측상단 버튼 통일
+- 17개 HTML 파일에 navFandomBtn 추가
+- 토큰 있으면 "🏘️ 내 팬덤" → /fandom.html
+- 토큰 없으면 "🚀 로그인" → /login.html
+- index.html 슬로건 → "지금 시작하기" CTA 버튼으로 교체
+
+#### 📌 현재 보류 버그 (2026.04.06 세션4 기준)
+1. 모임채팅 — 실제 동작 테스트 필요 (moim_groups 시드 배포 확인)
+2. avatar.html 아바타 꾸미기 대부분 미적용
+3. room3d.html 아바타 벽타기 미해결
+
+#### 다음 세션 작업 순서
+1. 모바일 반응형 점검
+2. avatar.html 헤어/의상 레이어 개선
+3. fandom.html 소모임 채팅 실제 동작 테스트
