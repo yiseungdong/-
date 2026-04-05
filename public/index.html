@@ -323,6 +323,7 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
   <a class="top-nav-item" href="/avatar.html">아바타</a>
   <a class="top-nav-item" href="/shop.html">상점</a>
   <a class="top-nav-item" href="/competition.html">경쟁</a>
+  <a class="header-login-btn" id="navAuthBtn" href="/login.html" style="margin-left:auto;margin-right:12px;">로그인</a>
 </nav>
 
 <!-- 별빛 배경 -->
@@ -1157,22 +1158,41 @@ function updatePromotionBars(league) {
 // 입장 첫화면을 퀘이사로 통일
 window.addEventListener('DOMContentLoaded', () => {
   switchLeague('quasar');
-  const token = localStorage.getItem('accessToken');
+  const token = localStorage.getItem('asteria_token') || localStorage.getItem('accessToken');
   const nick = localStorage.getItem('asteria_nick') || '';
-  if (token && nick) {
+  const navAuthBtn = document.getElementById('navAuthBtn');
+  if (token) {
+    // 로그인 상태
+    try {
+      const userData = JSON.parse(localStorage.getItem('asteria_user') || '{}');
+      const fandomId = userData.fandomId;
+      if (navAuthBtn) {
+        if (fandomId) {
+          navAuthBtn.textContent = '✦ 내 팬덤';
+          navAuthBtn.href = '/fandom.html?fandom_id=' + fandomId;
+          navAuthBtn.style.background = 'var(--gold)';
+          navAuthBtn.style.color = 'var(--void)';
+          navAuthBtn.style.borderColor = 'var(--gold)';
+        } else {
+          navAuthBtn.textContent = '👤 ' + (userData.nickname || nick || '마이');
+          navAuthBtn.href = '#';
+          navAuthBtn.onclick = function(e) { e.preventDefault(); };
+        }
+      }
+    } catch(e) {}
     const avnode = document.getElementById('avnode');
     if (avnode) avnode.style.display = 'flex';
     const avname = document.getElementById('avname');
     if (avname) avname.textContent = nick;
     const loginBtn = document.getElementById('loginBtn');
     if (loginBtn) { loginBtn.textContent = '👤 ' + nick; loginBtn.onclick = null; }
-    // 내 팬덤 바로가기 버튼
+    // 내 팬덤 바로가기 버튼 (헤더 아래)
     try {
       const userData = JSON.parse(localStorage.getItem('asteria_user') || '{}');
       const fandomId = userData.fandomId;
       const myFandomBtn = document.getElementById('myFandomBtn');
       if (myFandomBtn && fandomId) {
-        myFandomBtn.href = '/fandom.html?fanclub=' + fandomId;
+        myFandomBtn.href = '/fandom.html?fandom_id=' + fandomId;
         myFandomBtn.style.display = 'inline-block';
       }
     } catch(e) {}
