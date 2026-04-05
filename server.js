@@ -1910,29 +1910,29 @@ app.post('/api/auth/register', async (req, res) => {
     // bcrypt cost 12
     const hashed = await bcrypt.hash(password, 12);
 
-    // 성궤번호 자동 발급: 현재 최대 orbit_number + 1
-    const astraId = await generateAstraId(pool);
+    // [임시 주석] 성궤번호 자동 발급
+    // const astraId = await generateAstraId(pool);
 
-    // 개척자 순번 계산
-    const countResult = await pool.query('SELECT COUNT(*) FROM users');
-    const totalUsers = parseInt(countResult.rows[0].count);
-    const isPioneer = totalUsers < 1000;
-    const pioneerRank = isPioneer ? totalUsers + 1 : null;
+    // [임시 주석] 개척자 순번 계산
+    // const countResult = await pool.query('SELECT COUNT(*) FROM users');
+    // const totalUsers = parseInt(countResult.rows[0].count);
+    // const isPioneer = totalUsers < 1000;
+    // const pioneerRank = isPioneer ? totalUsers + 1 : null;
 
-    // users 테이블 생성
+    // users 테이블 — 필수 컬럼만
     const result = await pool.query(
-      `INSERT INTO users (nickname, email, password, is_pioneer, pioneer_rank, stardust)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
-      [nickname, email, hashed, isPioneer, pioneerRank,
-       isPioneer ? 2000 : 500]
+      `INSERT INTO users (nickname, email, password)
+       VALUES ($1, $2, $3)
+       RETURNING id, nickname, email, league, stardust, created_at`,
+      [nickname, email, hashed]
     );
     const userId = result.rows[0].id;
 
-    // 성궤 자동 생성 (orbit_number 포맷: #00,000,001)
-    await pool.query(
-      `INSERT INTO nebulae (user_id, serial_code) VALUES ($1, $2)`,
-      [userId, astraId]
-    );
+    // [임시 주석] 성궤 자동 생성
+    // await pool.query(
+    //   `INSERT INTO nebulae (user_id, serial_code) VALUES ($1, $2)`,
+    //   [userId, astraId]
+    // );
 
     // 추천인 처리 (아스트라 번호 AA0001 형식으로 조회)
     if (referral_code) {
@@ -1956,7 +1956,7 @@ app.post('/api/auth/register', async (req, res) => {
     }
 
     // Access 토큰 (15분) + Refresh 토큰 (7일)
-    const tokenPayload = { id: userId, nickname, email, astraId };
+    const tokenPayload = { id: userId, nickname, email };
     const accessToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
     const refreshToken = jwt.sign({ id: userId, type: 'refresh' }, JWT_REFRESH_SECRET, { expiresIn: JWT_REFRESH_EXPIRES_IN });
 
@@ -1974,19 +1974,13 @@ app.post('/api/auth/register', async (req, res) => {
         id: userId,
         nickname,
         email,
-        emoji: emoji || '🌟',
         level: 1,
         grade: 'stardust',
-        league: 'dust',
-        astraId: astraId,
-        isPioneer,
-        pioneerRank,
-        stardust: isPioneer ? 2000 : 500,
+        league: result.rows[0].league || 'dust',
+        stardust: result.rows[0].stardust || 500,
         stats: { loy: 0, act: 0, soc: 0, eco: 0, cre: 0, int: 0 }
       },
-      message: isPioneer
-        ? `🌟 개척자 ${pioneerRank}번으로 등록되었습니다! 아스트라 번호: ${astraId}`
-        : `아스테리아에 오신 것을 환영합니다! 아스트라 번호: ${astraId}`
+      message: `아스테리아에 오신 것을 환영합니다!`
     });
   } catch (err) {
     console.error('회원가입 오류:', err);
