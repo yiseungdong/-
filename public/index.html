@@ -1028,7 +1028,7 @@ function createNode(fc, pos, rank, fcColor, isFirst) {
   node.onclick = function() { goFromNode(this); };
 
   const diam = pos.r * 2;
-  const fontSize = isFirst ? Math.round(pos.r * 0.35) : Math.round(pos.r * 0.55);
+  const fontSize = isFirst ? Math.round(pos.r * 0.28) : Math.round(pos.r * 0.38);
   const scoreStr = fc.score.toLocaleString();
   const rgb = hexToRgb(fcColor);
 
@@ -1038,8 +1038,10 @@ function createNode(fc, pos, rank, fcColor, isFirst) {
     : `width:${diam}px;height:${diam}px;background:radial-gradient(circle at 35% 35%,rgba(${rgb},.15),rgba(7,7,15,.95));box-shadow:0 0 0 2px rgba(${rgb},.7),0 0 30px rgba(${rgb},.4)`;
 
   node.innerHTML = `
-    <div class="q-orb" style="${orbStyle};border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative">
-      <span style="font-size:${fontSize}px">${fc.icon}</span>
+    <div class="q-orb" style="${orbStyle};border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative">
+      <div style="font-family:'Orbitron',monospace;color:var(--gold);font-size:${isFirst?14:11}px;font-weight:700;margin-bottom:2px">#${rank}</div>
+      <span style="font-size:${fontSize}px;line-height:1">${fc.icon}</span>
+      <div style="color:${fcColor};font-size:${isFirst?15:11}px;font-weight:700;margin-top:4px;font-family:'Noto Sans KR',sans-serif">${fc.name}</div>
       <div class="q-rank">${rank}</div>
     </div>
     <div class="q-lbl"><div class="q-name" style="font-size:${isFirst?18:13}px;color:${fcColor}">${fc.name}</div><div class="q-score" style="color:${fcColor}">${scoreStr} QP</div></div>
