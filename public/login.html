@@ -931,10 +931,27 @@
         var normalMsg = '✨ 회원가입이 완료되었습니다!\n\n성궤번호: ' + astraId + '\n이 번호를 기억하세요! ✨\n\n📍 소모임 위치: ' + moimPath;
         alert(data.user.is_pioneer ? pioneerMsg : normalMsg);
 
-        // 소모임 자동배정 (백그라운드)
-        fetch('/api/moim/auto-assign', {
-          headers: { 'Authorization': 'Bearer ' + data.accessToken }
-        }).catch(function(){});
+        // 소모임 자동배정
+        try {
+          var assignRes = await fetch('/api/moim/auto-assign', {
+            headers: { 'Authorization': 'Bearer ' + data.accessToken }
+          });
+          if (assignRes.ok) {
+            var assignData = await assignRes.json();
+            if (assignData.moim_depth1) {
+              var savedUser = JSON.parse(localStorage.getItem('asteria_user') || '{}');
+              savedUser.moim_depth1 = assignData.moim_depth1;
+              savedUser.moim_depth2 = assignData.moim_depth2 || null;
+              savedUser.moim_depth3 = assignData.moim_depth3 || null;
+              savedUser.moim_depth4 = assignData.moim_depth4 || null;
+              savedUser.moim_depth5 = assignData.moim_depth5 || null;
+              localStorage.setItem('asteria_user', JSON.stringify(savedUser));
+              console.log('✅ 소모임 자동 배정 완료:', assignData);
+            }
+          }
+        } catch (e) {
+          console.log('소모임 자동 배정 실패 (무시):', e);
+        }
 
         window.location.href = '/index.html';
       } else {

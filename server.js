@@ -180,6 +180,21 @@ async function initDB() {
       )
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS moim_chat_messages (
+        id SERIAL PRIMARY KEY,
+        room_id VARCHAR(200) NOT NULL,
+        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        nickname VARCHAR(100) NOT NULL DEFAULT '팬',
+        league VARCHAR(20) DEFAULT 'star',
+        message TEXT NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_moim_chat_room ON moim_chat_messages(room_id, created_at DESC)
+    `);
+
     // ── 2. 팬클럽 (리그 소속 단위) ──
     await client.query(`
       CREATE TABLE IF NOT EXISTS fanclubs (
@@ -2397,7 +2412,15 @@ app.get('/api/moim/auto-assign', authenticateToken, async (req, res) => {
       );
     }
 
-    res.json({ success: true, assignments });
+    res.json({
+      success: true,
+      assignments,
+      moim_depth1: assignments.moim_depth1 || null,
+      moim_depth2: assignments.moim_depth2 || null,
+      moim_depth3: assignments.moim_depth3 || null,
+      moim_depth4: assignments.moim_depth4 || null,
+      moim_depth5: assignments.moim_depth5 || null
+    });
   } catch (err) {
     console.error('소모임 자동배정 오류:', err);
     res.status(500).json({ message: '소모임 배정 실패', detail: err.message });
@@ -6528,6 +6551,7 @@ io.on('connection', (socket) => {
       if (!user.rows[0]) return socket.emit('auth_error', '유저를 찾을 수 없습니다.');
 
       const u = user.rows[0];
+      socket.userId = u.id;
       connectedUsers.set(socket.id, {
         userId: u.id, nickname: u.nickname,
         league: u.league, fandomId: u.fandom_id, orgId: u.org_id
@@ -6617,6 +6641,66 @@ io.on('connection', (socket) => {
       apEarned: data.apEarned,
       timestamp: new Date().toISOString()
     });
+  });
+
+  // ── 소모임 채팅룸 조인 ──
+  socket.on('join_room', async ({ room }) => {
+    if (!room) return;
+    socket.join(room);
+    const roomSockets = io.sockets.adapter.rooms.get(room);
+    const count = roomSockets ? roomSockets.size : 0;
+    io.to(room).emit('room_count', { room, count });
+    console.log(`📡 ${socket.id} joined room: ${room} (${count}명)`);
+  });
+
+  // ── 소모임 채팅 메시지 전송 ──
+  socket.on('send_message', async ({ room, msg, nickname, league }) => {
+    if (!room || !msg) return;
+    const safeMsg = String(msg).slice(0, 200);
+    const safeNick = String(nickname || '팬').slice(0, 50);
+    const safeLeague = ['dust','star','planet','nova','quasar'].includes(league) ? league : 'star';
+    try {
+      const userId = socket.userId || null;
+      const result = await pool.query(
+        `INSERT INTO moim_chat_messages (room_id, user_id, nickname, league, message)
+         VALUES ($1, $2, $3, $4, $5) RETURNING id, created_at`,
+        [room, userId, safeNick, safeLeague, safeMsg]
+      );
+      io.to(room).emit('new_message', {
+        id: result.rows[0]?.id,
+        room, msg: safeMsg, nickname: safeNick, league: safeLeague,
+        userId: socket.userId || null,
+        createdAt: result.rows[0]?.created_at
+      });
+    } catch (err) {
+      console.error('채팅 메시지 저장 오류:', err.message);
+      io.to(room).emit('new_message', {
+        room, msg: safeMsg, nickname: safeNick, league: safeLeague,
+        userId: null, createdAt: new Date().toISOString()
+      });
+    }
+  });
+
+  // ── 채팅 히스토리 요청 ──
+  socket.on('get_history', async ({ room, limit = 30 }) => {
+    if (!room) return;
+    try {
+      const result = await pool.query(
+        `SELECT id, room_id, user_id, nickname, league, message, created_at
+         FROM moim_chat_messages WHERE room_id = $1
+         ORDER BY created_at DESC LIMIT $2`,
+        [room, Math.min(limit, 50)]
+      );
+      const messages = result.rows.reverse().map(r => ({
+        id: r.id, room: r.room_id, msg: r.message,
+        nickname: r.nickname, league: r.league,
+        userId: r.user_id, createdAt: r.created_at
+      }));
+      socket.emit('chat_history', { room, messages });
+    } catch (err) {
+      console.error('채팅 히스토리 조회 오류:', err.message);
+      socket.emit('chat_history', { room, messages: [] });
+    }
   });
 
   // 타이핑 표시
