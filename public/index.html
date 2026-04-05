@@ -342,10 +342,16 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
   </div>
 </header>
 
-<!-- 슬로건 배너 -->
-<div class="slogan-banner">
-  <p class="slogan-kr">먼지에서 은하로, 팬이 주권을 갖는 우주</p>
-  <p class="slogan-en">From Dust to Galaxy — Where Fans Own the Universe</p>
+<!-- CTA 버튼 -->
+<div class="slogan-banner" style="padding:6px 0;">
+  <a id="heroCta" href="/login.html"
+    style="display:inline-block;padding:8px 20px;border:1px solid var(--gold);border-radius:20px;
+    color:var(--gold);font-size:13px;font-weight:600;text-decoration:none;
+    font-family:'Noto Sans KR',sans-serif;transition:all .2s;background:transparent;"
+    onmouseover="this.style.background='var(--gold)';this.style.color='#030308'"
+    onmouseout="this.style.background='transparent';this.style.color='var(--gold)'">
+    🚀 지금 시작하기
+  </a>
 </div>
 
 <!-- 로그인 모달 -->
@@ -1162,15 +1168,23 @@ window.addEventListener('DOMContentLoaded', () => {
   const token = localStorage.getItem('asteria_token') || localStorage.getItem('accessToken');
   const nick = localStorage.getItem('asteria_nick') || '';
   const navAuthBtn = document.getElementById('navAuthBtn');
-  if (token && navAuthBtn) {
+  const heroCta = document.getElementById('heroCta');
+  if (token) {
+    // 로그인 상태 — 두 버튼 모두 "내 팬덤"으로
     try {
       const userData = JSON.parse(localStorage.getItem('asteria_user') || '{}');
-      const fandomId = userData.fandomId;
-      navAuthBtn.textContent = '🏘️ 내 팬덤';
-      navAuthBtn.href = fandomId ? '/fandom.html?fandom_id=' + fandomId : '/fandom.html';
-      navAuthBtn.style.background = 'var(--gold)';
-      navAuthBtn.style.color = '#030308';
-      navAuthBtn.style.borderColor = 'var(--gold)';
+      const fandomHref = userData.fandomId ? '/fandom.html?fandom_id=' + userData.fandomId : '/fandom.html';
+      if (navAuthBtn) {
+        navAuthBtn.textContent = '🏘️ 내 팬덤';
+        navAuthBtn.href = fandomHref;
+        navAuthBtn.style.background = 'var(--gold)';
+        navAuthBtn.style.color = '#030308';
+        navAuthBtn.style.borderColor = 'var(--gold)';
+      }
+      if (heroCta) {
+        heroCta.textContent = '🏘️ 내 팬덤 바로가기';
+        heroCta.href = fandomHref;
+      }
     } catch(e) {}
     const avnode = document.getElementById('avnode');
     if (avnode) avnode.style.display = 'flex';
