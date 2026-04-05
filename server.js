@@ -10,6 +10,7 @@ const rateLimit = require('express-rate-limit');
 const CryptoJS = require('crypto-js');
 const http = require('http');
 const { Server } = require('socket.io');
+const nodemailer = require('nodemailer');
 
 const app = express();
 const server = http.createServer(app);
@@ -152,6 +153,21 @@ async function initDB() {
         max_members INTEGER NOT NULL,
         current_members INTEGER DEFAULT 0,
         created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // 팬클럽 등록 신청 테이블
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS fanclub_requests (
+        id SERIAL PRIMARY KEY,
+        artist_name VARCHAR(100) NOT NULL,
+        fanclub_name VARCHAR(100) NOT NULL,
+        color VARCHAR(20) NOT NULL,
+        description VARCHAR(200),
+        applicant_email VARCHAR(200),
+        status VARCHAR(20) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT NOW(),
+        reviewed_at TIMESTAMP
       )
     `);
 
@@ -13862,6 +13878,134 @@ app.get('/api/system/cron-status', (req, res) => {
     ],
     serverUptime: Math.floor(process.uptime()) + '초'
   });
+});
+
+// ══════════════════════════════════════════════
+//  팬클럽 등록 신청 시스템
+// ══════════════════════════════════════════════
+
+// 이메일 발송 헬퍼
+async function sendFanclubMail(to, subject, text) {
+  if (!process.env.MAIL_USER || !process.env.MAIL_PASS) {
+    console.log(`[메일 미발송] ${to} / ${subject} / ${text}`);
+    return;
+  }
+  try {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: process.env.MAIL_USER, pass: process.env.MAIL_PASS }
+    });
+    await transporter.sendMail({
+      from: `"${process.env.MAIL_FROM || '아스테리아 Asteria'}" <${process.env.MAIL_USER}>`,
+      to, subject, text
+    });
+    console.log(`[메일 발송 완료] ${to}`);
+  } catch (e) {
+    console.error('[메일 발송 실패]', e.message);
+  }
+}
+
+// POST /api/fanclub-requests — 신청 접수
+app.post('/api/fanclub-requests', async (req, res) => {
+  const { artistName, fanclubName, color, description, applicantEmail } = req.body;
+  if (!artistName || !fanclubName || !color) {
+    return res.status(400).json({ success: false, message: '필수 항목을 입력해주세요.' });
+  }
+  try {
+    await pool.query(
+      `INSERT INTO fanclub_requests (artist_name, fanclub_name, color, description, applicant_email)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [artistName, fanclubName, color, description || null, applicantEmail || null]
+    );
+    res.json({ success: true, message: '신청이 접수됐습니다.' });
+  } catch (err) {
+    console.error('팬클럽 신청 오류:', err);
+    res.status(500).json({ success: false, message: '서버 오류' });
+  }
+});
+
+// GET /api/fanclub-requests — 신청 목록 조회
+app.get('/api/fanclub-requests', async (req, res) => {
+  try {
+    const status = req.query.status;
+    let query = 'SELECT * FROM fanclub_requests';
+    const params = [];
+    if (status) {
+      query += ' WHERE status = $1';
+      params.push(status);
+    }
+    query += ' ORDER BY created_at DESC';
+    const result = await pool.query(query, params);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('팬클럽 신청 목록 조회 오류:', err);
+    res.status(500).json({ message: '서버 오류' });
+  }
+});
+
+// PATCH /api/fanclub-requests/:id/approve — 승인
+app.patch('/api/fanclub-requests/:id/approve', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(
+      `UPDATE fanclub_requests SET status = 'approved', reviewed_at = NOW()
+       WHERE id = $1 RETURNING *`,
+      [id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ success: false, message: '신청 없음' });
+
+    const req_row = result.rows[0];
+
+    // fanclubs 테이블에 INSERT
+    await pool.query(
+      `INSERT INTO fanclubs (name, emoji, color, description)
+       VALUES ($1, '⭐', $2, $3)
+       ON CONFLICT (name) DO NOTHING`,
+      [req_row.fanclub_name, req_row.color, req_row.description || '']
+    );
+
+    // 이메일 발송
+    if (req_row.applicant_email) {
+      sendFanclubMail(
+        req_row.applicant_email,
+        '[아스테리아] 팬클럽 등록이 승인됐습니다 ✨',
+        `${req_row.fanclub_name} 팬클럽이 아스테리아에 등록됐습니다! 이제 회원가입 시 선택할 수 있어요.`
+      );
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('팬클럽 승인 오류:', err);
+    res.status(500).json({ success: false, message: '서버 오류' });
+  }
+});
+
+// PATCH /api/fanclub-requests/:id/reject — 거절
+app.patch('/api/fanclub-requests/:id/reject', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(
+      `UPDATE fanclub_requests SET status = 'rejected', reviewed_at = NOW()
+       WHERE id = $1 RETURNING *`,
+      [id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ success: false, message: '신청 없음' });
+
+    const req_row = result.rows[0];
+
+    if (req_row.applicant_email) {
+      sendFanclubMail(
+        req_row.applicant_email,
+        '[아스테리아] 팬클럽 등록 신청 결과 안내',
+        `신청해주신 ${req_row.fanclub_name} 팬클럽 등록이 아쉽게도 반려됐습니다. 문의: asteria@asteria.me.kr`
+      );
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('팬클럽 거절 오류:', err);
+    res.status(500).json({ success: false, message: '서버 오류' });
+  }
 });
 
 server.listen(PORT, () => {
