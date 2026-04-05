@@ -49,9 +49,9 @@ html,body {
 ══════════════════════ */
 .preview-section {
   position:relative; z-index:10;
-  height:380px; display:flex; flex-direction:column;
+  min-height:320px; display:flex; flex-direction:column;
   align-items:center; justify-content:center;
-  overflow:hidden;
+  overflow:visible;
 }
 .preview-bg {
   position:absolute; inset:0;
@@ -435,7 +435,7 @@ html,body {
   <!-- 아바타 프리뷰 -->
   <div class="preview-section">
     <div class="preview-bg" id="previewBg"></div>
-    <div id="avatarContainer" style="width:180px;height:225px;position:relative;margin:20px auto 0;cursor:pointer">
+    <div id="avatarContainer" style="width:180px;height:225px;position:relative;margin:30px auto 0;cursor:pointer">
       <div id="layer-aura"   style="position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;pointer-events:none"></div>
       <div id="layer-body"   style="position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;pointer-events:none"></div>
       <div id="layer-bottom" style="position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;pointer-events:none"></div>
@@ -884,6 +884,8 @@ function renderAvatarLayers(){
   if (typeof getStyledHairSVG === 'function') {
     var hairSvg = getStyledHairSVG(hairId, hairColor);
     hairSvg = hairSvg.replace('width="200"', 'width="180"').replace('height="250"', 'height="225"');
+    // 헤어 크기 축소 + 상단 기준 정렬로 잘림 방지
+    hairSvg = '<div style="transform:scale(0.7);transform-origin:top center;">' + hairSvg + '</div>';
     document.getElementById('layer-hair').innerHTML = hairSvg;
   } else {
     document.getElementById('layer-hair').innerHTML = '';
