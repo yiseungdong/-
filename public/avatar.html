@@ -952,26 +952,33 @@ function selectFace(id){
   avatar.face=id;
   // 선택 즉시 localStorage 반영 (다른 페이지 실시간 연동)
   localStorage.setItem('asteria_avatar_base', id);
+  refreshAvatarPreview();
   renderFace(); renderAvatarLayers(); burst(); showToast('얼굴형 변경!');
 }
 function selectSkin(color){
   avatar.skin=color;
   localStorage.setItem('asteria_avatar_skin', color);
+  refreshAvatarPreview();
   renderFace(); renderAvatarLayers(); burst(); showToast('피부색 변경!');
 }
 function selectHair(id){
   const h=HAIRS.find(x=>x.id===id);
   if(!h||!h.unlocked){showToast(`🔒 ${h?.req||'조건'} 달성 시 해금!`);return;}
-  avatar.hair=id; renderHair(); renderAvatarLayers(); burst(); showToast('헤어스타일 변경!');
+  avatar.hair=id;
+  localStorage.setItem('asteria_avatar_hair', id);
+  refreshAvatarPreview();
+  renderHair(); renderAvatarLayers(); burst(); showToast('헤어스타일 변경!');
 }
 function selectHairColor(color){
   avatar.hairColor=color;
   localStorage.setItem('asteria_avatar_hairColor', color);
+  refreshAvatarPreview();
   renderHair(); renderAvatarLayers(); burst(); showToast('헤어 컬러 변경!');
 }
 function selectOutfitColor(color){
   avatar.outfitColor=color;
   localStorage.setItem('asteria_avatar_outfitColor', color);
+  refreshAvatarPreview();
   renderOutfitColors(); renderAvatarLayers(); burst(); showToast('의상 컬러 변경!');
 }
 function renderOutfitColors(){
@@ -1111,6 +1118,20 @@ function showToast(msg){
 }
 
 // ════════════════════════════════════
+// 아바타 미리보기 즉시 갱신
+// ════════════════════════════════════
+function refreshAvatarPreview() {
+  // localStorage에서 최신 값을 avatar 객체에 동기화
+  var base = localStorage.getItem('asteria_avatar_base') || 'm1';
+  avatar.face = base;
+  avatar.skin = localStorage.getItem('asteria_avatar_skin') || avatar.skin || '';
+  avatar.hairColor = localStorage.getItem('asteria_avatar_hairColor') || avatar.hairColor || '';
+  avatar.outfitColor = localStorage.getItem('asteria_avatar_outfitColor') || avatar.outfitColor || '';
+  // 레이어 다시 그리기
+  renderAvatarLayers();
+}
+
+// ════════════════════════════════════
 // INIT
 // ════════════════════════════════════
 const savedBase = localStorage.getItem('asteria_avatar_base');
@@ -1125,7 +1146,7 @@ if(!avatar.face || !['m1','m2','m3','f1','f2','f3'].includes(avatar.face)){
 
 updateLeagueColor();
 renderFace();
-renderAvatarLayers();
+refreshAvatarPreview();
 renderOutfitColors();
 
 document.getElementById('avatarContainer').addEventListener('click', function(){
