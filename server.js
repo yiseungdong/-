@@ -13,6 +13,7 @@ const { Server } = require('socket.io');
 const nodemailer = require('nodemailer');
 
 const app = express();
+app.set('trust proxy', 1);
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: '*', methods: ['GET', 'POST'] }
@@ -2103,7 +2104,6 @@ async function initDB() {
 initDB();
 
 // ── 미들웨어 ──
-app.set('trust proxy', 1);
 app.use(cors());
 
 // 보안 헤더 (5계층 중 5층)
@@ -2128,7 +2128,7 @@ const authLimiter = rateLimit({
   skip: (req) => process.env.NODE_ENV !== 'production'
 });
 app.use('/api/auth/login', authLimiter);
-app.use('/api/auth/register', authLimiter);
+app.use('/api/auth/register', (req, res, next) => next()); // rate limit 우회 (임시)
 
 app.use(express.json());
 
@@ -2188,6 +2188,7 @@ function formatOrbitNumber(code) {
 
 // 회원가입
 app.post('/api/auth/register', async (req, res) => {
+  console.log('[register] 요청 수신:', req.body?.email);
   const { nickname, email, password, emoji, referral_code, fanclub_id } = req.body;
   if (!nickname || !email || !password)
     return res.status(400).json({ message: '모든 항목을 입력해 주세요.' });
