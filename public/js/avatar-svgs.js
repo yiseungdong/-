@@ -151,6 +151,70 @@ var AVATAR_SIZE_PRESETS = {
   'full': { width: 240, height: 300 }
 };
 
+// ── 헤어 SVG 데이터 (레이어 시스템 Phase 1) ──
+var AVATAR_HAIR_SVGS = {
+  'short': '<svg width="200" height="250" viewBox="0 0 80 100" style="position:absolute;top:0;left:0;">\
+    <ellipse cx="40" cy="26" rx="20" ry="14" fill="#1a1a1a"/>\
+    <ellipse cx="40" cy="30" rx="19" ry="8" fill="#1a1a1a"/>\
+    <path d="M22 30 Q22 18 40 15 Q58 18 58 30 Q55 24 40 22 Q25 24 22 30Z" fill="#1a1a1a"/>\
+    <path d="M26 32 Q28 36 32 34" stroke="#1a1a1a" stroke-width="3" fill="#1a1a1a"/>\
+    <path d="M54 32 Q52 36 48 34" stroke="#1a1a1a" stroke-width="3" fill="#1a1a1a"/>\
+  </svg>',
+  'long': '<svg width="200" height="250" viewBox="0 0 80 100" style="position:absolute;top:0;left:0;">\
+    <ellipse cx="40" cy="26" rx="20" ry="14" fill="#1a1a1a"/>\
+    <path d="M22 30 Q22 18 40 15 Q58 18 58 30 Q55 24 40 22 Q25 24 22 30Z" fill="#1a1a1a"/>\
+    <path d="M22 30 Q20 45 18 60 Q19 62 22 58 Q24 48 26 38" fill="#1a1a1a"/>\
+    <path d="M58 30 Q60 45 62 60 Q61 62 58 58 Q56 48 54 38" fill="#1a1a1a"/>\
+    <path d="M22 30 L20 55 Q20 58 23 55 L25 35Z" fill="#1a1a1a"/>\
+    <path d="M58 30 L60 55 Q60 58 57 55 L55 35Z" fill="#1a1a1a"/>\
+  </svg>',
+  'neat': '<svg width="200" height="250" viewBox="0 0 80 100" style="position:absolute;top:0;left:0;">\
+    <ellipse cx="40" cy="26" rx="19" ry="13" fill="#1a1a1a"/>\
+    <path d="M22 30 Q22 17 40 14 Q58 17 58 30 Q55 23 40 21 Q25 23 22 30Z" fill="#1a1a1a"/>\
+    <path d="M28 28 Q34 22 46 22 Q52 24 52 28 Q48 25 40 24 Q32 25 28 28Z" fill="#1a1a1a"/>\
+  </svg>',
+  'wave': '<svg width="200" height="250" viewBox="0 0 80 100" style="position:absolute;top:0;left:0;">\
+    <ellipse cx="40" cy="26" rx="20" ry="14" fill="#1a1a1a"/>\
+    <path d="M22 30 Q22 18 40 15 Q58 18 58 30" fill="#1a1a1a"/>\
+    <path d="M22 30 Q20 38 22 44 Q24 48 22 52 Q23 54 26 50 Q28 44 26 38 Q24 34 24 30" fill="#1a1a1a"/>\
+    <path d="M58 30 Q60 38 58 44 Q56 48 58 52 Q57 54 54 50 Q52 44 54 38 Q56 34 56 30" fill="#1a1a1a"/>\
+    <path d="M30 22 Q35 18 40 20 Q36 24 30 22Z" fill="#1a1a1a"/>\
+  </svg>',
+  'up': '<svg width="200" height="250" viewBox="0 0 80 100" style="position:absolute;top:0;left:0;">\
+    <ellipse cx="40" cy="26" rx="19" ry="13" fill="#1a1a1a"/>\
+    <path d="M22 30 Q22 17 40 14 Q58 17 58 30" fill="#1a1a1a"/>\
+    <ellipse cx="40" cy="12" rx="10" ry="8" fill="#1a1a1a"/>\
+    <path d="M32 18 Q36 10 40 8 Q44 10 48 18 Q44 14 40 13 Q36 14 32 18Z" fill="#1a1a1a"/>\
+    <ellipse cx="40" cy="10" rx="7" ry="5" fill="#1a1a1a"/>\
+  </svg>',
+  'twoblocks': '<svg width="200" height="250" viewBox="0 0 80 100" style="position:absolute;top:0;left:0;">\
+    <ellipse cx="40" cy="24" rx="18" ry="10" fill="#1a1a1a"/>\
+    <path d="M24 28 Q24 16 40 13 Q56 16 56 28" fill="#1a1a1a"/>\
+    <rect x="26" y="14" width="28" height="14" rx="8" fill="#1a1a1a"/>\
+    <rect x="28" y="12" width="24" height="10" rx="6" fill="#1a1a1a"/>\
+    <path d="M26 30 Q26 28 28 30 L28 36 Q27 38 26 36Z" fill="#1a1a1a" opacity="0.4"/>\
+    <path d="M54 30 Q54 28 52 30 L52 36 Q53 38 54 36Z" fill="#1a1a1a" opacity="0.4"/>\
+  </svg>'
+};
+
+// 헤어 ID 매핑 (avatar.html의 h1~h6 → SVG키)
+var HAIR_ID_MAP = {
+  'h1': 'short', 'h2': 'long', 'h3': 'neat',
+  'h4': 'wave', 'h5': 'up', 'h6': 'twoblocks',
+  'short': 'short', 'long': 'long', 'neat': 'neat',
+  'wave': 'wave', 'up': 'up', 'twoblocks': 'twoblocks'
+};
+
+// 헤어 색상 적용된 SVG 반환
+function getStyledHairSVG(hairId, hairColor) {
+  var key = HAIR_ID_MAP[hairId] || 'short';
+  var svg = AVATAR_HAIR_SVGS[key] || AVATAR_HAIR_SVGS['short'];
+  var color = hairColor || localStorage.getItem('asteria_avatar_hairColor') || '#1a1a1a';
+  // 헤어 SVG의 모든 fill 색상을 선택한 색으로 교체
+  svg = svg.replace(/fill="#1a1a1a"/g, 'fill="' + color + '"');
+  return svg;
+}
+
 // ═══════════════════════════════════════════════════════
 // 기존 함수 (하위호환 100% + 크기 프리셋 지원)
 // ═══════════════════════════════════════════════════════

@@ -797,7 +797,15 @@ function renderAvatarLayers(){
   document.getElementById('layer-body').innerHTML = styledSvg;
   document.getElementById('layer-top').innerHTML = '';
   document.getElementById('layer-bottom').innerHTML = '';
-  document.getElementById('layer-hair').innerHTML = '';
+  var hairId = avatar.hair || localStorage.getItem('asteria_avatar_hair') || 'h1';
+  var hairColor = avatar.hairColor || localStorage.getItem('asteria_avatar_hairColor') || '#1a1a1a';
+  if (typeof getStyledHairSVG === 'function') {
+    var hairSvg = getStyledHairSVG(hairId, hairColor);
+    hairSvg = hairSvg.replace('width="200"', 'width="180"').replace('height="250"', 'height="225"');
+    document.getElementById('layer-hair').innerHTML = hairSvg;
+  } else {
+    document.getElementById('layer-hair').innerHTML = '';
+  }
 
   // 액세서리 레이어: 선택된 아이템 이모지 오버레이
   var accHtml = '';
