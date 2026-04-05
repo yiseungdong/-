@@ -795,8 +795,42 @@ function renderAvatarLayers(){
   }
 
   document.getElementById('layer-body').innerHTML = styledSvg;
-  document.getElementById('layer-top').innerHTML = '';
-  document.getElementById('layer-bottom').innerHTML = '';
+
+  // 상의 레이어 렌더링
+  var topId = avatar.outfit_top || localStorage.getItem('asteria_avatar_outfit_top') || 't1';
+  var outfitColor = avatar.outfitColor || localStorage.getItem('asteria_avatar_outfitColor') || '#1e40af';
+  if (typeof getStyledOutfitSVG === 'function') {
+    var topSvg = getStyledOutfitSVG(topId, outfitColor);
+    if (topSvg) {
+      topSvg = topSvg.replace('width="200"', 'width="180"').replace('height="250"', 'height="225"');
+    }
+    document.getElementById('layer-top').innerHTML = topSvg || '';
+  } else {
+    document.getElementById('layer-top').innerHTML = '';
+  }
+
+  // 하의 레이어 렌더링
+  var bottomId = avatar.outfit_bottom || localStorage.getItem('asteria_avatar_outfit_bottom') || 'b1';
+  if (typeof getStyledOutfitSVG === 'function') {
+    var bottomSvg = getStyledOutfitSVG(bottomId, outfitColor);
+    if (bottomSvg) {
+      bottomSvg = bottomSvg.replace('width="200"', 'width="180"').replace('height="250"', 'height="225"');
+    }
+    document.getElementById('layer-bottom').innerHTML = bottomSvg || '';
+  } else {
+    document.getElementById('layer-bottom').innerHTML = '';
+  }
+
+  // 전신 의상이 있으면 상의+하의 대신 전신 렌더링
+  var fullId = avatar.outfit_full || localStorage.getItem('asteria_avatar_outfit_full') || null;
+  if (fullId && typeof getStyledOutfitSVG === 'function') {
+    var fullSvg = getStyledOutfitSVG(fullId, outfitColor);
+    if (fullSvg) {
+      fullSvg = fullSvg.replace('width="200"', 'width="180"').replace('height="250"', 'height="225"');
+      document.getElementById('layer-top').innerHTML = fullSvg;
+      document.getElementById('layer-bottom').innerHTML = '';
+    }
+  }
   var hairId = avatar.hair || localStorage.getItem('asteria_avatar_hair') || 'h1';
   var hairColor = avatar.hairColor || localStorage.getItem('asteria_avatar_hairColor') || '#1a1a1a';
   if (typeof getStyledHairSVG === 'function') {
@@ -999,10 +1033,22 @@ function renderOutfitColors(){
 function selectOutfit(type,id){
   const o=(OUTFITS[type]||[]).find(x=>x.id===id);
   if(!o||!o.unlocked){showToast(`🔒 ${o?.req||'조건'} 달성 시 해금!`);return;}
-  // 착용중 업데이트
   (OUTFITS[type]||[]).forEach(x=>x.equipped=false);
   o.equipped=true;
   avatar['outfit_'+type]=id;
+  localStorage.setItem('asteria_avatar_outfit_' + type, id);
+  // 전신 선택 시 상의/하의 해제
+  if (type === 'full') {
+    avatar.outfit_top = null;
+    avatar.outfit_bottom = null;
+    localStorage.removeItem('asteria_avatar_outfit_top');
+    localStorage.removeItem('asteria_avatar_outfit_bottom');
+  }
+  // 상의/하의 선택 시 전신 해제
+  if (type === 'top' || type === 'bottom') {
+    avatar.outfit_full = null;
+    localStorage.removeItem('asteria_avatar_outfit_full');
+  }
   renderOutfit(type); renderAvatarLayers(); burst(); showToast(`${o.emoji} ${o.name} 착용!`);
 }
 function selectAura(id){
@@ -1135,6 +1181,9 @@ function refreshAvatarPreview() {
   avatar.skin = localStorage.getItem('asteria_avatar_skin') || avatar.skin || '';
   avatar.hairColor = localStorage.getItem('asteria_avatar_hairColor') || avatar.hairColor || '';
   avatar.outfitColor = localStorage.getItem('asteria_avatar_outfitColor') || avatar.outfitColor || '';
+  avatar.outfit_top = localStorage.getItem('asteria_avatar_outfit_top') || avatar.outfit_top || 't1';
+  avatar.outfit_bottom = localStorage.getItem('asteria_avatar_outfit_bottom') || avatar.outfit_bottom || 'b1';
+  avatar.outfit_full = localStorage.getItem('asteria_avatar_outfit_full') || avatar.outfit_full || null;
   // 레이어 다시 그리기
   renderAvatarLayers();
 }

@@ -215,6 +215,92 @@ function getStyledHairSVG(hairId, hairColor) {
   return svg;
 }
 
+// ── 의상 SVG 데이터 (레이어 시스템 Phase 2) ──
+var AVATAR_OUTFIT_SVGS = {
+  // 하의
+  'pants': '<svg width="200" height="250" viewBox="0 0 80 100" style="position:absolute;top:0;left:0;">\
+    <rect x="28" y="70" width="10" height="22" rx="3" fill="#1e40af"/>\
+    <rect x="42" y="70" width="10" height="22" rx="3" fill="#1e40af"/>\
+    <rect x="27" y="68" width="26" height="6" rx="2" fill="#1e40af"/>\
+  </svg>',
+  'shorts': '<svg width="200" height="250" viewBox="0 0 80 100" style="position:absolute;top:0;left:0;">\
+    <rect x="28" y="70" width="10" height="12" rx="3" fill="#1e40af"/>\
+    <rect x="42" y="70" width="10" height="12" rx="3" fill="#1e40af"/>\
+    <rect x="27" y="68" width="26" height="6" rx="2" fill="#1e40af"/>\
+  </svg>',
+  'miniskirt': '<svg width="200" height="250" viewBox="0 0 80 100" style="position:absolute;top:0;left:0;">\
+    <path d="M27 68 L24 82 Q40 86 56 82 L53 68 Z" fill="#1e40af"/>\
+    <path d="M24 82 Q40 88 56 82 Q40 84 24 82Z" fill="#1e40af" opacity="0.7"/>\
+  </svg>',
+  // 상의
+  'tshirt': '<svg width="200" height="250" viewBox="0 0 80 100" style="position:absolute;top:0;left:0;">\
+    <ellipse cx="40" cy="64" rx="18" ry="14" fill="#1e40af"/>\
+    <rect x="18" y="56" width="8" height="14" rx="3" fill="#1e40af"/>\
+    <rect x="54" y="56" width="8" height="14" rx="3" fill="#1e40af"/>\
+    <path d="M22 54 Q40 50 58 54 Q58 58 54 58 L26 58 Q22 58 22 54Z" fill="#1e40af"/>\
+  </svg>',
+  'hoodie': '<svg width="200" height="250" viewBox="0 0 80 100" style="position:absolute;top:0;left:0;">\
+    <ellipse cx="40" cy="64" rx="19" ry="15" fill="#1e40af"/>\
+    <rect x="16" y="55" width="9" height="18" rx="4" fill="#1e40af"/>\
+    <rect x="55" y="55" width="9" height="18" rx="4" fill="#1e40af"/>\
+    <path d="M22 52 Q40 48 58 52 Q58 56 54 56 L26 56 Q22 56 22 52Z" fill="#1e40af"/>\
+    <path d="M30 50 Q34 44 40 42 Q46 44 50 50 Q46 48 40 47 Q34 48 30 50Z" fill="#1e40af" opacity="0.8"/>\
+    <rect x="36" y="60" width="8" height="12" rx="2" fill="#1e40af" opacity="0.5"/>\
+  </svg>',
+  'jacket': '<svg width="200" height="250" viewBox="0 0 80 100" style="position:absolute;top:0;left:0;">\
+    <ellipse cx="40" cy="64" rx="18" ry="14" fill="#1e40af"/>\
+    <rect x="17" y="55" width="9" height="16" rx="3" fill="#1e40af"/>\
+    <rect x="54" y="55" width="9" height="16" rx="3" fill="#1e40af"/>\
+    <path d="M22 53 Q40 49 58 53 Q58 57 54 57 L26 57 Q22 57 22 53Z" fill="#1e40af"/>\
+    <line x1="40" y1="54" x2="40" y2="76" stroke="#1e40af" stroke-width="1.5" opacity="0.6"/>\
+    <circle cx="40" cy="60" r="1" fill="#1e40af" opacity="0.5"/>\
+    <circle cx="40" cy="66" r="1" fill="#1e40af" opacity="0.5"/>\
+    <circle cx="40" cy="72" r="1" fill="#1e40af" opacity="0.5"/>\
+  </svg>',
+  // 전신
+  'jumpsuit': '<svg width="200" height="250" viewBox="0 0 80 100" style="position:absolute;top:0;left:0;">\
+    <ellipse cx="40" cy="64" rx="18" ry="14" fill="#1e40af"/>\
+    <rect x="17" y="56" width="9" height="16" rx="3" fill="#1e40af"/>\
+    <rect x="54" y="56" width="9" height="16" rx="3" fill="#1e40af"/>\
+    <path d="M22 54 Q40 50 58 54 Q58 58 54 58 L26 58 Q22 58 22 54Z" fill="#1e40af"/>\
+    <rect x="28" y="70" width="10" height="22" rx="3" fill="#1e40af"/>\
+    <rect x="42" y="70" width="10" height="22" rx="3" fill="#1e40af"/>\
+    <rect x="27" y="68" width="26" height="6" rx="2" fill="#1e40af"/>\
+    <rect x="36" y="54" width="8" height="8" rx="1" fill="#1e40af" opacity="0.5"/>\
+  </svg>',
+  'dress': '<svg width="200" height="250" viewBox="0 0 80 100" style="position:absolute;top:0;left:0;">\
+    <ellipse cx="40" cy="62" rx="18" ry="12" fill="#1e40af"/>\
+    <rect x="18" y="56" width="8" height="12" rx="3" fill="#1e40af"/>\
+    <rect x="54" y="56" width="8" height="12" rx="3" fill="#1e40af"/>\
+    <path d="M22 53 Q40 49 58 53 Q58 57 54 57 L26 57 Q22 57 22 53Z" fill="#1e40af"/>\
+    <path d="M24 70 L20 92 Q40 96 60 92 L56 70 Z" fill="#1e40af"/>\
+    <path d="M20 92 Q40 98 60 92 Q40 94 20 92Z" fill="#1e40af" opacity="0.7"/>\
+  </svg>'
+};
+
+// 의상 ID 매핑 (avatar.html의 t1~t6/b1~b5/f1~f4 → SVG키)
+var OUTFIT_ID_MAP = {
+  't1': 'tshirt', 't2': 'hoodie', 't3': 'jacket',
+  'b1': 'pants', 'b2': 'shorts', 'b3': 'miniskirt',
+  'f1': 'jumpsuit', 'f2': 'dress',
+  'tshirt': 'tshirt', 'hoodie': 'hoodie', 'jacket': 'jacket',
+  'pants': 'pants', 'shorts': 'shorts', 'miniskirt': 'miniskirt',
+  'jumpsuit': 'jumpsuit', 'dress': 'dress'
+};
+
+// 의상 색상 적용된 SVG 반환
+function getStyledOutfitSVG(outfitId, outfitColor) {
+  var key = OUTFIT_ID_MAP[outfitId] || '';
+  var svg = AVATAR_OUTFIT_SVGS[key];
+  if (!svg) return '';
+  var color = outfitColor || localStorage.getItem('asteria_avatar_outfitColor') || '#1e40af';
+  // 기본색 #1e40af를 선택한 색으로 교체
+  svg = svg.replace(/fill="#1e40af"/gi, 'fill="' + color + '"');
+  // stroke도 교체
+  svg = svg.replace(/stroke="#1e40af"/gi, 'stroke="' + color + '"');
+  return svg;
+}
+
 // ═══════════════════════════════════════════════════════
 // 기존 함수 (하위호환 100% + 크기 프리셋 지원)
 // ═══════════════════════════════════════════════════════
