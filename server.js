@@ -2003,6 +2003,43 @@ app.post('/api/auth/register', async (req, res) => {
 
     const newUser = result.rows[0];
 
+    // 추천인 보상 처리
+    if (referral_code) {
+      try {
+        const referrerResult = await pool.query(
+          `SELECT u.id, u.is_pioneer, u.stardust
+           FROM users u
+           JOIN nebulae n ON n.user_id = u.id
+           WHERE n.serial_code = $1`,
+          [referral_code.toUpperCase()]
+        );
+
+        if (referrerResult.rows.length > 0) {
+          const referrer = referrerResult.rows[0];
+          const reward = referrer.is_pioneer ? 1000 : 500;
+
+          await pool.query(
+            `UPDATE users SET stardust = stardust + $1 WHERE id = $2`,
+            [reward, referrer.id]
+          );
+
+          try {
+            await pool.query(
+              `INSERT INTO stardust_ledger (user_id, amount, reason, created_at)
+               VALUES ($1, $2, $3, NOW())`,
+              [referrer.id, reward, `추천인 보상 (신규: ${nickname})`]
+            );
+          } catch (e) {
+            // stardust_ledger 없으면 무시
+          }
+
+          console.log(`추천인 보상: ${referral_code} → ${reward} 스타더스트 지급`);
+        }
+      } catch (refErr) {
+        console.error('추천인 처리 오류:', refErr);
+      }
+    }
+
     // 소모임 자동배정 (백그라운드 실행, 실패해도 회원가입은 완료)
     pool.query(
       `SELECT league, fandom_id FROM users WHERE id = $1`,
