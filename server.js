@@ -123,6 +123,18 @@ async function initDB() {
       )
     `);
 
+    // 누락 컬럼 자동 추가
+    await client.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS emoji VARCHAR(10) DEFAULT '⭐';
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS is_pioneer BOOLEAN DEFAULT FALSE;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS pioneer_rank INTEGER;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS stardust INTEGER DEFAULT 0;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS ap INTEGER DEFAULT 0;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS cp INTEGER DEFAULT 0;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS fandom_id INTEGER;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS org_id INTEGER;
+    `);
+
     // ── 2. 팬클럽 (리그 소속 단위) ──
     await client.query(`
       CREATE TABLE IF NOT EXISTS fanclubs (
