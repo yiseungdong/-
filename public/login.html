@@ -457,6 +457,19 @@
       <div class="fc-empty">불러오는 중...</div>
     </div>
 
+    <!-- 소모임 선택 섹션 (팬클럽 선택 후 표시) -->
+    <div id="moimSection" style="display:none; margin-top:16px;">
+      <div class="section-label">소모임 선택 · Select Group</div>
+      <div id="moimSteps" style="margin-top:8px;"></div>
+      <button type="button" id="autoAssignBtn" onclick="autoAssignMoim()"
+        style="width:100%; padding:10px; margin-top:8px; background:rgba(180,150,255,0.15);
+        border:1px solid var(--accent); border-radius:8px; color:var(--accent);
+        cursor:pointer; font-family:'Noto Sans KR',sans-serif;">
+        🎲 소모임 자동배치 · Auto Assign
+      </button>
+      <div id="moimResult" style="margin-top:8px; color:var(--gold); font-size:13px; text-align:center;"></div>
+    </div>
+
     <div class="error-msg" id="regError"></div>
     <button class="btn-primary" id="regBtn" onclick="doRegister()">회원가입 · REGISTER</button>
 
@@ -601,6 +614,89 @@
   var FANCLUBS = [];
   var selectedFanclub = null;
 
+  // 리그별 소모임 계층 구조
+  var MOIM_STRUCTURE = {
+    quasar: ['엠파이어', '도미니언', '섹터', '클러스터', '오빗'],
+    nova:   ['프로빈스', '디스트릭트', '스퀘어', '라운지'],
+    planet: ['테리토리', '베이스', '유닛'],
+    star:   ['테리토리', '베이스', '유닛'],
+    dust:   ['게더링', '포인트']
+  };
+  var selectedMoim = {};
+
+  function showMoimSection(league) {
+    selectedMoim = {};
+    var section = document.getElementById('moimSection');
+    var steps = document.getElementById('moimSteps');
+    var result = document.getElementById('moimResult');
+    var structure = MOIM_STRUCTURE[league] || MOIM_STRUCTURE['dust'];
+    section.style.display = 'block';
+    result.textContent = '';
+    steps.innerHTML = renderMoimStep(structure, 0, league);
+  }
+
+  function renderMoimStep(structure, depthIndex, league) {
+    if (depthIndex >= structure.length) return '';
+    var depthName = structure[depthIndex];
+    var count = depthIndex === 0 ? 5 : 3;
+    var html = '<div class="moim-step" style="margin-bottom:8px;">' +
+      '<div style="color:var(--muted);font-size:12px;margin-bottom:4px;">' +
+      (depthIndex + 1) + '단계 · ' + depthName + '</div>' +
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;">';
+    for (var i = 1; i <= count; i++) {
+      html += '<button type="button" onclick="selectMoim(\'' + depthName + '\',' + i + ',' + depthIndex + ',\'' + league + '\')" ' +
+        'id="moim-' + depthIndex + '-' + i + '" ' +
+        'style="padding:6px 12px;border-radius:6px;border:1px solid var(--border);' +
+        'background:rgba(10,10,22,0.8);color:var(--text);cursor:pointer;' +
+        'font-family:\'Noto Sans KR\',sans-serif;font-size:13px;">' +
+        depthName + i + '</button>';
+    }
+    html += '</div></div>';
+    return html;
+  }
+
+  function selectMoim(depthName, number, depthIndex, league) {
+    var structure = MOIM_STRUCTURE[league] || MOIM_STRUCTURE['dust'];
+    selectedMoim['depth' + (depthIndex + 1)] = depthName + number;
+    // 버튼 스타일
+    document.querySelectorAll('[id^="moim-' + depthIndex + '-"]').forEach(function(btn) {
+      btn.style.background = 'rgba(10,10,22,0.8)';
+      btn.style.borderColor = 'var(--border)';
+      btn.style.color = 'var(--text)';
+    });
+    var sel = document.getElementById('moim-' + depthIndex + '-' + number);
+    if (sel) sel.style.cssText += 'background:rgba(192,132,252,0.2);border-color:var(--accent);color:var(--accent);';
+    // 현재 이후 단계 제거
+    var steps = document.getElementById('moimSteps');
+    var allSteps = steps.querySelectorAll('.moim-step');
+    allSteps.forEach(function(s, i) { if (i > depthIndex) s.remove(); });
+    // 다음 단계 표시
+    if (depthIndex + 1 < structure.length) {
+      var next = document.createElement('div');
+      next.className = 'moim-step';
+      next.innerHTML = renderMoimStep(structure, depthIndex + 1, league);
+      steps.appendChild(next);
+    } else {
+      var result = document.getElementById('moimResult');
+      var path = Object.values(selectedMoim).join(' > ');
+      result.textContent = '✅ ' + path + ' 배정 완료!';
+    }
+  }
+
+  function autoAssignMoim() {
+    var league = selectedFanclub ? (selectedFanclub.league || 'dust') : 'dust';
+    var structure = MOIM_STRUCTURE[league] || MOIM_STRUCTURE['dust'];
+    selectedMoim = {};
+    structure.forEach(function(depthName, i) {
+      var randomNum = Math.floor(Math.random() * 3) + 1;
+      selectedMoim['depth' + (i + 1)] = depthName + randomNum;
+    });
+    var result = document.getElementById('moimResult');
+    var path = Object.values(selectedMoim).join(' > ');
+    result.textContent = '🎲 자동배치: ' + path;
+    document.getElementById('moimSteps').innerHTML = '';
+  }
+
   var COLOR_MAP = {
     '보라색(Purple)': '#7c3aed',
     '카키색(Khaki)': '#8b7d3c',
@@ -672,14 +768,17 @@
   }
 
   function selectFanclub(index) {
-    // 현재 렌더링된 목록 기준 인덱스
-    var cards = document.querySelectorAll('#fcGrid .fc-card');
-    // 전체 FANCLUBS에서 찾기: 렌더링 시 순서 그대로이므로
-    // filterFanclubs 시 filteredList를 별도 관리
     var fc = _currentList[index];
     if (!fc) return;
     selectedFanclub = fc;
     renderFanclubs(_currentList);
+    // 선택된 팬클럽명을 검색창에 표시
+    var artistName = fc.artist_kr || fc.artist || '';
+    var fandomName = fc.fandom || '';
+    document.getElementById('fcSearch').value = artistName + ' · ' + fandomName;
+    // 소모임 섹션 표시
+    var league = fc.league || 'dust';
+    showMoimSection(league);
   }
 
   var _currentList = [];
@@ -747,7 +846,8 @@
           email: email,
           password: password,
           nickname: nickname,
-          fanclub_id: selectedFanclub.rank
+          fanclub_id: selectedFanclub.rank,
+          moim: selectedMoim
         })
       });
       var data = await res.json();
@@ -759,7 +859,8 @@
 
         // 개척자 축하 메시지
         if (data.user.is_pioneer) {
-          alert('🌟 개척자 #' + data.user.pioneer_rank + '번으로 등록되셨습니다!\n스타더스트 2,000개가 지급되었습니다!');
+          var astraId = data.user.astra_id || 'AA' + String(data.user.pioneer_rank).padStart(4, '0');
+          alert('🌟 개척자 #' + data.user.pioneer_rank + '번으로 등록되셨습니다!\n\n성궤번호: ' + astraId + '\n이 번호를 기억하세요! ✨\n\n스타더스트 2,000개가 지급되었습니다!');
         }
 
         // 소모임 자동배정 (백그라운드)
