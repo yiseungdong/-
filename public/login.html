@@ -761,7 +761,17 @@
         localStorage.setItem('asteria_token', data.accessToken);
         localStorage.setItem('asteria_refresh', data.refreshToken);
         localStorage.setItem('asteria_user', JSON.stringify(data.user));
-        alert('회원가입 완료! 별빛 팬덤에 오신 것을 환영합니다 ✨');
+
+        // 개척자 축하 메시지
+        if (data.user.is_pioneer) {
+          alert('🌟 개척자 #' + data.user.pioneer_rank + '번으로 등록되셨습니다!\n스타더스트 2,000개가 지급되었습니다!');
+        }
+
+        // 소모임 자동배정 (백그라운드)
+        fetch('/api/moim/auto-assign', {
+          headers: { 'Authorization': 'Bearer ' + data.accessToken }
+        }).catch(function(){});
+
         window.location.href = '/index.html';
       } else {
         errEl.textContent = '⚠️ ' + (data.message || '회원가입에 실패했습니다');

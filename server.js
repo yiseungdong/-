@@ -133,6 +133,26 @@ async function initDB() {
       ALTER TABLE users ADD COLUMN IF NOT EXISTS cp INTEGER DEFAULT 0;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS fandom_id INTEGER;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS org_id INTEGER;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS moim_depth1 INTEGER;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS moim_depth2 INTEGER;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS moim_depth3 INTEGER;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS moim_depth4 INTEGER;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS moim_depth5 INTEGER;
+    `);
+
+    // moim_groups 테이블
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS moim_groups (
+        id SERIAL PRIMARY KEY,
+        fandom_id INTEGER,
+        league VARCHAR(20) NOT NULL,
+        depth INTEGER NOT NULL,
+        name VARCHAR(100) NOT NULL,
+        parent_id INTEGER REFERENCES moim_groups(id),
+        max_members INTEGER NOT NULL,
+        current_members INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
     `);
 
     // ── 2. 팬클럽 (리그 소속 단위) ──
@@ -1922,29 +1942,31 @@ app.post('/api/auth/register', async (req, res) => {
     // bcrypt cost 12
     const hashed = await bcrypt.hash(password, 12);
 
-    // [임시 주석] 성궤번호 자동 발급
-    // const astraId = await generateAstraId(pool);
+    // 성궤번호(Astra ID) 생성
+    const astraId = await generateAstraId(pool);
 
-    // [임시 주석] 개척자 순번 계산
-    // const countResult = await pool.query('SELECT COUNT(*) FROM users');
-    // const totalUsers = parseInt(countResult.rows[0].count);
-    // const isPioneer = totalUsers < 1000;
-    // const pioneerRank = isPioneer ? totalUsers + 1 : null;
+    // 개척자 판별 (최초 1000명)
+    const countResult = await pool.query('SELECT COUNT(*) FROM users');
+    const userCount = parseInt(countResult.rows[0].count);
+    const isPioneer = userCount < 1000;
+    const pioneerRank = isPioneer ? userCount + 1 : null;
+    const initialStardust = isPioneer ? 2000 : 0;
 
-    // users 테이블 — 필수 컬럼만
+    // users 테이블 INSERT
     const result = await pool.query(
-      `INSERT INTO users (nickname, email, password)
-       VALUES ($1, $2, $3)
-       RETURNING id, nickname, email, league, created_at`,
-      [nickname, email, hashed]
+      `INSERT INTO users (nickname, email, password, is_pioneer, pioneer_rank, stardust)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id, nickname, email, league, stardust, created_at`,
+      [nickname, email, hashed, isPioneer, pioneerRank, initialStardust]
     );
     const userId = result.rows[0].id;
 
-    // [임시 주석] 성궤 자동 생성
-    // await pool.query(
-    //   `INSERT INTO nebulae (user_id, serial_code) VALUES ($1, $2)`,
-    //   [userId, astraId]
-    // );
+    // nebulae 테이블에 성궤 생성
+    await pool.query(
+      `INSERT INTO nebulae (user_id, serial_code) VALUES ($1, $2)
+       ON CONFLICT (user_id) DO NOTHING`,
+      [userId, astraId]
+    );
 
     // [임시 주석] 추천인 처리
     // if (referral_code) {
@@ -1980,6 +2002,16 @@ app.post('/api/auth/register', async (req, res) => {
     );
 
     const newUser = result.rows[0];
+
+    // 소모임 자동배정 (백그라운드 실행, 실패해도 회원가입은 완료)
+    pool.query(
+      `SELECT league, fandom_id FROM users WHERE id = $1`,
+      [newUser.id]
+    ).then(async (r) => {
+      // 자동배정 로직은 API로 분리되어 있으므로 여기서는 생략
+      // 로그인 후 클라이언트에서 /api/moim/auto-assign 호출
+    }).catch(() => {});
+
     res.status(201).json({
       accessToken,
       refreshToken,
@@ -1988,7 +2020,10 @@ app.post('/api/auth/register', async (req, res) => {
         nickname: newUser.nickname,
         email: newUser.email,
         league: newUser.league || 'dust',
-        stardust: 0
+        stardust: newUser.stardust || initialStardust || 0,
+        is_pioneer: isPioneer,
+        pioneer_rank: pioneerRank,
+        astra_id: astraId || null
       }
     });
   } catch (err) {
@@ -1998,6 +2033,80 @@ app.post('/api/auth/register', async (req, res) => {
       detail: err.message,
       code: err.code
     });
+  }
+});
+
+// 소모임 자동배정 API
+app.get('/api/moim/auto-assign', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // 유저 정보 조회
+    const userResult = await pool.query(
+      'SELECT league, fandom_id FROM users WHERE id = $1',
+      [userId]
+    );
+    const user = userResult.rows[0];
+    if (!user) return res.status(404).json({ message: '유저 없음' });
+
+    const league = user.league || 'dust';
+    const fandomId = user.fandom_id;
+
+    // 리그별 소모임 깊이 설정
+    const leagueDepths = {
+      dust: 2,
+      star: 3,
+      planet: 3,
+      nova: 4,
+      quasar: 5
+    };
+
+    const maxDepth = leagueDepths[league] || 2;
+    const assignments = {};
+
+    // 각 깊이별로 여유있는 소모임 배정
+    let parentId = null;
+    for (let depth = 1; depth <= maxDepth; depth++) {
+      let query = `
+        SELECT id FROM moim_groups
+        WHERE league = $1 AND depth = $2 AND current_members < max_members
+      `;
+      const params = [league, depth];
+
+      if (parentId) {
+        query += ` AND parent_id = $3`;
+        params.push(parentId);
+      }
+
+      query += ` ORDER BY current_members ASC LIMIT 1`;
+
+      const result = await pool.query(query, params);
+
+      if (result.rows.length > 0) {
+        parentId = result.rows[0].id;
+        assignments[`moim_depth${depth}`] = parentId;
+
+        await pool.query(
+          'UPDATE moim_groups SET current_members = current_members + 1 WHERE id = $1',
+          [parentId]
+        );
+      }
+    }
+
+    // users 테이블에 배정 결과 저장
+    if (Object.keys(assignments).length > 0) {
+      const setClauses = Object.keys(assignments).map((k, i) => `${k} = $${i + 2}`).join(', ');
+      const values = [userId, ...Object.values(assignments)];
+      await pool.query(
+        `UPDATE users SET ${setClauses} WHERE id = $1`,
+        values
+      );
+    }
+
+    res.json({ success: true, assignments });
+  } catch (err) {
+    console.error('소모임 자동배정 오류:', err);
+    res.status(500).json({ message: '소모임 배정 실패', detail: err.message });
   }
 });
 
