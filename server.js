@@ -859,6 +859,124 @@ async function initDB() {
     const fcCount = await client.query('SELECT COUNT(*) FROM fanclubs');
     console.log(`✅ 팬클럽 DB: ${fcCount.rows[0].count}개`);
 
+    // ── 25-2. moim_groups 소모임 계층 시드 ──
+    async function seedMoimGroups() {
+      const { rows: existing } = await pool.query('SELECT COUNT(*) FROM moim_groups');
+      if (parseInt(existing[0].count) > 0) {
+        console.log(`✅ moim_groups 이미 ${existing[0].count}개 존재, 건너뜀`);
+        return;
+      }
+
+      const { rows: fanclubs } = await pool.query('SELECT id, name, league FROM fanclubs ORDER BY rank');
+
+      const leagueStructure = {
+        dust: [
+          { depth: 1, type: 'gathering', name_kr: '게더링', max_members: 500, count: 2 },
+          { depth: 2, type: 'point',     name_kr: '포인트', max_members: 50,  count: 10 }
+        ],
+        star: [
+          { depth: 1, type: 'territory', name_kr: '테리토리', max_members: 1000, count: 3 },
+          { depth: 2, type: 'base',      name_kr: '베이스',   max_members: 100,  count: 5 },
+          { depth: 3, type: 'unit',      name_kr: '유닛',     max_members: 20,   count: 5 }
+        ],
+        planet: [
+          { depth: 1, type: 'territory', name_kr: '테리토리', max_members: 2000, count: 4 },
+          { depth: 2, type: 'base',      name_kr: '베이스',   max_members: 200,  count: 5 },
+          { depth: 3, type: 'unit',      name_kr: '유닛',     max_members: 30,   count: 5 }
+        ],
+        nova: [
+          { depth: 1, type: 'province',  name_kr: '프로빈스',   max_members: 5000, count: 3 },
+          { depth: 2, type: 'district',  name_kr: '디스트릭트', max_members: 500,  count: 4 },
+          { depth: 3, type: 'square',    name_kr: '스퀘어',     max_members: 50,   count: 5 },
+          { depth: 4, type: 'lounge',    name_kr: '라운지',     max_members: 15,   count: 5 }
+        ],
+        quasar: [
+          { depth: 1, type: 'empire',    name_kr: '엠파이어',   max_members: 10000, count: 2 },
+          { depth: 2, type: 'dominion',  name_kr: '도미니언',   max_members: 1000,  count: 3 },
+          { depth: 3, type: 'sector',    name_kr: '섹터',       max_members: 100,   count: 4 },
+          { depth: 4, type: 'cluster',   name_kr: '클러스터',   max_members: 20,    count: 5 },
+          { depth: 5, type: 'fanclub',   name_kr: '팬클럽',     max_members: 5,     count: 5 }
+        ]
+      };
+
+      let totalInserted = 0;
+
+      for (const fc of fanclubs) {
+        const structure = leagueStructure[fc.league] || leagueStructure.dust;
+
+        const depth1Layer = structure[0];
+        for (let i = 1; i <= depth1Layer.count; i++) {
+          const name = `${fc.name} ${depth1Layer.name_kr}${i}`;
+          const { rows: d1 } = await pool.query(
+            `INSERT INTO moim_groups (fandom_id, league, depth, name, parent_id, max_members)
+             VALUES ($1, $2, $3, $4, NULL, $5) RETURNING id`,
+            [fc.id, fc.league, 1, name, depth1Layer.max_members]
+          );
+          totalInserted++;
+          const d1Id = d1[0].id;
+
+          if (structure.length < 2) continue;
+
+          const depth2Layer = structure[1];
+          for (let j = 1; j <= depth2Layer.count; j++) {
+            const name2 = `${fc.name} ${depth2Layer.name_kr}${(i-1)*depth2Layer.count + j}`;
+            const { rows: d2 } = await pool.query(
+              `INSERT INTO moim_groups (fandom_id, league, depth, name, parent_id, max_members)
+               VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+              [fc.id, fc.league, 2, name2, d1Id, depth2Layer.max_members]
+            );
+            totalInserted++;
+            const d2Id = d2[0].id;
+
+            if (structure.length < 3) continue;
+
+            const depth3Layer = structure[2];
+            for (let k = 1; k <= depth3Layer.count; k++) {
+              const name3 = `${fc.name} ${depth3Layer.name_kr}${(i-1)*depth2Layer.count*depth3Layer.count + (j-1)*depth3Layer.count + k}`;
+              const { rows: d3 } = await pool.query(
+                `INSERT INTO moim_groups (fandom_id, league, depth, name, parent_id, max_members)
+                 VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+                [fc.id, fc.league, 3, name3, d2Id, depth3Layer.max_members]
+              );
+              totalInserted++;
+              const d3Id = d3[0].id;
+
+              if (structure.length < 4) continue;
+
+              const depth4Layer = structure[3];
+              for (let l = 1; l <= depth4Layer.count; l++) {
+                const name4 = `${fc.name} ${depth4Layer.name_kr}${l}`;
+                const { rows: d4 } = await pool.query(
+                  `INSERT INTO moim_groups (fandom_id, league, depth, name, parent_id, max_members)
+                   VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+                  [fc.id, fc.league, 4, name4, d3Id, depth4Layer.max_members]
+                );
+                totalInserted++;
+                const d4Id = d4[0].id;
+
+                if (structure.length < 5) continue;
+
+                const depth5Layer = structure[4];
+                for (let m = 1; m <= depth5Layer.count; m++) {
+                  const name5 = `${fc.name} ${depth5Layer.name_kr}${m}`;
+                  await pool.query(
+                    `INSERT INTO moim_groups (fandom_id, league, depth, name, parent_id, max_members)
+                     VALUES ($1, $2, $3, $4, $5, $6)`,
+                    [fc.id, fc.league, 5, name5, d4Id, depth5Layer.max_members]
+                  );
+                  totalInserted++;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      console.log(`✅ moim_groups 시드 완료: ${totalInserted}개 소모임 생성`);
+    }
+
+    await seedMoimGroups();
+
     // ── 26. 목업 팬클럽 조직 자동 생성 ──
     const seedFanclubs = await client.query('SELECT id, name, league FROM fanclubs ORDER BY id');
     for (const fc of seedFanclubs.rows) {
