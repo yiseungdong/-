@@ -419,6 +419,7 @@ html,body {
   <a class="top-nav-item active" href="/avatar.html">아바타</a>
   <a class="top-nav-item" href="/shop.html">상점</a>
   <a class="top-nav-item" href="/competition.html">경쟁</a>
+  <div id="navFandomBtn" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);"></div>
 </nav>
 
 <canvas id="starCanvas"></canvas>
@@ -1507,6 +1508,18 @@ renderAstraId(psInit, serialVal);
 </div></div></div>
 <script>
 async function submitBugReport(){var t=localStorage.getItem('accessToken');if(!t){alert('로그인이 필요합니다.');return}try{var r=await fetch('/api/bugs',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},body:JSON.stringify({page:document.getElementById('bugPage').value,issue_type:document.getElementById('bugType').value,description:document.getElementById('bugDesc').value})});var d=await r.json();if(r.ok){if(typeof showToast==='function')showToast(d.message);else alert(d.message);document.getElementById('bugModal').classList.remove('open');document.getElementById('bugDesc').value=''}else{alert(d.message||'제출 실패')}}catch(e){alert('네트워크 오류')}}
+</script>
+<script>
+(function(){
+  var token = localStorage.getItem('asteria_token');
+  var btn = document.getElementById('navFandomBtn');
+  if(!btn) return;
+  if(token){
+    btn.innerHTML = '<a href="/fandom.html" style="display:flex;align-items:center;gap:4px;padding:5px 12px;border:1px solid var(--gold,#f0c040);border-radius:20px;color:var(--gold,#f0c040);font-size:11px;text-decoration:none;font-weight:700;background:rgba(240,192,64,0.08);transition:all .2s;" onmouseover="this.style.background=\'var(--gold,#f0c040)\';this.style.color=\'#000\'" onmouseout="this.style.background=\'rgba(240,192,64,0.08)\';this.style.color=\'var(--gold,#f0c040)\'">🏘️ 내 팬덤</a>';
+  } else {
+    btn.innerHTML = '<a href="/login.html" style="display:flex;align-items:center;gap:4px;padding:5px 12px;border:1px solid var(--gold,#f0c040);border-radius:20px;color:var(--gold,#f0c040);font-size:11px;text-decoration:none;font-weight:700;background:rgba(240,192,64,0.08);">🚀 로그인</a>';
+  }
+})();
 </script>
 </body>
 </html>

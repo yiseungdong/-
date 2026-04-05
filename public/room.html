@@ -608,6 +608,7 @@ html,body {
     <a class="top-nav-item " href="/avatar.html"><div class="top-nav-icon">🎭</div><div class="top-nav-label">아바타</div></a>
     <a class="top-nav-item " href="/shop.html"><div class="top-nav-icon">🛒</div><div class="top-nav-label">상점</div></a>
     <a class="top-nav-item" href="/competition.html">경쟁</a>
+    <div id="navFandomBtn" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);"></div>
   </nav>
 
   <!-- TOP NAV -->
@@ -1363,6 +1364,18 @@ renderGuestbook();
   }
   loop();
 })();
-
+</script>
+<script>
+(function(){
+  var token = localStorage.getItem('asteria_token');
+  var btn = document.getElementById('navFandomBtn');
+  if(!btn) return;
+  if(token){
+    btn.innerHTML = '<a href="/fandom.html" style="display:flex;align-items:center;gap:4px;padding:5px 12px;border:1px solid var(--gold,#f0c040);border-radius:20px;color:var(--gold,#f0c040);font-size:11px;text-decoration:none;font-weight:700;background:rgba(240,192,64,0.08);transition:all .2s;" onmouseover="this.style.background=\'var(--gold,#f0c040)\';this.style.color=\'#000\'" onmouseout="this.style.background=\'rgba(240,192,64,0.08)\';this.style.color=\'var(--gold,#f0c040)\'">🏘️ 내 팬덤</a>';
+  } else {
+    btn.innerHTML = '<a href="/login.html" style="display:flex;align-items:center;gap:4px;padding:5px 12px;border:1px solid var(--gold,#f0c040);border-radius:20px;color:var(--gold,#f0c040);font-size:11px;text-decoration:none;font-weight:700;background:rgba(240,192,64,0.08);">🚀 로그인</a>';
+  }
+})();
+</script>
 </body>
 </html>

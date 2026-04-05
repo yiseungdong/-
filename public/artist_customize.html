@@ -24,7 +24,7 @@ html,body {
 
 /* ── TOP NAV ── */
 .top-nav {
-  display:flex; background:var(--panel); backdrop-filter:blur(20px);
+  position:relative; display:flex; background:var(--panel); backdrop-filter:blur(20px);
   border-bottom:1px solid var(--border); overflow-x:auto; flex-shrink:0;
 }
 .top-nav::-webkit-scrollbar{display:none}
@@ -209,6 +209,7 @@ html,body {
     <a class="tni" href="/nebula.html"><div class="tni-icon">🌌</div><div class="tni-label">성궤</div></a>
     <a class="tni" href="/avatar.html"><div class="tni-icon">🎭</div><div class="tni-label">아바타</div></a>
     <a class="tni" href="/shop.html"><div class="tni-icon">🛒</div><div class="tni-label">상점</div></a>
+    <div id="navFandomBtn" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);"></div>
   </nav>
 
   <!-- TOP BAR -->
@@ -721,6 +722,18 @@ drawArtist();
 // 저장된 코스튬 태그 복원
 const typeLabel={stage:'🎤 스테이지 의상',casual:'👕 일상복',special:'✨ 특별복'};
 document.getElementById('costumeTag').textContent=typeLabel[artist.outfitType]||'🎤 스테이지 의상';
+</script>
+<script>
+(function(){
+  var token = localStorage.getItem('asteria_token');
+  var btn = document.getElementById('navFandomBtn');
+  if(!btn) return;
+  if(token){
+    btn.innerHTML = '<a href="/fandom.html" style="display:flex;align-items:center;gap:4px;padding:5px 12px;border:1px solid var(--gold,#f0c040);border-radius:20px;color:var(--gold,#f0c040);font-size:11px;text-decoration:none;font-weight:700;background:rgba(240,192,64,0.08);transition:all .2s;" onmouseover="this.style.background=\'var(--gold,#f0c040)\';this.style.color=\'#000\'" onmouseout="this.style.background=\'rgba(240,192,64,0.08)\';this.style.color=\'var(--gold,#f0c040)\'">🏘️ 내 팬덤</a>';
+  } else {
+    btn.innerHTML = '<a href="/login.html" style="display:flex;align-items:center;gap:4px;padding:5px 12px;border:1px solid var(--gold,#f0c040);border-radius:20px;color:var(--gold,#f0c040);font-size:11px;text-decoration:none;font-weight:700;background:rgba(240,192,64,0.08);">🚀 로그인</a>';
+  }
+})();
 </script>
 </body>
 </html>

@@ -20,7 +20,7 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 #app{max-width:720px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative;z-index:1}
 
 /* 네비 */
-.top-nav{display:flex;align-items:center;background:var(--panel);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0}
+.top-nav{position:relative;display:flex;align-items:center;background:var(--panel);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0}
 .top-nav::-webkit-scrollbar{display:none}
 .top-nav-item{flex-shrink:0;display:flex;flex-direction:column;align-items:center;padding:10px 14px;cursor:pointer;text-decoration:none;color:var(--muted);border-bottom:2px solid transparent;gap:3px;transition:all .2s}
 .top-nav-item.active{color:var(--accent);border-bottom-color:var(--accent)}
@@ -197,6 +197,7 @@ textarea.rm-input{resize:vertical;min-height:60px}
     <a class="top-nav-item" href="/avatar.html"><div class="top-nav-icon">🎭</div><div class="top-nav-label">아바타</div></a>
     <a class="top-nav-item" href="/shop.html"><div class="top-nav-icon">🛒</div><div class="top-nav-label">상점</div></a>
     <a class="top-nav-item" href="/competition.html">경쟁</a>
+    <div id="navFandomBtn" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);"></div>
   </nav>
 
   <div class="track-tabs">
@@ -384,6 +385,18 @@ function toggleCollapse(el){el.nextElementSibling.classList.toggle('open');el.qu
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500)}
 
 render();
+</script>
+<script>
+(function(){
+  var token = localStorage.getItem('asteria_token');
+  var btn = document.getElementById('navFandomBtn');
+  if(!btn) return;
+  if(token){
+    btn.innerHTML = '<a href="/fandom.html" style="display:flex;align-items:center;gap:4px;padding:5px 12px;border:1px solid var(--gold,#f0c040);border-radius:20px;color:var(--gold,#f0c040);font-size:11px;text-decoration:none;font-weight:700;background:rgba(240,192,64,0.08);transition:all .2s;" onmouseover="this.style.background=\'var(--gold,#f0c040)\';this.style.color=\'#000\'" onmouseout="this.style.background=\'rgba(240,192,64,0.08)\';this.style.color=\'var(--gold,#f0c040)\'">🏘️ 내 팬덤</a>';
+  } else {
+    btn.innerHTML = '<a href="/login.html" style="display:flex;align-items:center;gap:4px;padding:5px 12px;border:1px solid var(--gold,#f0c040);border-radius:20px;color:var(--gold,#f0c040);font-size:11px;text-decoration:none;font-weight:700;background:rgba(240,192,64,0.08);">🚀 로그인</a>';
+  }
+})();
 </script>
 </body>
 </html>
