@@ -2205,13 +2205,22 @@ app.post('/api/auth/register', async (req, res) => {
     if (nickExists.rows.length > 0)
       return res.status(409).json({ message: '이미 사용 중인 닉네임입니다.' });
 
-    // bcrypt cost 12
+    // bcrypt cost 10
+    console.log('[register] 1/7 bcrypt 시작');
     const hashed = await bcrypt.hash(password, 10);
 
     // 성궤번호(Astra ID) 생성
-    const astraId = await generateAstraId(pool);
+    console.log('[register] 2/7 아스트라ID 생성');
+    let astraId = null;
+    try {
+      astraId = await generateAstraId(pool);
+    } catch (e) {
+      console.error('[register] 아스트라ID 생성 실패:', e.message);
+      astraId = 'AA' + String(Date.now()).slice(-4);
+    }
 
     // 개척자 판별 (최초 1000명)
+    console.log('[register] 3/7 개척자 판별');
     const countResult = await pool.query('SELECT COUNT(*) FROM users');
     const userCount = parseInt(countResult.rows[0].count);
     const isPioneer = userCount < 1000;
@@ -2219,12 +2228,19 @@ app.post('/api/auth/register', async (req, res) => {
     const initialStardust = isPioneer ? 2000 : 0;
 
     // fanclub rank → 실제 fanclubs.id 변환
-    const fanclubRow = fanclub_id
-      ? await pool.query('SELECT id FROM fanclubs WHERE rank = $1', [parseInt(fanclub_id)])
-      : null;
-    const realFandomId = fanclubRow?.rows?.[0]?.id || null;
+    console.log('[register] 4/7 팬클럽 변환');
+    let realFandomId = null;
+    if (fanclub_id) {
+      try {
+        const fanclubRow = await pool.query('SELECT id FROM fanclubs WHERE rank = $1', [parseInt(fanclub_id)]);
+        realFandomId = fanclubRow?.rows?.[0]?.id || null;
+      } catch (e) {
+        console.error('[register] 팬클럽 조회 실패:', e.message);
+      }
+    }
 
     // users 테이블 INSERT
+    console.log('[register] 5/7 유저 INSERT');
     const result = await pool.query(
       `INSERT INTO users (nickname, email, password, is_pioneer, pioneer_rank, stardust, fandom_id)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -2234,11 +2250,16 @@ app.post('/api/auth/register', async (req, res) => {
     const userId = result.rows[0].id;
 
     // nebulae 테이블에 성궤 생성
-    await pool.query(
-      `INSERT INTO nebulae (user_id, serial_code) VALUES ($1, $2)
-       ON CONFLICT (user_id) DO NOTHING`,
-      [userId, astraId]
-    );
+    console.log('[register] 6/7 성궤 생성');
+    try {
+      await pool.query(
+        `INSERT INTO nebulae (user_id, serial_code) VALUES ($1, $2)
+         ON CONFLICT (user_id) DO NOTHING`,
+        [userId, astraId]
+      );
+    } catch (nebErr) {
+      console.error('[register] 성궤 생성 실패 (무시):', nebErr.message);
+    }
 
     // [임시 주석] 추천인 처리
     // if (referral_code) {
@@ -2262,6 +2283,7 @@ app.post('/api/auth/register', async (req, res) => {
     // }
 
     // Access 토큰 (15분) + Refresh 토큰 (7일)
+    console.log('[register] 7/7 JWT 발급');
     const tokenPayload = { id: userId, nickname, email };
     const accessToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
     const refreshToken = jwt.sign({ id: userId, type: 'refresh' }, JWT_REFRESH_SECRET, { expiresIn: JWT_REFRESH_EXPIRES_IN });
