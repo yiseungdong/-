@@ -1923,7 +1923,7 @@ app.post('/api/auth/register', async (req, res) => {
     const result = await pool.query(
       `INSERT INTO users (nickname, email, password)
        VALUES ($1, $2, $3)
-       RETURNING id, nickname, email, league, stardust, created_at`,
+       RETURNING id, nickname, email, league, created_at`,
       [nickname, email, hashed]
     );
     const userId = result.rows[0].id;
@@ -1976,7 +1976,7 @@ app.post('/api/auth/register', async (req, res) => {
         nickname: newUser.nickname,
         email: newUser.email,
         league: newUser.league || 'dust',
-        stardust: newUser.stardust || 0
+        stardust: 0
       }
     });
   } catch (err) {
