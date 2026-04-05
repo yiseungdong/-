@@ -376,6 +376,14 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
     <div class="qhdr-top"><span class="qhdr-gem">✦</span><span class="qhdr-title">Quasar League</span><span class="qhdr-gem">✦</span></div>
     <div class="qhdr-line"></div>
     <div class="qhdr-sub">— 제국의 정점 · 실시간 팬클럽 화력 순위 —</div>
+    <a id="myFandomBtn" href="#" style="display:none; margin-top:8px; padding:8px 20px;
+      border:1px solid var(--accent); border-radius:20px; color:var(--accent);
+      font-size:12px; font-weight:600; text-decoration:none;
+      font-family:'Noto Sans KR',sans-serif; transition:all .2s;"
+      onmouseover="this.style.background='rgba(192,132,252,0.15)'"
+      onmouseout="this.style.background='transparent'">
+      ✦ 내 팬덤 바로가기 · Go to My Fandom
+    </a>
   </div>
   <!-- 별자리 드래그 뷰 -->
   <div class="cv" id="cv">
@@ -1158,6 +1166,16 @@ window.addEventListener('DOMContentLoaded', () => {
     if (avname) avname.textContent = nick;
     const loginBtn = document.getElementById('loginBtn');
     if (loginBtn) { loginBtn.textContent = '👤 ' + nick; loginBtn.onclick = null; }
+    // 내 팬덤 바로가기 버튼
+    try {
+      const userData = JSON.parse(localStorage.getItem('asteria_user') || '{}');
+      const fandomId = userData.fandomId;
+      const myFandomBtn = document.getElementById('myFandomBtn');
+      if (myFandomBtn && fandomId) {
+        myFandomBtn.href = '/fandom.html?fanclub=' + fandomId;
+        myFandomBtn.style.display = 'inline-block';
+      }
+    } catch(e) {}
   }
   if(typeof initAvatarCardSync === 'function') {
     initAvatarCardSync([

@@ -1945,7 +1945,7 @@ function formatOrbitNumber(code) {
 
 // 회원가입
 app.post('/api/auth/register', async (req, res) => {
-  const { nickname, email, password, emoji, referral_code } = req.body;
+  const { nickname, email, password, emoji, referral_code, fanclub_id } = req.body;
   if (!nickname || !email || !password)
     return res.status(400).json({ message: '모든 항목을 입력해 주세요.' });
   if (password.length < 8)
@@ -1979,10 +1979,10 @@ app.post('/api/auth/register', async (req, res) => {
 
     // users 테이블 INSERT
     const result = await pool.query(
-      `INSERT INTO users (nickname, email, password, is_pioneer, pioneer_rank, stardust)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id, nickname, email, league, stardust, created_at`,
-      [nickname, email, hashed, isPioneer, pioneerRank, initialStardust]
+      `INSERT INTO users (nickname, email, password, is_pioneer, pioneer_rank, stardust, fandom_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id, nickname, email, league, stardust, fandom_id, created_at`,
+      [nickname, email, hashed, isPioneer, pioneerRank, initialStardust, fanclub_id ? parseInt(fanclub_id) : null]
     );
     const userId = result.rows[0].id;
 
@@ -2249,6 +2249,7 @@ app.post('/api/auth/login', async (req, res) => {
         stardust: user.stardust,
         isPioneer: user.is_pioneer,
         pioneerRank: user.pioneer_rank,
+        fandomId: user.fandom_id || null,
         stats: {
           loy: user.stat_loy, act: user.stat_act, soc: user.stat_soc,
           eco: user.stat_eco, cre: user.stat_cre, int: user.stat_int
