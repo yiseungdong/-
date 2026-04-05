@@ -1813,3 +1813,59 @@ CREATE TABLE moim_groups (
 3. 모바일 반응형 점검
 4. avatar.html 헤어 레이어 위치 미세조정
 5. avatar.html 의상 SVG → svgrepo.com 소스 적용
+
+---
+
+### 완료된 사항 (2026.04.06 세션 3)
+
+#### 로그인 서버 오류 수정
+- 로그인/회원가입 catch 블록에 detail/code 에러 상세 노출 추가
+- ALTER TABLE로 login_fail_count, locked_until, last_login, last_active, is_banned, level, grade, league 등 누락 컬럼 자동 추가
+
+#### 리그맵 실제 K팝 팬클럽 데이터 적용
+- 홈 리그맵 원 안에 순위(한국어)+이모지+팬클럽명+QP 세로 배치
+- 원 밖 중복 요소(q-rank 배지, q-lbl 라벨) 완전 제거
+- createNode JS 함수도 동일 구조로 교체
+- 오른쪽 패널(순위 목록, 채팅, 화력 게이지) 더미 데이터 → 실제 팬클럽으로 교체
+- JS LEAGUES.quasar.fanclubs + promoData 더미 데이터 교체
+
+#### 팬클럽 등록 신청 시스템
+- login.html: 검색 결과 0개 시 "팬클럽 등록 신청" 버튼 + 모달 추가
+- server.js: fanclub_requests 테이블 + POST/GET/PATCH(approve/reject) API
+- nodemailer 이메일 발송 (환경변수 미설정 시 콘솔 로그만)
+
+#### 팬클럽 DB 시드 데이터
+- fanclubs 테이블 가상 데이터(ASTRANOVA 등 12개) 삭제
+- 실제 K팝 팬클럽 100개 INSERT (ON CONFLICT DO UPDATE)
+- artist_name, artist_name_kr 컬럼 추가
+- 서버 시작 시 자동 시드 + COUNT 로그 출력
+
+#### 회원가입-팬클럽 연동 완성
+- 회원가입 시 fanclub rank → fanclubs.id 변환 후 fandom_id 저장
+- 로그인 응답에 fandomId 포함
+- index.html "내 팬덤 바로가기" 버튼 추가
+
+#### moim_groups 소모임 계층 시드
+- 100개 팬클럽별 리그에 맞는 소모임 계층 자동 생성
+- dust 2단계 / star 3단계 / planet 3단계 / nova 4단계 / quasar 5단계
+- seedMoimGroups() 함수: COUNT > 0이면 자동 건너뜀
+
+#### 기술 참고사항
+- fanclubs 테이블: rank 컬럼으로 조회, id가 fandom_id
+- 로그인 응답: user.fandomId로 팬클럽 ID 접근
+- masterplan 경로: public/data/ideas-masterplan.md
+- 로컬: C:\Users\이승동\클로드코드\asteria
+- 배포: asteria.me.kr
+
+#### 📌 현재 보류 버그 (2026.04.06 세션3 기준)
+1. 모임채팅 탭 — moim_groups 시드 데이터 배포 후 실제 연동 확인 필요
+2. avatar.html 아바타 꾸미기 대부분 미적용
+3. room3d.html 아바타 벽타기 미해결
+4. login.html 팬클럽 선택 시 fanclubs DB id와 JSON rank 매핑 검증 필요
+
+#### 다음 세션 작업 순서
+1. 배포 후 회원가입/로그인 + 소모임 자동배정 통합 테스트
+2. fandom.html 소모임 채팅 실제 연동
+3. 모바일 반응형 점검
+4. avatar.html 헤어/의상 레이어 개선
+5. 관리자 페이지 (팬클럽 신청 승인/거절)
