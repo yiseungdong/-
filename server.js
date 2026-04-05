@@ -2103,6 +2103,7 @@ async function initDB() {
 initDB();
 
 // ── 미들웨어 ──
+app.set('trust proxy', 1);
 app.use(cors());
 
 // 보안 헤더 (5계층 중 5층)
