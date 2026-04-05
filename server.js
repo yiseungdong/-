@@ -14382,5 +14382,5 @@ server.listen(PORT, () => {
   console.log('🔌 Socket.IO 실시간 통신 활성화');
   console.log(`📊 DB 상태: ${dbReady ? '준비 완료' : '초기화 중...'}`);
   // 서버 시작 10초 후 파이프라인 1회 실행 (DB 초기화 대기)
-  setTimeout(() => runFullPipeline().catch(err => console.error('파이프라인 초기 실행 오류:', err)), 10000);
+  setTimeout(() => runFullPipeline().catch(err => console.error('파이프라인 초기 실행 오류:', err)), 5 * 60 * 1000);
 });
