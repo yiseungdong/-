@@ -1934,26 +1934,26 @@ app.post('/api/auth/register', async (req, res) => {
     //   [userId, astraId]
     // );
 
-    // 추천인 처리 (아스트라 번호 AA0001 형식으로 조회)
-    if (referral_code) {
-      const referrer = await pool.query(
-        `SELECT u.id FROM users u
-         JOIN nebulae n ON n.user_id = u.id
-         WHERE n.serial_code = $1`,
-        [referral_code.trim().toUpperCase()]
-      );
-      if (referrer.rows.length > 0) {
-        await pool.query(
-          `INSERT INTO referrals (referrer_id, referee_id) VALUES ($1, $2)
-           ON CONFLICT DO NOTHING`,
-          [referrer.rows[0].id, userId]
-        );
-        await pool.query(
-          'UPDATE users SET stardust = stardust + 500 WHERE id = $1',
-          [referrer.rows[0].id]
-        );
-      }
-    }
+    // [임시 주석] 추천인 처리
+    // if (referral_code) {
+    //   const referrer = await pool.query(
+    //     `SELECT u.id FROM users u
+    //      JOIN nebulae n ON n.user_id = u.id
+    //      WHERE n.serial_code = $1`,
+    //     [referral_code.trim().toUpperCase()]
+    //   );
+    //   if (referrer.rows.length > 0) {
+    //     await pool.query(
+    //       `INSERT INTO referrals (referrer_id, referee_id) VALUES ($1, $2)
+    //        ON CONFLICT DO NOTHING`,
+    //       [referrer.rows[0].id, userId]
+    //     );
+    //     await pool.query(
+    //       'UPDATE users SET stardust = stardust + 500 WHERE id = $1',
+    //       [referrer.rows[0].id]
+    //     );
+    //   }
+    // }
 
     // Access 토큰 (15분) + Refresh 토큰 (7일)
     const tokenPayload = { id: userId, nickname, email };
@@ -1967,20 +1967,17 @@ app.post('/api/auth/register', async (req, res) => {
       [userId, refreshToken, refreshExpiry]
     );
 
+    const newUser = result.rows[0];
     res.status(201).json({
       accessToken,
       refreshToken,
       user: {
-        id: userId,
-        nickname,
-        email,
-        level: 1,
-        grade: 'stardust',
-        league: result.rows[0].league || 'dust',
-        stardust: result.rows[0].stardust || 500,
-        stats: { loy: 0, act: 0, soc: 0, eco: 0, cre: 0, int: 0 }
-      },
-      message: `아스테리아에 오신 것을 환영합니다!`
+        id: newUser.id,
+        nickname: newUser.nickname,
+        email: newUser.email,
+        league: newUser.league || 'dust',
+        stardust: newUser.stardust || 0
+      }
     });
   } catch (err) {
     console.error('회원가입 오류:', err);
