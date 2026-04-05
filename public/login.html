@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASTERIA · 로그인</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --void: #030308;
+      --panel: rgba(10,10,22,0.96);
+      --border: rgba(180,150,255,0.13);
+      --gold: #f0c040;
+      --accent: #c084fc;
+      --accent2: #818cf8;
+      --accent3: #38bdf8;
+      --text: #e8e4f0;
+      --muted: rgba(200,190,220,0.6);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--void);
+      color: var(--text);
+      font-family: 'Noto Sans KR', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    canvas#starCanvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* 카드 */
+    .card {
+      position: relative;
+      z-index: 1;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 440px;
+      padding: 36px 32px 32px;
+      box-shadow: 0 0 60px rgba(192,132,252,0.08), 0 20px 60px rgba(0,0,0,0.6);
+    }
+
+    /* 로고 영역 */
+    .logo-area {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .logo-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--gold);
+      letter-spacing: 4px;
+      text-shadow: 0 0 20px rgba(240,192,64,0.5);
+    }
+    .logo-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 6px;
+      letter-spacing: 1px;
+    }
+
+    /* 탭 */
+    .tabs {
+      display: flex;
+      gap: 0;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 24px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px 8px;
+      background: none;
+      border: none;
+      border-radius: 9px;
+      color: var(--muted);
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      background: rgba(192,132,252,0.15);
+      color: var(--text);
+      font-weight: 700;
+    }
+    .tab-btn:hover:not(.active) {
+      color: var(--text);
+      background: rgba(255,255,255,0.04);
+    }
+
+    /* 탭 패널 */
+    .tab-panel {
+      display: none;
+      animation: fadeIn 0.25s ease;
+    }
+    .tab-panel.active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 입력 필드 공통 */
+    .field-wrap {
+      position: relative;
+      margin-bottom: 12px;
+    }
+    .field-wrap input {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: var(--text);
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .field-wrap input::placeholder {
+      color: var(--muted);
+    }
+    .field-wrap input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 8px rgba(192,132,252,0.3);
+    }
+    .pw-wrap input {
+      padding-right: 44px;
+    }
+    .pw-toggle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      padding: 4px;
+      color: var(--muted);
+      transition: color 0.2s;
+    }
+    .pw-toggle:hover { color: var(--text); }
+
+    /* 에러 메시지 */
+    .error-msg {
+      display: none;
+      color: #ef4444;
+      font-size: 13px;
+      margin-bottom: 12px;
+      padding: 10px 14px;
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.2);
+      border-radius: 8px;
+    }
+
+    /* 주 버튼 */
+    .btn-primary {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(90deg, #f0c040, #e6a800);
+      border: none;
+      border-radius: 12px;
+      color: #1a1000;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: box-shadow 0.2s, transform 0.1s;
+      margin-bottom: 4px;
+    }
+    .btn-primary:hover {
+      box-shadow: 0 0 20px rgba(240,192,64,0.45), 0 4px 12px rgba(0,0,0,0.4);
+    }
+    .btn-primary:active { transform: scale(0.99); }
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* 구분선 */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .divider-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* 소셜 버튼 */
+    .social-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'Noto Sans KR', sans-serif;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      margin-bottom: 8px;
+    }
+    .social-btn:last-child { margin-bottom: 0; }
+    .social-btn:hover { opacity: 0.88; }
+    .social-btn:active { transform: scale(0.99); }
+    .social-kakao { background: #FEE500; color: #3C1E1E; }
+    .social-naver { background: #03C75A; color: #ffffff; }
+    .social-google { background: #ffffff; color: #333333; border: 1px solid #dddddd; }
+
+    .social-icon {
+      font-size: 16px;
+      font-weight: 900;
+      line-height: 1;
+    }
+    .social-icon-text {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 13px;
+      font-weight: 900;
+      line-height: 1;
+    }
+    .google-g {
+      font-family: Arial, sans-serif;
+      font-size: 15px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #4285f4 0%, #ea4335 33%, #fbbc05 66%, #34a853 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* 팬클럽 섹션 */
+    .fc-section-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .fc-search {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      margin-bottom: 10px;
+    }
+    .fc-search::placeholder { color: var(--muted); }
+    .fc-search:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 8px rgba(192,132,252,0.3);
+    }
+
+    .fc-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      max-height: 240px;
+      overflow-y: auto;
+      padding-right: 2px;
+      margin-bottom: 14px;
+    }
+    .fc-grid::-webkit-scrollbar {
+      width: 4px;
+    }
+    .fc-grid::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .fc-grid::-webkit-scrollbar-thumb {
+      background: rgba(192,132,252,0.4);
+      border-radius: 2px;
+    }
+    .fc-grid::-webkit-scrollbar-thumb:hover {
+      background: rgba(192,132,252,0.7);
+    }
+
+    .fc-card {
+      position: relative;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 8px 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      overflow: hidden;
+    }
+    .fc-card:hover {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(192,132,252,0.3);
+    }
+    .fc-card.selected {
+      border-color: var(--gold);
+      box-shadow: 0 0 12px rgba(240,192,64,0.3);
+      background: rgba(240,192,64,0.05);
+    }
+    .fc-color-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      border-radius: 3px 3px 0 0;
+    }
+    .fc-check {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      font-size: 10px;
+      color: var(--gold);
+      display: none;
+    }
+    .fc-card.selected .fc-check { display: block; }
+    .fc-emoji {
+      font-size: 18px;
+      margin-bottom: 4px;
+      margin-top: 2px;
+    }
+    .fc-artist {
+      font-size: 10px;
+      color: var(--muted);
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .fc-name {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .fc-empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      padding: 20px;
+    }
+
+    /* 반응형 */
+    @media (max-width: 480px) {
+      .card {
+        padding: 28px 20px 24px;
+        width: 92vw;
+      }
+      .logo-title { font-size: 22px; }
+      .fc-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="starCanvas"></canvas>
+
+<div class="card">
+  <!-- 로고 -->
+  <div class="logo-area">
+    <div class="logo-title">✦ ASTERIA</div>
+    <div class="logo-sub">별빛 팬덤 플랫폼 · Starlight Fandom Platform</div>
+  </div>
+
+  <!-- 탭 버튼 -->
+  <div class="tabs">
+    <button class="tab-btn active" id="tabLoginBtn" onclick="switchTab('login')">로그인 · LOGIN</button>
+    <button class="tab-btn" id="tabRegisterBtn" onclick="switchTab('register')">회원가입 · REGISTER</button>
+  </div>
+
+  <!-- 로그인 패널 -->
+  <div class="tab-panel active" id="panelLogin">
+    <div class="field-wrap">
+      <input type="email" id="loginEmail" placeholder="이메일 · Email" onkeydown="if(event.key==='Enter')document.getElementById('loginPassword').focus()">
+    </div>
+    <div class="field-wrap pw-wrap">
+      <input type="password" id="loginPassword" placeholder="비밀번호 · Password" onkeydown="if(event.key==='Enter')doLogin()">
+      <button class="pw-toggle" onclick="togglePw('loginPassword',this)">👁</button>
+    </div>
+    <div class="error-msg" id="loginError"></div>
+    <button class="btn-primary" id="loginBtn" onclick="doLogin()">로그인 · LOGIN</button>
+
+    <div class="divider">
+      <div class="divider-line"></div>
+      <span>또는 · OR</span>
+      <div class="divider-line"></div>
+    </div>
+
+    <button class="social-btn social-kakao" onclick="socialComingSoon()">
+      <span class="social-icon">💬</span>
+      <span>카카오로 계속하기 · Kakao</span>
+    </button>
+    <button class="social-btn social-naver" onclick="socialComingSoon()">
+      <span class="social-icon-text">N</span>
+      <span>네이버로 계속하기 · Naver</span>
+    </button>
+    <button class="social-btn social-google" onclick="socialComingSoon()">
+      <span class="google-g">G</span>
+      <span>구글로 계속하기 · Google</span>
+    </button>
+  </div>
+
+  <!-- 회원가입 패널 -->
+  <div class="tab-panel" id="panelRegister">
+    <div class="field-wrap">
+      <input type="email" id="regEmail" placeholder="이메일 · Email" onkeydown="if(event.key==='Enter')document.getElementById('regNickname').focus()">
+    </div>
+    <div class="field-wrap">
+      <input type="text" id="regNickname" placeholder="닉네임 · Nickname" maxlength="20" onkeydown="if(event.key==='Enter')document.getElementById('regPassword').focus()">
+    </div>
+    <div class="field-wrap pw-wrap">
+      <input type="password" id="regPassword" placeholder="비밀번호 · Password 8자 이상" onkeydown="if(event.key==='Enter')document.getElementById('regConfirm').focus()">
+      <button class="pw-toggle" onclick="togglePw('regPassword',this)">👁</button>
+    </div>
+    <div class="field-wrap pw-wrap">
+      <input type="password" id="regConfirm" placeholder="비밀번호 확인 · Confirm Password" onkeydown="if(event.key==='Enter')doRegister()">
+      <button class="pw-toggle" onclick="togglePw('regConfirm',this)">👁</button>
+    </div>
+
+    <!-- 팬클럽 선택 -->
+    <div class="fc-section-label">팬클럽 선택 · Select Fanclub</div>
+    <input class="fc-search" id="fcSearch" type="text" placeholder="아티스트 또는 팬클럽명 검색 · Search" oninput="filterFanclubs(this.value)">
+    <div class="fc-grid" id="fcGrid">
+      <div class="fc-empty">불러오는 중...</div>
+    </div>
+
+    <div class="error-msg" id="regError"></div>
+    <button class="btn-primary" id="regBtn" onclick="doRegister()">회원가입 · REGISTER</button>
+
+    <div class="divider">
+      <div class="divider-line"></div>
+      <span>또는 · OR</span>
+      <div class="divider-line"></div>
+    </div>
+
+    <button class="social-btn social-kakao" onclick="socialComingSoon()">
+      <span class="social-icon">💬</span>
+      <span>카카오로 계속하기 · Kakao</span>
+    </button>
+    <button class="social-btn social-naver" onclick="socialComingSoon()">
+      <span class="social-icon-text">N</span>
+      <span>네이버로 계속하기 · Naver</span>
+    </button>
+    <button class="social-btn social-google" onclick="socialComingSoon()">
+      <span class="google-g">G</span>
+      <span>구글로 계속하기 · Google</span>
+    </button>
+  </div>
+</div>
+
+<script>
+  // ── 이미 로그인된 경우 리다이렉트 ──
+  if (localStorage.getItem('asteria_token')) {
+    window.location.href = '/index.html';
+  }
+
+  // ── 별빛 배경 ──
+  (function() {
+    var canvas = document.getElementById('starCanvas');
+    var ctx = canvas.getContext('2d');
+    var stars = [];
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    function randomColor() {
+      var r = Math.random();
+      if (r < 0.85) return '#ffffff';
+      if (r < 0.95) return '#c084fc';
+      return '#f0c040';
+    }
+
+    for (var i = 0; i < 200; i++) {
+      stars.push({
+        x: Math.random(),
+        y: Math.random(),
+        size: Math.random() * 1.5 + 0.3,
+        color: randomColor(),
+        speed: Math.random() * 0.012 + 0.004,
+        phase: Math.random() * Math.PI * 2,
+        baseOpacity: Math.random() * 0.5 + 0.3
+      });
+    }
+
+    function animate(t) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      var time = t * 0.001;
+      for (var i = 0; i < stars.length; i++) {
+        var s = stars[i];
+        var opacity = s.baseOpacity + Math.sin(time * s.speed * 10 + s.phase) * 0.3;
+        opacity = Math.max(0.05, Math.min(1, opacity));
+        ctx.beginPath();
+        ctx.arc(s.x * canvas.width, s.y * canvas.height, s.size, 0, Math.PI * 2);
+        ctx.fillStyle = s.color;
+        ctx.globalAlpha = opacity;
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+  })();
+
+  // ── 탭 전환 ──
+  function switchTab(tab) {
+    document.getElementById('panelLogin').classList.toggle('active', tab === 'login');
+    document.getElementById('panelRegister').classList.toggle('active', tab === 'register');
+    document.getElementById('tabLoginBtn').classList.toggle('active', tab === 'login');
+    document.getElementById('tabRegisterBtn').classList.toggle('active', tab === 'register');
+  }
+
+  // ── 비밀번호 토글 ──
+  function togglePw(inputId, btn) {
+    var el = document.getElementById(inputId);
+    if (el.type === 'password') { el.type = 'text'; btn.textContent = '🙈'; }
+    else { el.type = 'password'; btn.textContent = '👁'; }
+  }
+
+  // ── 소셜 로그인 ──
+  function socialComingSoon() {
+    alert('소셜 로그인 준비 중입니다 · Coming Soon 🚀');
+  }
+
+  // ── 로그인 API ──
+  async function doLogin() {
+    var email = document.getElementById('loginEmail').value.trim();
+    var password = document.getElementById('loginPassword').value;
+    var errEl = document.getElementById('loginError');
+    var btn = document.getElementById('loginBtn');
+    errEl.style.display = 'none';
+
+    if (!email || !password) {
+      errEl.textContent = '⚠️ 이메일과 비밀번호를 입력해주세요';
+      errEl.style.display = 'block'; return;
+    }
+
+    btn.textContent = '로그인 중...';
+    btn.disabled = true;
+
+    try {
+      var res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, password: password })
+      });
+      var data = await res.json();
+
+      if (res.ok) {
+        localStorage.setItem('asteria_token', data.accessToken);
+        localStorage.setItem('asteria_refresh', data.refreshToken);
+        localStorage.setItem('asteria_user', JSON.stringify(data.user));
+        window.location.href = '/index.html';
+      } else if (res.status === 423) {
+        errEl.textContent = '⚠️ 로그인 5회 실패 · 10분간 잠금됩니다';
+        errEl.style.display = 'block';
+      } else {
+        errEl.textContent = '⚠️ ' + (data.message || '로그인에 실패했습니다');
+        errEl.style.display = 'block';
+      }
+    } catch (e) {
+      errEl.textContent = '⚠️ 서버 연결에 실패했습니다';
+      errEl.style.display = 'block';
+    }
+    btn.textContent = '로그인 · LOGIN';
+    btn.disabled = false;
+  }
+
+  // ── 팬클럽 데이터 ──
+  var FANCLUBS = [];
+  var selectedFanclub = null;
+
+  var COLOR_MAP = {
+    '보라색(Purple)': '#7c3aed',
+    '카키색(Khaki)': '#8b7d3c',
+    '로즈쿼츠&세레니티(Rose Quartz)': '#f472b6',
+    '네온그린(Neon Green)': '#22c55e',
+    '블랙(Black)': '#333333',
+    '오렌지(Orange)': '#f97316',
+    '쿨그레이(Cool Gray)': '#6b7280',
+    '라벤더(Lavender)': '#a78bfa',
+    '밤하늘색(Midnight Blue)': '#1e3a5f',
+    '은색(Silver)': '#94a3b8',
+    '빨간색(Red)': '#ef4444',
+    '진주크림(Pearl Cream)': '#fef3c7',
+    '코럴핑크(Coral Pink)': '#fb7185',
+    '노란색(Yellow)': '#eab308',
+    '샴페인골드(Champagne Gold)': '#d4a853',
+    '파란색(Blue)': '#3b82f6',
+    '연핑크(Light Pink)': '#f9a8d4',
+    '하늘색(Sky Blue)': '#38bdf8',
+    '네이비(Navy)': '#1e40af',
+    '스트로베리(Strawberry)': '#e11d48'
+  };
+
+  function getFanclubColor(colorStr) {
+    if (!colorStr) return '#7c3aed';
+    for (var key in COLOR_MAP) {
+      if (colorStr.indexOf(key.split('(')[0]) !== -1) return COLOR_MAP[key];
+    }
+    return '#7c3aed';
+  }
+
+  fetch('/data/kpop-fanclub-database.json')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      FANCLUBS = data.fanclubs || [];
+      renderFanclubs(FANCLUBS);
+    })
+    .catch(function() {
+      document.getElementById('fcGrid').innerHTML = '<div class="fc-empty">팬클럽 데이터를 불러올 수 없습니다</div>';
+    });
+
+  function renderFanclubs(list) {
+    var grid = document.getElementById('fcGrid');
+    if (!list || list.length === 0) {
+      grid.innerHTML = '<div class="fc-empty">검색 결과가 없습니다</div>';
+      return;
+    }
+    var html = '';
+    for (var i = 0; i < list.length; i++) {
+      var fc = list[i];
+      var color = getFanclubColor(fc.symbol && fc.symbol.official_color);
+      var emoji = (fc.symbol && fc.symbol.lightstick_emoji) ? fc.symbol.lightstick_emoji : '⭐';
+      var artistName = fc.artist_kr || fc.artist || '';
+      var fandomName = fc.fandom || '';
+      var isSelected = selectedFanclub && selectedFanclub.rank === fc.rank;
+      html += '<div class="fc-card' + (isSelected ? ' selected' : '') + '" onclick="selectFanclub(' + i + ')">';
+      html += '<div class="fc-color-bar" style="background:' + color + '"></div>';
+      html += '<span class="fc-check">✓</span>';
+      html += '<div class="fc-emoji">' + emoji + '</div>';
+      html += '<div class="fc-artist">' + escHtml(artistName) + '</div>';
+      html += '<div class="fc-name">' + escHtml(fandomName) + '</div>';
+      html += '</div>';
+    }
+    grid.innerHTML = html;
+  }
+
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function selectFanclub(index) {
+    // 현재 렌더링된 목록 기준 인덱스
+    var cards = document.querySelectorAll('#fcGrid .fc-card');
+    // 전체 FANCLUBS에서 찾기: 렌더링 시 순서 그대로이므로
+    // filterFanclubs 시 filteredList를 별도 관리
+    var fc = _currentList[index];
+    if (!fc) return;
+    selectedFanclub = fc;
+    renderFanclubs(_currentList);
+  }
+
+  var _currentList = [];
+
+  // renderFanclubs 래핑하여 _currentList 동기화
+  var _origRender = renderFanclubs;
+  renderFanclubs = function(list) {
+    _currentList = list || [];
+    _origRender(list);
+  };
+
+  function filterFanclubs(query) {
+    if (!query || !query.trim()) {
+      renderFanclubs(FANCLUBS);
+      return;
+    }
+    var q = query.trim().toLowerCase();
+    var result = FANCLUBS.filter(function(fc) {
+      var artist = (fc.artist_kr || fc.artist || '').toLowerCase();
+      var fandom = (fc.fandom || '').toLowerCase();
+      return artist.indexOf(q) !== -1 || fandom.indexOf(q) !== -1;
+    });
+    renderFanclubs(result);
+  }
+
+  // ── 회원가입 API ──
+  async function doRegister() {
+    var email = document.getElementById('regEmail').value.trim();
+    var nickname = document.getElementById('regNickname').value.trim();
+    var password = document.getElementById('regPassword').value;
+    var confirm = document.getElementById('regConfirm').value;
+    var errEl = document.getElementById('regError');
+    var btn = document.getElementById('regBtn');
+    errEl.style.display = 'none';
+
+    if (!email || !email.includes('@')) {
+      errEl.textContent = '⚠️ 올바른 이메일을 입력해주세요';
+      errEl.style.display = 'block'; return;
+    }
+    if (!nickname || nickname.length < 2) {
+      errEl.textContent = '⚠️ 닉네임은 2자 이상 입력해주세요';
+      errEl.style.display = 'block'; return;
+    }
+    if (!password || password.length < 8) {
+      errEl.textContent = '⚠️ 비밀번호는 8자 이상 입력해주세요';
+      errEl.style.display = 'block'; return;
+    }
+    if (password !== confirm) {
+      errEl.textContent = '⚠️ 비밀번호가 일치하지 않습니다';
+      errEl.style.display = 'block'; return;
+    }
+    if (!selectedFanclub) {
+      errEl.textContent = '⚠️ 팬클럽을 선택해주세요';
+      errEl.style.display = 'block'; return;
+    }
+
+    btn.textContent = '가입 중...';
+    btn.disabled = true;
+
+    try {
+      var res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+          nickname: nickname,
+          fanclub_id: selectedFanclub.rank
+        })
+      });
+      var data = await res.json();
+
+      if (res.ok) {
+        localStorage.setItem('asteria_token', data.accessToken);
+        localStorage.setItem('asteria_refresh', data.refreshToken);
+        localStorage.setItem('asteria_user', JSON.stringify(data.user));
+        alert('회원가입 완료! 별빛 팬덤에 오신 것을 환영합니다 ✨');
+        window.location.href = '/index.html';
+      } else {
+        errEl.textContent = '⚠️ ' + (data.message || '회원가입에 실패했습니다');
+        errEl.style.display = 'block';
+      }
+    } catch (e) {
+      errEl.textContent = '⚠️ 서버 연결에 실패했습니다';
+      errEl.style.display = 'block';
+    }
+    btn.textContent = '회원가입 · REGISTER';
+    btn.disabled = false;
+  }
+</script>
+</body>
+</html>
