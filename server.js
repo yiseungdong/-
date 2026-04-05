@@ -134,6 +134,15 @@ async function initDB() {
       ALTER TABLE users ADD COLUMN IF NOT EXISTS cp INTEGER DEFAULT 0;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS fandom_id INTEGER;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS org_id INTEGER;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS login_fail_count INTEGER DEFAULT 0;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until TIMESTAMP;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login TIMESTAMP;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS is_banned BOOLEAN DEFAULT FALSE;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS ban_reason VARCHAR(255);
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS level INTEGER DEFAULT 1;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS grade VARCHAR(20) DEFAULT 'stardust';
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS league VARCHAR(20) DEFAULT 'dust';
       ALTER TABLE users ADD COLUMN IF NOT EXISTS moim_depth1 INTEGER;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS moim_depth2 INTEGER;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS moim_depth3 INTEGER;
@@ -2248,7 +2257,11 @@ app.post('/api/auth/login', async (req, res) => {
     });
   } catch (err) {
     console.error('로그인 오류:', err);
-    res.status(500).json({ message: '서버 오류입니다.' });
+    res.status(500).json({
+      message: '서버 오류입니다.',
+      detail: err.message,
+      code: err.code
+    });
   }
 });
 
