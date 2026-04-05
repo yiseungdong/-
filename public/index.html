@@ -160,6 +160,27 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 .q-score{font-size:12px;color:var(--gold);margin-top:4px;font-weight:500}
 .q-hint{text-align:center;font-size:11px;color:var(--muted);letter-spacing:2px;padding:8px 0;animation:blink 2.5s ease-in-out infinite;flex-shrink:0}
 @keyframes blink{0%,100%{opacity:.3}50%{opacity:1}}
+/* 원 안 팬클럽 목록 */
+.q-fc-list {
+  position:absolute; inset:0; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:2px;
+  padding:20px 10px; overflow-y:auto; scrollbar-width:none;
+  pointer-events:none; z-index:2;
+}
+.q-fc-list::-webkit-scrollbar { display:none; }
+.q-fc-item {
+  display:flex; align-items:center; gap:4px; white-space:nowrap;
+  font-size:11px; line-height:1.4;
+}
+.q-fc-item .fc-rank {
+  font-family:'Orbitron',monospace; font-size:10px; color:var(--gold); font-weight:700; min-width:20px;
+}
+.q-fc-item .fc-emoji { font-size:12px; }
+.q-fc-item .fc-name { font-weight:600; }
+.q-orb.r1 .q-fc-list { padding:40px 20px; }
+.q-orb.r1 .q-fc-item { font-size:13px; gap:6px; }
+.q-orb.r1 .q-fc-item .fc-rank { font-size:12px; }
+.q-orb.r1 .q-fc-item .fc-emoji { font-size:14px; }
 
 /* ── 리그 선택 페이지 ── */
 #page-league-select{align-items:center;justify-content:center;padding:40px;overflow-y:auto;padding-top:80px;padding-bottom:80px}
@@ -418,24 +439,24 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
         <line x1="900" y1="600" x2="1440" y2="600" stroke="url(#lg)" stroke-width="1.5" stroke-dasharray="6,6" opacity="0.5"/>
       </svg>
       <div class="q-node c1" data-fan="ARMY" style="left:710px;top:410px" onclick="goFromNode(this)">
-        <div class="q-orb r1"><span style="font-size:100px">🪖</span><div class="q-rank">1</div></div>
-        <div class="q-lbl"><div class="q-name" style="color:#9333ea">ARMY</div><div class="q-score">방탄소년단</div></div>
+        <div class="q-orb r1"><div class="q-fc-list"><div class="q-fc-item"><span class="fc-rank">#1</span><span class="fc-emoji">🪖</span><span class="fc-name" style="color:#9333ea">ARMY</span></div><div class="q-fc-item"><span class="fc-rank">#2</span><span class="fc-emoji">🩷</span><span class="fc-name" style="color:#ec4899">BLINK</span></div><div class="q-fc-item"><span class="fc-rank">#3</span><span class="fc-emoji">🖤</span><span class="fc-name" style="color:#6366f1">STAY</span></div><div class="q-fc-item"><span class="fc-rank">#4</span><span class="fc-emoji">💎</span><span class="fc-name" style="color:#38bdf8">CARAT</span></div><div class="q-fc-item"><span class="fc-rank">#5</span><span class="fc-emoji">🌕</span><span class="fc-name" style="color:#f0c040">EXO-L</span></div></div><div class="q-rank">1</div></div>
+        <div class="q-lbl"><div class="q-name" style="color:#f0c040">QUASAR</div><div class="q-score">TOP 5 팬덤</div></div>
       </div>
       <div class="q-node" data-fan="BLINK" style="left:800px;top:55px" onclick="goFromNode(this)">
-        <div class="q-orb r2"><span style="font-size:54px">🩷</span><div class="q-rank">2</div></div>
-        <div class="q-lbl"><div class="q-name" style="color:#ec4899">BLINK</div><div class="q-score">블랙핑크</div></div>
+        <div class="q-orb r2"><div class="q-fc-list" style="font-size:9px;gap:1px;padding:15px 5px"><div class="q-fc-item"><span class="fc-rank" style="font-size:8px">#6</span><span class="fc-emoji" style="font-size:10px">🌸</span><span class="fc-name" style="color:#f9a8d4;font-size:9px">ONCE</span></div><div class="q-fc-item"><span class="fc-rank" style="font-size:8px">#7</span><span class="fc-emoji" style="font-size:10px">💚</span><span class="fc-name" style="color:#22c55e;font-size:9px">NCTzen</span></div><div class="q-fc-item"><span class="fc-rank" style="font-size:8px">#8</span><span class="fc-emoji" style="font-size:10px">🔮</span><span class="fc-name" style="color:#818cf8;font-size:9px">ENGENE</span></div><div class="q-fc-item"><span class="fc-rank" style="font-size:8px">#9</span><span class="fc-emoji" style="font-size:10px">🌙</span><span class="fc-name" style="color:#c084fc;font-size:9px">MOA</span></div><div class="q-fc-item"><span class="fc-rank" style="font-size:8px">#10</span><span class="fc-emoji" style="font-size:10px">🏴‍☠️</span><span class="fc-name" style="color:#f97316;font-size:9px">ATINY</span></div><div style="color:var(--muted);font-size:8px;margin-top:1px">+5 more</div></div><div class="q-rank">2</div></div>
+        <div class="q-lbl"><div class="q-name" style="color:#c084fc">NOVA</div><div class="q-score">TOP 6~15</div></div>
       </div>
       <div class="q-node" data-fan="STAY" style="left:800px;top:950px" onclick="goFromNode(this)">
-        <div class="q-orb r3"><span style="font-size:54px">🖤</span><div class="q-rank">3</div></div>
-        <div class="q-lbl"><div class="q-name" style="color:#e8ecf4">STAY</div><div class="q-score">스트레이 키즈</div></div>
+        <div class="q-orb r3"><div class="q-fc-list" style="font-size:9px;gap:1px;padding:15px 5px"><div class="q-fc-item"><span class="fc-rank" style="font-size:8px">#16</span><span class="fc-emoji" style="font-size:10px">💫</span><span class="fc-name" style="color:#38bdf8;font-size:9px">Shawol</span></div><div class="q-fc-item"><span class="fc-rank" style="font-size:8px">#17</span><span class="fc-emoji" style="font-size:10px">🐻</span><span class="fc-name" style="color:#6366f1;font-size:9px">Monbebe</span></div><div class="q-fc-item"><span class="fc-rank" style="font-size:8px">#18</span><span class="fc-emoji" style="font-size:10px">🦅</span><span class="fc-name" style="color:#10b981;font-size:9px">IGOT7</span></div><div style="color:var(--muted);font-size:8px;margin-top:1px">▼ +2 more</div></div><div class="q-rank">3</div></div>
+        <div class="q-lbl"><div class="q-name" style="color:#34d399">PLANET</div><div class="q-score">TOP 16~35</div></div>
       </div>
       <div class="q-node" data-fan="CARAT" style="left:155px;top:500px" onclick="goFromNode(this)">
-        <div class="q-orb r4"><span style="font-size:54px">💎</span><div class="q-rank">4</div></div>
-        <div class="q-lbl"><div class="q-name" style="color:#38bdf8">CARAT</div><div class="q-score">세븐틴</div></div>
+        <div class="q-orb r4"><div class="q-fc-list" style="font-size:9px;gap:1px;padding:15px 5px"><div class="q-fc-item"><span class="fc-rank" style="font-size:8px">#36</span><span class="fc-emoji" style="font-size:10px">✨</span><span class="fc-name" style="color:#818cf8;font-size:9px">MIRACLE</span></div><div class="q-fc-item"><span class="fc-rank" style="font-size:8px">#37</span><span class="fc-emoji" style="font-size:10px">🎵</span><span class="fc-name" style="color:#3b82f6;font-size:9px">MELODY</span></div><div class="q-fc-item"><span class="fc-rank" style="font-size:8px">#38</span><span class="fc-emoji" style="font-size:10px">🌻</span><span class="fc-name" style="color:#fbbf24;font-size:9px">MooMoo</span></div><div style="color:var(--muted);font-size:8px;margin-top:1px">▼ +2 more</div></div><div class="q-rank">4</div></div>
+        <div class="q-lbl"><div class="q-name" style="color:#fbbf24">STAR</div><div class="q-score">TOP 36~75</div></div>
       </div>
       <div class="q-node" data-fan="EXO-L" style="left:1445px;top:500px" onclick="goFromNode(this)">
-        <div class="q-orb r5"><span style="font-size:54px">🌕</span><div class="q-rank">5</div></div>
-        <div class="q-lbl"><div class="q-name" style="color:#f0c040">EXO-L</div><div class="q-score">엑소</div></div>
+        <div class="q-orb r5"><div class="q-fc-list" style="font-size:9px;gap:1px;padding:15px 5px"><div class="q-fc-item"><span class="fc-rank" style="font-size:8px">#76</span><span class="fc-emoji" style="font-size:10px">🌧️</span><span class="fc-name" style="color:#64748b;font-size:9px">LEANON</span></div><div class="q-fc-item"><span class="fc-rank" style="font-size:8px">#77</span><span class="fc-emoji" style="font-size:10px">🍇</span><span class="fc-name" style="color:#7c3aed;font-size:9px">VERRER</span></div><div class="q-fc-item"><span class="fc-rank" style="font-size:8px">#78</span><span class="fc-emoji" style="font-size:10px">🎯</span><span class="fc-name" style="color:#ef4444;font-size:9px">TO1</span></div><div style="color:var(--muted);font-size:8px;margin-top:1px">▼ +2 more</div></div><div class="q-rank">5</div></div>
+        <div class="q-lbl"><div class="q-name" style="color:#94a3b8">DUST</div><div class="q-score">TOP 76~100</div></div>
       </div>
     </div>
   </div>
