@@ -225,6 +225,12 @@ async function initDB() {
       )
     `);
 
+    // fanclubs 아티스트명 컬럼 추가
+    await client.query(`
+      ALTER TABLE fanclubs ADD COLUMN IF NOT EXISTS artist_name VARCHAR(100);
+      ALTER TABLE fanclubs ADD COLUMN IF NOT EXISTS artist_name_kr VARCHAR(100);
+    `);
+
     // ── 3. 아스트라 성궤 (개인 공간) ──
     await client.query(`
       CREATE TABLE IF NOT EXISTS nebulae (
@@ -733,23 +739,125 @@ async function initDB() {
       ON CONFLICT DO NOTHING
     `);
 
-    // ── 25. 목업 팬클럽 시드 데이터 ──
-    await client.query(`
-      INSERT INTO fanclubs (name, emoji, color, league, qp, member_count, score_iai, score_gsi, score_pii, score_total) VALUES
-        ('ASTRANOVA',    '🌌', '#8b5cf6', 'quasar', 9500000, 8200000, 95.0, 92.0, 98.0, 95.0),
-        ('CELESTIA',     '✨', '#f59e0b', 'quasar', 8800000, 7500000, 90.0, 88.0, 95.0, 91.0),
-        ('STELLARIS',    '⭐', '#ec4899', 'nova',   4200000, 3800000, 85.0, 82.0, 80.0, 82.3),
-        ('INFINITEA',    '🍵', '#10b981', 'nova',   3900000, 3200000, 80.0, 78.0, 75.0, 77.7),
-        ('DREAMWAVE',    '🌊', '#3b82f6', 'nova',   3500000, 2800000, 78.0, 75.0, 72.0, 75.0),
-        ('LUMINOUS',     '💡', '#f97316', 'planet', 1800000, 420000,  70.0, 68.0, 65.0, 67.7),
-        ('STARDUST',     '💫', '#a78bfa', 'planet', 1500000, 380000,  65.0, 63.0, 60.0, 62.7),
-        ('POLARIS',      '🌟', '#06b6d4', 'star',   800000,  85000,   55.0, 50.0, 45.0, 50.0),
-        ('AURORA',       '🌈', '#f43f5e', 'star',   650000,  72000,   50.0, 48.0, 42.0, 46.7),
-        ('SPARKLE',      '✳️', '#84cc16', 'star',   500000,  58000,   45.0, 42.0, 38.0, 41.7),
-        ('NEBULA KIDS',  '🌠', '#d946ef', 'dust',   120000,  15000,   30.0, 25.0, 20.0, 25.0),
-        ('FIRST LIGHT',  '🔆', '#fbbf24', 'dust',   80000,   8000,    25.0, 20.0, 15.0, 20.0)
-      ON CONFLICT (name) DO NOTHING
-    `);
+    // ── 25. K팝 팬클럽 100개 시드 데이터 ──
+    const fanclubSeed = [
+      { rank:1,  artist:'BTS',            artist_kr:'방탄소년단',   fandom:'ARMY',              emoji:'💜',  color:'#9333ea', league:'quasar' },
+      { rank:2,  artist:'BLACKPINK',      artist_kr:'블랙핑크',     fandom:'BLINK',             emoji:'🖤',  color:'#ec4899', league:'quasar' },
+      { rank:3,  artist:'Stray Kids',     artist_kr:'스트레이 키즈', fandom:'STAY',             emoji:'🧭',  color:'#ef4444', league:'quasar' },
+      { rank:4,  artist:'SEVENTEEN',      artist_kr:'세븐틴',       fandom:'CARAT',             emoji:'💎',  color:'#38bdf8', league:'quasar' },
+      { rank:5,  artist:'EXO',            artist_kr:'엑소',         fandom:'EXO-L',             emoji:'🪐',  color:'#94a3b8', league:'quasar' },
+      { rank:6,  artist:'TWICE',          artist_kr:'트와이스',     fandom:'ONCE',              emoji:'🍭',  color:'#f9a8d4', league:'nova'   },
+      { rank:7,  artist:'NCT',            artist_kr:'NCT',          fandom:'NCTzen',            emoji:'💚',  color:'#22c55e', league:'nova'   },
+      { rank:8,  artist:'ENHYPEN',        artist_kr:'엔하이픈',     fandom:'ENGENE',            emoji:'🧬',  color:'#f97316', league:'nova'   },
+      { rank:9,  artist:'TXT',            artist_kr:'투모로우바이투게더', fandom:'MOA',          emoji:'💙',  color:'#3b82f6', league:'nova'   },
+      { rank:10, artist:'ATEEZ',          artist_kr:'에이티즈',     fandom:'ATINY',             emoji:'🏴‍☠️', color:'#f59e0b', league:'nova'   },
+      { rank:11, artist:'IVE',            artist_kr:'아이브',       fandom:'DIVE',              emoji:'👑',  color:'#f9a8d4', league:'nova'   },
+      { rank:12, artist:'aespa',          artist_kr:'에스파',       fandom:'MY',                emoji:'🫧',  color:'#a78bfa', league:'nova'   },
+      { rank:13, artist:'NewJeans',       artist_kr:'뉴진스',       fandom:'Bunnies',           emoji:'🐰',  color:'#7dd3fc', league:'nova'   },
+      { rank:14, artist:'LE SSERAFIM',    artist_kr:'르세라핌',     fandom:'FEARNOT',           emoji:'🔥',  color:'#64748b', league:'nova'   },
+      { rank:15, artist:'(G)I-DLE',       artist_kr:'여자아이들',   fandom:'Neverland',         emoji:'🦋',  color:'#c084fc', league:'nova'   },
+      { rank:16, artist:'ITZY',           artist_kr:'있지',         fandom:'MIDZY',             emoji:'⚡',  color:'#fbbf24', league:'planet' },
+      { rank:17, artist:'TREASURE',       artist_kr:'트레져',       fandom:'TEUME',             emoji:'📦',  color:'#7dd3fc', league:'planet' },
+      { rank:18, artist:'Red Velvet',     artist_kr:'레드벨벳',     fandom:'ReVeluv',           emoji:'🍰',  color:'#f43f5e', league:'planet' },
+      { rank:19, artist:'MAMAMOO',        artist_kr:'마마무',       fandom:'MooMoo',            emoji:'🥬',  color:'#4ade80', league:'planet' },
+      { rank:20, artist:'GOT7',           artist_kr:'갓세븐',       fandom:'IGOT7',             emoji:'🐦',  color:'#22c55e', league:'planet' },
+      { rank:21, artist:'NMIXX',          artist_kr:'엔믹스',       fandom:'NSWER',             emoji:'🎲',  color:'#f9a8d4', league:'planet' },
+      { rank:22, artist:'THE BOYZ',       artist_kr:'더보이즈',     fandom:'THE B',             emoji:'👑',  color:'#7dd3fc', league:'planet' },
+      { rank:23, artist:'MONSTA X',       artist_kr:'몬스타엑스',   fandom:'Monbebe',           emoji:'🖤',  color:'#fbbf24', league:'planet' },
+      { rank:24, artist:'SHINee',         artist_kr:'샤이니',       fandom:'SHINee World',      emoji:'💠',  color:'#67e8f9', league:'planet' },
+      { rank:25, artist:'BABYMONSTER',    artist_kr:'베이비몬스터', fandom:'MONSTIEZ',          emoji:'👾',  color:'#a3e635', league:'planet' },
+      { rank:26, artist:'BOYNEXTDOOR',    artist_kr:'보이넥스트도어', fandom:'BOYNEXTDOOR ID',  emoji:'🚪',  color:'#67e8f9', league:'planet' },
+      { rank:27, artist:'NCT DREAM',      artist_kr:'엔시티 드림',  fandom:'NCTzen DREAM',      emoji:'🌱',  color:'#22c55e', league:'planet' },
+      { rank:28, artist:'NCT 127',        artist_kr:'엔시티 127',   fandom:'NCTzen 127',        emoji:'🏙️', color:'#22c55e', league:'planet' },
+      { rank:29, artist:'STAYC',          artist_kr:'스테이씨',     fandom:'SWITH',             emoji:'💜',  color:'#c084fc', league:'planet' },
+      { rank:30, artist:'SUPER JUNIOR',   artist_kr:'슈퍼주니어',   fandom:'E.L.F.',            emoji:'💙',  color:'#3b82f6', league:'planet' },
+      { rank:31, artist:"Girls' Generation", artist_kr:'소녀시대',  fandom:'SONE',              emoji:'🌹',  color:'#f9a8d4', league:'planet' },
+      { rank:32, artist:'DAY6',           artist_kr:'데이식스',     fandom:'My Day',            emoji:'⌚',  color:'#fbbf24', league:'planet' },
+      { rank:33, artist:'BIGBANG',        artist_kr:'빅뱅',         fandom:'VIP',               emoji:'👑',  color:'#fbbf24', league:'planet' },
+      { rank:34, artist:'iKON',           artist_kr:'아이콘',       fandom:'iKONIC',            emoji:'🏏',  color:'#f97316', league:'planet' },
+      { rank:35, artist:'CRAVITY',        artist_kr:'크래비티',     fandom:'LUVITY',            emoji:'🩶',  color:'#94a3b8', league:'planet' },
+      { rank:36, artist:'ILLIT',          artist_kr:'아일릿',       fandom:'GLLIT',             emoji:'🌸',  color:'#f9a8d4', league:'star'   },
+      { rank:37, artist:'ZEROBASEONE',    artist_kr:'제로베이스원', fandom:'ZEROSE',            emoji:'🔵',  color:'#3b82f6', league:'star'   },
+      { rank:38, artist:'Kep1er',         artist_kr:'케플러',       fandom:'Kep1ian',           emoji:'🪐',  color:'#c084fc', league:'star'   },
+      { rank:39, artist:'EVERGLOW',       artist_kr:'에버글로우',   fandom:'FOREVER',           emoji:'🌟',  color:'#f9a8d4', league:'star'   },
+      { rank:40, artist:'OH MY GIRL',     artist_kr:'오마이걸',     fandom:'Miracle',           emoji:'🪄',  color:'#c084fc', league:'star'   },
+      { rank:41, artist:'fromis_9',       artist_kr:'프로미스나인', fandom:'flover',            emoji:'🌼',  color:'#3b82f6', league:'star'   },
+      { rank:42, artist:'ASTRO',          artist_kr:'아스트로',     fandom:'AROHA',             emoji:'⭐',  color:'#a78bfa', league:'star'   },
+      { rank:43, artist:'2PM',            artist_kr:'투피엠',       fandom:'Hottest',           emoji:'🖤',  color:'#94a3b8', league:'star'   },
+      { rank:44, artist:'SF9',            artist_kr:'에스에프나인', fandom:'FANTASY',           emoji:'🌍',  color:'#c084fc', league:'star'   },
+      { rank:45, artist:'AB6IX',          artist_kr:'에이비식스',   fandom:'ABNEW',             emoji:'🔷',  color:'#f9a8d4', league:'star'   },
+      { rank:46, artist:'Billlie',        artist_kr:'빌리',         fandom:"Belllie've",        emoji:'🌙',  color:'#1d4ed8', league:'star'   },
+      { rank:47, artist:'PENTAGON',       artist_kr:'펜타곤',       fandom:'Universe',          emoji:'🔮',  color:'#1d4ed8', league:'star'   },
+      { rank:48, artist:'VIVIZ',          artist_kr:'비비지',       fandom:'Na.V',              emoji:'🦋',  color:'#f97316', league:'star'   },
+      { rank:49, artist:'n.SSign',        artist_kr:'엔싸인',       fandom:'COSMO',             emoji:'🌌',  color:'#1d4ed8', league:'star'   },
+      { rank:50, artist:'LOONA',          artist_kr:'이달의 소녀',  fandom:'Orbit',             emoji:'🌙',  color:'#f43f5e', league:'star'   },
+      { rank:51, artist:'DREAMCATCHER',   artist_kr:'드림캐쳐',     fandom:'InSomnia',          emoji:'🌙',  color:'#ef4444', league:'star'   },
+      { rank:52, artist:'WEi',            artist_kr:'위아이',       fandom:'RUi',               emoji:'🤍',  color:'#3b82f6', league:'star'   },
+      { rank:53, artist:'CIX',            artist_kr:'씨아이엑스',   fandom:'FIX',               emoji:'❤️',  color:'#7f1d1d', league:'star'   },
+      { rank:54, artist:'VICTON',         artist_kr:'빅톤',         fandom:'ALICE',             emoji:'💙',  color:'#3b82f6', league:'star'   },
+      { rank:55, artist:'KINGDOM',        artist_kr:'킹덤',         fandom:'KINGMAKER',         emoji:'👑',  color:'#fbbf24', league:'star'   },
+      { rank:56, artist:'TEMPEST',        artist_kr:'템페스트',     fandom:'iE',                emoji:'🌀',  color:'#3b82f6', league:'star'   },
+      { rank:57, artist:'Weeekly',        artist_kr:'위클리',       fandom:'Daileee',           emoji:'⭐',  color:'#c084fc', league:'star'   },
+      { rank:58, artist:'SECRET NUMBER',  artist_kr:'시크릿넘버',   fandom:'LOCKEY',            emoji:'🔑',  color:'#fbbf24', league:'star'   },
+      { rank:59, artist:'ONEUS',          artist_kr:'원어스',       fandom:'ToMoon',            emoji:'🌕',  color:'#1d4ed8', league:'star'   },
+      { rank:60, artist:'ONEWE',          artist_kr:'원위',         fandom:'WEVE',              emoji:'🎸',  color:'#1d4ed8', league:'star'   },
+      { rank:61, artist:'LIGHTSUM',       artist_kr:'라잇썸',       fandom:'SUMIT',             emoji:'☀️',  color:'#f97316', league:'star'   },
+      { rank:62, artist:'TAN',            artist_kr:'탄',           fandom:'BLINGKY',           emoji:'✨',  color:'#ef4444', league:'star'   },
+      { rank:63, artist:'OMEGA X',        artist_kr:'오메가엑스',   fandom:'FOR X',             emoji:'🔷',  color:'#3b82f6', league:'star'   },
+      { rank:64, artist:'PIXY',           artist_kr:'픽시',         fandom:'WINXY',             emoji:'🧚',  color:'#a78bfa', league:'star'   },
+      { rank:65, artist:'JUST B',         artist_kr:'저스트비',     fandom:'JOYFUL',            emoji:'😊',  color:'#3b82f6', league:'star'   },
+      { rank:66, artist:"NU'EST",         artist_kr:'뉴이스트',     fandom:'L.O.Λ.E',          emoji:'🩶',  color:'#94a3b8', league:'star'   },
+      { rank:67, artist:'HIGHLIGHT',      artist_kr:'하이라이트',   fandom:'LIGHT',             emoji:'💡',  color:'#fbbf24', league:'star'   },
+      { rank:68, artist:'BTOB',           artist_kr:'비투비',       fandom:'Melody',            emoji:'🎵',  color:'#3b82f6', league:'star'   },
+      { rank:69, artist:'INFINITE',       artist_kr:'인피니트',     fandom:'Inspirit',          emoji:'♾️',  color:'#fbbf24', league:'star'   },
+      { rank:70, artist:'B.A.P',          artist_kr:'비에이피',     fandom:'BABY',              emoji:'🐰',  color:'#94a3b8', league:'star'   },
+      { rank:71, artist:'BLOCK B',        artist_kr:'블락비',       fandom:'BBC',               emoji:'🐝',  color:'#fbbf24', league:'star'   },
+      { rank:72, artist:'GFRIEND',        artist_kr:'여자친구',     fandom:'Buddy',             emoji:'🔮',  color:'#7dd3fc', league:'star'   },
+      { rank:73, artist:'WINNER',         artist_kr:'위너',         fandom:'Inner Circle',      emoji:'🌌',  color:'#3b82f6', league:'star'   },
+      { rank:74, artist:'VIXX',           artist_kr:'빅스',         fandom:'Starlight',         emoji:'⭐',  color:'#1d4ed8', league:'star'   },
+      { rank:75, artist:'WJSN',           artist_kr:'우주소녀',     fandom:'Ujung',             emoji:'🌟',  color:'#a78bfa', league:'star'   },
+      { rank:76, artist:'T-ARA',          artist_kr:'티아라',       fandom:"Queen's",           emoji:'👑',  color:'#ef4444', league:'dust'   },
+      { rank:77, artist:'APRIL',          artist_kr:'에이프릴',     fandom:'Fineapple',         emoji:'🍍',  color:'#f9a8d4', league:'dust'   },
+      { rank:78, artist:'LABOUM',         artist_kr:'라붐',         fandom:'LATTE',             emoji:'☕',  color:'#f9a8d4', league:'dust'   },
+      { rank:79, artist:'PURPLE KISS',    artist_kr:'퍼플키스',     fandom:'Plory',             emoji:'💋',  color:'#a78bfa', league:'dust'   },
+      { rank:80, artist:'KATSEYE',        artist_kr:'캣세이',       fandom:'EYEKON',            emoji:'🐱',  color:'#3b82f6', league:'dust'   },
+      { rank:81, artist:'NEXZ',           artist_kr:'넥스지',       fandom:'NEXZ-UP',           emoji:'🔴',  color:'#ef4444', league:'dust'   },
+      { rank:82, artist:'KISS OF LIFE',   artist_kr:'키스오브라이프', fandom:'KIOF',            emoji:'💋',  color:'#ef4444', league:'dust'   },
+      { rank:83, artist:'RIIZE',          artist_kr:'라이즈',       fandom:'BRIIZE',            emoji:'🧡',  color:'#f97316', league:'dust'   },
+      { rank:84, artist:'xikers',         artist_kr:'자이커스',     fandom:'TRICKY',            emoji:'💚',  color:'#4ade80', league:'dust'   },
+      { rank:85, artist:'TWS',            artist_kr:'투어스',       fandom:'AMOR',              emoji:'💙',  color:'#7dd3fc', league:'dust'   },
+      { rank:86, artist:'YOUNG POSSE',    artist_kr:'영파씨',       fandom:'POSE',              emoji:'🤘',  color:'#fbbf24', league:'dust'   },
+      { rank:87, artist:'PLAVE',          artist_kr:'플레이브',     fandom:'Plennie',           emoji:'🎮',  color:'#3b82f6', league:'dust'   },
+      { rank:88, artist:'tripleS',        artist_kr:'트리플에스',   fandom:'WAVs',              emoji:'🌊',  color:'#f9a8d4', league:'dust'   },
+      { rank:89, artist:'Xdinary Heroes', artist_kr:'엑스디너리히어로즈', fandom:'Villains',    emoji:'🦹',  color:'#a78bfa', league:'dust'   },
+      { rank:90, artist:'ARTMS',          artist_kr:'아르테미스',   fandom:'Orbit',             emoji:'🏹',  color:'#f43f5e', league:'dust'   },
+      { rank:91, artist:'H1-KEY',         artist_kr:'하이키',       fandom:'MY KEY',            emoji:'🗝️', color:'#3b82f6', league:'dust'   },
+      { rank:92, artist:'VCHA',           artist_kr:'브이차',       fandom:'A2V',               emoji:'💜',  color:'#a78bfa', league:'dust'   },
+      { rank:93, artist:'ZICO',           artist_kr:'지코',         fandom:'ZICO FANS',         emoji:'🎤',  color:'#ef4444', league:'dust'   },
+      { rank:94, artist:'IU',             artist_kr:'아이유',       fandom:'UAENA',             emoji:'🩷',  color:'#c084fc', league:'dust'   },
+      { rank:95, artist:'TAEYEON',        artist_kr:'태연',         fandom:'Taengoo',           emoji:'💜',  color:'#a78bfa', league:'dust'   },
+      { rank:96, artist:'HWASA',          artist_kr:'화사',         fandom:'TWIT',              emoji:'🔥',  color:'#ef4444', league:'dust'   },
+      { rank:97, artist:'SUNMI',          artist_kr:'선미',         fandom:'Miya-ne',           emoji:'🌙',  color:'#f9a8d4', league:'dust'   },
+      { rank:98, artist:'CHUNG HA',       artist_kr:'청하',         fandom:'Byulharang',        emoji:'⭐',  color:'#f9a8d4', league:'dust'   },
+      { rank:99, artist:'JEON SOMI',      artist_kr:'전소미',       fandom:'Gomie',             emoji:'💖',  color:'#f9a8d4', league:'dust'   },
+      { rank:100,artist:'XG',             artist_kr:'엑스지',       fandom:'ALPHAZ',            emoji:'🐺',  color:'#1a1a1a', league:'dust'   },
+    ];
+    for (const fc of fanclubSeed) {
+      await client.query(`
+        INSERT INTO fanclubs (name, emoji, color, league, rank, description, artist_name, artist_name_kr)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        ON CONFLICT (name) DO UPDATE SET
+          emoji = EXCLUDED.emoji,
+          color = EXCLUDED.color,
+          league = EXCLUDED.league,
+          rank = EXCLUDED.rank,
+          description = EXCLUDED.description,
+          artist_name = EXCLUDED.artist_name,
+          artist_name_kr = EXCLUDED.artist_name_kr
+      `, [fc.fandom, fc.emoji, fc.color, fc.league, fc.rank, fc.artist_kr + ' 팬클럽', fc.artist, fc.artist_kr]);
+    }
+    const fcCount = await client.query('SELECT COUNT(*) FROM fanclubs');
+    console.log(`✅ 팬클럽 DB: ${fcCount.rows[0].count}개`);
 
     // ── 26. 목업 팬클럽 조직 자동 생성 ──
     const seedFanclubs = await client.query('SELECT id, name, league FROM fanclubs ORDER BY id');
