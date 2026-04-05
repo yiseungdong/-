@@ -97,6 +97,26 @@ html,body {
   50% { transform:scale(1.1); opacity:1; }
 }
 
+/* 모션 애니메이션 (Phase 3) */
+@keyframes avatarDance {
+  0%,100% { transform: rotate(-8deg) translateY(0); }
+  25% { transform: rotate(8deg) translateY(-8px); }
+  50% { transform: rotate(-8deg) translateY(0); }
+  75% { transform: rotate(8deg) translateY(-4px); }
+}
+@keyframes avatarCheer {
+  0%,100% { transform: translateY(0) scale(1); }
+  30% { transform: translateY(-15px) scale(1.05); }
+  60% { transform: translateY(0) scale(0.98); }
+}
+@keyframes avatarHeart {
+  0%,100% { transform: scale(1); }
+  20% { transform: scale(1.08); }
+  40% { transform: scale(1); }
+  60% { transform: scale(1.05); }
+  80% { transform: scale(1); }
+}
+
 /* ══════════════════════
    TAB 네비게이션
 ══════════════════════ */
@@ -420,9 +440,11 @@ html,body {
       <div id="layer-body"   style="position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;pointer-events:none"></div>
       <div id="layer-bottom" style="position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;pointer-events:none"></div>
       <div id="layer-top"    style="position:absolute;inset:0;z-index:4;display:flex;align-items:center;justify-content:center;pointer-events:none"></div>
+      <div id="layer-expression" style="position:absolute;inset:0;z-index:4;display:flex;align-items:flex-start;justify-content:center;padding-top:30%;pointer-events:none"></div>
       <div id="layer-hair"   style="position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;pointer-events:none"></div>
       <div id="layer-acc"    style="position:absolute;inset:0;z-index:6;pointer-events:none"></div>
     </div>
+    <div id="avatar-motion-emoji" style="font-size:28px;text-align:center;display:none;margin-bottom:4px;position:relative;z-index:5;"></div>
     <div class="preview-info">
       <div class="preview-name" id="previewName">별빛 탐험가</div>
       <div id="previewSerial" style="font-size:11px;letter-spacing:2px;margin-top:2px;margin-bottom:2px;opacity:0.9;"></div>
@@ -694,6 +716,22 @@ const EMOTIONS = [
   {id:'e8',emoji:'😇',name:'천사같이',unlocked:false,req:'미션'},
 ];
 
+// 표정 ID 매핑 (e1~e8 → 키)
+var EXPR_ID_MAP = {
+  'e1':'smile','e2':'laugh','e3':'love','e4':'cool',
+  'e5':'excited','e6':'confident','e7':'cute','e8':'angel'
+};
+var AVATAR_EXPRESSIONS = {
+  'smile':     { emoji: '😊' },
+  'laugh':     { emoji: '😄' },
+  'love':      { emoji: '🥰' },
+  'cool':      { emoji: '😎' },
+  'excited':   { emoji: '🤩' },
+  'confident': { emoji: '😤' },
+  'cute':      { emoji: '😏' },
+  'angel':     { emoji: '😇' }
+};
+
 const MOTIONS = [
   {id:'m1',emoji:'💃',name:'댄스',unlocked:true},
   {id:'m2',emoji:'🙌',name:'환호',unlocked:true},
@@ -702,6 +740,16 @@ const MOTIONS = [
   {id:'m5',emoji:'⚡',name:'파워 포즈',unlocked:false,req:'노바 리그'},
   {id:'m6',emoji:'✨',name:'스파클',unlocked:false,req:'상점 한정'},
 ];
+
+// 모션 ID 매핑 (m1~m6 → 키)
+var MOTION_ID_MAP = {
+  'm1':'dance','m2':'cheer','m3':'heart'
+};
+var AVATAR_MOTIONS = {
+  'dance':  { emoji: '💃', animation: 'avatarDance' },
+  'cheer':  { emoji: '🙌', animation: 'avatarCheer' },
+  'heart':  { emoji: '💜', animation: 'avatarHeart' }
+};
 
 const GROWTH_ITEMS = [
   {icon:'🎵',name:'스트리밍 활동',desc:'음원 누적 100시간',reward:'헤어 자동 해금',done:true},
@@ -856,6 +904,37 @@ function renderAvatarLayers(){
     if(awp) accHtml += '<div style="position:absolute;bottom:20px;right:10px;font-size:22px;line-height:1;z-index:6;">'+awp.emoji+'</div>';
   }
   document.getElementById('layer-acc').innerHTML = accHtml;
+}
+
+// 표정 레이어 렌더링 (Phase 3)
+function renderExpressionLayer() {
+  var exprId = avatar.emotion || localStorage.getItem('asteria_avatar_expression') || 'e1';
+  var el = document.getElementById('layer-expression');
+  if (!el) return;
+  var key = EXPR_ID_MAP[exprId] || exprId || 'smile';
+  var expr = AVATAR_EXPRESSIONS[key];
+  if (!expr) { el.innerHTML = ''; return; }
+  el.innerHTML = '<div style="font-size:32px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));">' + expr.emoji + '</div>';
+}
+
+// 모션 적용 (Phase 3)
+function renderMotionLayer() {
+  var motionId = avatar.motion || localStorage.getItem('asteria_avatar_motion') || '';
+  var container = document.getElementById('avatarContainer');
+  if (!container) return;
+  // 기존 모션 제거
+  container.style.animation = '';
+  var motionEl = document.getElementById('avatar-motion-emoji');
+  if (motionEl) { motionEl.style.display = 'none'; motionEl.textContent = ''; }
+  if (!motionId) return;
+  var key = MOTION_ID_MAP[motionId] || motionId || '';
+  var motion = AVATAR_MOTIONS[key];
+  if (!motion) return;
+  container.style.animation = motion.animation + ' 0.8s ease-in-out infinite';
+  if (motionEl) {
+    motionEl.textContent = motion.emoji;
+    motionEl.style.display = 'block';
+  }
 }
 
 // ════════════════════════════════════
@@ -1069,13 +1148,23 @@ function selectAcc(type,id){
 function selectEmotion(id){
   const e=EMOTIONS.find(x=>x.id===id);
   if(!e||!e.unlocked){showToast(`🔒 ${e?.req||'조건'} 달성 시 해금!`);return;}
-  avatar.emotion=id; renderEmotion(); renderAvatarLayers(); burst();
+  avatar.emotion=id;
+  localStorage.setItem('asteria_avatar_expression', id);
+  renderEmotion(); renderAvatarLayers(); renderExpressionLayer(); burst();
   showToast(`${e.emoji} 표정 변경!`);
 }
 function selectMotion(id){
   const m=MOTIONS.find(x=>x.id===id);
   if(!m||!m.unlocked){showToast(`🔒 ${m?.req||'조건'} 달성 시 해금!`);return;}
-  avatar.motion=id; renderEmotion(); renderAvatarLayers(); burst();
+  // 같은 모션 클릭 시 해제
+  if(avatar.motion===id){
+    avatar.motion=''; localStorage.removeItem('asteria_avatar_motion');
+    renderEmotion(); renderAvatarLayers(); renderMotionLayer();
+    showToast('모션 해제!'); return;
+  }
+  avatar.motion=id;
+  localStorage.setItem('asteria_avatar_motion', id);
+  renderEmotion(); renderAvatarLayers(); renderMotionLayer(); burst();
   showToast(`${m.emoji} 모션 변경!`);
 }
 function switchOutfit(type,btn){
@@ -1186,6 +1275,8 @@ function refreshAvatarPreview() {
   avatar.outfit_full = localStorage.getItem('asteria_avatar_outfit_full') || avatar.outfit_full || null;
   // 레이어 다시 그리기
   renderAvatarLayers();
+  renderExpressionLayer();
+  renderMotionLayer();
 }
 
 // ════════════════════════════════════
