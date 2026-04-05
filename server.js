@@ -2206,7 +2206,7 @@ app.post('/api/auth/register', async (req, res) => {
       return res.status(409).json({ message: '이미 사용 중인 닉네임입니다.' });
 
     // bcrypt cost 12
-    const hashed = await bcrypt.hash(password, 12);
+    const hashed = await bcrypt.hash(password, 10);
 
     // 성궤번호(Astra ID) 생성
     const astraId = await generateAstraId(pool);
