@@ -147,38 +147,8 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 }
 .q-orb.r3{animation-delay:-1.3s}.q-orb.r4{animation-delay:-2.6s}.q-orb.r5{animation-delay:-.7s}
 @keyframes op2{0%,100%{box-shadow:0 0 0 2px rgba(192,132,252,.55),0 0 40px rgba(192,132,252,.45),0 0 100px rgba(192,132,252,.2)}50%{box-shadow:0 0 0 3px rgba(192,132,252,.9),0 0 70px rgba(192,132,252,.7),0 0 160px rgba(192,132,252,.4)}}
-.q-rank{
-  position:absolute;top:-8px;right:-8px;width:32px;height:32px;border-radius:50%;
-  background:var(--gold);color:var(--void);font-size:13px;font-weight:900;
-  font-family:'Orbitron',monospace;display:flex;align-items:center;justify-content:center;
-  box-shadow:0 0 12px rgba(240,192,64,.7);
-}
-.q-node.c1 .q-rank{width:44px;height:44px;font-size:19px;top:-10px;right:-10px}
-.q-lbl{margin-top:14px;text-align:center}
-.q-name{font-size:16px;font-weight:700}
-.q-node.c1 .q-name{font-size:22px}
-.q-score{font-size:12px;color:var(--gold);margin-top:4px;font-weight:500}
 .q-hint{text-align:center;font-size:11px;color:var(--muted);letter-spacing:2px;padding:8px 0;animation:blink 2.5s ease-in-out infinite;flex-shrink:0}
 @keyframes blink{0%,100%{opacity:.3}50%{opacity:1}}
-/* 원 안 팬클럽 정보 */
-.fanclub-info {
-  position:absolute; top:15%; left:50%; transform:translateX(-50%);
-  text-align:center; z-index:10; pointer-events:none;
-}
-.fanclub-info .fi-rank {
-  font-family:'Orbitron',monospace; color:var(--gold);
-  font-size:13px; font-weight:700; margin-bottom:4px;
-}
-.fanclub-info .fi-emoji {
-  font-size:28px; line-height:1; margin-bottom:6px;
-}
-.fanclub-info .fi-name {
-  font-size:14px; font-weight:700;
-}
-.q-orb.r1 .fanclub-info { top:12%; }
-.q-orb.r1 .fi-rank { font-size:18px; }
-.q-orb.r1 .fi-emoji { font-size:48px; margin-bottom:8px; }
-.q-orb.r1 .fi-name { font-size:20px; }
 
 /* ── 리그 선택 페이지 ── */
 #page-league-select{align-items:center;justify-content:center;padding:40px;overflow-y:auto;padding-top:80px;padding-bottom:80px}
@@ -437,24 +407,19 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
         <line x1="900" y1="600" x2="1440" y2="600" stroke="url(#lg)" stroke-width="1.5" stroke-dasharray="6,6" opacity="0.5"/>
       </svg>
       <div class="q-node c1" data-fan="ARMY" style="left:710px;top:410px" onclick="goFromNode(this)">
-        <div class="q-orb r1"><div class="fanclub-info"><div class="fi-rank">#1</div><div class="fi-emoji">🪖</div><div class="fi-name" style="color:#9333ea">ARMY</div></div><div class="q-rank">1</div></div>
-        <div class="q-lbl"><div class="q-name" style="color:#9333ea">ARMY</div><div class="q-score">방탄소년단</div></div>
+        <div class="q-orb r1" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px"><div style="font-family:'Orbitron',monospace;color:var(--gold);font-size:22px;font-weight:700;margin-bottom:6px">1위</div><span style="font-size:56px;line-height:1;margin-bottom:8px">🪖</span><div style="color:#9333ea;font-size:22px;font-weight:700;margin-bottom:4px">ARMY</div><div style="color:var(--gold);font-size:15px;opacity:0.8">127,450 QP</div></div>
       </div>
       <div class="q-node" data-fan="BLINK" style="left:800px;top:55px" onclick="goFromNode(this)">
-        <div class="q-orb r2"><div class="fanclub-info"><div class="fi-rank">#2</div><div class="fi-emoji">🩷</div><div class="fi-name" style="color:#ec4899">BLINK</div></div><div class="q-rank">2</div></div>
-        <div class="q-lbl"><div class="q-name" style="color:#ec4899">BLINK</div><div class="q-score">블랙핑크</div></div>
+        <div class="q-orb r2" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px"><div style="font-family:'Orbitron',monospace;color:var(--gold);font-size:16px;font-weight:700;margin-bottom:6px">2위</div><span style="font-size:36px;line-height:1;margin-bottom:8px">🩷</span><div style="color:#ec4899;font-size:15px;font-weight:700;margin-bottom:4px">BLINK</div><div style="color:var(--gold);font-size:11px;opacity:0.8">98,320 QP</div></div>
       </div>
       <div class="q-node" data-fan="STAY" style="left:800px;top:950px" onclick="goFromNode(this)">
-        <div class="q-orb r3"><div class="fanclub-info"><div class="fi-rank">#3</div><div class="fi-emoji">🖤</div><div class="fi-name" style="color:#6366f1">STAY</div></div><div class="q-rank">3</div></div>
-        <div class="q-lbl"><div class="q-name" style="color:#6366f1">STAY</div><div class="q-score">스트레이 키즈</div></div>
+        <div class="q-orb r3" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px"><div style="font-family:'Orbitron',monospace;color:var(--gold);font-size:16px;font-weight:700;margin-bottom:6px">3위</div><span style="font-size:36px;line-height:1;margin-bottom:8px">🖤</span><div style="color:#6366f1;font-size:15px;font-weight:700;margin-bottom:4px">STAY</div><div style="color:var(--gold);font-size:11px;opacity:0.8">82,100 QP</div></div>
       </div>
       <div class="q-node" data-fan="CARAT" style="left:155px;top:500px" onclick="goFromNode(this)">
-        <div class="q-orb r4"><div class="fanclub-info"><div class="fi-rank">#4</div><div class="fi-emoji">💎</div><div class="fi-name" style="color:#38bdf8">CARAT</div></div><div class="q-rank">4</div></div>
-        <div class="q-lbl"><div class="q-name" style="color:#38bdf8">CARAT</div><div class="q-score">세븐틴</div></div>
+        <div class="q-orb r4" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px"><div style="font-family:'Orbitron',monospace;color:var(--gold);font-size:16px;font-weight:700;margin-bottom:6px">4위</div><span style="font-size:36px;line-height:1;margin-bottom:8px">💎</span><div style="color:#38bdf8;font-size:15px;font-weight:700;margin-bottom:4px">CARAT</div><div style="color:var(--gold);font-size:11px;opacity:0.8">71,880 QP</div></div>
       </div>
       <div class="q-node" data-fan="EXO-L" style="left:1445px;top:500px" onclick="goFromNode(this)">
-        <div class="q-orb r5"><div class="fanclub-info"><div class="fi-rank">#5</div><div class="fi-emoji">🌕</div><div class="fi-name" style="color:#f0c040">EXO-L</div></div><div class="q-rank">5</div></div>
-        <div class="q-lbl"><div class="q-name" style="color:#f0c040">EXO-L</div><div class="q-score">엑소</div></div>
+        <div class="q-orb r5" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px"><div style="font-family:'Orbitron',monospace;color:var(--gold);font-size:16px;font-weight:700;margin-bottom:6px">5위</div><span style="font-size:36px;line-height:1;margin-bottom:8px">🌕</span><div style="color:#f0c040;font-size:15px;font-weight:700;margin-bottom:4px">EXO-L</div><div style="color:var(--gold);font-size:11px;opacity:0.8">63,240 QP</div></div>
       </div>
     </div>
   </div>
@@ -1038,13 +1003,12 @@ function createNode(fc, pos, rank, fcColor, isFirst) {
     : `width:${diam}px;height:${diam}px;background:radial-gradient(circle at 35% 35%,rgba(${rgb},.15),rgba(7,7,15,.95));box-shadow:0 0 0 2px rgba(${rgb},.7),0 0 30px rgba(${rgb},.4)`;
 
   node.innerHTML = `
-    <div class="q-orb" style="${orbStyle};border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative">
-      <div style="font-family:'Orbitron',monospace;color:var(--gold);font-size:${isFirst?14:11}px;font-weight:700;margin-bottom:2px">#${rank}</div>
-      <span style="font-size:${fontSize}px;line-height:1">${fc.icon}</span>
-      <div style="color:${fcColor};font-size:${isFirst?15:11}px;font-weight:700;margin-top:4px;font-family:'Noto Sans KR',sans-serif">${fc.name}</div>
-      <div class="q-rank">${rank}</div>
+    <div class="q-orb" style="${orbStyle};border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:${isFirst?'12':'8'}px">
+      <div style="font-family:'Orbitron',monospace;color:var(--gold);font-size:${isFirst?22:16}px;font-weight:700;margin-bottom:6px">${rank}위</div>
+      <span style="font-size:${isFirst?56:36}px;line-height:1;margin-bottom:8px">${fc.icon}</span>
+      <div style="color:${fcColor};font-size:${isFirst?22:15}px;font-weight:700;margin-bottom:4px;font-family:'Noto Sans KR',sans-serif">${fc.name}</div>
+      <div style="color:var(--gold);font-size:${isFirst?15:11}px;opacity:0.8">${scoreStr} QP</div>
     </div>
-    <div class="q-lbl"><div class="q-name" style="font-size:${isFirst?18:13}px;color:${fcColor}">${fc.name}</div><div class="q-score" style="color:${fcColor}">${scoreStr} QP</div></div>
   `;
   return node;
 }
