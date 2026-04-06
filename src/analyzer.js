@@ -4,9 +4,71 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// 회사명이 아닌 일반 키워드 필터
+const NOISE_WORDS = new Set([
+  'VC', '스타트업', '투자', '시리즈', '비상장', '벤처', '액셀러레이터',
+  '프리IPO', 'IPO', 'TIPS', 'CES', 'MWC', 'KVCA', 'AI', 'IT',
+  '더벨', '한국경제', '매일경제', '조선비즈', '뉴스', '기자', '특파원',
+  '데모데이', '네이버', '카카오', '삼성', '현대', 'LG', 'SK',
+  '금융위', '과기부', '식약처', '정부', '국내', '해외', '글로벌',
+  '바이오', '핀테크', '플랫폼', '유니콘', '기업', '회사', '대표',
+  '상장', '코스닥', '코스피', '증권', '투자자', '펀드', '자금',
+  '억원', '조원', '만원', '달러', '기술', '서비스', '솔루션',
+  '올해', '내년', '지난해', '최근', '국내외', '관련', '이상',
+  'PoC', 'AC', 'IB', 'LP', 'GP', 'IR', 'PE', 'M&A', 'RCPS', 'CB',
+  '단독', '속보', '현지시간', '규모', '이번', '결과', '대상', '부문',
+  '4YFN', '4YFN관', '팁스', '모태', '정시출자', '출자',
+  '벤처캐피탈', '복수의결권', '인터뷰', '기업家', 'K-water',
+  '유통가 레이더', '브리프', '마켓인', '모여', 'Meet-up',
+  '넘버스', '모두의 창업', '팁스(TIPS)',
+  '종합', '인공지능', '데카콘', '유니콘팩토리', '프리 IPO', 'CES 등',
+  'K-엔비디아', '리스팅', '스케일업', '지원사업', 'Demoday',
+  '기자수첩', '석간', '선택과 집중',
+]);
+
+/**
+ * 회사명으로 유효한지 검증
+ */
+function isValidCompanyName(name) {
+  if (NOISE_WORDS.has(name)) return false;
+  // 길이 제한: 한글 2~10자 또는 영문 3~15자 혼합
+  if (name.length < 2 || name.length > 15) return false;
+  // URL, 경로, 특수문자 포함 시 제외
+  if (/[/.:\\?!]/.test(name)) return false;
+  // 숫자로만 또는 숫자+단위로 구성된 경우 제외
+  if (/^\d+$/.test(name)) return false;
+  if (/^\d+억$/.test(name) || /^\d+조$/.test(name) || /^\d+만$/.test(name)) return false;
+  // 공백 2개 이상이면 문장형 → 제외
+  if ((name.match(/\s/g) || []).length >= 2) return false;
+  // 영문 1~3글자 약어 제외 (NST, MWC 등)
+  if (/^[A-Za-z]{1,3}$/.test(name)) return false;
+  // 영문+숫자 조합 짧은 코드 제외 (MWC 2026 등)
+  if (/^[A-Za-z]{1,4}\s*\d{2,4}$/.test(name)) return false;
+  // 한글이 전혀 없고 영문도 4자 미만이면 제외
+  if (!/[가-힣]/.test(name) && name.replace(/[^A-Za-z]/g, '').length < 4) return false;
+  // "~투자", "~선택권", "~유치" 등 일반명사 패턴 제외
+  if (/(?:투자$|유치$|선택권$|풍향계$|로드쇼$|프로젝트$|레이더$|의결권$)/.test(name)) return false;
+  // 괄호 포함 이름 제외
+  if (/[()（）]/.test(name)) return false;
+  // 영문 이름 패턴 (이름 성 형태) 제외
+  if (/^[A-Z][a-z]+\s[A-Z][a-z]+/.test(name)) return false;
+  // "K-" 접두어 일반명사 제외
+  if (/^K-(?!스타트업)/.test(name) && !/[가-힣]/.test(name)) return false;
+  // 연도 포함 이벤트명 제외
+  if (/\d{4}$/.test(name)) return false;
+  // 순수 숫자+한글 혼합 (27타수 등) 제외
+  if (/^\d+[가-힣]/.test(name)) return false;
+  // 한 글자 일반명사 제외
+  if (/^[가-힣]{1}$/.test(name)) return false;
+  // 일반 보통명사 2글자 (현장, 올해 등) — 한글 2글자이면서 회사명으로 보기 어려운 것
+  const commonNouns2 = ['현장', '올해', '내년', '작년', '시장', '성장', '기반', '확대', '강화'];
+  if (commonNouns2.includes(name)) return false;
+  return true;
+}
+
 /**
  * 뉴스 기사 목록에서 투자유치 관련 회사명 추출
- * 최소 2건 이상 언급된 회사만 반환
+ * 노이즈 필터링 후 최소 2건 이상 언급된 회사만 반환 (상위 20개)
  */
 function extractCompanyList(articles) {
   const companyCount = {};
@@ -16,7 +78,7 @@ function extractCompanyList(articles) {
     if (article.companyHints && article.companyHints.length > 0) {
       for (const hint of article.companyHints) {
         const name = hint.trim();
-        if (name.length >= 2 && name.length <= 20) {
+        if (isValidCompanyName(name)) {
           companyCount[name] = (companyCount[name] || 0) + 1;
         }
       }
@@ -32,20 +94,22 @@ function extractCompanyList(articles) {
       let match;
       while ((match = pattern.exec(article.title)) !== null) {
         const name = match[1].trim();
-        if (name.length >= 2 && name.length <= 20) {
+        if (isValidCompanyName(name)) {
           companyCount[name] = (companyCount[name] || 0) + 1;
         }
       }
     }
   }
 
-  // 최소 2건 이상 언급된 회사만 추출, 중복 제거
+  // 최소 2건 이상, 언급 횟수 순 정렬, 상위 20개만
+  const MAX_COMPANIES = 20;
   const companies = Object.entries(companyCount)
     .filter(([, count]) => count >= 2)
     .sort((a, b) => b[1] - a[1])
+    .slice(0, MAX_COMPANIES)
     .map(([name]) => name);
 
-  console.log(`[analyzer] 회사 ${companies.length}개 추출 (2건 이상 언급)`);
+  console.log(`[analyzer] 회사 ${companies.length}개 추출 (상위 ${MAX_COMPANIES}개, 2건 이상 언급)`);
   return companies;
 }
 
@@ -144,9 +208,8 @@ async function analyze(collectedData) {
   const {
     articles = [],
     dartResults = {},
-    patentResults = {},
-    regulationResults = {},
     priceResults = {},
+    companyInfoResults = {},
   } = collectedData;
 
   // 1. 회사 목록 추출
@@ -162,11 +225,12 @@ async function analyze(collectedData) {
   for (const companyName of companies) {
     console.log(`[analyzer] "${companyName}" 분석 중...`);
 
+    const info = companyInfoResults[companyName] || {};
     const data = {
       articles,
       financials: dartResults[companyName] || null,
-      patents: patentResults[companyName] || null,
-      regulations: regulationResults[companyName] || null,
+      patents: info.patents || null,
+      regulations: info.regulations || null,
       price: priceResults[companyName] || null,
     };
 

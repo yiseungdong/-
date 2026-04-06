@@ -86,7 +86,7 @@
 ### 런타임팀 (실제 실행) — .claude/agents/
 | 에이전트 | 담당 |
 |---|---|
-| collector | 뉴스·DART·특허·가격 수집 실행 |
+| collector | 뉴스·VC트렌드·DART·가격·특허/허가 수집 실행 |
 | analyzer | Claude AI 분석·스코어링 실행 |
 | reporter | .md 리포트 생성·저장 실행 |
 | scheduler | 매일 오후 4시 전체 파이프라인 조율 |
