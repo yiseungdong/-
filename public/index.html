@@ -944,7 +944,15 @@ const LEAGUE_MAP_SCALE = {
   star:   2.5,
   dust:   3.0
 };
+const LEAGUE_NODE_SCALE = {
+  quasar: 1.0,
+  nova:   0.85,
+  planet: 0.70,
+  star:   0.55,
+  dust:   0.45
+};
 let currentMapScale = 1.0;
+let currentNodeScale = 1.0;
 
 // 월드 중심 좌표
 const CX = 900, CY = 600;
@@ -1009,17 +1017,26 @@ function layoutSpiral(fanclubs) {
 
 // 노드 생성 (개별 색상 적용)
 function createNode(fc, pos, rank, fcColor, isFirst) {
+  const ns = currentNodeScale;
   const node = document.createElement('div');
   node.className = 'q-node' + (isFirst ? ' c1' : '');
   node.setAttribute('data-fan', fc.name);
-  node.style.left = (pos.x - pos.r) + 'px';
-  node.style.top = (pos.y - pos.r) + 'px';
+  const scaledR = Math.round(pos.r * ns);
+  node.style.left = (pos.x - scaledR) + 'px';
+  node.style.top = (pos.y - scaledR) + 'px';
   node.onclick = function() { goFromNode(this); };
 
-  const diam = pos.r * 2;
-  const fontSize = isFirst ? Math.round(pos.r * 0.28) : Math.round(pos.r * 0.38);
+  const diam = scaledR * 2;
   const scoreStr = fc.score.toLocaleString();
   const rgb = hexToRgb(fcColor);
+
+  // 텍스트/아이콘 크기도 비례 축소
+  const rankFs = Math.round((isFirst ? 22 : 16) * ns);
+  const iconFs = Math.round((isFirst ? 56 : 36) * ns);
+  const nameFs = Math.round((isFirst ? 22 : 15) * ns);
+  const scoreFs = Math.round((isFirst ? 15 : 11) * ns);
+  const pad = Math.round((isFirst ? 12 : 8) * ns);
+  const mb = Math.round(6 * ns);
 
   // 1등: 골드 광채 + 파티클 애니메이션
   const orbStyle = isFirst
@@ -1027,11 +1044,11 @@ function createNode(fc, pos, rank, fcColor, isFirst) {
     : `width:${diam}px;height:${diam}px;background:radial-gradient(circle at 35% 35%,rgba(${rgb},.15),rgba(7,7,15,.95));box-shadow:0 0 0 2px rgba(${rgb},.7),0 0 30px rgba(${rgb},.4)`;
 
   node.innerHTML = `
-    <div class="q-orb" style="${orbStyle};border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:${isFirst?'12':'8'}px">
-      <div style="font-family:'Orbitron',monospace;color:var(--gold);font-size:${isFirst?22:16}px;font-weight:700;margin-bottom:6px">${rank}위</div>
-      <span style="font-size:${isFirst?56:36}px;line-height:1;margin-bottom:8px">${fc.icon}</span>
-      <div style="color:${fcColor};font-size:${isFirst?22:15}px;font-weight:700;margin-bottom:4px;font-family:'Noto Sans KR',sans-serif">${fc.name}</div>
-      <div style="color:var(--gold);font-size:${isFirst?15:11}px;opacity:0.8">${scoreStr} QP</div>
+    <div class="q-orb" style="${orbStyle};border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:${pad}px">
+      <div style="font-family:'Orbitron',monospace;color:var(--gold);font-size:${rankFs}px;font-weight:700;margin-bottom:${mb}px">${rank}위</div>
+      <span style="font-size:${iconFs}px;line-height:1;margin-bottom:${mb}px">${fc.icon}</span>
+      <div style="color:${fcColor};font-size:${nameFs}px;font-weight:700;margin-bottom:${Math.round(4*ns)}px;font-family:'Noto Sans KR',sans-serif">${fc.name}</div>
+      <div style="color:var(--gold);font-size:${scoreFs}px;opacity:0.8">${scoreStr} QP</div>
     </div>
   `;
   return node;
@@ -1063,8 +1080,9 @@ function switchLeague(league) {
   // 배경색 변경
   document.body.style.background = data.bg;
 
-  // 리그별 맵 스케일 적용
+  // 리그별 맵/노드 스케일 적용
   currentMapScale = LEAGUE_MAP_SCALE[league] || 1.0;
+  currentNodeScale = LEAGUE_NODE_SCALE[league] || 1.0;
 
   // 별자리 노드 업데이트
   const cw = document.getElementById('cw');
