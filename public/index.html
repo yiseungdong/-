@@ -1180,10 +1180,6 @@ window.addEventListener('DOMContentLoaded', () => {
     try {
       const userData = JSON.parse(localStorage.getItem('asteria_user') || '{}');
       const fandomHref = userData.fandomId ? '/fandom.html?fandom_id=' + userData.fandomId : '/fandom.html';
-      if (heroCta) {
-        heroCta.textContent = '🏘️ 내 팬덤 바로가기';
-        heroCta.href = fandomHref;
-      }
     } catch(e) {}
     const avnode = document.getElementById('avnode');
     if (avnode) avnode.style.display = 'flex';
@@ -1196,9 +1192,8 @@ window.addEventListener('DOMContentLoaded', () => {
       const userData2 = JSON.parse(localStorage.getItem('asteria_user') || '{}');
       const fandomId2 = userData2.fandomId;
       const myFandomBtn = document.getElementById('myFandomBtn');
-      if (myFandomBtn && fandomId2) {
-        myFandomBtn.href = '/fandom.html?fandom_id=' + fandomId2;
-        myFandomBtn.style.display = 'inline-block';
+      if (myFandomBtn) {
+        myFandomBtn.href = fandomId2 ? '/fandom.html?fandom_id=' + fandomId2 : '/fandom.html';
       }
     } catch(e) {}
   }
