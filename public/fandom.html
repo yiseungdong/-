@@ -99,7 +99,7 @@ canvas{position:absolute;inset:0;z-index:1}
   min-width:200px;
   max-width:260px;
   border-radius:12px;
-  overflow:hidden;
+  overflow:visible;
   border:1px solid rgba(180,150,255,0.18);
   backdrop-filter:blur(12px);
 }
@@ -831,9 +831,23 @@ canvas{position:absolute;inset:0;z-index:1}
 <div class="ent" id="ent"><div class="ent-t" id="entT">STARIUM</div><div class="ent-s" id="entS">entering...</div></div>
 <!-- 헤더 제거됨 -->
 <!-- 리그 탭 제거됨 -->
-<div style="display:flex;align-items:flex-start;gap:8px;">
-<div class="fc-header" id="fcHeader" style="flex:1;min-width:0;">
+<div class="fc-header" id="fcHeader">
   <div class="fc-header-top" onclick="toggleFcHeader()">
+    <button id="fandomSideBtnLocal" onclick="event.stopPropagation();location.href='/fandom.html'" style="
+      position:absolute;
+      right:-80px;
+      top:4px;
+      background: rgba(240,192,64,0.15);
+      border: 1px solid rgba(240,192,64,0.4);
+      color: #f0c040;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-family: 'Noto Sans KR', sans-serif;
+      cursor: pointer;
+      white-space: nowrap;
+      backdrop-filter: blur(10px);
+    ">🏘️ 내 팬덤</button>
     <div>
       <div class="fc-header-name" id="fcName">BTS ARMY</div>
       <div class="fc-header-rank">
@@ -884,21 +898,6 @@ canvas{position:absolute;inset:0;z-index:1}
     </div>
   </div>
 </div>
-<button id="fandomSideBtnLocal" onclick="location.href='/fandom.html'" style="
-  background: rgba(240,192,64,0.15);
-  border: 1px solid rgba(240,192,64,0.4);
-  color: #f0c040;
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-family: 'Noto Sans KR', sans-serif;
-  cursor: pointer;
-  white-space: nowrap;
-  backdrop-filter: blur(10px);
-  margin-top: 4px;
-  flex-shrink: 0;
-">🏘️ 내 팬덤</button>
-</div><!-- /flex wrapper -->
 <div class="chat-panel" id="chatPanel">
   <div class="chat-panel-hdr">
     <div class="chat-panel-title" id="chatPanelTitle">💬 팬클럽 전체 채팅</div>
