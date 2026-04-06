@@ -110,6 +110,9 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 #toast.show{opacity:1}
 
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+#navFandomBtn {
+  display: none !important;
+}
 </style>
 </head>
 <body>
@@ -126,6 +129,28 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
   <a class="top-nav-item active" href="/competition.html">경쟁</a>
   <div id="navFandomBtn" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);"></div>
 </nav>
+
+<!-- 내 팬덤 버튼 (경쟁 탭 바로 아래 우측) -->
+<div id="subNavFandomBtn" style="
+  display: flex;
+  justify-content: flex-end;
+  padding: 6px 16px 0 0;
+  position: relative;
+  z-index: 100;
+">
+  <button onclick="location.href='/fandom.html'" id="subFandomBtnInner" style="
+    background: rgba(240,192,64,0.15);
+    border: 1px solid rgba(240,192,64,0.4);
+    color: #f0c040;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-family: 'Noto Sans KR', sans-serif;
+    cursor: pointer;
+    white-space: nowrap;
+    backdrop-filter: blur(10px);
+  ">🏘️ 내 팬덤</button>
+</div>
 
 <div id="app">
 
@@ -489,6 +514,18 @@ showTab('statking');
     btn.innerHTML = '<a href="/fandom.html" style="display:flex;align-items:center;gap:4px;padding:5px 12px;border:1px solid var(--gold,#f0c040);border-radius:20px;color:var(--gold,#f0c040);font-size:11px;text-decoration:none;font-weight:700;background:rgba(240,192,64,0.08);transition:all .2s;" onmouseover="this.style.background=\'var(--gold,#f0c040)\';this.style.color=\'#000\'" onmouseout="this.style.background=\'rgba(240,192,64,0.08)\';this.style.color=\'var(--gold,#f0c040)\'">🏘️ 내 팬덤</a>';
   } else {
     btn.innerHTML = '<a href="/login.html" style="display:flex;align-items:center;gap:4px;padding:5px 12px;border:1px solid var(--gold,#f0c040);border-radius:20px;color:var(--gold,#f0c040);font-size:11px;text-decoration:none;font-weight:700;background:rgba(240,192,64,0.08);">🚀 로그인</a>';
+  }
+})();
+</script>
+<script>
+(function(){
+  const subFandomBtn = document.getElementById('subFandomBtnInner');
+  if (subFandomBtn) {
+    const token = localStorage.getItem('asteria_token');
+    if (!token) {
+      subFandomBtn.textContent = '🚀 로그인';
+      subFandomBtn.onclick = () => location.href = '/login.html';
+    }
   }
 })();
 </script>
