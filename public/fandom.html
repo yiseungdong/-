@@ -1616,20 +1616,28 @@ function calcBLD(league){
 let cv,ctx,t,anim;
 
 function init(){
-  cv=document.getElementById('cv');ctx=cv.getContext('2d');
-  cv.width=W;cv.height=H;
-  document.getElementById('vw').style.width=W+'px';
-  document.getElementById('vw').style.height=H+'px';
+  try{
+    cv=document.getElementById('cv');ctx=cv.getContext('2d');
+    cv.width=W;cv.height=H;
+    document.getElementById('vw').style.width=W+'px';
+    document.getElementById('vw').style.height=H+'px';
+  }catch(e){
+    console.error('[Asteria] init() 초기화 오류:', e);
+  }
 }
 
 /* ═══ 메인 드로잉 ═══ */
 function draw(){
   if(!t)return;
-  ctx.clearRect(0,0,W,H);
-  drawSky();drawGround();drawRoads();drawPlaza();
-  drawPond();drawBridge();drawFlowers();
-  drawBuildings();drawLamps();drawMonument();drawGate();drawProps();
-  drawSmoke();drawParticles();
+  try{
+    ctx.clearRect(0,0,W,H);
+    drawSky();drawGround();drawRoads();drawPlaza();
+    drawPond();drawBridge();drawFlowers();
+    drawBuildings();drawLamps();drawMonument();drawGate();drawProps();
+    drawSmoke();drawParticles();
+  }catch(e){
+    console.error('[Asteria] draw() 렌더링 오류 (league='+DM.league+'):', e);
+  }
   anim=requestAnimationFrame(draw);
 }
 
@@ -1908,7 +1916,8 @@ i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
       ctx.lineWidth=1;
       ctx.beginPath();ctx.ellipse(mx,my,r,r*.77,0,0,Math.PI*2);ctx.stroke();
     }
-    // 빛    const g=ctx.createRadialGradient(mx,my,0,mx,my,300);
+    // 빛
+    const g=ctx.createRadialGradient(mx,my,0,mx,my,300);
     g.addColorStop(0,t.lg);g.addColorStop(1,'transparent');
     ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(mx,my,300,230,0,0,Math.PI*2);ctx.fill();
   } else if(league==='quasar'){
