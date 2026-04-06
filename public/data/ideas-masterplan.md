@@ -1907,3 +1907,64 @@ CREATE TABLE moim_groups (
 1. 모바일 반응형 점검
 2. avatar.html 헤어/의상 레이어 개선
 3. fandom.html 소모임 채팅 실제 동작 테스트
+
+---
+
+### 완료된 사항 (2026.04.07 세션)
+
+#### 내 팬덤 버튼 위치 전체 수정
+- fandom.html: 우측상단 navFandomBtn 숨김 + BTS ARMY 카드 우측에 flex 배치
+- astra.html, room3d.html, avatar.html, shop.html: 네비 바로 아래 우측(경쟁 탭 아래)에 버튼 배치
+- competition.html: 네비 바로 아래 중앙에 버튼 배치
+- index.html: 우측상단 버튼 숨김 + "내 팬덤 바로가기 · Go to My Fandom" 버튼 네비 아래 중앙 배치 (중복 버튼 제거)
+
+#### 회원가입 팬클럽/리그 전체 페이지 연동 수정
+- server.js 회원가입/로그인 API 응답에 fandomId, fandomName, league 포함
+- login.html localStorage에 fandomId, fandomName, league 저장
+- index.html 로그인 시 내 리그 탭 자동 선택
+- fandom.html 내 팬클럽 마을 표시 (BTS ARMY 하드코딩 제거)
+- astra.html 브레드크럼 실제 팬클럽명 표시
+
+#### 리그맵 팬클럽 클릭 → 해당 팬클럽 마을로 이동
+- index.html 팬클럽 원 클릭 시 /fandom.html?fandomId=XX 로 이동
+- fandom.html URL 파라미터로 해당 팬클럽 마을 표시 (구경 모드)
+- 구경 모드 시 "내 팬덤으로" 버튼으로 변경
+
+#### fandom.html 노바 리그 마을 렌더링 오류 수정
+- nova 리그 진입 시 검은 화면 멈춤 버그 수정
+
+#### 리그별 맵 크기 확장 (드래그 탐험)
+- index.html 리그별 맵 크기 배율 적용:
+  - quasar: 1.0 (현재 유지)
+  - nova: 1.2배
+  - planet: 1.5배 (나선 간격 75% + 맵 1.5배)
+  - star: 2.5배
+  - dust: 3.0배
+- 드래그로 모든 팬클럽 탐험 가능
+
+#### planet 리그 나선형 배치 간격 조정
+- 1위 중심에서 퍼져나가는 나선 간격을 75%로 조정 (겹침 해소)
+
+#### fandom.html 리그별 팬덤 마을 크기 차등
+- 리그별 마을 맵 scale 적용:
+  - quasar: 1.0
+  - nova: 0.9
+  - planet: 0.8
+  - star: 0.7
+  - dust: 0.6
+
+---
+
+### 현재 보류 버그 (2026.04.07 기준)
+1. 모임채팅 탭 — 실제 동작 테스트 필요
+2. avatar.html 아바타 꾸미기 대부분 미적용
+3. room3d.html 아바타 벽타기 미해결
+4. star/dust 리그 나선 배치 간격 미조정 (planet만 완료)
+5. fandom.html 팬클럽 색상 테마 리그별 미적용
+
+### 다음 세션 작업 순서
+1. star 리그 나선 배치 간격 조정
+2. dust 리그 나선 배치 간격 조정
+3. fandom.html 리그별 색상 테마 적용
+4. 모바일 반응형 점검
+5. avatar.html 헤어/의상 레이어 개선
