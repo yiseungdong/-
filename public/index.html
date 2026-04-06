@@ -310,6 +310,9 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 .bug-modal-btns button{flex:1;padding:10px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;border:none;font-family:'Noto Sans KR',sans-serif}
 .bug-submit{background:linear-gradient(90deg,#4a90d9,#7c5ce0);color:#fff}
 .bug-cancel{background:transparent;border:1px solid rgba(200,175,80,0.2)!important;color:#e8ecf4}
+#navFandomBtn {
+  display: none !important;
+}
 </style>
 <script src="/js/avatar-svgs.js"></script>
 </head>
@@ -383,10 +386,11 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
     <div class="qhdr-top"><span class="qhdr-gem">✦</span><span class="qhdr-title">Quasar League</span><span class="qhdr-gem">✦</span></div>
     <div class="qhdr-line"></div>
     <div class="qhdr-sub">— 제국의 정점 · 실시간 팬클럽 화력 순위 —</div>
-    <a id="myFandomBtn" href="#" style="display:none; margin-top:8px; padding:8px 20px;
+    <a id="myFandomBtn" href="/fandom.html" onclick="location.href='/fandom.html'" style="margin-top:8px; padding:8px 20px;
       border:1px solid var(--accent); border-radius:20px; color:var(--accent);
       font-size:12px; font-weight:600; text-decoration:none;
-      font-family:'Noto Sans KR',sans-serif; transition:all .2s;"
+      font-family:'Noto Sans KR',sans-serif; transition:all .2s;
+      pointer-events:auto;"
       onmouseover="this.style.background='rgba(192,132,252,0.15)'"
       onmouseout="this.style.background='transparent'">
       ✦ 내 팬덤 바로가기 · Go to My Fandom
