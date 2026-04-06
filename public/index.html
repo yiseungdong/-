@@ -719,8 +719,8 @@ function flash(cb){
 (function(){
   const vp=document.getElementById('cv'),wd=document.getElementById('cw');
   let drag=false,sx,sy,tx=0,ty=0;
-  function init(){const vw=vp.clientWidth,vh=vp.clientHeight;tx=vw/2-900;ty=vh/2-600;clamp();apply()}
-  function clamp(){const vw=vp.clientWidth,vh=vp.clientHeight;tx=Math.min(0,Math.max(vw-1800,tx));ty=Math.min(0,Math.max(vh-1200,ty))}
+  function init(){const vw=vp.clientWidth,vh=vp.clientHeight;const ww=parseInt(wd.style.width)||1800;const wh=parseInt(wd.style.height)||1200;tx=vw/2-ww/2;ty=vh/2-wh/2;clamp();apply()}
+  function clamp(){const vw=vp.clientWidth,vh=vp.clientHeight;const ww=parseInt(wd.style.width)||1800;const wh=parseInt(wd.style.height)||1200;tx=Math.min(0,Math.max(vw-ww,tx));ty=Math.min(0,Math.max(vh-wh,ty))}
   function apply(){wd.style.transform=`translate(${tx}px,${ty}px)`}
   setTimeout(init,60);window.addEventListener('resize',init);
   vp.addEventListener('mousedown',e=>{if(e.target.closest('.q-node'))return;drag=true;sx=e.clientX-tx;sy=e.clientY-ty;vp.style.cursor='grabbing'});
@@ -936,6 +936,16 @@ const LEAGUE_DATA = {
   }
 };
 
+// 리그별 맵 크기 배율
+const LEAGUE_MAP_SCALE = {
+  quasar: 1.0,
+  nova:   1.2,
+  planet: 1.5,
+  star:   2.5,
+  dust:   3.0
+};
+let currentMapScale = 1.0;
+
 // 월드 중심 좌표
 const CX = 900, CY = 600;
 
@@ -967,16 +977,18 @@ function layoutQuasar(fanclubs) {
 
 // 나선형 배치: 아르키메데스 나선 (팬클럽 수에 따라 자동 조절)
 function layoutSpiral(fanclubs) {
+  const scale = currentMapScale;
   const maxScore = fanclubs[0].score;
   const count = fanclubs.length;
   const positions = [];
 
   // 1등 반지름 (팬클럽 수 많을수록 작게)
   const r1 = count <= 10 ? 100 : count <= 20 ? 80 : count <= 40 ? 60 : 50;
-  positions.push({ x: CX, y: CY, r: r1 });
+  const cx = CX * scale, cy = CY * scale;
+  positions.push({ x: cx, y: cy, r: r1 });
 
-  const startR = r1 + (count <= 10 ? 60 : count <= 20 ? 50 : 35);
-  const spacing = count <= 10 ? 55 : count <= 20 ? 38 : count <= 40 ? 26 : 22;
+  const startR = (r1 + (count <= 10 ? 60 : count <= 20 ? 50 : 35)) * scale;
+  const spacing = (count <= 10 ? 55 : count <= 20 ? 38 : count <= 40 ? 26 : 22) * scale;
   const angleStep = count <= 10 ? 0.85 : count <= 20 ? 0.65 : count <= 40 ? 0.48 : 0.42;
 
   for (let i = 1; i < count; i++) {
@@ -987,8 +999,8 @@ function layoutSpiral(fanclubs) {
     const angle = i * angleStep;
     const dist = startR + i * spacing;
     positions.push({
-      x: CX + Math.cos(angle) * dist,
-      y: CY + Math.sin(angle) * dist,
+      x: cx + Math.cos(angle) * dist,
+      y: cy + Math.sin(angle) * dist,
       r: ri
     });
   }
@@ -1051,6 +1063,9 @@ function switchLeague(league) {
   // 배경색 변경
   document.body.style.background = data.bg;
 
+  // 리그별 맵 스케일 적용
+  currentMapScale = LEAGUE_MAP_SCALE[league] || 1.0;
+
   // 별자리 노드 업데이트
   const cw = document.getElementById('cw');
   cw.querySelectorAll('.q-node').forEach(n => n.remove());
@@ -1083,7 +1098,9 @@ function switchLeague(league) {
   // 뷰포트를 1등 중심으로 이동
   const vp = document.getElementById('cv');
   const vw = vp.clientWidth, vh = vp.clientHeight;
-  const tx = vw / 2 - CX, ty = vh / 2 - CY;
+  const firstX = positions[0] ? positions[0].x : CX * currentMapScale;
+  const firstY = positions[0] ? positions[0].y : CY * currentMapScale;
+  const tx = vw / 2 - firstX, ty = vh / 2 - firstY;
   const cwW = parseInt(cw.style.width), cwH = parseInt(cw.style.height);
   const clampedTx = Math.min(0, Math.max(vw - cwW, tx));
   const clampedTy = Math.min(0, Math.max(vh - cwH, ty));
