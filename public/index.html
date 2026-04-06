@@ -939,10 +939,10 @@ const LEAGUE_DATA = {
 // 리그별 맵 크기 배율
 const LEAGUE_MAP_SCALE = {
   quasar: 1.0,
-  nova:   0.80,
-  planet: 0.65,
-  star:   0.50,
-  dust:   0.40
+  nova:   1.2,
+  planet: 1.5,
+  star:   2.5,
+  dust:   3.0
 };
 let currentMapScale = 1.0;
 
@@ -984,7 +984,8 @@ function layoutSpiral(fanclubs) {
 
   // 1등 반지름 (팬클럽 수 많을수록 작게)
   const r1 = count <= 10 ? 100 : count <= 20 ? 80 : count <= 40 ? 60 : 50;
-  positions.push({ x: CX, y: CY, r: r1 });
+  const cx = CX * scale, cy = CY * scale;
+  positions.push({ x: cx, y: cy, r: r1 });
 
   const startR = (r1 + (count <= 10 ? 60 : count <= 20 ? 50 : 35)) * scale;
   const spacing = (count <= 10 ? 55 : count <= 20 ? 38 : count <= 40 ? 26 : 22) * scale;
@@ -998,8 +999,8 @@ function layoutSpiral(fanclubs) {
     const angle = i * angleStep;
     const dist = startR + i * spacing;
     positions.push({
-      x: CX + Math.cos(angle) * dist,
-      y: CY + Math.sin(angle) * dist,
+      x: cx + Math.cos(angle) * dist,
+      y: cy + Math.sin(angle) * dist,
       r: ri
     });
   }
@@ -1097,7 +1098,9 @@ function switchLeague(league) {
   // 뷰포트를 1등 중심으로 이동
   const vp = document.getElementById('cv');
   const vw = vp.clientWidth, vh = vp.clientHeight;
-  const tx = vw / 2 - CX, ty = vh / 2 - CY;
+  const firstX = positions[0] ? positions[0].x : CX;
+  const firstY = positions[0] ? positions[0].y : CY;
+  const tx = vw / 2 - firstX, ty = vh / 2 - firstY;
   const cwW = parseInt(cw.style.width), cwH = parseInt(cw.style.height);
   const clampedTx = Math.min(0, Math.max(vw - cwW, tx));
   const clampedTy = Math.min(0, Math.max(vh - cwH, ty));
