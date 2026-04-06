@@ -987,7 +987,7 @@ function layoutSpiral(fanclubs, league) {
   const cx = CX * scale, cy = CY * scale;
   positions.push({ x: cx, y: cy, r: r1 });
 
-  const spiralTight = league === 'planet' ? 0.75 : league === 'nova' ? 0.50 : 1.0;
+  const spiralTight = league === 'planet' ? 0.75 : league === 'nova' ? 0.60 : 1.0;
   const startR = (r1 + (count <= 10 ? 60 : count <= 20 ? 50 : 35)) * scale * spiralTight;
   const spacing = (count <= 10 ? 55 : count <= 20 ? 38 : count <= 40 ? 26 : 22) * scale * spiralTight;
   const angleStep = count <= 10 ? 0.85 : count <= 20 ? 0.65 : count <= 40 ? 0.48 : 0.42;
@@ -1004,6 +1004,24 @@ function layoutSpiral(fanclubs, league) {
       y: cy + Math.sin(angle) * dist,
       r: ri
     });
+  }
+  // 겹침 방지: 겹치는 원을 바깥으로 밀어냄
+  for (let pass = 0; pass < 3; pass++) {
+    for (let i = 1; i < positions.length; i++) {
+      for (let j = 0; j < i; j++) {
+        const a = positions[i], b = positions[j];
+        const dx = a.x - b.x, dy = a.y - b.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const minDist = a.r + b.r + 4;
+        if (dist < minDist && dist > 0) {
+          const push = (minDist - dist) / 2;
+          const nx = dx / dist, ny = dy / dist;
+          a.x += nx * push;
+          a.y += ny * push;
+          if (j > 0) { b.x -= nx * push; b.y -= ny * push; }
+        }
+      }
+    }
   }
   return positions;
 }
