@@ -91,15 +91,15 @@ canvas{position:absolute;inset:0;z-index:1}
 .top-nav-item.active {
   color:#c084fc; border-bottom-color:#c084fc;
 }
+#navFandomBtn {
+  display: none !important;
+}
 /* 접이식 헤더 */
 .fc-header {
-  position:fixed;
-  top:52px; left:12px;
-  z-index:350;
   min-width:200px;
   max-width:260px;
   border-radius:12px;
-  overflow:visible;
+  overflow:hidden;
   border:1px solid rgba(180,150,255,0.18);
   backdrop-filter:blur(12px);
 }
@@ -831,23 +831,10 @@ canvas{position:absolute;inset:0;z-index:1}
 <div class="ent" id="ent"><div class="ent-t" id="entT">STARIUM</div><div class="ent-s" id="entS">entering...</div></div>
 <!-- 헤더 제거됨 -->
 <!-- 리그 탭 제거됨 -->
+<!-- 팬클럽 카드 + 내 팬덤 버튼을 flex로 나란히 배치 -->
+<div style="display:flex; align-items:flex-start; gap:8px; position:fixed; top:52px; left:12px; z-index:350;">
 <div class="fc-header" id="fcHeader">
   <div class="fc-header-top" onclick="toggleFcHeader()">
-    <button id="fandomSideBtnLocal" onclick="event.stopPropagation();location.href='/fandom.html'" style="
-      position:absolute;
-      right:-80px;
-      top:4px;
-      background: rgba(240,192,64,0.15);
-      border: 1px solid rgba(240,192,64,0.4);
-      color: #f0c040;
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-family: 'Noto Sans KR', sans-serif;
-      cursor: pointer;
-      white-space: nowrap;
-      backdrop-filter: blur(10px);
-    ">🏘️ 내 팬덤</button>
     <div>
       <div class="fc-header-name" id="fcName">BTS ARMY</div>
       <div class="fc-header-rank">
@@ -898,6 +885,22 @@ canvas{position:absolute;inset:0;z-index:1}
     </div>
   </div>
 </div>
+  <button id="fandomSideBtnLocal" style="
+    background: rgba(240,192,64,0.15);
+    border: 1px solid rgba(240,192,64,0.4);
+    color: #f0c040;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-family: 'Noto Sans KR', sans-serif;
+    cursor: pointer;
+    white-space: nowrap;
+    backdrop-filter: blur(10px);
+    flex-shrink: 0;
+    align-self: flex-start;
+    margin-top: 4px;
+  ">🏘️ 내 팬덤</button>
+</div><!-- /flex wrapper -->
 <div class="chat-panel" id="chatPanel">
   <div class="chat-panel-hdr">
     <div class="chat-panel-title" id="chatPanelTitle">💬 팬클럽 전체 채팅</div>
@@ -4131,7 +4134,10 @@ function renderFcHeader(league){
   var fandomSideBtn = document.getElementById('fandomSideBtnLocal');
   if (fandomSideBtn) {
     var token = localStorage.getItem('asteria_token');
-    if (!token) {
+    if (token) {
+      fandomSideBtn.textContent = '🏘️ 내 팬덤';
+      fandomSideBtn.onclick = function(){ location.href = '/fandom.html'; };
+    } else {
       fandomSideBtn.textContent = '🚀 로그인';
       fandomSideBtn.onclick = function(){ location.href = '/login.html'; };
     }
