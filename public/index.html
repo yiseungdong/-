@@ -1158,9 +1158,10 @@ function updatePromotionBars(league) {
   }
 }
 
-// 입장 첫화면을 퀘이사로 통일
+// 입장 첫화면: localStorage의 리그 정보 우선, 없으면 퀘이사
 window.addEventListener('DOMContentLoaded', () => {
-  switchLeague('quasar');
+  const _userLeague = (function(){ try { return JSON.parse(localStorage.getItem('asteria_user')||'{}').league; } catch(e){ return null; } })();
+  switchLeague(_userLeague || 'quasar');
   const token = localStorage.getItem('asteria_token') || localStorage.getItem('accessToken');
   const nick = localStorage.getItem('asteria_nick') || '';
   if (token) {

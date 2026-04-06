@@ -836,7 +836,7 @@ canvas{position:absolute;inset:0;z-index:1}
 <div class="fc-header" id="fcHeader">
   <div class="fc-header-top" onclick="toggleFcHeader()">
     <div>
-      <div class="fc-header-name" id="fcName">BTS ARMY</div>
+      <div class="fc-header-name" id="fcName">로딩중...</div>
       <div class="fc-header-rank">
         <span id="fcLeague">스타 리그</span>
         <span>·</span>
@@ -1092,7 +1092,7 @@ function buildDM() {
     const user = JSON.parse(localStorage.getItem('asteria_user') || '{}');
     return {
       name: user.fandomName || user.fandom_name || 'BTS ARMY',
-      league: user.league || 'star',
+      league: user.league || 'dust',
       rank: user.fandomRank || user.fandom_rank || 3,
       members: 98432, score: 847, energy: 72, dday: 14, online: 1234,
       fandom_id: user.fandomId || user.fandom_id || 1,
@@ -1108,7 +1108,7 @@ function buildDM() {
     };
   } catch(e) {
     return {
-      name:'BTS ARMY', league:'star', rank:3, members:98432,
+      name:'내 팬덤', league:'dust', rank:3, members:98432,
       score:847, energy:72, dday:14, online:1234,
       fandom_id:1, myUserId:null, myNick:'나',
       moim_depth1:null, moim_depth2:null, moim_depth3:null,

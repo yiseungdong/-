@@ -2313,6 +2313,18 @@ app.post('/api/auth/register', async (req, res) => {
     );
 
     const newUser = result.rows[0];
+    const fandom_id = newUser.fandom_id;
+
+    // fanclubs에서 fandomName, league 조회
+    let fandomName = null;
+    let fandomLeague = 'dust';
+    if (fandom_id) {
+      const fcRow = await pool.query('SELECT name, league FROM fanclubs WHERE id = $1', [fandom_id]);
+      if (fcRow.rows.length > 0) {
+        fandomName = fcRow.rows[0].name;
+        fandomLeague = fcRow.rows[0].league;
+      }
+    }
 
     // 추천인 보상 처리
     if (referral_code) {
@@ -2367,11 +2379,13 @@ app.post('/api/auth/register', async (req, res) => {
         id: newUser.id,
         nickname: newUser.nickname,
         email: newUser.email,
-        league: newUser.league || 'dust',
+        league: fandomLeague,
         stardust: newUser.stardust || initialStardust || 0,
         is_pioneer: isPioneer,
         pioneer_rank: pioneerRank,
-        astra_id: astraId || null
+        astra_id: astraId || null,
+        fandomId: fandom_id || null,
+        fandomName: fandomName || null
       }
     });
   } catch (err) {
@@ -2512,6 +2526,17 @@ app.post('/api/auth/login', async (req, res) => {
       [user.id]
     );
 
+    // fanclubs에서 fandomName, league 조회
+    let fandomName = null;
+    let fandomLeague = user.league || 'dust';
+    if (user.fandom_id) {
+      const fcRow = await pool.query('SELECT name, league FROM fanclubs WHERE id = $1', [user.fandom_id]);
+      if (fcRow.rows.length > 0) {
+        fandomName = fcRow.rows[0].name;
+        fandomLeague = fcRow.rows[0].league;
+      }
+    }
+
     // 아스트라 번호 조회 후 토큰에 포함
     const nebula = await pool.query('SELECT serial_code FROM nebulae WHERE user_id = $1', [user.id]);
     const astraId = nebula.rows[0]?.serial_code || null;
@@ -2536,7 +2561,7 @@ app.post('/api/auth/login', async (req, res) => {
         emoji: user.emoji,
         level: user.level,
         grade: user.grade,
-        league: user.league,
+        league: fandomLeague,
         astraId,
         ap: user.ap,
         cp: user.cp,
@@ -2544,6 +2569,7 @@ app.post('/api/auth/login', async (req, res) => {
         isPioneer: user.is_pioneer,
         pioneerRank: user.pioneer_rank,
         fandomId: user.fandom_id || null,
+        fandomName: fandomName || null,
         stats: {
           loy: user.stat_loy, act: user.stat_act, soc: user.stat_soc,
           eco: user.stat_eco, cre: user.stat_cre, int: user.stat_int
