@@ -387,12 +387,13 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
     <div class="qhdr-line"></div>
     <div class="qhdr-sub">— 제국의 정점 · 실시간 팬클럽 화력 순위 —</div>
     <a id="myFandomBtn" href="/fandom.html" onclick="location.href='/fandom.html'" style="margin-top:8px; padding:8px 20px;
-      border:1px solid var(--accent); border-radius:20px; color:var(--accent);
+      border:1px solid rgba(240,192,64,0.4); border-radius:20px; color:#f0c040;
       font-size:12px; font-weight:600; text-decoration:none;
       font-family:'Noto Sans KR',sans-serif; transition:all .2s;
-      pointer-events:auto;"
-      onmouseover="this.style.background='rgba(192,132,252,0.15)'"
-      onmouseout="this.style.background='transparent'">
+      background:rgba(240,192,64,0.1);
+      pointer-events:auto; position:relative; z-index:50; cursor:pointer;"
+      onmouseover="this.style.background='rgba(240,192,64,0.25)'"
+      onmouseout="this.style.background='rgba(240,192,64,0.1)'">
       ✦ 내 팬덤 바로가기 · Go to My Fandom
     </a>
   </div>
