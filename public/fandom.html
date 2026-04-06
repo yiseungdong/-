@@ -831,7 +831,8 @@ canvas{position:absolute;inset:0;z-index:1}
 <div class="ent" id="ent"><div class="ent-t" id="entT">STARIUM</div><div class="ent-s" id="entS">entering...</div></div>
 <!-- 헤더 제거됨 -->
 <!-- 리그 탭 제거됨 -->
-<div class="fc-header" id="fcHeader">
+<div style="display:flex;align-items:flex-start;gap:8px;">
+<div class="fc-header" id="fcHeader" style="flex:1;min-width:0;">
   <div class="fc-header-top" onclick="toggleFcHeader()">
     <div>
       <div class="fc-header-name" id="fcName">BTS ARMY</div>
@@ -883,6 +884,21 @@ canvas{position:absolute;inset:0;z-index:1}
     </div>
   </div>
 </div>
+<button id="fandomSideBtnLocal" onclick="location.href='/fandom.html'" style="
+  background: rgba(240,192,64,0.15);
+  border: 1px solid rgba(240,192,64,0.4);
+  color: #f0c040;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-family: 'Noto Sans KR', sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  backdrop-filter: blur(10px);
+  margin-top: 4px;
+  flex-shrink: 0;
+">🏘️ 내 팬덤</button>
+</div><!-- /flex wrapper -->
 <div class="chat-panel" id="chatPanel">
   <div class="chat-panel-hdr">
     <div class="chat-panel-title" id="chatPanelTitle">💬 팬클럽 전체 채팅</div>
@@ -4107,13 +4123,19 @@ function renderFcHeader(league){
 <div id="league-chat-container"></div>
 <script>
 (function(){
-  var token = localStorage.getItem('asteria_token');
   var btn = document.getElementById('navFandomBtn');
-  if(!btn) return;
-  if(token){
-    btn.innerHTML = '<a href="/fandom.html" style="display:flex;align-items:center;gap:4px;padding:5px 12px;border:1px solid var(--gold,#f0c040);border-radius:20px;color:var(--gold,#f0c040);font-size:11px;text-decoration:none;font-weight:700;background:rgba(240,192,64,0.08);transition:all .2s;" onmouseover="this.style.background=\'var(--gold,#f0c040)\';this.style.color=\'#000\'" onmouseout="this.style.background=\'rgba(240,192,64,0.08)\';this.style.color=\'var(--gold,#f0c040)\'">🏘️ 내 팬덤</a>';
-  } else {
-    btn.innerHTML = '<a href="/login.html" style="display:flex;align-items:center;gap:4px;padding:5px 12px;border:1px solid var(--gold,#f0c040);border-radius:20px;color:var(--gold,#f0c040);font-size:11px;text-decoration:none;font-weight:700;background:rgba(240,192,64,0.08);">🚀 로그인</a>';
+  if(btn) btn.style.display = 'none';
+})();
+</script>
+<script>
+(function(){
+  var fandomSideBtn = document.getElementById('fandomSideBtnLocal');
+  if (fandomSideBtn) {
+    var token = localStorage.getItem('asteria_token');
+    if (!token) {
+      fandomSideBtn.textContent = '🚀 로그인';
+      fandomSideBtn.onclick = function(){ location.href = '/login.html'; };
+    }
   }
 })();
 </script>
