@@ -1,7 +1,9 @@
 const fs = require('fs-extra');
 const path = require('path');
+const XLSX = require('xlsx');
 
 const REPORTS_DIR = path.join(__dirname, '..', 'reports');
+const EXCEL_PATH = path.join(__dirname, '..', 'reports', '비상장_누적.xlsx');
 
 function getToday() {
   const now = new Date();
@@ -262,4 +264,76 @@ async function writeReports(analysisResults) {
   return createdFiles;
 }
 
-module.exports = { writeReports, generateReport };
+/**
+ * 분석 결과를 엑셀 파일에 누적 저장
+ * reports/비상장_누적.xlsx 에 날짜별로 행 추가
+ */
+async function appendToExcel(analysisResults) {
+  if (!analysisResults || analysisResults.length === 0) return;
+
+  const today = getToday();
+  let wb;
+  let ws;
+  let existingData = [];
+
+  // 기존 파일이 있으면 읽기
+  try {
+    if (await fs.pathExists(EXCEL_PATH)) {
+      wb = XLSX.readFile(EXCEL_PATH);
+      ws = wb.Sheets[wb.SheetNames[0]];
+      existingData = XLSX.utils.sheet_to_json(ws);
+    }
+  } catch (err) {
+    console.log('[reportWriter] 기존 엑셀 읽기 실패, 새로 생성:', err.message);
+  }
+
+  // 새 데이터 추가
+  for (const r of analysisResults) {
+    const latestRound =
+      r.vcHistory && r.vcHistory.rounds && r.vcHistory.rounds.length > 0
+        ? r.vcHistory.rounds[r.vcHistory.rounds.length - 1]
+        : {};
+
+    existingData.push({
+      날짜: today,
+      회사명: r.companyName,
+      업종: r.industry || '',
+      DART상태: r.dartStatus || '',
+      매력도: r.score || 0,
+      최신라운드: latestRound.roundName || '',
+      투자금액_억: latestRound.amount || '',
+      밸류에이션_억: latestRound.valuation || '',
+      누적투자_억: (r.vcHistory && r.vcHistory.totalRaised) || '',
+      밸류상승률: (r.vcHistory && r.vcHistory.valuationGrowth) || '',
+      '38커뮤니케이션': r.price && r.price.price38 ? r.price.price38.price : '미등록',
+      증권플러스: r.price && r.price.pricePlus ? r.price.pricePlus.price : '미등록',
+      특허수: r.patents ? r.patents.totalCount : 0,
+      강점1: r.strengths && r.strengths[0] ? r.strengths[0] : '',
+      강점2: r.strengths && r.strengths[1] ? r.strengths[1] : '',
+      강점3: r.strengths && r.strengths[2] ? r.strengths[2] : '',
+      리스크1: r.risks && r.risks[0] ? r.risks[0] : '',
+      리스크2: r.risks && r.risks[1] ? r.risks[1] : '',
+      리스크3: r.risks && r.risks[2] ? r.risks[2] : '',
+      IPO전망: r.ipoOutlook || '',
+    });
+  }
+
+  // 엑셀 쓰기
+  wb = XLSX.utils.book_new();
+  ws = XLSX.utils.json_to_sheet(existingData);
+
+  // 컬럼 너비 자동 조정
+  const colWidths = Object.keys(existingData[0] || {}).map((key) => ({
+    wch: Math.max(key.length * 2, 12),
+  }));
+  ws['!cols'] = colWidths;
+
+  XLSX.utils.book_append_sheet(wb, ws, '비상장_누적');
+
+  await fs.ensureDir(path.dirname(EXCEL_PATH));
+  XLSX.writeFile(wb, EXCEL_PATH);
+
+  console.log(`[reportWriter] 엑셀 누적 완료 — ${analysisResults.length}건 추가 (총 ${existingData.length}행)`);
+}
+
+module.exports = { writeReports, generateReport, appendToExcel };

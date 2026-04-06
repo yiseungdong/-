@@ -10,9 +10,9 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.40.0",
     "axios": "^1.7.0",
-    "puppeteer": "^22.0.0",
-    "node-cron": "^3.0.3",
     "dotenv": "^16.4.0",
-    "fs-extra": "^11.2.0"
+    "fs-extra": "^11.2.0",
+    "puppeteer": "^22.0.0",
+    "xlsx": "^0.18.5"
   }
 }
