@@ -357,17 +357,6 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
   </div>
 </header>
 
-<!-- CTA 버튼 -->
-<div class="slogan-banner" style="padding:6px 0;">
-  <a id="heroCta" href="/login.html"
-    style="display:inline-block;padding:8px 20px;border:1px solid var(--gold);border-radius:20px;
-    color:var(--gold);font-size:13px;font-weight:600;text-decoration:none;
-    font-family:'Noto Sans KR',sans-serif;transition:all .2s;background:transparent;"
-    onmouseover="this.style.background='var(--gold)';this.style.color='#030308'"
-    onmouseout="this.style.background='transparent';this.style.color='var(--gold)'">
-    🚀 지금 시작하기
-  </a>
-</div>
 
 <!-- 로그인 모달 -->
 <div class="login-overlay" id="loginModal">
@@ -1174,13 +1163,8 @@ window.addEventListener('DOMContentLoaded', () => {
   switchLeague('quasar');
   const token = localStorage.getItem('asteria_token') || localStorage.getItem('accessToken');
   const nick = localStorage.getItem('asteria_nick') || '';
-  const heroCta = document.getElementById('heroCta');
   if (token) {
     // 로그인 상태
-    try {
-      const userData = JSON.parse(localStorage.getItem('asteria_user') || '{}');
-      const fandomHref = userData.fandomId ? '/fandom.html?fandom_id=' + userData.fandomId : '/fandom.html';
-    } catch(e) {}
     const avnode = document.getElementById('avnode');
     if (avnode) avnode.style.display = 'flex';
     const avname = document.getElementById('avname');
