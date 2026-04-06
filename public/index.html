@@ -987,7 +987,7 @@ function layoutSpiral(fanclubs, league) {
   const cx = CX * scale, cy = CY * scale;
   positions.push({ x: cx, y: cy, r: r1 });
 
-  const spiralTight = league === 'planet' ? 0.50 : 1.0;
+  const spiralTight = league === 'planet' ? 0.50 : league === 'nova' ? 0.50 : 1.0;
   const startR = (r1 + (count <= 10 ? 60 : count <= 20 ? 50 : 35)) * scale * spiralTight;
   const spacing = (count <= 10 ? 55 : count <= 20 ? 38 : count <= 40 ? 26 : 22) * scale * spiralTight;
   const angleStep = count <= 10 ? 0.85 : count <= 20 ? 0.65 : count <= 40 ? 0.48 : 0.42;
