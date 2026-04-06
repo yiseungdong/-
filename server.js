@@ -4786,6 +4786,32 @@ app.get('/api/fanclub/:id', async (req, res) => {
   }
 });
 
+// GET /api/fanclubs/by-name/:name — 팬클럽 이름으로 단일 조회
+app.get('/api/fanclubs/by-name/:name', async (req, res) => {
+  try {
+    const { name } = req.params;
+    const result = await pool.query('SELECT * FROM fanclubs WHERE name = $1', [name]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('팬클럽 이름 조회 오류:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/fanclubs/:id — 팬클럽 ID로 단일 조회
+app.get('/api/fanclubs/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query('SELECT * FROM fanclubs WHERE id = $1', [id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('팬클럽 ID 조회 오류:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // POST /api/fanclub/join — 팬클럽 가입
 app.post('/api/fanclub/join', authenticateToken, async (req, res) => {
   const { fanclub_id } = req.body;

@@ -1089,7 +1089,31 @@ const MAP_SIZE={
 };
 function buildDM() {
   try {
+    const params = new URLSearchParams(window.location.search);
+    const urlFan = params.get('fan');
+    const urlLeague = params.get('league');
+    const urlFandomId = params.get('fandomId') || params.get('fandom_id');
     const user = JSON.parse(localStorage.getItem('asteria_user') || '{}');
+
+    // URL 파라미터가 있으면 구경 모드
+    if (urlFan && urlLeague) {
+      return {
+        name: decodeURIComponent(urlFan),
+        league: urlLeague,
+        rank: 0,
+        members: 0, score: 0, energy: 0, dday: 0, online: 0,
+        fandom_id: urlFandomId || null,
+        myUserId: user.id || user.userId || null,
+        myNick: user.nickname || '나',
+        moim_depth1: null, moim_depth2: null, moim_depth3: null,
+        moim_depth4: null, moim_depth5: null,
+        ann: [],
+        ld: { n: '', lv: 0, a: '' },
+        isVisiting: true
+      };
+    }
+
+    // 기존 내 팬덤 로직
     return {
       name: user.fandomName || user.fandom_name || 'BTS ARMY',
       league: user.league || 'dust',
@@ -4133,13 +4157,18 @@ function renderFcHeader(league){
 (function(){
   var fandomSideBtn = document.getElementById('fandomSideBtnLocal');
   if (fandomSideBtn) {
-    var token = localStorage.getItem('asteria_token');
-    if (token) {
-      fandomSideBtn.textContent = '🏘️ 내 팬덤';
+    if (DM.isVisiting) {
+      fandomSideBtn.textContent = '🏠 내 팬덤으로';
       fandomSideBtn.onclick = function(){ location.href = '/fandom.html'; };
     } else {
-      fandomSideBtn.textContent = '🚀 로그인';
-      fandomSideBtn.onclick = function(){ location.href = '/login.html'; };
+      var token = localStorage.getItem('asteria_token');
+      if (token) {
+        fandomSideBtn.textContent = '🏘️ 내 팬덤';
+        fandomSideBtn.onclick = function(){ location.href = '/fandom.html'; };
+      } else {
+        fandomSideBtn.textContent = '🚀 로그인';
+        fandomSideBtn.onclick = function(){ location.href = '/login.html'; };
+      }
     }
   }
 })();
