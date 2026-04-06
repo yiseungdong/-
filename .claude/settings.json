@@ -1,0 +1,61 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx eslint --fix \"${tool_input.file_path}\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"${tool_input.command}\" | grep -qE 'rm -rf|del /f|format' && echo 'BLOCKED: 위험한 명령어가 감지되었습니다.' && exit 2 || exit 0"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"[$(date '+%Y-%m-%d %H:%M:%S')] 세션 종료\" >> logs/session.log 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  },
+  "mcpServers": {
+    "puppeteer": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-puppeteer"],
+      "description": "38커뮤니케이션, 증권플러스 브라우저 크롤링"
+    },
+    "fetch": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-fetch"],
+      "description": "네이버 뉴스 API, DART API, KIPRIS API 호출"
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "C:\\Users\\이승동\\Desktop\\프로그래밍\\비상장\\reports"
+      ],
+      "description": "리포트 폴더 파일 생성·저장"
+    }
+  },
+  "permissions": {
+    "allow": [],
+    "deny": []
+  }
+}

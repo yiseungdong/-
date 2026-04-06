@@ -1,0 +1,157 @@
+아래 작업을 순서대로 실행해줘.
+
+## 작업 경로
+C:\Users\이승동\Desktop\프로그래밍\비상장\
+
+## 1단계: 폴더 구조 생성
+
+아래 폴더를 모두 만들어줘 (없는 것만):
+
+비상장/
+├── .claude/
+│   ├── agents/
+│   └── commands/
+├── src/
+│   └── collectors/
+├── reports/
+├── logs/
+
+## 2단계: CLAUDE.md 생성
+
+다운로드된 파일 중 CLAUDE.md 파일을 읽고,
+그 내용 그대로 C:\Users\이승동\Desktop\프로그래밍\비상장\CLAUDE.md 에 저장해줘.
+
+## 3단계: 에이전트 파일 10개 생성
+
+다운로드된 파일 중 agents-and-settings.txt 파일을 읽고,
+그 안에 표시된 각 파일을 아래 경로에 생성해줘:
+
+- "파일 1: .claude/agents/coder-collector.md" 섹션 내용
+  → .claude/agents/coder-collector.md
+
+- "파일 2: .claude/agents/coder-analyzer.md" 섹션 내용
+  → .claude/agents/coder-analyzer.md
+
+- "파일 3: .claude/agents/coder-reporter.md" 섹션 내용
+  → .claude/agents/coder-reporter.md
+
+- "파일 4: .claude/agents/coder-infra.md" 섹션 내용
+  → .claude/agents/coder-infra.md
+
+- "파일 5: .claude/agents/coder-reviewer.md" 섹션 내용
+  → .claude/agents/coder-reviewer.md
+
+- "파일 6: .claude/agents/coder-tester.md" 섹션 내용
+  → .claude/agents/coder-tester.md
+
+- "파일 7: .claude/agents/collector.md" 섹션 내용
+  → .claude/agents/collector.md
+
+- "파일 8: .claude/agents/analyzer.md" 섹션 내용
+  → .claude/agents/analyzer.md
+
+- "파일 9: .claude/agents/reporter.md" 섹션 내용
+  → .claude/agents/reporter.md
+
+- "파일 10: .claude/agents/scheduler.md" 섹션 내용
+  → .claude/agents/scheduler.md
+
+## 4단계: settings.json 생성
+
+agents-and-settings.txt에서 "파일 11: .claude/settings.json" 섹션 내용을
+.claude/settings.json 에 저장해줘.
+
+## 5단계: 슬래시 커맨드 3개 생성
+
+- "파일 12: .claude/commands/run-daily.md" 섹션 내용
+  → .claude/commands/run-daily.md
+
+- "파일 13: .claude/commands/add-company.md" 섹션 내용
+  → .claude/commands/add-company.md
+
+- "파일 14: .claude/commands/check-price.md" 섹션 내용
+  → .claude/commands/check-price.md
+
+## 6단계: 스킬 파일 생성
+
+- "파일 15: .claude/SKILL.md" 섹션 내용
+  → .claude/SKILL.md
+
+## 7단계: 기본 파일 생성
+
+아래 파일들을 직접 작성해줘.
+
+### .env.example
+CLAUDE_API_KEY=여기에_클로드_API_키
+NAVER_CLIENT_ID=여기에_네이버_클라이언트_ID
+NAVER_CLIENT_SECRET=여기에_네이버_클라이언트_시크릿
+DART_API_KEY=여기에_DART_API_키
+KIPRIS_API_KEY=여기에_특허청_KIPRIS_키
+
+### package.json
+{
+  "name": "unlisted-research",
+  "version": "1.0.0",
+  "description": "비상장 유망 종목 자동 발굴 시스템",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.40.0",
+    "axios": "^1.7.0",
+    "puppeteer": "^22.0.0",
+    "node-cron": "^3.0.3",
+    "dotenv": "^16.4.0",
+    "fs-extra": "^11.2.0"
+  }
+}
+
+### index.js (빈 진입점)
+require('dotenv').config();
+const scheduler = require('./src/scheduler');
+
+console.log('비상장 리서치 시스템 시작');
+scheduler.start();
+
+### src/scheduler.js (빈 파일, 나중에 coder-infra가 작성)
+// coder-infra 에이전트가 작성 예정
+module.exports = { start: () => {} };
+
+### src/analyzer.js (빈 파일, 나중에 coder-analyzer가 작성)
+// coder-analyzer 에이전트가 작성 예정
+module.exports = {};
+
+### src/reportWriter.js (빈 파일, 나중에 coder-reporter가 작성)
+// coder-reporter 에이전트가 작성 예정
+module.exports = {};
+
+### src/collectors/naverNews.js (빈 파일)
+// coder-collector 에이전트가 작성 예정
+module.exports = {};
+
+### src/collectors/dartApi.js (빈 파일)
+// coder-collector 에이전트가 작성 예정
+module.exports = {};
+
+### src/collectors/kiprisApi.js (빈 파일)
+// coder-collector 에이전트가 작성 예정
+module.exports = {};
+
+### src/collectors/priceTracker.js (빈 파일)
+// coder-collector 에이전트가 작성 예정
+module.exports = {};
+
+### src/collectors/regulationNews.js (빈 파일)
+// coder-collector 에이전트가 작성 예정
+module.exports = {};
+
+## 8단계: npm install 실행
+
+npm install
+
+## 9단계: 완료 확인
+
+전체 폴더 구조를 tree 명령어로 보여주고,
+생성된 파일 총 개수를 알려줘.
