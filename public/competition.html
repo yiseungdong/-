@@ -138,7 +138,7 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
   position: relative;
   z-index: 100;
 ">
-  <button onclick="location.href='/fandom.html'" id="subFandomBtnInner" style="
+  <button id="subFandomBtnInner" style="
     background: rgba(240,192,64,0.15);
     border: 1px solid rgba(240,192,64,0.4);
     color: #f0c040;
@@ -522,7 +522,10 @@ showTab('statking');
   const subFandomBtn = document.getElementById('subFandomBtnInner');
   if (subFandomBtn) {
     const token = localStorage.getItem('asteria_token');
-    if (!token) {
+    if (token) {
+      subFandomBtn.textContent = '🏘️ 내 팬덤';
+      subFandomBtn.onclick = () => location.href = '/fandom.html';
+    } else {
       subFandomBtn.textContent = '🚀 로그인';
       subFandomBtn.onclick = () => location.href = '/login.html';
     }
