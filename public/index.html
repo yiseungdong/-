@@ -976,7 +976,7 @@ function layoutQuasar(fanclubs) {
 }
 
 // 나선형 배치: 아르키메데스 나선 (팬클럽 수에 따라 자동 조절)
-function layoutSpiral(fanclubs) {
+function layoutSpiral(fanclubs, league) {
   const scale = currentMapScale;
   const maxScore = fanclubs[0].score;
   const count = fanclubs.length;
@@ -987,8 +987,9 @@ function layoutSpiral(fanclubs) {
   const cx = CX * scale, cy = CY * scale;
   positions.push({ x: cx, y: cy, r: r1 });
 
-  const startR = (r1 + (count <= 10 ? 60 : count <= 20 ? 50 : 35)) * scale;
-  const spacing = (count <= 10 ? 55 : count <= 20 ? 38 : count <= 40 ? 26 : 22) * scale;
+  const spiralTight = league === 'planet' ? 0.75 : 1.0;
+  const startR = (r1 + (count <= 10 ? 60 : count <= 20 ? 50 : 35)) * scale * spiralTight;
+  const spacing = (count <= 10 ? 55 : count <= 20 ? 38 : count <= 40 ? 26 : 22) * scale * spiralTight;
   const angleStep = count <= 10 ? 0.85 : count <= 20 ? 0.65 : count <= 40 ? 0.48 : 0.42;
 
   for (let i = 1; i < count; i++) {
@@ -1073,7 +1074,7 @@ function switchLeague(league) {
   // 배치 계산
   const positions = league === 'quasar'
     ? layoutQuasar(data.fanclubs)
-    : layoutSpiral(data.fanclubs);
+    : layoutSpiral(data.fanclubs, league);
 
   // 월드 크기 동적 조정
   const maxX = Math.max(...positions.map(p => p.x + p.r)) + 100;
