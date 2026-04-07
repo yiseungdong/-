@@ -3,6 +3,9 @@ const { collectVcTrends } = require('./vcTrends');
 const { collectDart } = require('./dartApi');
 const { collectPrice } = require('./priceTracker');
 const { collectCompanyInfo } = require('./companyInfo');
+const thevcCrawler = require('./thevcCrawler');
+const innoforestCrawler = require('./innoforestCrawler');
+const nextunicornCrawler = require('./nextunicornCrawler');
 const { extractCompanyList } = require('../analyzer');
 const { filterUnlisted } = require('../krxFilter');
 const { verifyUnlisted } = require('../dartVerify');
@@ -128,6 +131,24 @@ async function run() {
       entry.regulations = info.regulations || null;
     } catch (err) {
       console.error(`[collectors] 특허/규제 실패 (${name}):`, err.message);
+    }
+
+    try {
+      entry.thevcData = await thevcCrawler.search(name);
+    } catch (err) {
+      console.error(`[collectors] THE VC 실패 (${name}):`, err.message);
+    }
+
+    try {
+      entry.innoforestData = await innoforestCrawler.search(name);
+    } catch (err) {
+      console.error(`[collectors] 혁신의숲 실패 (${name}):`, err.message);
+    }
+
+    try {
+      entry.nextunicornData = await nextunicornCrawler.search(name);
+    } catch (err) {
+      console.error(`[collectors] 넥스트유니콘 실패 (${name}):`, err.message);
     }
 
     results.push(entry);
