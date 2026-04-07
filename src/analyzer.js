@@ -1,4 +1,7 @@
 const Anthropic = require('@anthropic-ai/sdk');
+const { classifySector, calculateGrowthGrade } = require('./sectorClassifier');
+const { matchPeerGroup } = require('./peerGroupMatcher');
+const { calculateFairValue } = require('./valuationEngine');
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -215,6 +218,33 @@ async function analyze(companies) {
       analyzedCompany = { ...company, ...defaultAnalysis(company.name) };
     }
 
+    // 섹터 분류 + 성장성 등급 + 피어그룹 + 적정밸류
+    try {
+      const sectorResult = await classifySector(company);
+      const growthGradeResult = calculateGrowthGrade(analyzedCompany);
+      const peerData = await matchPeerGroup(sectorResult.sectorCode, growthGradeResult.grade);
+
+      analyzedCompany.sectorCode = sectorResult.sectorCode;
+      analyzedCompany.sectorName = sectorResult.sectorName;
+      analyzedCompany.growthGrade = growthGradeResult.grade;
+      analyzedCompany.growthGradeDetail = growthGradeResult;
+      analyzedCompany.peerGroup = peerData;
+
+      const valuationResult = calculateFairValue(
+        { ...analyzedCompany, sectorCode: sectorResult.sectorCode },
+        peerData
+      );
+      analyzedCompany.fairValuation = valuationResult.fairValue;
+      analyzedCompany.valuation = valuationResult;
+
+      // industry를 섹터명으로 통일
+      if (sectorResult.sectorName && sectorResult.sectorName !== '기타') {
+        analyzedCompany.industry = sectorResult.sectorName;
+      }
+    } catch (err) {
+      console.error(`[analyzer] "${company.name}" 섹터/밸류 분석 실패:`, err.message);
+    }
+
     // 점수 계산 (규칙 기반)
     const scoreResult = calculateScore(analyzedCompany);
     analyzedCompany.score = scoreResult.score;
@@ -234,6 +264,7 @@ async function analyze(companies) {
  * 규칙 기반 매력도 점수 계산 (100점 만점 → 10점 환산)
  */
 function calculateScore(company) {
+  try {
   let total = 0;
   const breakdown = {};
 
@@ -353,6 +384,10 @@ function calculateScore(company) {
       인증허가: `${breakdown.regulations}/5`,
     }
   };
+  } catch (err) {
+    console.error('[analyzer] 점수 계산 실패:', err.message);
+    return { score: 0, totalRaw: 0, breakdown: {} };
+  }
 }
 
 module.exports = { analyze, extractCompanyList, calculateScore };
