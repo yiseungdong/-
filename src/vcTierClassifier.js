@@ -1,7 +1,7 @@
 const { getVCTier, getVCInfo } = require('./vcDatabaseManager');
 
 function classifyInvestors(investorData) {
-  const { leadInvestor, coInvestors = [], strategicInvestors = [] } = investorData || {};
+  const { leadInvestor, coInvestors = [], strategicInvestors = [], participants = [] } = investorData || {};
 
   const allInvestors = [];
   let tierScore = 0;
@@ -30,6 +30,23 @@ function classifyInvestors(investorData) {
   }
   tierScore += coBonus;
 
+  // participants 배열 지원 (coInvestors 대신 participants가 있으면 사용)
+  if (participants.length > 0) {
+    let participantBonus = 0;
+    for (const p of participants) {
+      // 리드는 이미 위에서 처리했으므로 스킵
+      if (p.role === '리드' && p.name === leadInvestor) continue;
+      // coInvestors에서 이미 추가된 이름 스킵
+      if (allInvestors.some(ai => ai.name === p.name)) continue;
+      const tier = getVCTier(p.name);
+      allInvestors.push({ name: p.name, tier, role: p.role || '참여' });
+      if ((tier === 'T1' || tier === 'T2') && (coBonus + participantBonus) < 30) {
+        participantBonus += 10;
+      }
+    }
+    tierScore += participantBonus;
+  }
+
   // 전략적 투자자 (CVC +15)
   let hasCVC = false;
   for (const name of strategicInvestors) {
@@ -46,6 +63,17 @@ function classifyInvestors(investorData) {
   if (hasPolicyFinance && !allInvestors.some(i => i.role === '리드' && i.tier === '정책금융')) {
     tierScore += 15;
   }
+
+  // 기관 유형별 추가 가산
+  const allTypes = allInvestors.map(i => {
+    const info = getVCInfo(i.name);
+    return info?.type || 'VC';
+  });
+
+  if (allTypes.includes('연기금')) tierScore += 15;
+  if (allTypes.includes('증권사') && allInvestors.some(i => { const info = getVCInfo(i.name); return info?.type === '증권사' && info?.tier === 'T1'; })) tierScore += 10;
+  if (allTypes.includes('공제회')) tierScore += 5;
+  if (allTypes.includes('자산운용')) tierScore += 5;
 
   tierScore = Math.min(100, tierScore);
 

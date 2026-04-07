@@ -32,9 +32,11 @@ async function extractCompanies(articles) {
 6. investmentRound: 라운드명 (시드/프리A/시리즈A/시리즈B/시리즈C/프리IPO, 없으면 null)
 7. equityPercent: 지분율 (숫자, 없으면 null)
 8. investmentType: "보통주" / "CB" / "SAFE" / "RCPS" (전환사채→CB, 상환전환우선주→RCPS, 미언급→보통주)
-9. leadInvestor: 리드 투자자명 ("리드했다","주도했다","대표주관" 패턴, 없으면 null)
-10. coInvestors: 공동/후속 투자자 배열
-11. strategicInvestors: 전략적 투자자 (대기업 CVC) 배열
+9. leadInvestor: 리드 투자자명 (1개, "리드","주도","대표주관" 패턴, 없으면 null)
+10. participants: 기사에 언급된 모든 투자 참여 기관 배열 (VC뿐 아니라 정책금융/연기금/증권사/공제회/자산운용사 등 모두 포함)
+   - 각 항목: {"name": "기관명", "type": "VC/정책금융/연기금/증권사/캐피탈/공제회/자산운용/CVC/해외VC/기타", "role": "리드/앵커/공동/재무적/참여"}
+   - 역할 판단: "리드/주도/대표주관"→리드, "앵커"→앵커, "참여/공동/후속/팔로온"→공동, "재무적/FI"→재무적, 미명시→참여
+11. strategicInvestors: 전략적 투자자 (대기업 CVC) 배열 — 기존 유지
 12. cumulativeInvestment: 누적 투자액 (억원, 없으면 null)
 
 밸류가 없지만 투자금액과 지분율이 있으면:
@@ -53,8 +55,12 @@ async function extractCompanies(articles) {
       "investmentRound": "시리즈C",
       "equityPercent": null,
       "investmentType": "보통주",
-      "leadInvestor": "산업은행",
-      "coInvestors": ["캡스톤파트너스"],
+      "leadInvestor": "국민성장펀드",
+      "participants": [
+        {"name": "국민성장펀드", "type": "정책금융", "role": "리드"},
+        {"name": "산업은행", "type": "정책금융", "role": "공동"},
+        {"name": "소프트뱅크벤처스", "type": "VC", "role": "공동"}
+      ],
       "strategicInvestors": [],
       "cumulativeInvestment": 250
     }

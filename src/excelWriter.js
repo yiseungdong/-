@@ -112,12 +112,22 @@ function toSheet1Row(company, today) {
     valuSource = '시세기반';
   }
 
-  // 참여VC 포맷: "[리드] 소뱅 / 캡스톤 / 산업은행"
-  const leadVC = latestRound.leadVC || (latestRound.investors?.[0] || '');
-  const otherVCs = (latestRound.investors || []).filter(v => v !== leadVC);
-  const vcStr = leadVC
-    ? `[리드] ${leadVC}${otherVCs.length > 0 ? ' / ' + otherVCs.join(' / ') : ''}`
-    : (latestRound.investors || []).join(' / ') || '-';
+  // 참여VC 포맷: "[리드] 소뱅 / 캡스톤 / 산업은행(정책금융)"
+  // participants 배열이 있으면 유형 표시 포함
+  let vcStr = '-';
+  const participants = company.participants || [];
+  if (participants.length > 0) {
+    vcStr = participants.map(p => {
+      const prefix = p.role === '리드' ? '[리드] ' : '';
+      const suffix = (p.type && p.type !== 'VC') ? `(${p.type})` : '';
+      return `${prefix}${p.name}${suffix}`;
+    }).join(' / ');
+  } else {
+    // 기존 fallback
+    const leadVC = latestRound.leadVC || (latestRound.investors?.[0] || '');
+    const otherVCs = (latestRound.investors || []).filter(v => v !== leadVC);
+    vcStr = leadVC ? `[리드] ${leadVC}${otherVCs.length > 0 ? ' / ' + otherVCs.join(' / ') : ''}` : (latestRound.investors || []).join(' / ') || '-';
+  }
 
   // 강점/리스크 통합 (" / " 구분자) — 문자열 또는 배열 모두 처리
   const rawStr = company.strengths || company.coreStrengths || [];

@@ -18,8 +18,19 @@ function getSectorPremiumLabel(premium) {
   return '역풍섹터';
 }
 
-// VC 참여자 문자열 생성 ([리드] 포맷 포함)
+// VC 참여자 문자열 생성 ([리드] 포맷 포함, participants 배열 우선 사용)
 function generateVCStr(company) {
+  // participants 배열이 있으면 유형 표시 포함
+  const participants = company.participants || [];
+  if (participants.length > 0) {
+    return participants.map(p => {
+      const prefix = p.role === '리드' ? '[리드] ' : '';
+      const suffix = (p.type && p.type !== 'VC') ? `(${p.type})` : '';
+      return `${prefix}${p.name}${suffix}`;
+    }).join(', ') || '확인불가';
+  }
+
+  // 기존 fallback
   const rounds = company.vcHistory?.rounds || [];
   if (rounds.length === 0) return '확인불가';
 
@@ -35,6 +46,16 @@ function generateVCStr(company) {
     }
   }
   return allInvestors.join(', ') || '확인불가';
+}
+
+// 기관 투자 시그널 생성
+function generateInstitutionalSignal(company) {
+  const participants = company.participants || [];
+  const types = participants.map(p => p.type).filter(t => t && t !== 'VC');
+  if (types.length === 0) return '일반 VC 투자';
+  const unique = [...new Set(types)];
+  const names = participants.filter(p => p.type !== 'VC').map(p => p.name);
+  return `${names.join('·')} 등 ${unique.join('+')} 참여로 높은 신뢰도`;
 }
 
 // 섹션 2: VC 투자 이력 테이블
@@ -190,32 +211,55 @@ function generateScoreSection(company) {
 | 기본 합계 | ${company.rawScore || 0}/100점 |
 | 가산점 | +${company.scoreBonus || 0}점 |
 | 섹터 프리미엄 | x${company.sectorPremium || 1.0}배 |
-| **최종 점수** | **${company.score || 0}/10** |`;
+| **최종 점수** | **${company.score || 0}/10** |
+
+### 추가 가감점
+| 항목 | 점수 |
+|------|------|
+| 투자자 티어 가산 | +${company.tierScore || 0}점 |
+| 후속투자 가산 | +${company.followOnScore || 0}점 |
+| 크로스체크 | ${company.crossCheckBonus || 0}점 |`;
 
   return result;
 }
 
 // 섹션 8: AI 종합의견
 function generateOpinionSection(company) {
-  const strengths = company.strengths || [];
-  const risks = company.risks || [];
+  const strengths = company.strengths || '확인불가';
+  const risks = company.risks || '확인불가';
 
-  return `### 한줄 요약
+  // 문자열이면 그대로, 배열이면 " / "로 합침 (하위호환)
+  const strengthsStr = Array.isArray(strengths) ? strengths.join(' / ') : strengths;
+  const risksStr = Array.isArray(risks) ? risks.join(' / ') : risks;
+
+  let result = `### 한줄 요약
 > ${company.valuation?.evaluation || ''} ${company.name} — ${company.reason || ''}
 
 ### 핵심 강점
-${strengths.map((s, i) => `${i + 1}. ${s}`).join('\n') || '- 확인불가'}
+${strengthsStr}
 
 ### 주요 리스크
-${risks.map((r, i) => `${i + 1}. ${r}`).join('\n') || '- 확인불가'}
+${risksStr}
 
 ### IPO 전망
-${company.ipoOutlook || '확인불가'}
+${company.ipoOutlook || '확인불가'}`;
 
-### 모니터링 포인트
+  // 유사 포트폴리오 기업
+  if (company.similarPortfolio) {
+    result += `\n\n### 유사 포트폴리오 기업\n${company.similarPortfolio}`;
+  }
+
+  // 공동투자 패턴
+  if (company.coInvestPattern) {
+    result += `\n\n### 공동투자 패턴\n${company.coInvestPattern}`;
+  }
+
+  result += `\n\n### 모니터링 포인트
 - 다음 투자 라운드 동향
 - 매출 성장률 유지 여부
 - 비상장 거래가격 변동`;
+
+  return result;
 }
 
 // 메인 리포트 생성
@@ -243,7 +287,8 @@ ${generateVCTable(company)}
 **직전 라운드 대비 밸류 상승률:** ${v(company.vcHistory?.valuationGrowth)}
 **누적 투자유치 총액:** ${company.vcHistory?.totalRaised ? company.vcHistory.totalRaised + '억원' : '확인불가'}
 
-- 참여VC: ${generateVCStr(company)}
+- 참여기관: ${generateVCStr(company)}
+- 기관 투자 시그널: ${generateInstitutionalSignal(company)}
 - 투자자 티어: ${v(company.vcTierBreakdown)}
 - 투자 형태: ${v(company.investmentType)}
 - 후속투자: ${v(company.followOnSummary, '없음')}

@@ -194,7 +194,7 @@
         "NH투자"
       ],
       "tier": "T1",
-      "type": "VC",
+      "type": "증권사",
       "investmentFocus": [
         "프리IPO",
         "성장",
@@ -242,7 +242,7 @@
         "국민연금공단"
       ],
       "tier": "T1",
-      "type": "LP",
+      "type": "연기금",
       "investmentFocus": [
         "대형펀드출자",
         "인프라",
@@ -669,7 +669,7 @@
         "타임폴리오"
       ],
       "tier": "T2",
-      "type": "VC",
+      "type": "자산운용",
       "investmentFocus": [
         "프리IPO",
         "성장",
@@ -1254,7 +1254,8 @@
       "name": "한국벤처투자",
       "aliases": [
         "KVIC",
-        "Korea Venture Investment Corp"
+        "Korea Venture Investment Corp",
+        "모태펀드"
       ],
       "tier": "정책금융",
       "type": "정책금융",
@@ -1332,7 +1333,271 @@
       "source": "manual"
     },
     {
+      "name": "한국수출입은행",
+      "aliases": ["수출입은행", "수은"],
+      "tier": "T1",
+      "type": "정책금융",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "manual"
+    },
+    {
+      "name": "IBK기업은행",
+      "aliases": ["기업은행", "IBK"],
+      "tier": "T1",
+      "type": "정책금융",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "manual"
+    },
+    {
+      "name": "국민성장펀드",
+      "aliases": [],
+      "tier": "T1",
+      "type": "정책금융",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "manual"
+    },
+    {
+      "name": "사학연금",
+      "aliases": [],
+      "tier": "T2",
+      "type": "연기금",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "manual"
+    },
+    {
+      "name": "공무원연금",
+      "aliases": [],
+      "tier": "T2",
+      "type": "연기금",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "manual"
+    },
+    {
+      "name": "군인공제회",
+      "aliases": [],
+      "tier": "T2",
+      "type": "공제회",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "manual"
+    },
+    {
+      "name": "과학기술인공제회",
+      "aliases": [],
+      "tier": "T2",
+      "type": "공제회",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "manual"
+    },
+    {
+      "name": "교직원공제회",
+      "aliases": [],
+      "tier": "T2",
+      "type": "공제회",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "manual"
+    },
+    {
+      "name": "미래에셋증권",
+      "aliases": ["미래에셋대우"],
+      "tier": "T1",
+      "type": "증권사",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "manual"
+    },
+    {
+      "name": "한국투자증권",
+      "aliases": [],
+      "tier": "T1",
+      "type": "증권사",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "manual"
+    },
+    {
+      "name": "신한투자증권",
+      "aliases": ["신한금융투자"],
+      "tier": "T1",
+      "type": "증권사",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "manual"
+    },
+    {
+      "name": "KB증권",
+      "aliases": [],
+      "tier": "T1",
+      "type": "증권사",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "manual"
+    },
+    {
+      "name": "삼성증권",
+      "aliases": [],
+      "tier": "T1",
+      "type": "증권사",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "manual"
+    },
+    {
+      "name": "하나증권",
+      "aliases": ["하나금융투자"],
+      "tier": "T1",
+      "type": "증권사",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "manual"
+    },
+    {
+      "name": "대신증권",
+      "aliases": [],
+      "tier": "T2",
+      "type": "증권사",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "manual"
+    },
+    {
+      "name": "키움증권",
+      "aliases": [],
+      "tier": "T2",
+      "type": "증권사",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "manual"
+    },
+    {
+      "name": "신한캐피탈",
+      "aliases": [],
+      "tier": "T2",
+      "type": "캐피탈",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "manual"
+    },
+    {
+      "name": "우리기술투자",
+      "aliases": [],
+      "tier": "T2",
+      "type": "캐피탈",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "manual"
+    },
+    {
+      "name": "미래에셋자산운용",
+      "aliases": [],
+      "tier": "T2",
+      "type": "자산운용",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "manual"
+    },
+    {
+      "name": "한화자산운용",
+      "aliases": [],
+      "tier": "T2",
+      "type": "자산운용",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "manual"
+    },
+    {
+      "name": "삼성자산운용",
+      "aliases": [],
+      "tier": "T2",
+      "type": "자산운용",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "manual"
+    },
+    {
       "name": "알수없는VC",
+      "aliases": [],
+      "tier": "unknown",
+      "type": "VC",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "auto-detected"
+    },
+    {
+      "name": "미상",
+      "aliases": [],
+      "tier": "unknown",
+      "type": "VC",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "auto-detected"
+    },
+    {
+      "name": "한화시스템 및 외부 투자자",
+      "aliases": [],
+      "tier": "unknown",
+      "type": "VC",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "auto-detected"
+    },
+    {
+      "name": "미확인",
       "aliases": [],
       "tier": "unknown",
       "type": "VC",
