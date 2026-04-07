@@ -508,12 +508,56 @@ async function updateExcel(companies) {
     const widths4 = [16, 12, 14, 12, 12, 20, 40, 12, 12, 30];
     sheet4.columns.forEach((col, i) => { col.width = widths4[i] || 14; });
 
+    // ── Sheet5: 오늘의 리서치 (당일만, 매일 리셋) ──────────────────────────────
+    const sheet5 = workbook.addWorksheet('오늘의리서치');
+
+    // 시트 탭 색상: 주황색
+    sheet5.properties.tabColor = { argb: 'FFFF8C00' };
+
+    // 타이틀 행 (A1~R1 병합)
+    const todayCompanies = companies.length;
+    sheet5.mergeCells('A1', 'R1');
+    const titleCell = sheet5.getCell('A1');
+    titleCell.value = `오늘의 리서치: ${today} | ${todayCompanies}개 종목 발굴`;
+    titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFD699' } };
+    titleCell.font = { bold: true, size: 13 };
+    titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+
+    // 헤더 행 (2행)
+    const headerRow5 = sheet5.addRow(headers1);
+    headerRow5.eachCell((cell, col) => {
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F4E79' } };
+      cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+      cell.alignment = { vertical: 'middle', horizontal: 'center' };
+      if (col === 4) {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF3CD' } };
+        cell.font = { color: { argb: 'FF000000' }, bold: true };
+      }
+    });
+
+    // 데이터: 오늘 수집된 종목만, 매력도 내림차순 정렬
+    const todayRows = companies
+      .map(c => toSheet1Row(c, today))
+      .sort((a, b) => (b[3] || 0) - (a[3] || 0)); // D열(매력도) 내림차순
+
+    for (const row of todayRows) {
+      sheet5.addRow(row);
+    }
+
+    // 열 너비 (Sheet1과 동일)
+    sheet5.columns.forEach((col, i) => {
+      col.width = widths1[i] || 15;
+    });
+
+    console.log(`[excelWriter] Sheet5 오늘의리서치: ${todayRows.length}개 종목`);
+
     // ── 저장 ──────────────────────────────────────────────────────────────────
     await workbook.xlsx.writeFile(thisWeekFile);
     console.log(
       `[excelWriter] 저장 완료: ${path.basename(thisWeekFile)} ` +
       `(Sheet1: ${allRows1.length}행, Sheet2: ${allRows2.length}행, ` +
-      `Sheet3: ${priceChanges.length}건, Sheet4: ${allRows4.length}행)`
+      `Sheet3: ${priceChanges.length}건, Sheet4: ${allRows4.length}행, ` +
+      `Sheet5: ${todayRows.length}개 당일종목)`
     );
   } catch (err) {
     console.error(`[excelWriter] 수집 실패 - ${err.message}`);
