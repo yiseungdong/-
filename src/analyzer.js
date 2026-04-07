@@ -2,6 +2,7 @@ const Anthropic = require('@anthropic-ai/sdk');
 const { classifySector, calculateGrowthGrade } = require('./sectorClassifier');
 const { matchPeerGroup } = require('./peerGroupMatcher');
 const { calculateFairValue } = require('./valuationEngine');
+const { calculateScore: calculateSectorScore } = require('./scoreEngine');
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -245,11 +246,13 @@ async function analyze(companies) {
       console.error(`[analyzer] "${company.name}" 섹터/밸류 분석 실패:`, err.message);
     }
 
-    // 점수 계산 (규칙 기반)
-    const scoreResult = calculateScore(analyzedCompany);
+    // 섹터별 매력도 점수 계산 (scoreEngine)
+    const scoreResult = await calculateSectorScore(analyzedCompany);
     analyzedCompany.score = scoreResult.score;
-    analyzedCompany.scoreRaw = scoreResult.totalRaw;
+    analyzedCompany.rawScore = scoreResult.rawScore;
+    analyzedCompany.sectorPremium = scoreResult.sectorPremium;
     analyzedCompany.scoreBreakdown = scoreResult.breakdown;
+    analyzedCompany.scoreBreakdownStr = scoreResult.breakdownStr;
 
     results.push(analyzedCompany);
 
@@ -390,4 +393,4 @@ function calculateScore(company) {
   }
 }
 
-module.exports = { analyze, extractCompanyList, calculateScore };
+module.exports = { analyze, extractCompanyList };
