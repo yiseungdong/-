@@ -61,6 +61,8 @@ async function updateExcel(analysisResults) {
       업종: r.industry || '',
       DART상태: r.listingType || '',
       매력도: r.score || 0,
+      원점수: r.scoreRaw ? `${r.scoreRaw}/100` : '0/100',
+      점수세부내역: r.scoreBreakdown ? Object.entries(r.scoreBreakdown).map(([k, v]) => `${k}:${v}`).join(' | ') : '',
       설립연도: bi.foundedYear || '',
       대표자: bi.ceo || '',
       주요제품: bi.mainProduct || '',
