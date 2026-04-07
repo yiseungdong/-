@@ -185,7 +185,7 @@ function getPriceChanges(companies, existingData) {
 
 // ── Sheet3 빌더 (기존 로직 그대로) ───────────────────────────────────────────
 
-function buildPriceAlertSheet(sheet, changes, today) {
+function buildPriceAlertSheet(sheet, changes, today, companies) {
   const upCount   = changes.filter(c => c.alertType === '급등').length;
   const downCount = changes.filter(c => c.alertType === '급락').length;
 
@@ -232,6 +232,78 @@ function buildPriceAlertSheet(sheet, changes, today) {
   sheet.columns.forEach((col, i) => {
     col.width = [16, 12, 12, 12, 12, 14, 14, 14, 12, 10][i] || 12;
   });
+
+  // ── VC 밸류 변동 섹션 ──
+  if (companies && companies.length > 0) {
+    buildVCValuationAlerts(sheet, companies);
+  }
+}
+
+// ── VC 밸류 변동 알림 빌더 ───────────────────────────────────────────────────
+
+function buildVCValuationAlerts(sheet, companies) {
+  // 구분선
+  sheet.addRow([]);
+  const dividerRow = sheet.addRow(['── VC 밸류 변동 ──']);
+  dividerRow.getCell(1).font = { bold: true, size: 12 };
+  sheet.addRow([]);
+
+  // 헤더
+  const vcHeaders = ['회사명', '직전라운드', '직전밸류(억)', '현재라운드', '현재밸류(억)', '변동률', '알림'];
+  const vcHeaderRow = sheet.addRow(vcHeaders);
+  vcHeaderRow.eachCell(cell => {
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4A148C' } };
+    cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+  });
+
+  // 각 회사별 최근 2개 라운드 비교
+  let alertCount = 0;
+  for (const company of companies) {
+    const rounds = (company.vcHistory?.rounds || []).slice(0, 2);
+    if (rounds.length < 2) continue;
+
+    const current = rounds[0];
+    const prev = rounds[1];
+    if (!current.valuation || !prev.valuation) continue;
+
+    const curVal = parseFloat(current.valuation);
+    const prevVal = parseFloat(prev.valuation);
+    if (!curVal || !prevVal) continue;
+
+    const changeRate = Math.round(((curVal - prevVal) / prevVal) * 100);
+
+    let alertLabel, bgColor;
+    if (changeRate >= 100) {
+      alertLabel = '🔴 급등 (밸류 2배+)';
+      bgColor = 'FFFFE0E0';
+    } else if (changeRate >= 50) {
+      alertLabel = '🟢 대폭 상승';
+      bgColor = 'FFE0FFE0';
+    } else if (changeRate < 0) {
+      alertLabel = '🔵 다운라운드 주의';
+      bgColor = 'FFE0E8FF';
+    } else {
+      continue; // 50% 미만 상승은 알림 안 함
+    }
+
+    const row = sheet.addRow([
+      company.name,
+      prev.roundName || '-',
+      prevVal,
+      current.roundName || '-',
+      curVal,
+      (changeRate >= 0 ? '+' : '') + changeRate + '%',
+      alertLabel,
+    ]);
+    row.eachCell(cell => {
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } };
+    });
+    alertCount++;
+  }
+
+  if (alertCount === 0) {
+    sheet.addRow(['VC 밸류 변동 알림 없음']);
+  }
 }
 
 // ── 메인 ──────────────────────────────────────────────────────────────────────
@@ -379,7 +451,7 @@ async function updateExcel(companies) {
     // ── Sheet3: 가격변동알림 (기존 로직 그대로) ───────────────────────────────
     const sheet3 = workbook.addWorksheet('가격변동알림');
     const priceChanges = getPriceChanges(companies, existingSheet1Data);
-    buildPriceAlertSheet(sheet3, priceChanges, today);
+    buildPriceAlertSheet(sheet3, priceChanges, today, companies);
 
     // ── Sheet4: VC밸류히스토리 (신규) ─────────────────────────────────────────
     const sheet4 = workbook.addWorksheet('VC밸류히스토리');

@@ -1,4 +1,6 @@
 const Anthropic = require('@anthropic-ai/sdk');
+const fs = require('fs-extra');
+const path = require('path');
 const { classifySector, calculateGrowthGrade } = require('./sectorClassifier');
 const { matchPeerGroup } = require('./peerGroupMatcher');
 const { calculateFairValue } = require('./valuationEngine');
@@ -66,6 +68,38 @@ ${titleList}`;
   }
 }
 
+/**
+ * 기존 리포트 검색: reports/ 하위 폴더에서 회사명 포함된 .md 파일을 찾아 내용 반환
+ */
+async function findExistingReport(companyName) {
+  try {
+    const reportsDir = path.join(__dirname, '../reports');
+    if (!await fs.pathExists(reportsDir)) return null;
+
+    const dateDirs = await fs.readdir(reportsDir);
+    // 최신 날짜 폴더부터 탐색
+    const sorted = dateDirs.filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort().reverse();
+
+    for (const dir of sorted) {
+      const dirPath = path.join(reportsDir, dir);
+      const stat = await fs.stat(dirPath);
+      if (!stat.isDirectory()) continue;
+
+      const files = await fs.readdir(dirPath);
+      const match = files.find(f => f.endsWith('.md') && f.includes(companyName));
+      if (match) {
+        const content = await fs.readFile(path.join(dirPath, match), 'utf8');
+        console.log(`[analyzer] 기존 리포트 발견: ${dir}/${match}`);
+        return content;
+      }
+    }
+    return null;
+  } catch (err) {
+    console.error(`[analyzer] 기존 리포트 검색 실패:`, err.message);
+    return null;
+  }
+}
+
 // 분석 실패 시 기본값
 function defaultAnalysis(companyName) {
   return {
@@ -84,18 +118,11 @@ function defaultAnalysis(companyName) {
     fairValuation: null,
     growthGrade: null,
     profile: {
-      oneLineIntro: null,
-      coreTechnology: null,
-      coreCompetency: null,
-      targetMarket: null,
-      keyClients: null,
-      businessModel: null,
-      competitors: null,
-      growthStrategy: null,
-      mainProducts: null,
+      businessSummary: null,
+      marketCompetition: null,
     },
-    strengths: [],
-    risks: [],
+    strengths: null,
+    risks: null,
     ipoOutlook: null,
   };
 }
@@ -104,6 +131,12 @@ function defaultAnalysis(companyName) {
  * Claude API 회사당 1번 호출하여 분석
  */
 async function analyzeOne(client, company) {
+  // 기존 리포트 검색하여 참고 자료로 첨부
+  const existingReport = await findExistingReport(company.name);
+  const referenceSection = existingReport
+    ? `\n\n참고 자료 (이전 분석 리포트):\n---\n${existingReport.slice(0, 3000)}\n---`
+    : '';
+
   const prompt = `아래는 오늘 노출된 비상장 회사 ${company.name}의 수집 데이터야.
 아래 항목을 분석해서 반드시 JSON 형식으로만 응답해줘 (다른 텍스트 금지):
 
@@ -131,18 +164,11 @@ async function analyzeOne(client, company) {
   "fairValuation": "적정 밸류에이션(억원, 업종·성장성·매출 기반 추정, 모르면 null)",
   "growthGrade": "성장성등급 (S/A/B/C/D 중 하나, S=초고성장 A=고성장 B=안정성장 C=저성장 D=정체/역성장)",
   "profile": {
-    "oneLineIntro": "한 문장으로 무엇하는 회사인지",
-    "coreTechnology": "핵심 기술 (2~3줄)",
-    "coreCompetency": "핵심 경쟁력 (경쟁사 대비 강점 2~3줄)",
-    "targetMarket": "타겟 시장/고객",
-    "keyClients": "주요 고객사 (없으면 null)",
-    "businessModel": "비즈니스 모델 (수익 구조)",
-    "competitors": "주요 경쟁사",
-    "growthStrategy": "성장 전략 (2~3줄)",
-    "mainProducts": "주요 제품/서비스"
+    "businessSummary": "사업요약 1~3문장 (주요제품, 핵심기술, 차별화 경쟁력 포함)",
+    "marketCompetition": "시장/경쟁 (타겟시장, 주요고객, 경쟁사)"
   },
-  "strengths": ["강점1", "강점2", "강점3"],
-  "risks": ["리스크1", "리스크2", "리스크3"],
+  "coreStrengths": "핵심강점들을 / 구분자로 한 줄 작성",
+  "coreRisks": "핵심리스크들을 / 구분자로 한 줄 작성",
   "ipoOutlook": "IPO 가능성 및 예상 시점 한 줄"
 }
 
@@ -152,7 +178,7 @@ async function analyzeOne(client, company) {
 - 재무정보: ${company.financials ? JSON.stringify(company.financials.financials || company.financials) : '없음'}
 - 특허수: ${company.patents ? company.patents.totalCount || 0 : 0}건
 - 규제현황: ${company.regulations ? JSON.stringify(company.regulations.regulations || company.regulations).slice(0, 500) : '없음'}
-- 비상장가격: ${company.price ? JSON.stringify({ price38: company.price.price38, pricePlus: company.price.pricePlus, status: company.price.status }) : '없음'}`;
+- 비상장가격: ${company.price ? JSON.stringify({ price38: company.price.price38, pricePlus: company.price.pricePlus, status: company.price.status }) : '없음'}${referenceSection}`;
 
   const response = await client.messages.create({
     model: 'claude-sonnet-4-6',
@@ -215,6 +241,14 @@ async function analyze(companies) {
     let analyzedCompany;
     if (analysis) {
       analyzedCompany = { ...company, ...analysis };
+      // coreStrengths / coreRisks → strengths / risks (문자열)
+      analyzedCompany.strengths = analysis.coreStrengths || null;
+      analyzedCompany.risks = analysis.coreRisks || null;
+      // profile 필드 보장
+      analyzedCompany.profile = {
+        businessSummary: analysis.profile?.businessSummary || null,
+        marketCompetition: analysis.profile?.marketCompetition || null,
+      };
     } else {
       analyzedCompany = { ...company, ...defaultAnalysis(company.name) };
     }

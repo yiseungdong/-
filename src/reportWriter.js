@@ -18,6 +18,25 @@ function getSectorPremiumLabel(premium) {
   return '역풍섹터';
 }
 
+// VC 참여자 문자열 생성 ([리드] 포맷 포함)
+function generateVCStr(company) {
+  const rounds = company.vcHistory?.rounds || [];
+  if (rounds.length === 0) return '확인불가';
+
+  const allInvestors = [];
+  for (const r of rounds) {
+    const investors = r.investors || [];
+    for (let i = 0; i < investors.length; i++) {
+      const name = investors[i];
+      const label = (i === 0 && r.leadInvestor) ? `[리드] ${name}` : (i === 0 ? `[리드] ${name}` : name);
+      if (!allInvestors.includes(label) && !allInvestors.includes(name)) {
+        allInvestors.push(label);
+      }
+    }
+  }
+  return allInvestors.join(', ') || '확인불가';
+}
+
 // 섹션 2: VC 투자 이력 테이블
 function generateVCTable(company) {
   const rounds = company.vcHistory?.rounds || [];
@@ -139,6 +158,11 @@ function generatePriceSection(company) {
     table += '| 증권플러스 비상장 | - | 미등록 |\n';
   }
 
+  // 시세기반 시가총액
+  const marketCap = company.marketCap;
+  const totalShares = company.totalShares;
+  table += `\n**시세기반 시가총액:** ${marketCap ? marketCap + '억원' : '산출불가'} (발행주식수: ${totalShares || '미확인'})`;
+
   return table;
 }
 
@@ -207,9 +231,8 @@ function generateReport(company) {
 | 항목 | 내용 |
 |------|------|
 | 섹터 | ${v(company.sectorName)} |
-| 주요 제품·서비스 | ${v(company.basicInfo?.mainProduct)} |
-| 추정 기업가치 | ${company.vcHistory?.rounds?.[0]?.valuation ? company.vcHistory.rounds[0].valuation + '억원' : '확인불가'} |
-| 오늘 노출 이유 | ${v(company.reason)} |
+| 사업요약 | ${v(company.profile?.businessSummary)} |
+| 시장/경쟁 | ${v(company.profile?.marketCompetition)} |
 | 출처 | ${v(company.source)} |
 
 ---
@@ -219,6 +242,12 @@ ${generateVCTable(company)}
 
 **직전 라운드 대비 밸류 상승률:** ${v(company.vcHistory?.valuationGrowth)}
 **누적 투자유치 총액:** ${company.vcHistory?.totalRaised ? company.vcHistory.totalRaised + '억원' : '확인불가'}
+
+- 참여VC: ${generateVCStr(company)}
+- 투자자 티어: ${v(company.vcTierBreakdown)}
+- 투자 형태: ${v(company.investmentType)}
+- 후속투자: ${v(company.followOnSummary, '없음')}
+- 밸류 크로스체크: ${v(company.crossCheckFlag, '일치')}
 
 ---
 
