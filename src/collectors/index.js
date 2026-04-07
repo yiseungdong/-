@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const { collectNews } = require('./naverNews');
 const { collectVcTrends } = require('./vcTrends');
 const { collectDart } = require('./dartApi');
@@ -9,6 +11,22 @@ const nextunicornCrawler = require('./nextunicornCrawler');
 const { extractCompanyList } = require('../analyzer');
 const { filterUnlisted } = require('../krxFilter');
 const { verifyUnlisted } = require('../dartVerify');
+
+const ANALYZED_PATH = path.join(__dirname, '../../public/data/analyzed-articles.json');
+
+function loadAnalyzedArticles() {
+  try {
+    if (fs.existsSync(ANALYZED_PATH)) return JSON.parse(fs.readFileSync(ANALYZED_PATH, 'utf-8'));
+  } catch (e) {}
+  return { lastUpdated: null, articles: {} };
+}
+
+function saveAnalyzedArticles(data) {
+  const dir = path.dirname(ANALYZED_PATH);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  data.lastUpdated = new Date().toISOString().slice(0, 10);
+  fs.writeFileSync(ANALYZED_PATH, JSON.stringify(data, null, 2), 'utf-8');
+}
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -50,10 +68,24 @@ async function run() {
     return [];
   }
 
+  // 기분석 기사 필터링
+  const analyzedData = loadAnalyzedArticles();
+  const newArticles = allArticles.filter(a => {
+    const url = a.link || a.originallink || '';
+    return !analyzedData.articles[url];
+  });
+  const skipped = allArticles.length - newArticles.length;
+  if (skipped > 0) console.log(`[collectors] 기분석 기사 ${skipped}건 스킵`);
+
+  if (newArticles.length === 0) {
+    console.log('[collectors] 신규 기사 없음. 수집 종료.');
+    return [];
+  }
+
   // === 2. Claude API → 회사명 추출 ===
   let rawCompanies = [];
   try {
-    rawCompanies = await extractCompanyList(allArticles);
+    rawCompanies = await extractCompanyList(newArticles);
     console.log(`[collectors] Claude 추출 ${rawCompanies.length}개`);
   } catch (err) {
     console.error('[collectors] 회사 추출 오류:', err.message);
@@ -95,7 +127,7 @@ async function run() {
     console.log(`[collectors] "${name}" 보조 정보 수집`);
 
     // 관련 기사 찾기
-    const relatedArticle = allArticles.find(
+    const relatedArticle = newArticles.find(
       (a) => a.title.includes(name) || a.description.includes(name)
     );
 
@@ -154,6 +186,18 @@ async function run() {
     results.push(entry);
     await sleep(2000);
   }
+
+  // 분석 완료 기사 기록
+  for (const article of newArticles) {
+    const url = article.link || article.originallink || '';
+    if (url) {
+      analyzedData.articles[url] = {
+        analyzedDate: new Date().toISOString().slice(0, 10),
+        companies: results.map(r => r.name),
+      };
+    }
+  }
+  saveAnalyzedArticles(analyzedData);
 
   console.log(`[collectors] 수집 완료 — ${results.length}개 회사`);
   return results;

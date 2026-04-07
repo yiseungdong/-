@@ -60,8 +60,21 @@ async function run() {
     try { newsArticles = await collectNews(); } catch (e) { log('뉴스 수집 실패: ' + e.message); }
     try { vcArticles = await collectVcTrends(); } catch (e) { log('VC 수집 실패: ' + e.message); }
     const allArticles = [...newsArticles, ...vcArticles];
-    log(`수집: 뉴스 ${newsArticles.length}건 + VC ${vcArticles.length}건`);
+    log(`수집: 뉴스 ${newsArticles.length}건 + VC ${vcArticles.length}건 = 전체 ${allArticles.length}건`);
     appendLog(`수집 완료 — ${allArticles.length}건`);
+
+    // 기분석 기사 스킵 통계 (실제 필터링은 collectors/index.js에서 수행)
+    const analyzedArticlesPath = path.join(__dirname, '../public/data/analyzed-articles.json');
+    let analyzedCount = 0;
+    try {
+      if (fs.existsSync(analyzedArticlesPath)) {
+        const analyzedData = JSON.parse(fs.readFileSync(analyzedArticlesPath, 'utf-8'));
+        const analyzedUrls = Object.keys(analyzedData.articles || {});
+        analyzedCount = allArticles.filter(a => analyzedUrls.includes(a.link || a.originallink || '')).length;
+      }
+    } catch (e) {}
+    const newCount = allArticles.length - analyzedCount;
+    log(`기사 필터: 전체 ${allArticles.length}건, 신규 ${newCount}건, 스킵 ${analyzedCount}건`);
 
     if (allArticles.length === 0) { log('수집 기사 없음. 종료.'); return; }
 
@@ -159,6 +172,9 @@ async function run() {
 
     await excelWriter.updateExcel(analyzed);
     appendLog('엑셀 업데이트 완료');
+
+    // 섹터 데이터 저장 (이미 sectorClassifier에서 저장하지만 확인용)
+    console.log('[scheduler] 섹터/기사 데이터 저장 완료');
 
     // VC DB 업데이트
     try {

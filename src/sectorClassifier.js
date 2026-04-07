@@ -1,4 +1,21 @@
 const Anthropic = require('@anthropic-ai/sdk');
+const fs = require('fs');
+const path = require('path');
+const SECTORS_PATH = path.join(__dirname, '../public/data/company-sectors.json');
+
+function loadSectorData() {
+  try {
+    if (fs.existsSync(SECTORS_PATH)) return JSON.parse(fs.readFileSync(SECTORS_PATH, 'utf-8'));
+  } catch (e) {}
+  return { lastUpdated: null, companies: {} };
+}
+
+function saveSectorData(data) {
+  const dir = path.dirname(SECTORS_PATH);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  data.lastUpdated = new Date().toISOString().slice(0, 10);
+  fs.writeFileSync(SECTORS_PATH, JSON.stringify(data, null, 2), 'utf-8');
+}
 
 const SECTORS = {
   COMMERCE: '커머스·플랫폼',
@@ -83,30 +100,52 @@ async function callClaude(prompt, maxTokens) {
 
 async function classifySector(company) {
   try {
-    // 1차: 키워드 매칭으로 빠른 분류
-    const text = `${company.name || ''} ${company.reason || ''} ${company.source || ''}`.toLowerCase();
+    const sectorData = loadSectorData();
+    const companyName = company.name || '';
 
+    // 기존 섹터가 있으면 재사용
+    if (sectorData.companies[companyName]) {
+      const existing = sectorData.companies[companyName];
+      console.log(`[sectorClassifier] 섹터 재사용: ${companyName} → ${existing.sectorName}`);
+      return {
+        sectorCode: existing.sectorCode,
+        sectorName: existing.sectorName,
+        confidence: existing.confidence || 'cached'
+      };
+    }
+
+    // 신규: 키워드 매칭 + AI 분류 (기존 로직)
+    const text = `${companyName} ${company.reason || ''} ${company.source || ''}`.toLowerCase();
     let maxScore = 0;
     let detectedSector = null;
 
     for (const [sector, keywords] of Object.entries(SECTOR_KEYWORDS)) {
       const score = keywords.filter(kw => text.includes(kw.toLowerCase())).length;
-      if (score > maxScore) {
-        maxScore = score;
-        detectedSector = sector;
-      }
+      if (score > maxScore) { maxScore = score; detectedSector = sector; }
     }
 
-    // 2차: 키워드 매칭 불확실할 때 Claude AI로 판단
     if (maxScore < 2) {
       detectedSector = await classifyWithAI(company);
     }
 
-    return {
+    const result = {
       sectorCode: detectedSector,
       sectorName: SECTORS[detectedSector] || '기타',
       confidence: maxScore >= 2 ? 'high' : 'ai'
     };
+
+    // 결과 저장
+    sectorData.companies[companyName] = {
+      sectorCode: result.sectorCode,
+      sectorName: result.sectorName,
+      classifiedDate: new Date().toISOString().slice(0, 10),
+      confidence: result.confidence,
+      source: maxScore >= 2 ? '키워드' : 'Claude AI'
+    };
+    saveSectorData(sectorData);
+    console.log(`[sectorClassifier] 섹터 신규분류: ${companyName} → ${result.sectorName}`);
+
+    return result;
   } catch (err) {
     console.error('[sectorClassifier] 섹터 분류 실패:', err.message);
     return { sectorCode: null, sectorName: '기타', confidence: 'error' };
@@ -117,6 +156,8 @@ async function classifyWithAI(company) {
   const prompt = `
 다음 비상장 회사의 섹터를 아래 9개 중 하나로 분류해줘.
 반드시 아래 코드 중 하나만 응답해. 다른 텍스트 금지.
+섹터 분류 시 아래 9개 중 반드시 1개를 선택해. "기타"는 가능하면 사용하지 마.
+가장 가까운 섹터로 분류해줘.
 
 섹터 코드:
 COMMERCE, FINTECH, MOBILITY, B2B_SAAS, ENTERTAINMENT,
