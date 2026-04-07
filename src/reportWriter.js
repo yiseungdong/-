@@ -1,282 +1,280 @@
 const fs = require('fs-extra');
 const path = require('path');
 
-const REPORTS_DIR = path.join(__dirname, '..', 'reports');
-
 function getToday() {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, '0');
-  const d = String(now.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
-function sanitizeFileName(name) {
-  return name.replace(/[/\\:*?"<>|]/g, '').trim();
+  return new Date().toISOString().slice(0, 10);
 }
 
 function v(val, fallback) {
-  if (val === null || val === undefined || val === '') return fallback || '-';
+  if (val === null || val === undefined || val === '') return fallback || '확인불가';
   return val;
 }
 
-function generateReport(c) {
-  const today = getToday();
-  const bi = c.basicInfo || {};
-  const vc = c.vcHistory || {};
-  const rounds = vc.rounds || [];
-  const latestRound = rounds.length > 0 ? rounds[rounds.length - 1] : {};
-  const valData = c.valuation || {};
-  const prof = c.profile || {};
+function getSectorPremiumLabel(premium) {
+  if (premium >= 1.3) return '핫섹터';
+  if (premium >= 1.2) return '인기섹터';
+  if (premium >= 1.0) return '보통';
+  if (premium >= 0.8) return '비인기';
+  return '역풍섹터';
+}
 
-  // ── 섹션 1: 기업 기본정보 ──
-  const section1 = `## 1. 기업 기본정보
+// 섹션 2: VC 투자 이력 테이블
+function generateVCTable(company) {
+  const rounds = company.vcHistory?.rounds || [];
+  if (rounds.length === 0) return '> 수집 실패 - 투자 이력 정보 없음';
 
-| 항목 | 내용 |
-|------|------|
-| 회사명 | **${v(c.name)}** |
-| 섹터 | ${v(c.sectorName || c.industry)} |
-| 성장성등급 | **${v(c.growthGrade)}** |
-| 설립연도 | ${v(bi.foundedYear)} |
-| 대표자 | ${v(bi.ceo)} |
-| 주요 제품·서비스 | ${v(bi.mainProduct)} |
-| 한줄 소개 | ${v(prof.oneLineIntro)} |
-| 노출 이유 | ${v(c.reason)} |`;
+  let table = '| 라운드 | 투자금액 | 밸류에이션 | 날짜 | 참여 VC |\n';
+  table += '|--------|---------|-----------|------|--------|\n';
 
-  // ── 섹션 2: VC 투자 이력 ──
-  let section2;
-  if (rounds.length > 0) {
-    const rows = rounds
-      .map(r => `| ${v(r.roundName)} | ${v(r.amount)}억 | ${v(r.valuation)}억 | ${v(r.date)} | ${r.investors ? r.investors.join(', ') : '-'} |`)
-      .join('\n');
-    section2 = `## 2. VC 투자 이력
+  for (const r of rounds) {
+    table += `| ${r.roundName || '-'} | ${r.amount ? r.amount + '억' : '-'} | ${r.valuation ? r.valuation + '억' : '-'} | ${r.date || '-'} | ${(r.investors || []).join(', ') || '-'} |\n`;
+  }
+  return table;
+}
 
-| 라운드 | 투자금액 | 밸류에이션 | 날짜 | 참여 VC |
-|--------|---------|-----------|------|---------|
-${rows}
+// 섹션 3: 밸류에이션 분석
+function generateValuationSection(company) {
+  const val = company.valuation;
+  const peer = company.peerGroup;
+  const growthDetail = company.growthGradeDetail;
 
-- **직전 라운드 대비 밸류 상승률:** ${v(vc.valuationGrowth)}
-- **누적 투자유치 총액:** ${v(vc.totalRaised ? vc.totalRaised + '억원' : null)}`;
-  } else {
-    section2 = `## 2. VC 투자 이력\n\n> 수집 실패 - VC 투자 이력 없음`;
+  if (!val || !val.fairValue) {
+    return '> 수집 실패 - 밸류에이션 산출 데이터 부족';
   }
 
-  // ── 섹션 3: 밸류에이션 분석 ──
-  const growthDetail = c.growthGradeDetail || {};
-  const growthBd = growthDetail.breakdown || {};
-  const peerGroup = c.peerGroup || {};
-  const peers = peerGroup.peers || [];
-
-  let peerTable = '';
-  if (peers.length > 0) {
-    const peerRows = peers
-      .map(p => `| ${v(p.name)} | ${v(p.ticker)} | ${p.per !== null ? p.per + '배' : '-'} | ${v(p.grade)} |`)
+  let peerRows = '';
+  if (peer?.peers && peer.peers.length > 0) {
+    peerRows = peer.peers.slice(0, 3)
+      .map(p => `| 매칭 피어 | ${p.name} | ${p.per || '-'}배 | ${p.grade}급 |`)
       .join('\n');
-    peerTable = `
-**피어그룹 상장사 (${v(c.sectorName)} 섹터)**
+  } else {
+    peerRows = '| - | 피어그룹 없음 | - | - |';
+  }
 
-| 회사명 | 종목코드 | PER | 등급 |
-|--------|---------|-----|------|
+  return `### 성장성 등급
+| 지표 | 수치 | 등급 |
+|------|------|------|
+| 매출 성장률 | ${v(company.financials?.financials?.[0]?.revenueGrowth)}% | ${v(growthDetail?.grade, '-')}급 |
+| 밸류 상승률 | ${v(company.vcHistory?.valuationGrowth)} | ${v(growthDetail?.grade, '-')}급 |
+| **종합 성장성 등급** | | **${company.growthGrade}급** |
+
+### 피어그룹 매칭
+| 구분 | 상장사 | PER | 성장등급 |
+|------|--------|-----|---------|
 ${peerRows}
 
-- 피어그룹 평균 PER: ${peerGroup.avgPer ? peerGroup.avgPer.toFixed(1) + '배' : '-'}
-- 섹터 프리미엄: ${peerGroup.sectorPremium ? 'x' + peerGroup.sectorPremium : '-'}`;
+### 적정 밸류 산출
+| 항목 | 수치 |
+|------|------|
+| 산출 방법 | ${val.method} |
+| 피어 기반 밸류 | ${val.preFairValue ? val.preFairValue + '억원' : '-'} |
+| 비상장 할인율 | ${val.discountRate} |
+| **최종 적정 밸류** | **${val.fairValue}억원** |
+
+### VC 밸류 비교
+| 항목 | 수치 |
+|------|------|
+| 현재 VC 밸류 | ${val.currentVCValue ? val.currentVCValue + '억원' : '-'} |
+| 적정 밸류 | ${val.fairValue}억원 |
+| 평가 | ${val.evaluation} |
+| 업사이드 | ${val.undervalueRate !== null && val.undervalueRate !== undefined ? (val.undervalueRate > 0 ? '+' : '') + val.undervalueRate + '%' : '-'} |
+
+> 섹터 프리미엄: x${company.sectorPremium || 1.0}배 (${getSectorPremiumLabel(company.sectorPremium || 1.0)})`;
+}
+
+// 섹션 4: 특허·인증
+function generatePatentSection(company) {
+  const patents = company.patents;
+  if (!patents || patents.totalCount === 0) {
+    return '> 수집 실패 - 등록 특허 없음';
   }
 
-  const section3 = `## 3. 밸류에이션 분석
+  let result = `> 총 **${patents.totalCount}건** 등록 특허 보유\n\n`;
 
+  if (patents.patents && patents.patents.length > 0) {
+    result += '| 특허명 | 출원일 | 등록번호 |\n';
+    result += '|--------|--------|----------|\n';
+    for (const p of patents.patents.slice(0, 10)) {
+      result += `| ${p.title || '-'} | ${p.applicationDate || '-'} | ${p.registrationNumber || '-'} |\n`;
+    }
+    if (patents.patents.length > 10) {
+      result += `\n> 외 ${patents.patents.length - 10}건 추가`;
+    }
+  }
+  return result;
+}
+
+// 섹션 5: 허가·규제
+function generateRegulationSection(company) {
+  const regs = company.regulations?.regulations || [];
+  if (regs.length === 0) return '> 수집 실패 - 허가·규제 정보 없음';
+
+  let table = '| 항목 | 현황 | 날짜 | 출처 |\n';
+  table += '|------|------|------|------|\n';
+  for (const r of regs.slice(0, 5)) {
+    table += `| ${r.title || '-'} | ${r.status || '-'} | ${r.date || '-'} | ${r.source || '-'} |\n`;
+  }
+  return table;
+}
+
+// 섹션 6: 비상장 거래가격
+function generatePriceSection(company) {
+  const price = company.price;
+  if (!price || price.status === '미등록' || (!price.price38 && !price.pricePlus)) {
+    return '| 플랫폼 | 거래가 | 비고 |\n|--------|--------|------|\n| 38커뮤니케이션 | - | 미등록 |\n| 증권플러스 비상장 | - | 미등록 |\n\n> 거래 없음 (38/증권플러스 모두 미등록)';
+  }
+
+  let table = '| 플랫폼 | 거래가 | 비고 |\n';
+  table += '|--------|--------|------|\n';
+
+  if (price.price38) {
+    table += `| 38커뮤니케이션 | ${price.price38.price}원 | 최근거래일: ${price.price38.lastTradeDate || '-'} |\n`;
+  } else {
+    table += '| 38커뮤니케이션 | - | 미등록 |\n';
+  }
+
+  if (price.pricePlus) {
+    table += `| 증권플러스 비상장 | ${price.pricePlus.price}원 | 호가스프레드: ${price.pricePlus.spread || '-'} |\n`;
+  } else {
+    table += '| 증권플러스 비상장 | - | 미등록 |\n';
+  }
+
+  return table;
+}
+
+// 섹션 7: 매력도 점수 상세
+function generateScoreSection(company) {
+  const breakdown = company.scoreBreakdown || {};
+
+  let result = `**섹터: ${v(company.sectorName)}**
+**성장성 등급: ${v(company.growthGrade)}급**
+**섹터 프리미엄: x${company.sectorPremium || 1.0}배**
+
+### 항목별 점수
+| 항목 | 획득점수 | 근거 |
+|------|---------|------|
+`;
+
+  for (const [key, value] of Object.entries(breakdown)) {
+    result += `| ${key} | ${value}점 | - |\n`;
+  }
+
+  result += `
+### 점수 집계
+| 구분 | 점수 |
+|------|------|
+| 기본 합계 | ${company.rawScore || 0}/100점 |
+| 가산점 | +${company.scoreBonus || 0}점 |
+| 섹터 프리미엄 | x${company.sectorPremium || 1.0}배 |
+| **최종 점수** | **${company.score || 0}/10** |`;
+
+  return result;
+}
+
+// 섹션 8: AI 종합의견
+function generateOpinionSection(company) {
+  const strengths = company.strengths || [];
+  const risks = company.risks || [];
+
+  return `### 한줄 요약
+> ${company.valuation?.evaluation || ''} ${company.name} — ${company.reason || ''}
+
+### 핵심 강점
+${strengths.map((s, i) => `${i + 1}. ${s}`).join('\n') || '- 확인불가'}
+
+### 주요 리스크
+${risks.map((r, i) => `${i + 1}. ${r}`).join('\n') || '- 확인불가'}
+
+### IPO 전망
+${company.ipoOutlook || '확인불가'}
+
+### 모니터링 포인트
+- 다음 투자 라운드 동향
+- 매출 성장률 유지 여부
+- 비상장 거래가격 변동`;
+}
+
+// 메인 리포트 생성
+function generateReport(company) {
+  const today = getToday();
+
+  return `# ${company.name}
+> 분석일: ${today} | 섹터: ${v(company.sectorName)} | 성장성: ${v(company.growthGrade)}급 | 투자 매력도: ${company.score || 0}/10
+
+---
+
+## 1. 기업 기본정보
 | 항목 | 내용 |
 |------|------|
-| 성장성등급 | **${v(c.growthGrade)}** (평균점수: ${v(growthDetail.avgScore)}) |
-| 매출성장률 점수 | ${v(growthBd.revenueGrowthScore)} |
-| 밸류상승률 점수 | ${v(growthBd.valuationGrowthScore)} |
-| 라운드텀 점수 | ${v(growthBd.roundSpeedScore)} |
-| 현재 VC 밸류 | ${valData.currentVCValue ? valData.currentVCValue + '억원' : '-'} |
-| 적정 밸류 (할인 전) | ${valData.preFairValue ? valData.preFairValue + '억원' : '-'} |
-| 비상장 할인율 | ${v(valData.discountRate)} |
-| **적정 밸류 (할인 후)** | **${valData.fairValue ? valData.fairValue + '억원' : '-'}** |
-| 산출 방법 | ${v(valData.method)} |
-| **저평가율** | **${valData.undervalueRate !== null && valData.undervalueRate !== undefined ? valData.undervalueRate + '%' : '-'}** |
-| **평가등급** | **${v(valData.evaluation)}** |
-${peerTable}`;
-
-  // ── 섹션 4: 특허·인증 ──
-  let section4;
-  if (c.patents && c.patents.totalCount > 0) {
-    const patentList = (c.patents.patents || [])
-      .slice(0, 15)
-      .map(p => `| ${v(p.title)} | ${v(p.applicationDate)} | ${v(p.registrationNumber)} |`)
-      .join('\n');
-    section4 = `## 4. 특허·인증
-
-| 특허명 | 출원일 | 등록번호 |
-|--------|--------|---------|
-${patentList}
-
-> 총 **${c.patents.totalCount}건** 특허 보유`;
-  } else {
-    section4 = `## 4. 특허·인증\n\n> 수집 실패 - 특허 정보 없음`;
-  }
-
-  // ── 섹션 5: 허가·규제 ──
-  let section5;
-  const regs = c.regulations?.regulations || [];
-  if (regs.length > 0) {
-    const regRows = regs
-      .slice(0, 10)
-      .map(r => `| ${v(r.title)} | ${v(r.status)} | ${v(r.source)} |`)
-      .join('\n');
-    section5 = `## 5. 허가·규제 진행
-
-| 항목 | 현황 | 출처 |
-|------|------|------|
-${regRows}`;
-  } else {
-    section5 = `## 5. 허가·규제 진행\n\n> 수집 실패 - 허가·규제 정보 없음`;
-  }
-
-  // ── 섹션 6: 비상장 거래가격 ──
-  const price = c.price || {};
-  const priceLines = [];
-  if (price.price38) {
-    priceLines.push(`| 38커뮤니케이션 | ${v(price.price38.price)}원 | 최근거래일: ${v(price.price38.lastTradeDate)} |`);
-  } else {
-    priceLines.push('| 38커뮤니케이션 | 미등록 | - |');
-  }
-  if (price.pricePlus) {
-    priceLines.push(`| 증권플러스 비상장 | ${v(price.pricePlus.price)}원 | 호가스프레드: ${v(price.pricePlus.spread)} |`);
-  } else {
-    priceLines.push('| 증권플러스 비상장 | 미등록 | - |');
-  }
-  if (!price.price38 && !price.pricePlus) {
-    priceLines.push('\n> 거래 없음 (38/증권플러스 모두 미등록)');
-  }
-
-  const section6 = `## 6. 비상장 거래가격
-
-| 플랫폼 | 거래가 | 비고 |
-|--------|--------|------|
-${priceLines.join('\n')}`;
-
-  // ── 섹션 7: 매력도 점수 상세 ──
-  const bd = c.scoreBreakdown || {};
-  const bdEntries = Object.entries(bd);
-  let scoreTableRows = '';
-  if (bdEntries.length > 0) {
-    scoreTableRows = bdEntries
-      .map(([k, val]) => `| ${k} | ${val} |`)
-      .join('\n');
-  } else {
-    scoreTableRows = '| (데이터 없음) | - |';
-  }
-
-  const section7 = `## 7. 매력도 점수 상세
-
-**투자 매력도: ${c.score || 0} / 10** (원점수: ${c.rawScore || 0}/100, 섹터프리미엄: x${c.sectorPremium || 1.0})
-
-| 항목 | 점수 |
-|------|------|
-${scoreTableRows}
-| **합계** | **${c.rawScore || 0}점** |
-
-> 섹터: ${v(c.sectorName)} | 가산점: ${c.scoreBonus || 0}점`;
-
-  // ── 섹션 8: AI 종합의견 ──
-  const strengths = (c.strengths || []).length > 0
-    ? c.strengths.map((s, i) => `${i + 1}. ${s}`).join('\n')
-    : '- 정보 부족';
-  const risks = (c.risks || []).length > 0
-    ? c.risks.map((r, i) => `${i + 1}. ${r}`).join('\n')
-    : '- 정보 부족';
-
-  const section8 = `## 8. AI 종합의견
-
-**핵심 강점**
-${strengths}
-
-**주요 리스크**
-${risks}
-
-**IPO 전망:** ${v(c.ipoOutlook, '판단 불가')}`;
-
-  // ── 출처 ──
-  const sourceSection = c.link
-    ? `- [${c.source || c.reason}](${c.link}) — ${c.pubDate || today}`
-    : '- 출처 없음';
-
-  // ── 최종 조합 ──
-  return `# ${c.name}
-> 분석일: ${today} | 매력도: ${c.score || 0}/10 | 섹터: ${v(c.sectorName || c.industry, '기타')} | 성장성: ${v(c.growthGrade)} | 평가: ${v(valData.evaluation)}
+| 섹터 | ${v(company.sectorName)} |
+| 주요 제품·서비스 | ${v(company.basicInfo?.mainProduct)} |
+| 추정 기업가치 | ${company.vcHistory?.rounds?.[0]?.valuation ? company.vcHistory.rounds[0].valuation + '억원' : '확인불가'} |
+| 오늘 노출 이유 | ${v(company.reason)} |
+| 출처 | ${v(company.source)} |
 
 ---
 
-${section1}
+## 2. VC 투자 이력
+${generateVCTable(company)}
+
+**직전 라운드 대비 밸류 상승률:** ${v(company.vcHistory?.valuationGrowth)}
+**누적 투자유치 총액:** ${company.vcHistory?.totalRaised ? company.vcHistory.totalRaised + '억원' : '확인불가'}
 
 ---
 
-${section2}
+## 3. 밸류에이션 분석
+${generateValuationSection(company)}
 
 ---
 
-${section3}
+## 4. 특허·인증
+${generatePatentSection(company)}
 
 ---
 
-${section4}
+## 5. 허가·규제 진행
+${generateRegulationSection(company)}
 
 ---
 
-${section5}
+## 6. 비상장 거래가격
+${generatePriceSection(company)}
 
 ---
 
-${section6}
+## 7. 매력도 점수 상세
+${generateScoreSection(company)}
 
 ---
 
-${section7}
-
----
-
-${section8}
+## 8. AI 종합의견
+${generateOpinionSection(company)}
 
 ---
 
 ## 출처
-${sourceSection}
+${company.link ? `- [${company.source}](${company.link}) — ${company.pubDate || today}` : `- ${v(company.source)} — ${company.pubDate || today}`}
 `;
 }
 
-/**
- * 분석 결과 배열 → 회사별 .md 파일 저장
- */
-async function write(analysisResults) {
-  if (!analysisResults || analysisResults.length === 0) {
-    console.log('[reportWriter] 생성할 리포트가 없습니다.');
-    return [];
-  }
-
+async function write(companies) {
   const today = getToday();
-  const todayDir = path.join(REPORTS_DIR, today);
-  await fs.ensureDir(todayDir);
+  const dir = path.join(__dirname, '../reports', today);
+  await fs.ensureDir(dir);
 
-  const createdFiles = [];
-
-  for (const c of analysisResults) {
+  for (const company of companies) {
     try {
-      const report = generateReport(c);
-      const fileName = sanitizeFileName(c.name) + '.md';
-      const filePath = path.join(todayDir, fileName);
-      await fs.writeFile(filePath, report, 'utf-8');
-      createdFiles.push(filePath);
+      const content = generateReport(company);
+      const fileName = company.name.replace(/[/\\:*?"<>|]/g, '') + '.md';
+      const filePath = path.join(dir, fileName);
+      await fs.writeFile(filePath, content, 'utf8');
       console.log(`[reportWriter] 생성: ${fileName}`);
     } catch (err) {
-      console.error(`[reportWriter] "${c.name}" 실패:`, err.message);
+      console.error(`[reportWriter] "${company.name}" 실패:`, err.message);
     }
   }
 
-  console.log(`[reportWriter] 총 ${createdFiles.length}개 리포트 생성`);
-  return createdFiles;
+  console.log(`[reportWriter] 총 ${companies.length}개 리포트 생성 완료 → reports/${today}/`);
 }
 
-module.exports = { write, generateReport };
+module.exports = { write };

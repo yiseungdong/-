@@ -1,330 +1,312 @@
-const fs = require('fs-extra');
+const ExcelJS = require('exceljs');
 const path = require('path');
-const XLSX = require('xlsx');
+const fs = require('fs-extra');
 
-const EXCEL_DIR = path.join(__dirname, '..', 'reports', 'excel');
+const EXCEL_DIR = path.join(__dirname, '../reports/excel');
 
-function getToday() {
+function getWeekLabel() {
   const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, '0');
-  const d = String(now.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  const week = Math.ceil(((now - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7);
+  return `${now.getFullYear()}-W${String(week).padStart(2, '0')}`;
 }
 
-function getWeekFileName() {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, '0');
-  const oneJan = new Date(y, 0, 1);
-  const weekNum = Math.ceil(((now - oneJan) / 86400000 + oneJan.getDay() + 1) / 7);
-  return `비상장_${y}-${m}_W${String(weekNum).padStart(2, '0')}.xlsx`;
+function findLastFile() {
+  if (!fs.existsSync(EXCEL_DIR)) return null;
+  const files = fs.readdirSync(EXCEL_DIR)
+    .filter(f => f.endsWith('.xlsx'))
+    .sort()
+    .reverse();
+  return files.length > 0 ? path.join(EXCEL_DIR, files[0]) : null;
 }
 
-// Sheet1 컬럼 순서 (A~Z, 26개)
-const SHEET1_HEADERS = [
-  '날짜', '회사명', '섹터', '성장성등급', '매력도점수', '점수세부내역',
-  '평가등급', '노출이유', '최신라운드', '투자금액(억)', '밸류에이션(억)',
-  '적정밸류(억)', '저평가율(%)', '누적투자총액(억)', '참여VC',
-  '38커뮤니케이션', '증권플러스', '특허수',
-  '강점1', '강점2', '강점3', '리스크1', '리스크2', '리스크3',
-  'IPO전망', '출처링크',
-];
-
-// Sheet2 회사프로파일 컬럼 (12개)
-const SHEET2_HEADERS = [
-  '날짜', '회사명', '섹터', '한줄소개', '중점기술', '핵심경쟁력',
-  '타겟시장', '주요고객사', '비즈니스모델', '경쟁사', '성장전략', '주요제품서비스',
-];
-
-function getParticipatingVCs(vcHistory) {
-  if (!vcHistory || !vcHistory.rounds) return '';
-  const allVCs = vcHistory.rounds
-    .flatMap(r => r.investors || [])
-    .filter(Boolean);
-  return [...new Set(allVCs)].join(', ');
+function getEvalLabel(undervalueRate) {
+  if (undervalueRate === null || undervalueRate === undefined) return '-';
+  if (undervalueRate <= -30) return '🟢 저평가';
+  if (undervalueRate <= 30) return '🟡 적정';
+  if (undervalueRate <= 100) return '🟠 고평가';
+  return '🔴 버블';
 }
 
-function koreanSort(a, b) {
-  return (a || '').localeCompare(b || '', 'ko');
-}
+async function updateExcel(companies) {
+  try {
+  fs.ensureDirSync(EXCEL_DIR);
 
-function sortData(data) {
-  return data.sort((a, b) => {
-    const nameCompare = koreanSort(a['회사명'], b['회사명']);
+  const weekLabel = getWeekLabel();
+  const thisWeekFile = path.join(EXCEL_DIR, `비상장_${weekLabel}.xlsx`);
+
+  let workbook = new ExcelJS.Workbook();
+  let existingSheet1Data = [];
+  let existingSheet2Data = [];
+  let existingSheet4Data = [];
+
+  // 기존 파일 읽기
+  const existingFile = fs.existsSync(thisWeekFile) ? thisWeekFile : findLastFile();
+  if (existingFile) {
+    try {
+      await workbook.xlsx.readFile(existingFile);
+      const s1 = workbook.getWorksheet('비상장_누적');
+      const s2 = workbook.getWorksheet('회사프로파일');
+      const s4 = workbook.getWorksheet('가격변동알림');
+
+      if (s1) {
+        s1.eachRow((row, i) => {
+          if (i > 1) existingSheet1Data.push(row.values.slice(1));
+        });
+      }
+      if (s2) {
+        s2.eachRow((row, i) => {
+          if (i > 1) existingSheet2Data.push(row.values.slice(1));
+        });
+      }
+      if (s4) {
+        s4.eachRow((row, i) => {
+          if (i > 1) existingSheet4Data.push(row.values.slice(1));
+        });
+      }
+    } catch (e) {
+      console.log('[excelWriter] 기존 파일 읽기 실패, 새로 생성:', e.message);
+    }
+  }
+
+  // 새 워크북 생성
+  workbook = new ExcelJS.Workbook();
+
+  // ── Sheet1: 비상장_누적 ──
+  const sheet1 = workbook.addWorksheet('비상장_누적');
+
+  const headers1 = [
+    '날짜', '회사명', '섹터', '성장성등급', '매력도점수', '점수세부내역',
+    '평가등급', '노출이유', '최신라운드', '투자금액(억)', '밸류에이션(억)',
+    '적정밸류(억)', '저평가율(%)', '누적투자총액(억)', '참여VC',
+    '38커뮤니케이션', '증권플러스', '특허수',
+    '강점1', '강점2', '강점3',
+    '리스크1', '리스크2', '리스크3',
+    'IPO전망', '출처링크'
+  ];
+
+  const headerRow1 = sheet1.addRow(headers1);
+  headerRow1.eachCell((cell, col) => {
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F4E79' } };
+    cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+
+    // E열(5), F열(6) 노란색 강조
+    if (col === 5 || col === 6) {
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF3CD' } };
+      cell.font = { color: { argb: 'FF000000' }, bold: true };
+    }
+  });
+
+  // 기존 데이터
+  for (const row of existingSheet1Data) {
+    sheet1.addRow(row);
+  }
+
+  // 새 데이터 (중복 체크)
+  const today = new Date().toISOString().slice(0, 10);
+  for (const company of companies) {
+    const isDuplicate = existingSheet1Data.some(
+      row => row[1] === company.name && row[0] === today
+    );
+    if (isDuplicate) continue;
+
+    const latestRound = company.vcHistory?.rounds?.[0] || {};
+    sheet1.addRow([
+      today,
+      company.name,
+      company.sectorName || '-',
+      company.growthGrade || '-',
+      company.score || 0,
+      company.scoreBreakdownStr || '-',
+      getEvalLabel(company.valuation?.undervalueRate),
+      company.reason || '-',
+      latestRound.roundName || '-',
+      latestRound.amount || '-',
+      latestRound.valuation || '-',
+      company.valuation?.fairValue || '-',
+      company.valuation?.undervalueRate !== null && company.valuation?.undervalueRate !== undefined
+        ? company.valuation.undervalueRate + '%' : '-',
+      company.vcHistory?.totalRaised || '-',
+      (latestRound.investors || []).join(', ') || '-',
+      company.price?.price38?.price || '미등록',
+      company.price?.pricePlus?.price || '미등록',
+      company.patents?.totalCount || 0,
+      (company.strengths || [])[0] || '-',
+      (company.strengths || [])[1] || '-',
+      (company.strengths || [])[2] || '-',
+      (company.risks || [])[0] || '-',
+      (company.risks || [])[1] || '-',
+      (company.risks || [])[2] || '-',
+      company.ipoOutlook || '-',
+      company.link || '-'
+    ]);
+  }
+
+  // ㄱㄴㄷ 정렬
+  const allRows1 = [];
+  sheet1.eachRow((row, i) => { if (i > 1) allRows1.push(row.values.slice(1)); });
+  allRows1.sort((a, b) => {
+    const nameCompare = String(a[1] || '').localeCompare(String(b[1] || ''), 'ko');
     if (nameCompare !== 0) return nameCompare;
-    return (a['날짜'] || '').localeCompare(b['날짜'] || '');
+    return String(a[0] || '').localeCompare(String(b[0] || ''));
   });
-}
 
-function applyHeaderStyle(ws, headers, bgColor, highlightCols) {
-  for (let ci = 0; ci < headers.length; ci++) {
-    const cellRef = XLSX.utils.encode_cell({ r: 0, c: ci });
-    if (!ws[cellRef]) continue;
-    ws[cellRef].s = {
-      fill: { fgColor: { rgb: bgColor } },
-      font: { bold: true, color: { rgb: 'FFFFFF' } },
-      alignment: { horizontal: 'center' },
-    };
+  sheet1.spliceRows(2, sheet1.rowCount);
+  for (const row of allRows1) sheet1.addRow(row);
+
+  sheet1.columns.forEach((col, i) => {
+    col.width = [12, 16, 14, 10, 10, 40, 12, 30, 12, 12, 12, 12, 12, 12, 30, 12, 12, 8, 20, 20, 20, 20, 20, 20, 20, 30][i] || 15;
+  });
+
+  // ── Sheet2: 회사프로파일 ──
+  const sheet2 = workbook.addWorksheet('회사프로파일');
+
+  const headers2 = [
+    '날짜', '회사명', '섹터',
+    '한줄소개', '중점기술', '핵심경쟁력',
+    '타겟시장', '주요고객사', '비즈니스모델',
+    '경쟁사', '성장전략', '주요제품서비스'
+  ];
+
+  const headerRow2 = sheet2.addRow(headers2);
+  headerRow2.eachCell(cell => {
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1B5E20' } };
+    cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+  });
+
+  for (const row of existingSheet2Data) sheet2.addRow(row);
+
+  for (const company of companies) {
+    const isDuplicate = existingSheet2Data.some(
+      row => row[1] === company.name && row[0] === today
+    );
+    if (isDuplicate) continue;
+
+    const profile = company.profile || {};
+    sheet2.addRow([
+      today,
+      company.name,
+      company.sectorName || '-',
+      profile.oneLineIntro || '-',
+      profile.coreTechnology || '-',
+      profile.coreCompetency || '-',
+      profile.targetMarket || '-',
+      profile.keyClients || '-',
+      profile.businessModel || '-',
+      profile.competitors || '-',
+      profile.growthStrategy || '-',
+      profile.mainProducts || '-'
+    ]);
   }
-  if (highlightCols) {
-    for (const ci of highlightCols) {
-      const cellRef = XLSX.utils.encode_cell({ r: 0, c: ci });
-      if (!ws[cellRef]) continue;
-      ws[cellRef].s = {
-        fill: { fgColor: { rgb: 'FFF3CD' } },
-        font: { bold: true, color: { rgb: '000000' } },
-        alignment: { horizontal: 'center' },
-      };
-    }
-  }
-}
 
-function createSheet(data, headers) {
-  const ordered = data.map(row => {
-    const obj = {};
-    for (const h of headers) {
-      obj[h] = row[h] !== undefined ? row[h] : '';
-    }
-    return obj;
-  });
-  const ws = XLSX.utils.json_to_sheet(ordered, { header: headers });
+  // ㄱㄴㄷ 정렬
+  const allRows2 = [];
+  sheet2.eachRow((row, i) => { if (i > 1) allRows2.push(row.values.slice(1)); });
+  allRows2.sort((a, b) => String(a[1] || '').localeCompare(String(b[1] || ''), 'ko'));
+  sheet2.spliceRows(2, sheet2.rowCount);
+  for (const row of allRows2) sheet2.addRow(row);
 
-  ws['!cols'] = headers.map(h => {
-    let maxLen = h.length * 2;
-    for (const row of ordered) {
-      const val = String(row[h] || '');
-      maxLen = Math.max(maxLen, val.length * 1.2);
-    }
-    return { wch: Math.max(Math.min(maxLen, 50), 10) };
+  sheet2.columns.forEach((col, i) => {
+    col.width = [12, 16, 14, 40, 40, 40, 20, 20, 30, 20, 40, 30][i] || 20;
   });
 
-  return ws;
-}
+  // ── Sheet3: 가격변동알림 ──
+  const sheet3 = workbook.addWorksheet('가격변동알림');
+  const priceChanges = getPriceChanges(companies, existingSheet1Data);
+  buildPriceAlertSheet(sheet3, priceChanges, today);
 
-/**
- * 분석 결과 1건 → Sheet1 행
- * scoreEngine + valuationEngine + sectorClassifier 데이터 사용
- */
-function toSheet1Row(r, today) {
-  const vc = r.vcHistory || {};
-  const rounds = vc.rounds || [];
-  const latestRound = rounds.length > 0 ? rounds[rounds.length - 1] : {};
-  const valData = r.valuation || {};
-
-  // 점수세부내역: scoreEngine의 breakdownStr 우선, 없으면 breakdown 직접 생성
-  const breakdownStr = r.scoreBreakdownStr
-    || (r.scoreBreakdown
-      ? Object.entries(r.scoreBreakdown).map(([k, val]) => `${k}:${val}`).join(' | ')
-      : '');
-
-  return {
-    '날짜': today,
-    '회사명': r.name || '',
-    '섹터': r.sectorName || r.industry || '',
-    '성장성등급': r.growthGrade || '',
-    '매력도점수': r.score || 0,
-    '점수세부내역': breakdownStr,
-    '평가등급': valData.evaluation || '-',
-    '노출이유': r.reason || '',
-    '최신라운드': latestRound.roundName || '',
-    '투자금액(억)': latestRound.amount || '',
-    '밸류에이션(억)': latestRound.valuation || '',
-    '적정밸류(억)': valData.fairValue || '',
-    '저평가율(%)': valData.undervalueRate !== null && valData.undervalueRate !== undefined ? valData.undervalueRate : '',
-    '누적투자총액(억)': vc.totalRaised || '',
-    '참여VC': getParticipatingVCs(vc),
-    '38커뮤니케이션': r.price && r.price.price38 ? r.price.price38.price : '미등록',
-    '증권플러스': r.price && r.price.pricePlus ? r.price.pricePlus.price : '미등록',
-    '특허수': r.patents ? r.patents.totalCount || 0 : 0,
-    '강점1': r.strengths && r.strengths[0] || '',
-    '강점2': r.strengths && r.strengths[1] || '',
-    '강점3': r.strengths && r.strengths[2] || '',
-    '리스크1': r.risks && r.risks[0] || '',
-    '리스크2': r.risks && r.risks[1] || '',
-    '리스크3': r.risks && r.risks[2] || '',
-    'IPO전망': r.ipoOutlook || '',
-    '출처링크': r.link || '',
-  };
-}
-
-/**
- * 분석 결과 1건 → Sheet2 회사프로파일 행
- */
-function toSheet2Row(r, today) {
-  const p = r.profile || {};
-  return {
-    '날짜': today,
-    '회사명': r.name || '',
-    '섹터': r.sectorName || r.industry || '',
-    '한줄소개': p.oneLineIntro || '',
-    '중점기술': p.coreTechnology || '',
-    '핵심경쟁력': p.coreCompetency || '',
-    '타겟시장': p.targetMarket || '',
-    '주요고객사': p.keyClients || '',
-    '비즈니스모델': p.businessModel || '',
-    '경쟁사': p.competitors || '',
-    '성장전략': p.growthStrategy || '',
-    '주요제품서비스': p.mainProducts || '',
-  };
-}
-
-/**
- * 분석 결과를 주차별 엑셀에 누적 저장
- */
-async function updateExcel(analysisResults) {
-  if (!analysisResults || analysisResults.length === 0) return;
-
-  await fs.ensureDir(EXCEL_DIR);
-
-  const today = getToday();
-  const fileName = getWeekFileName();
-  const filePath = path.join(EXCEL_DIR, fileName);
-
-  let existingSheet1 = [];
-  let existingSheet2 = [];
-  let existingPriceAlert = null;
-
-  try {
-    if (await fs.pathExists(filePath)) {
-      const wb = XLSX.readFile(filePath);
-      if (wb.Sheets['비상장_누적']) {
-        existingSheet1 = XLSX.utils.sheet_to_json(wb.Sheets['비상장_누적']);
-      }
-      if (wb.Sheets['회사프로파일']) {
-        existingSheet2 = XLSX.utils.sheet_to_json(wb.Sheets['회사프로파일']);
-      }
-      if (wb.Sheets['가격변동알림']) {
-        existingPriceAlert = wb.Sheets['가격변동알림'];
-      }
-    }
+  // 저장
+  await workbook.xlsx.writeFile(thisWeekFile);
+  console.log(`[excelWriter] 저장 완료: ${path.basename(thisWeekFile)} (Sheet1: ${allRows1.length}행, Sheet2: ${allRows2.length}행)`);
   } catch (err) {
-    console.log('[excelWriter] 기존 엑셀 읽기 실패, 새로 생성:', err.message);
+    console.error(`[excelWriter] 수집 실패 - ${err.message}`);
   }
-
-  for (const r of analysisResults) {
-    existingSheet1.push(toSheet1Row(r, today));
-    existingSheet2.push(toSheet2Row(r, today));
-  }
-
-  sortData(existingSheet1);
-  sortData(existingSheet2);
-
-  const wb = XLSX.utils.book_new();
-
-  // Sheet1: 비상장_누적 (E/F열 노란색)
-  const ws1 = createSheet(existingSheet1, SHEET1_HEADERS);
-  applyHeaderStyle(ws1, SHEET1_HEADERS, '1F4E79', [4, 5]);
-  XLSX.utils.book_append_sheet(wb, ws1, '비상장_누적');
-
-  // Sheet2: 회사프로파일
-  const ws2 = createSheet(existingSheet2, SHEET2_HEADERS);
-  applyHeaderStyle(ws2, SHEET2_HEADERS, '1B5E20');
-  XLSX.utils.book_append_sheet(wb, ws2, '회사프로파일');
-
-  // Sheet3: 가격변동알림
-  if (existingPriceAlert) {
-    XLSX.utils.book_append_sheet(wb, existingPriceAlert, '가격변동알림');
-  }
-
-  XLSX.writeFile(wb, filePath);
-  console.log(`[excelWriter] ${fileName} — ${analysisResults.length}건 추가 (Sheet1: ${existingSheet1.length}행, Sheet2: ${existingSheet2.length}행)`);
 }
 
-/**
- * Sheet3: 가격변동알림 업데이트
- */
-async function updatePriceAlert(priceChanges) {
-  await fs.ensureDir(EXCEL_DIR);
+function getPriceChanges(companies, existingData) {
+  const changes = [];
+  for (const company of companies) {
+    try {
+      const today38 = company.price?.price38?.price;
+      const todayPlus = company.price?.pricePlus?.price;
 
-  const today = getToday();
-  const fileName = getWeekFileName();
-  const filePath = path.join(EXCEL_DIR, fileName);
+      const prevRows = existingData
+        .filter(row => row[1] === company.name)
+        .sort((a, b) => String(b[0]).localeCompare(String(a[0])));
 
-  let wb;
-  try {
-    if (await fs.pathExists(filePath)) {
-      wb = XLSX.readFile(filePath);
-    } else {
-      wb = XLSX.utils.book_new();
+      if (prevRows.length === 0) continue;
+      const prev = prevRows[0];
+      const prev38 = typeof prev[15] === 'number' ? prev[15] : null;
+      const prevPlus = typeof prev[16] === 'number' ? prev[16] : null;
+
+      let change38 = null, changePlus = null;
+      if (today38 && prev38) change38 = Math.round(((today38 - prev38) / prev38) * 1000) / 10;
+      if (todayPlus && prevPlus) changePlus = Math.round(((todayPlus - prevPlus) / prevPlus) * 1000) / 10;
+
+      const maxChange = Math.max(Math.abs(change38 || 0), Math.abs(changePlus || 0));
+      if (maxChange >= 10) {
+        changes.push({
+          companyName: company.name,
+          price38Today: today38, price38Prev: prev38, change38,
+          pricePlusToday: todayPlus, pricePlusPrev: prevPlus, changePlus,
+          maxChange: Math.abs(change38 || 0) >= Math.abs(changePlus || 0) ? (change38 || 0) : (changePlus || 0),
+          alertType: (Math.abs(change38 || 0) >= Math.abs(changePlus || 0) ? (change38 || 0) : (changePlus || 0)) > 0 ? '급등' : '급락'
+        });
+      }
+    } catch (err) {
+      console.error(`[excelWriter] 가격변동 감지 실패 (${company.name}):`, err.message);
     }
-  } catch (err) {
-    console.log('[excelWriter] 엑셀 읽기 실패, 새로 생성:', err.message);
-    wb = XLSX.utils.book_new();
   }
 
-  const sheetName = '가격변동알림';
-  const idx = wb.SheetNames.indexOf(sheetName);
-  if (idx !== -1) {
-    wb.SheetNames.splice(idx, 1);
-    delete wb.Sheets[sheetName];
-  }
+  return changes.sort((a, b) => Math.abs(b.maxChange) - Math.abs(a.maxChange));
+}
 
-  const ws = {};
-  const colWidths = [14, 12, 14, 14, 12, 18, 18, 16, 12, 10];
+function buildPriceAlertSheet(sheet, changes, today) {
+  const upCount = changes.filter(c => c.alertType === '급등').length;
+  const downCount = changes.filter(c => c.alertType === '급락').length;
 
-  const headerFill = { fgColor: { rgb: 'C00000' } };
-  const headerFont = { bold: true, color: { rgb: 'FFFFFF' } };
-  const upFill = { fgColor: { rgb: 'FFE0E0' } };
-  const downFill = { fgColor: { rgb: 'E0E8FF' } };
+  sheet.addRow([`기준일: ${today} | 급등 ${upCount}개 | 급락 ${downCount}개 | 총 ${changes.length}개 종목`]);
+  sheet.addRow([]);
 
-  if (!priceChanges || priceChanges.length === 0) {
-    ws['A1'] = { v: '전영업일 가격 데이터 없음 (첫째 날 실행)', t: 's' };
-    ws['!ref'] = 'A1:A1';
-  } else {
-    const prevDate = priceChanges[0].prevDate || '';
-    const upCount = priceChanges.filter(p => p.alertType === '급등').length;
-    const downCount = priceChanges.filter(p => p.alertType === '급락').length;
+  const headers = [
+    '회사명', '기준일', '38_전일가', '38_현재가', '38_변동폭',
+    '증권플러스_전일가', '증권플러스_현재가', '증권플러스_변동폭',
+    '최대변동폭', '알림'
+  ];
+  const headerRow = sheet.addRow(headers);
+  headerRow.eachCell(cell => {
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC00000' } };
+    cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+  });
 
-    ws['A1'] = { v: `기준일: ${today} | 전영업일: ${prevDate}`, t: 's' };
-    ws['A2'] = { v: `급등 ${upCount}개 | 급락 ${downCount}개 | 총 ${priceChanges.length}개 종목`, t: 's' };
+  for (const c of changes) {
+    const row = sheet.addRow([
+      c.companyName, today,
+      c.price38Prev || '-', c.price38Today || '-',
+      c.change38 !== null ? (c.change38 > 0 ? '+' : '') + c.change38 + '%' : '-',
+      c.pricePlusPrev || '-', c.pricePlusToday || '-',
+      c.changePlus !== null ? (c.changePlus > 0 ? '+' : '') + c.changePlus + '%' : '-',
+      (c.maxChange > 0 ? '+' : '') + c.maxChange + '%',
+      c.alertType === '급등' ? '🔴 급등' : '🔵 급락'
+    ]);
 
-    const headers = ['회사명', '기준일', '38_전일가', '38_현재가', '38_변동폭',
-      '증권플러스_전일가', '증권플러스_현재가', '증권플러스_변동폭', '최대변동폭', '알림'];
-
-    headers.forEach((h, ci) => {
-      const cellRef = XLSX.utils.encode_cell({ r: 3, c: ci });
-      ws[cellRef] = {
-        v: h, t: 's',
-        s: { fill: headerFill, font: headerFont, alignment: { horizontal: 'center' } }
+    row.eachCell(cell => {
+      cell.fill = {
+        type: 'pattern', pattern: 'solid',
+        fgColor: { argb: c.alertType === '급등' ? 'FFFFE0E0' : 'FFE0E8FF' }
       };
     });
-
-    priceChanges.forEach((p, ri) => {
-      const row = ri + 4;
-      const isUp = p.alertType === '급등';
-      const rowStyle = { fill: isUp ? upFill : downFill };
-
-      const fmt38 = p.change38 !== null ? `${p.change38 > 0 ? '+' : ''}${p.change38.toFixed(1)}%` : '-';
-      const fmtPlus = p.changePlus !== null ? `${p.changePlus > 0 ? '+' : ''}${p.changePlus.toFixed(1)}%` : '-';
-      const fmtMax = `${p.maxChange > 0 ? '+' : ''}${p.maxChange.toFixed(1)}%`;
-
-      const cells = [
-        p.companyName, p.date,
-        p.price38Prev !== null ? p.price38Prev.toLocaleString() : '-',
-        p.price38Today !== null ? p.price38Today.toLocaleString() : '-',
-        fmt38,
-        p.pricePlusPrev !== null ? p.pricePlusPrev.toLocaleString() : '-',
-        p.pricePlusToday !== null ? p.pricePlusToday.toLocaleString() : '-',
-        fmtPlus, fmtMax,
-        isUp ? '🔴 급등' : '🔵 급락',
-      ];
-
-      cells.forEach((val, ci) => {
-        const cellRef = XLSX.utils.encode_cell({ r: row, c: ci });
-        ws[cellRef] = { v: val, t: 's', s: rowStyle };
-      });
-    });
-
-    const lastRow = 4 + priceChanges.length - 1;
-    ws['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: lastRow, c: 9 } });
   }
 
-  ws['!cols'] = colWidths.map(w => ({ wch: w }));
-  XLSX.utils.book_append_sheet(wb, ws, sheetName);
-  XLSX.writeFile(wb, filePath);
+  if (changes.length === 0) {
+    sheet.addRow(['10% 이상 변동 종목 없음']);
+  }
 
-  console.log(`[excelWriter] Sheet3 가격변동알림 업데이트 — ${priceChanges.length}건`);
+  sheet.columns.forEach((col, i) => {
+    col.width = [16, 12, 12, 12, 12, 14, 14, 14, 12, 10][i] || 12;
+  });
 }
 
-module.exports = { updateExcel, updatePriceAlert };
+module.exports = { updateExcel };
