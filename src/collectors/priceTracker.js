@@ -138,4 +138,36 @@ async function collectPrice(companyName) {
   }
 }
 
-module.exports = { collectPrice };
+/**
+ * 시가총액 환산: 주당 가격 × 발행주식수
+ * @param {Object} priceData - { price38: { price: number }, pricePlus: { price: number } }
+ * @param {Object} dartData - { totalShares: number }
+ * @returns {Object} { marketCap38, marketCapPlus, avgMarketCap } (억원 단위)
+ */
+function calculateMarketCap(priceData, dartData) {
+  if (!dartData || !dartData.totalShares) return null;
+
+  const totalShares = dartData.totalShares;
+  const result = { marketCap38: null, marketCapPlus: null, avgMarketCap: null };
+
+  const price38 = priceData?.price38?.price;
+  const pricePlus = priceData?.pricePlus?.price;
+
+  if (price38 && typeof price38 === 'number') {
+    result.marketCap38 = Math.round((price38 * totalShares) / 100000000); // 억원
+  }
+
+  if (pricePlus && typeof pricePlus === 'number') {
+    result.marketCapPlus = Math.round((pricePlus * totalShares) / 100000000);
+  }
+
+  // 두 플랫폼 모두 있으면 평균
+  const caps = [result.marketCap38, result.marketCapPlus].filter(Boolean);
+  if (caps.length > 0) {
+    result.avgMarketCap = Math.round(caps.reduce((a, b) => a + b, 0) / caps.length);
+  }
+
+  return result;
+}
+
+module.exports = { collectPrice, calculateMarketCap };
