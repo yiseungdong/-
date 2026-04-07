@@ -258,6 +258,8 @@ async function analyze(companies) {
       console.error(`[analyzer] "${company.name}" 점수 계산 실패:`, err.message);
       analyzedCompany.score = 0;
       analyzedCompany.rawScore = 0;
+      analyzedCompany.scoreBreakdown = {};
+      analyzedCompany.scoreBreakdownStr = '';
     }
 
     results.push(analyzedCompany);
@@ -267,136 +269,6 @@ async function analyze(companies) {
 
   console.log(`[analyzer] ${results.length}개 회사 분석 완료`);
   return results;
-}
-
-/**
- * 규칙 기반 매력도 점수 계산 (100점 만점 → 10점 환산)
- */
-function calculateScore(company) {
-  try {
-  let total = 0;
-  const breakdown = {};
-
-  // 1. 투자 라운드 단계 (15점)
-  const roundName = (company.vcHistory?.rounds?.[0]?.roundName || '').toLowerCase();
-  let roundScore = 0;
-  if (roundName.includes('프리ipo') || roundName.includes('브릿지')) roundScore = 15;
-  else if (roundName.includes('시리즈c') || roundName.includes('series c')) roundScore = 13;
-  else if (roundName.includes('시리즈b') || roundName.includes('series b')) roundScore = 10;
-  else if (roundName.includes('시리즈a') || roundName.includes('series a')) roundScore = 6;
-  else if (roundName.includes('시드') || roundName.includes('seed') || roundName.includes('엔젤')) roundScore = 3;
-  breakdown.round = roundScore;
-  total += roundScore;
-
-  // 2. 투자금액 (15점)
-  const amount = parseFloat(company.vcHistory?.rounds?.[0]?.amount) || 0;
-  let amountScore = 0;
-  if (amount >= 300) amountScore = 15;
-  else if (amount >= 100) amountScore = 12;
-  else if (amount >= 50) amountScore = 9;
-  else if (amount >= 10) amountScore = 6;
-  else if (amount > 0) amountScore = 3;
-  breakdown.amount = amountScore;
-  total += amountScore;
-
-  // 3. 밸류에이션 (10점)
-  const valuation = parseFloat(company.vcHistory?.rounds?.[0]?.valuation) || 0;
-  let valuationScore = 0;
-  if (valuation >= 5000) valuationScore = 10;
-  else if (valuation >= 1000) valuationScore = 8;
-  else if (valuation >= 500) valuationScore = 6;
-  else if (valuation >= 100) valuationScore = 4;
-  else if (valuation > 0) valuationScore = 2;
-  breakdown.valuation = valuationScore;
-  total += valuationScore;
-
-  // 4. 참여 VC 티어 (10점)
-  const topTierVCs = ['소프트뱅크', 'imm', '카카오벤처스', '네이버', 'kdb', '한국투자파트너스',
-    '스톤브릿지', 'kb인베스트먼트', '한화투자', 'lg테크놀로지', '삼성벤처투자',
-    'sk', 'nhn', '카카오', '현대'];
-  const midTierVCs = ['스파크랩', '블루포인트', '퓨처플레이', '본엔젤스', '캡스톤',
-    '매쉬업엔젤스', '프라이머', '해시드', '디캠프'];
-
-  const investors = (company.vcHistory?.rounds || [])
-    .flatMap(r => r.investors || [])
-    .map(v => v.toLowerCase());
-
-  let vcScore = 0;
-  const hasTopTier = investors.some(v => topTierVCs.some(t => v.includes(t.toLowerCase())));
-  const hasMidTier = investors.some(v => midTierVCs.some(t => v.includes(t.toLowerCase())));
-
-  if (hasTopTier) vcScore = 10;
-  else if (hasMidTier) vcScore = 5;
-  else if (investors.length > 0) vcScore = 3;
-  breakdown.vc = vcScore;
-  total += vcScore;
-
-  // 5. 직전 라운드 대비 밸류 상승률 (20점)
-  const growthStr = company.vcHistory?.valuationGrowth || '';
-  const growthNum = parseFloat(String(growthStr).replace('%', '').replace('+', '')) || null;
-  let valuationGrowthScore = 5; // 정보 없으면 기본 5점
-  if (growthNum !== null) {
-    if (growthNum >= 500) valuationGrowthScore = 20;
-    else if (growthNum >= 200) valuationGrowthScore = 16;
-    else if (growthNum >= 100) valuationGrowthScore = 12;
-    else if (growthNum >= 30) valuationGrowthScore = 8;
-    else valuationGrowthScore = 5;
-  }
-  breakdown.valuationGrowth = valuationGrowthScore;
-  total += valuationGrowthScore;
-
-  // 6. 매출 성장률 (20점)
-  const revenueGrowth = company.financials?.financials?.[0]?.revenueGrowth || null;
-  let revenueScore = 0;
-  if (revenueGrowth !== null) {
-    if (revenueGrowth >= 100) revenueScore = 20;
-    else if (revenueGrowth >= 50) revenueScore = 16;
-    else if (revenueGrowth >= 30) revenueScore = 12;
-    else if (revenueGrowth >= 10) revenueScore = 8;
-    else if (revenueGrowth > 0) revenueScore = 5;
-  }
-  breakdown.revenue = revenueScore;
-  total += revenueScore;
-
-  // 7. 보유 특허 수 (5점)
-  const patentCount = company.patents?.totalCount || 0;
-  let patentScore = 0;
-  if (patentCount >= 21) patentScore = 5;
-  else if (patentCount >= 6) patentScore = 3;
-  else if (patentCount >= 1) patentScore = 2;
-  breakdown.patents = patentScore;
-  total += patentScore;
-
-  // 8. 인증·허가 현황 (5점)
-  const regCount = company.regulations?.regulations?.length || 0;
-  let regScore = 0;
-  if (regCount >= 3) regScore = 5;
-  else if (regCount >= 2) regScore = 4;
-  else if (regCount === 1) regScore = 2;
-  breakdown.regulations = regScore;
-  total += regScore;
-
-  // 최종 점수 계산 (100점 → 10점 환산)
-  const finalScore = Math.round((total / 100) * 10 * 10) / 10;
-
-  return {
-    score: finalScore,
-    totalRaw: total,
-    breakdown: {
-      투자라운드: `${breakdown.round}/15`,
-      투자금액: `${breakdown.amount}/15`,
-      밸류에이션: `${breakdown.valuation}/10`,
-      참여VC티어: `${breakdown.vc}/10`,
-      밸류상승률: `${breakdown.valuationGrowth}/20`,
-      매출성장률: `${breakdown.revenue}/20`,
-      특허수: `${breakdown.patents}/5`,
-      인증허가: `${breakdown.regulations}/5`,
-    }
-  };
-  } catch (err) {
-    console.error('[analyzer] 점수 계산 실패:', err.message);
-    return { score: 0, totalRaw: 0, breakdown: {} };
-  }
 }
 
 module.exports = { analyze, extractCompanyList };
