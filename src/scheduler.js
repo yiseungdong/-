@@ -43,7 +43,20 @@ async function run() {
     // 4. 엑셀 업데이트
     await require('./excelWriter').updateExcel(analyzed);
 
-    // 5. 로그 기록
+    // 5. 가격 변동 알림 시트 업데이트
+    const priceChangeTracker = require('./priceChangeTracker');
+    const priceChanges = await priceChangeTracker.getChanges();
+    if (priceChanges.length > 0) {
+      console.log(`가격 10% 이상 변동 종목: ${priceChanges.length}개`);
+      priceChanges.forEach(p => {
+        console.log(`  ${p.alertType} ${p.companyName}: ${p.maxChange > 0 ? '+' : ''}${p.maxChange.toFixed(1)}%`);
+      });
+    } else {
+      console.log('가격 10% 이상 변동 종목 없음');
+    }
+    await require('./excelWriter').updatePriceAlert(priceChanges);
+
+    // 6. 로그 기록
     const log = `[${new Date().toLocaleString('ko-KR')}] 완료 — 비상장 ${companies.length}개 리포트 생성\n`;
     fs.appendFileSync(logPath, log);
 

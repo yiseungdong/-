@@ -85,8 +85,25 @@ async function updateExcel(analysisResults) {
     });
   }
 
-  // 엑셀 쓰기
-  const wb = XLSX.utils.book_new();
+  // 엑셀 쓰기 (기존 시트 유지)
+  let wb;
+  try {
+    if (await fs.pathExists(filePath)) {
+      wb = XLSX.readFile(filePath);
+    } else {
+      wb = XLSX.utils.book_new();
+    }
+  } catch (err) {
+    wb = XLSX.utils.book_new();
+  }
+
+  // 기존 비상장_누적 시트 제거 후 재생성
+  const sheetIdx = wb.SheetNames.indexOf('비상장_누적');
+  if (sheetIdx !== -1) {
+    wb.SheetNames.splice(sheetIdx, 1);
+    delete wb.Sheets['비상장_누적'];
+  }
+
   const ws = XLSX.utils.json_to_sheet(existingData);
 
   // 컬럼 너비
@@ -95,10 +112,128 @@ async function updateExcel(analysisResults) {
   }));
   ws['!cols'] = cols;
 
-  XLSX.utils.book_append_sheet(wb, ws, '비상장_누적');
+  // 비상장_누적을 첫 번째 시트로 삽입
+  wb.SheetNames.unshift('비상장_누적');
+  wb.Sheets['비상장_누적'] = ws;
+
   XLSX.writeFile(wb, filePath);
 
   console.log(`[excelWriter] ${fileName} — ${analysisResults.length}건 추가 (총 ${existingData.length}행)`);
 }
 
-module.exports = { updateExcel };
+/**
+ * Sheet4: 가격변동알림 업데이트
+ */
+async function updatePriceAlert(priceChanges) {
+  await fs.ensureDir(EXCEL_DIR);
+
+  const today = getToday();
+  const fileName = getWeekFileName();
+  const filePath = path.join(EXCEL_DIR, fileName);
+
+  // 기존 엑셀 읽기
+  let wb;
+  try {
+    if (await fs.pathExists(filePath)) {
+      wb = XLSX.readFile(filePath);
+    } else {
+      wb = XLSX.utils.book_new();
+    }
+  } catch (err) {
+    console.log('[excelWriter] 엑셀 읽기 실패, 새로 생성:', err.message);
+    wb = XLSX.utils.book_new();
+  }
+
+  // 기존 Sheet4 제거 (있으면)
+  const sheetName = '가격변동알림';
+  const idx = wb.SheetNames.indexOf(sheetName);
+  if (idx !== -1) {
+    wb.SheetNames.splice(idx, 1);
+    delete wb.Sheets[sheetName];
+  }
+
+  // 새 시트 데이터 구성
+  const ws = {};
+  const colWidths = [14, 12, 14, 14, 12, 18, 18, 16, 12, 10];
+
+  // 전영업일 계산
+  const prevDate = priceChanges.length > 0 && priceChanges[0].prevDate
+    ? priceChanges[0].prevDate
+    : '';
+
+  // 스타일 정의
+  const headerFill = { fgColor: { rgb: 'C00000' } };
+  const headerFont = { bold: true, color: { rgb: 'FFFFFF' } };
+  const upFill = { fgColor: { rgb: 'FFE0E0' } };
+  const downFill = { fgColor: { rgb: 'E0E8FF' } };
+
+  if (!priceChanges || priceChanges.length === 0) {
+    // 데이터 없을 때
+    ws['A1'] = { v: '전영업일 가격 데이터 없음 (첫째 날 실행)', t: 's' };
+    ws['!ref'] = 'A1:A1';
+  } else {
+    // 1행: 기준일 요약
+    const upCount = priceChanges.filter(p => p.alertType === '급등').length;
+    const downCount = priceChanges.filter(p => p.alertType === '급락').length;
+
+    ws['A1'] = { v: `기준일: ${today} | 전영업일: ${prevDate}`, t: 's' };
+    ws['A2'] = { v: `급등 ${upCount}개 | 급락 ${downCount}개 | 총 ${priceChanges.length}개 종목`, t: 's' };
+    // 3행: 빈 행
+
+    // 4행: 헤더
+    const headers = ['회사명', '기준일', '38_전일가', '38_현재가', '38_변동폭',
+      '증권플러스_전일가', '증권플러스_현재가', '증권플러스_변동폭', '최대변동폭', '알림'];
+
+    headers.forEach((h, ci) => {
+      const cellRef = XLSX.utils.encode_cell({ r: 3, c: ci });
+      ws[cellRef] = {
+        v: h, t: 's',
+        s: { fill: headerFill, font: headerFont, alignment: { horizontal: 'center' } }
+      };
+    });
+
+    // 5행부터: 데이터
+    priceChanges.forEach((p, ri) => {
+      const row = ri + 4; // 0-indexed, 4행(헤더) 다음
+      const isUp = p.alertType === '급등';
+      const rowFill = isUp ? upFill : downFill;
+      const rowStyle = { fill: rowFill };
+
+      const fmt38 = p.change38 !== null ? `${p.change38 > 0 ? '+' : ''}${p.change38.toFixed(1)}%` : '-';
+      const fmtPlus = p.changePlus !== null ? `${p.changePlus > 0 ? '+' : ''}${p.changePlus.toFixed(1)}%` : '-';
+      const fmtMax = `${p.maxChange > 0 ? '+' : ''}${p.maxChange.toFixed(1)}%`;
+
+      const cells = [
+        p.companyName,
+        p.date,
+        p.price38Prev !== null ? p.price38Prev.toLocaleString() : '-',
+        p.price38Today !== null ? p.price38Today.toLocaleString() : '-',
+        fmt38,
+        p.pricePlusPrev !== null ? p.pricePlusPrev.toLocaleString() : '-',
+        p.pricePlusToday !== null ? p.pricePlusToday.toLocaleString() : '-',
+        fmtPlus,
+        fmtMax,
+        isUp ? '\uD83D\uDD34 급등' : '\uD83D\uDD35 급락',
+      ];
+
+      cells.forEach((val, ci) => {
+        const cellRef = XLSX.utils.encode_cell({ r: row, c: ci });
+        ws[cellRef] = { v: val, t: 's', s: rowStyle };
+      });
+    });
+
+    // 범위 설정
+    const lastRow = 4 + priceChanges.length - 1;
+    ws['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: lastRow, c: 9 } });
+  }
+
+  // 컬럼 너비
+  ws['!cols'] = colWidths.map(w => ({ wch: w }));
+
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  XLSX.writeFile(wb, filePath);
+
+  console.log(`[excelWriter] Sheet4 가격변동알림 업데이트 — ${priceChanges.length}건`);
+}
+
+module.exports = { updateExcel, updatePriceAlert };
