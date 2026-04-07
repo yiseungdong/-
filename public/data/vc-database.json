@@ -1,0 +1,1346 @@
+{
+  "lastUpdated": "2026-04-07",
+  "vcList": [
+    {
+      "name": "소프트뱅크벤처스",
+      "aliases": [
+        "소프트뱅크벤처스아시아",
+        "SoftBank Ventures Asia",
+        "SBVA"
+      ],
+      "tier": "T1",
+      "type": "VC",
+      "investmentFocus": [
+        "AI",
+        "딥테크",
+        "플랫폼",
+        "핀테크"
+      ],
+      "fundSize": "대형",
+      "foundedYear": 2000,
+      "notablePortfolio": [
+        "쿠팡",
+        "야놀자",
+        "비바리퍼블리카"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "IMM인베스트먼트",
+      "aliases": [
+        "IMM Investment",
+        "아이엠엠인베스트먼트"
+      ],
+      "tier": "T1",
+      "type": "VC",
+      "investmentFocus": [
+        "바이오",
+        "헬스케어",
+        "IT",
+        "소비재"
+      ],
+      "fundSize": "대형",
+      "foundedYear": 1999,
+      "notablePortfolio": [
+        "카카오뱅크",
+        "셀트리온",
+        "에코프로비엠"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "스틱인베스트먼트",
+      "aliases": [
+        "STIC Investments",
+        "스틱"
+      ],
+      "tier": "T1",
+      "type": "VC",
+      "investmentFocus": [
+        "바이오",
+        "헬스케어",
+        "IT",
+        "소비재"
+      ],
+      "fundSize": "대형",
+      "foundedYear": 1999,
+      "notablePortfolio": [
+        "크래프톤",
+        "하이브",
+        "컬리"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "한국투자파트너스",
+      "aliases": [
+        "Korea Investment Partners",
+        "KIP",
+        "한투파트너스"
+      ],
+      "tier": "T1",
+      "type": "VC",
+      "investmentFocus": [
+        "IT",
+        "바이오",
+        "핀테크",
+        "플랫폼"
+      ],
+      "fundSize": "대형",
+      "foundedYear": 2003,
+      "notablePortfolio": [
+        "토스",
+        "당근마켓",
+        "마켓컬리"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "미래에셋벤처투자",
+      "aliases": [
+        "Mirae Asset Venture Investment",
+        "미래에셋벤처"
+      ],
+      "tier": "T1",
+      "type": "VC",
+      "investmentFocus": [
+        "IT",
+        "플랫폼",
+        "핀테크",
+        "콘텐츠"
+      ],
+      "fundSize": "대형",
+      "foundedYear": 2000,
+      "notablePortfolio": [
+        "두나무",
+        "무신사",
+        "야놀자"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "KB인베스트먼트",
+      "aliases": [
+        "KB Investment",
+        "케이비인베스트먼트"
+      ],
+      "tier": "T1",
+      "type": "VC",
+      "investmentFocus": [
+        "핀테크",
+        "AI",
+        "바이오",
+        "플랫폼"
+      ],
+      "fundSize": "대형",
+      "foundedYear": 2008,
+      "notablePortfolio": [
+        "리디",
+        "센드버드",
+        "숨고"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "신한벤처투자",
+      "aliases": [
+        "Shinhan Venture Investment",
+        "신한벤처"
+      ],
+      "tier": "T1",
+      "type": "VC",
+      "investmentFocus": [
+        "핀테크",
+        "AI",
+        "헬스케어",
+        "ESG"
+      ],
+      "fundSize": "대형",
+      "foundedYear": 2009,
+      "notablePortfolio": [
+        "뱅크샐러드",
+        "직방",
+        "오늘의집"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "하나벤처스",
+      "aliases": [
+        "Hana Ventures",
+        "하나금융벤처스"
+      ],
+      "tier": "T1",
+      "type": "VC",
+      "investmentFocus": [
+        "핀테크",
+        "AI",
+        "SaaS",
+        "디지털전환"
+      ],
+      "fundSize": "대형",
+      "foundedYear": 2012,
+      "notablePortfolio": [
+        "핀다",
+        "채널톡",
+        "스패로우"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "NH투자증권",
+      "aliases": [
+        "NH Investment & Securities",
+        "NH투자"
+      ],
+      "tier": "T1",
+      "type": "VC",
+      "investmentFocus": [
+        "프리IPO",
+        "성장",
+        "바이오",
+        "IT"
+      ],
+      "fundSize": "대형",
+      "foundedYear": 1969,
+      "notablePortfolio": [
+        "카카오뱅크",
+        "크래프톤",
+        "SK바이오사이언스"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "산업은행",
+      "aliases": [
+        "KDB",
+        "한국산업은행",
+        "Korea Development Bank"
+      ],
+      "tier": "T1",
+      "type": "정책금융",
+      "investmentFocus": [
+        "인프라",
+        "에너지",
+        "바이오",
+        "반도체"
+      ],
+      "fundSize": "대형",
+      "foundedYear": 1954,
+      "notablePortfolio": [
+        "한화에어로스페이스",
+        "두산에너빌리티",
+        "HMM"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "국민연금",
+      "aliases": [
+        "NPS",
+        "National Pension Service",
+        "국민연금공단"
+      ],
+      "tier": "T1",
+      "type": "LP",
+      "investmentFocus": [
+        "대형펀드출자",
+        "인프라",
+        "글로벌"
+      ],
+      "fundSize": "초대형",
+      "foundedYear": 1988,
+      "notablePortfolio": [
+        "모태펀드출자",
+        "글로벌PEF"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "한국성장금융",
+      "aliases": [
+        "Korea Growth Finance",
+        "성장금융"
+      ],
+      "tier": "T1",
+      "type": "정책금융",
+      "investmentFocus": [
+        "성장사다리펀드",
+        "스케일업",
+        "혁신기업"
+      ],
+      "fundSize": "대형",
+      "foundedYear": 2013,
+      "notablePortfolio": [
+        "성장사다리펀드 운용"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "LB인베스트먼트",
+      "aliases": [
+        "LB Investment",
+        "엘비인베스트먼트"
+      ],
+      "tier": "T1",
+      "type": "VC",
+      "investmentFocus": [
+        "IT",
+        "바이오",
+        "반도체",
+        "소재"
+      ],
+      "fundSize": "대형",
+      "foundedYear": 1997,
+      "notablePortfolio": [
+        "카카오",
+        "셀트리온",
+        "하이브"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "SBI인베스트먼트",
+      "aliases": [
+        "SBI Investment Korea",
+        "에스비아이인베스트먼트"
+      ],
+      "tier": "T1",
+      "type": "VC",
+      "investmentFocus": [
+        "핀테크",
+        "블록체인",
+        "바이오",
+        "AI"
+      ],
+      "fundSize": "대형",
+      "foundedYear": 2007,
+      "notablePortfolio": [
+        "두나무",
+        "비트바이트",
+        "핀다"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "DSC인베스트먼트",
+      "aliases": [
+        "DSC Investment",
+        "디에스씨인베스트먼트"
+      ],
+      "tier": "T1",
+      "type": "VC",
+      "investmentFocus": [
+        "IT",
+        "플랫폼",
+        "콘텐츠",
+        "커머스"
+      ],
+      "fundSize": "대형",
+      "foundedYear": 2000,
+      "notablePortfolio": [
+        "배달의민족",
+        "야놀자",
+        "무신사"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "알토스벤처스",
+      "aliases": [
+        "Altos Ventures",
+        "알토스"
+      ],
+      "tier": "T1",
+      "type": "VC",
+      "investmentFocus": [
+        "플랫폼",
+        "SaaS",
+        "커머스",
+        "핀테크"
+      ],
+      "fundSize": "대형",
+      "foundedYear": 1996,
+      "notablePortfolio": [
+        "우아한형제들",
+        "당근마켓",
+        "토스"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "캡스톤파트너스",
+      "aliases": [
+        "Capstone Partners"
+      ],
+      "tier": "T1",
+      "type": "VC",
+      "investmentFocus": [
+        "IT",
+        "바이오",
+        "핀테크",
+        "딥테크"
+      ],
+      "fundSize": "대형",
+      "foundedYear": 2008,
+      "notablePortfolio": [
+        "직방",
+        "리디",
+        "버킷플레이스"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "BRV캐피탈",
+      "aliases": [
+        "BRV Capital Management",
+        "BRV"
+      ],
+      "tier": "T1",
+      "type": "VC",
+      "investmentFocus": [
+        "IT",
+        "AI",
+        "핀테크",
+        "글로벌확장"
+      ],
+      "fundSize": "대형",
+      "foundedYear": 2014,
+      "notablePortfolio": [
+        "토스",
+        "센드버드",
+        "마이리얼트립"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "컴퍼니케이파트너스",
+      "aliases": [
+        "Company K Partners",
+        "컴퍼니K파트너스"
+      ],
+      "tier": "T2",
+      "type": "VC",
+      "investmentFocus": [
+        "IT",
+        "플랫폼",
+        "커머스",
+        "SaaS"
+      ],
+      "fundSize": "중형",
+      "foundedYear": 2013,
+      "notablePortfolio": [
+        "클래스101",
+        "마이리얼트립",
+        "숨고"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "스마일게이트인베스트먼트",
+      "aliases": [
+        "Smilegate Investment",
+        "스마일게이트"
+      ],
+      "tier": "T2",
+      "type": "CVC",
+      "investmentFocus": [
+        "게임",
+        "엔터테인먼트",
+        "AI",
+        "메타버스"
+      ],
+      "fundSize": "중형",
+      "foundedYear": 2012,
+      "notablePortfolio": [
+        "인프런",
+        "쿼터백",
+        "파이오링크"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "에이티넘인베스트먼트",
+      "aliases": [
+        "Atinum Investment",
+        "아티넘"
+      ],
+      "tier": "T2",
+      "type": "VC",
+      "investmentFocus": [
+        "바이오",
+        "IT",
+        "소재",
+        "에너지"
+      ],
+      "fundSize": "중형",
+      "foundedYear": 2000,
+      "notablePortfolio": [
+        "에코프로",
+        "파두",
+        "레인보우로보틱스"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "대성창업투자",
+      "aliases": [
+        "Daesung Venture Capital",
+        "대성창투"
+      ],
+      "tier": "T2",
+      "type": "VC",
+      "investmentFocus": [
+        "에너지",
+        "소재",
+        "바이오",
+        "IT"
+      ],
+      "fundSize": "중형",
+      "foundedYear": 1986,
+      "notablePortfolio": [
+        "에코프로비엠",
+        "포스코퓨처엠"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "KTB네트워크",
+      "aliases": [
+        "KTB Network",
+        "케이티비네트워크"
+      ],
+      "tier": "T2",
+      "type": "VC",
+      "investmentFocus": [
+        "IT",
+        "바이오",
+        "반도체",
+        "핀테크"
+      ],
+      "fundSize": "중형",
+      "foundedYear": 1981,
+      "notablePortfolio": [
+        "카카오",
+        "넷마블",
+        "크래프톤"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "네오플럭스",
+      "aliases": [
+        "Neoplus",
+        "네오플럭스벤처투자"
+      ],
+      "tier": "T2",
+      "type": "VC",
+      "investmentFocus": [
+        "IT",
+        "헬스케어",
+        "소비재",
+        "콘텐츠"
+      ],
+      "fundSize": "중형",
+      "foundedYear": 2003,
+      "notablePortfolio": [
+        "토스",
+        "컬리",
+        "클래스101"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "포레스트파트너스",
+      "aliases": [
+        "Forest Partners"
+      ],
+      "tier": "T2",
+      "type": "VC",
+      "investmentFocus": [
+        "IT",
+        "바이오",
+        "AI",
+        "디지털전환"
+      ],
+      "fundSize": "중형",
+      "foundedYear": 2015,
+      "notablePortfolio": [
+        "채널톡",
+        "스패로우",
+        "닥터나우"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "아주IB투자",
+      "aliases": [
+        "Aju IB Investment",
+        "아주아이비투자"
+      ],
+      "tier": "T2",
+      "type": "VC",
+      "investmentFocus": [
+        "IT",
+        "바이오",
+        "소재",
+        "에너지"
+      ],
+      "fundSize": "중형",
+      "foundedYear": 1974,
+      "notablePortfolio": [
+        "쏘카",
+        "마이리얼트립",
+        "원티드랩"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "인터베스트",
+      "aliases": [
+        "InterVest",
+        "인터베스트벤처투자"
+      ],
+      "tier": "T2",
+      "type": "VC",
+      "investmentFocus": [
+        "IT",
+        "콘텐츠",
+        "게임",
+        "플랫폼"
+      ],
+      "fundSize": "중형",
+      "foundedYear": 1999,
+      "notablePortfolio": [
+        "넷마블",
+        "펄어비스",
+        "카카오게임즈"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "HB인베스트먼트",
+      "aliases": [
+        "HB Investment",
+        "에이치비인베스트먼트"
+      ],
+      "tier": "T2",
+      "type": "VC",
+      "investmentFocus": [
+        "바이오",
+        "IT",
+        "반도체",
+        "소재"
+      ],
+      "fundSize": "중형",
+      "foundedYear": 2000,
+      "notablePortfolio": [
+        "리가켐바이오",
+        "에이프로젠"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "코오롱인베스트먼트",
+      "aliases": [
+        "Kolon Investment",
+        "코오롱인베"
+      ],
+      "tier": "T2",
+      "type": "VC",
+      "investmentFocus": [
+        "소재",
+        "바이오",
+        "에너지",
+        "IT"
+      ],
+      "fundSize": "중형",
+      "foundedYear": 1999,
+      "notablePortfolio": [
+        "코오롱티슈진",
+        "에이프로젠"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "타임폴리오자산운용",
+      "aliases": [
+        "Timefolio Asset Management",
+        "타임폴리오"
+      ],
+      "tier": "T2",
+      "type": "VC",
+      "investmentFocus": [
+        "프리IPO",
+        "성장",
+        "IT",
+        "바이오"
+      ],
+      "fundSize": "중형",
+      "foundedYear": 2014,
+      "notablePortfolio": [
+        "두나무",
+        "컬리",
+        "오아시스"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "프라이머",
+      "aliases": [
+        "Primer",
+        "프라이머엑셀러레이터"
+      ],
+      "tier": "T3",
+      "type": "액셀러레이터",
+      "investmentFocus": [
+        "초기",
+        "플랫폼",
+        "커머스",
+        "SaaS"
+      ],
+      "fundSize": "소형",
+      "foundedYear": 2010,
+      "notablePortfolio": [
+        "마이리얼트립",
+        "숨고",
+        "원티드"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "본엔젤스",
+      "aliases": [
+        "BonAngels",
+        "본엔젤스벤처파트너스"
+      ],
+      "tier": "T3",
+      "type": "VC",
+      "investmentFocus": [
+        "초기",
+        "딥테크",
+        "AI",
+        "SaaS"
+      ],
+      "fundSize": "소형",
+      "foundedYear": 2012,
+      "notablePortfolio": [
+        "센드버드",
+        "스켈터랩스",
+        "뤼이드"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "매쉬업엔젤스",
+      "aliases": [
+        "Mashup Angels",
+        "매쉬업"
+      ],
+      "tier": "T3",
+      "type": "액셀러레이터",
+      "investmentFocus": [
+        "초기",
+        "AI",
+        "SaaS",
+        "핀테크"
+      ],
+      "fundSize": "소형",
+      "foundedYear": 2014,
+      "notablePortfolio": [
+        "채널톡",
+        "뱅크샐러드",
+        "스푼라디오"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "카카오벤처스",
+      "aliases": [
+        "Kakao Ventures"
+      ],
+      "tier": "T3",
+      "type": "CVC",
+      "investmentFocus": [
+        "초기",
+        "AI",
+        "콘텐츠",
+        "모빌리티"
+      ],
+      "fundSize": "소형",
+      "foundedYear": 2012,
+      "notablePortfolio": [
+        "닥터나우",
+        "클래스101",
+        "레몬베이스"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "소풍벤처스",
+      "aliases": [
+        "Sopoong Ventures",
+        "소풍"
+      ],
+      "tier": "T3",
+      "type": "VC",
+      "investmentFocus": [
+        "초기",
+        "임팩트투자",
+        "소셜벤처",
+        "ESG"
+      ],
+      "fundSize": "소형",
+      "foundedYear": 2008,
+      "notablePortfolio": [
+        "트리플",
+        "마린이노베이션",
+        "빅웨이브"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "퓨처플레이",
+      "aliases": [
+        "FuturePlay"
+      ],
+      "tier": "T3",
+      "type": "액셀러레이터",
+      "investmentFocus": [
+        "초기",
+        "딥테크",
+        "AI",
+        "로보틱스"
+      ],
+      "fundSize": "소형",
+      "foundedYear": 2014,
+      "notablePortfolio": [
+        "뤼이드",
+        "스켈터랩스",
+        "닷"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "블루포인트파트너스",
+      "aliases": [
+        "Bluepoint Partners",
+        "블루포인트"
+      ],
+      "tier": "T3",
+      "type": "액셀러레이터",
+      "investmentFocus": [
+        "초기",
+        "IT",
+        "플랫폼",
+        "커머스"
+      ],
+      "fundSize": "소형",
+      "foundedYear": 2013,
+      "notablePortfolio": [
+        "컬리",
+        "에이블리",
+        "오늘의집"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "스파크랩",
+      "aliases": [
+        "SparkLabs",
+        "SparkLabs Korea"
+      ],
+      "tier": "T3",
+      "type": "액셀러레이터",
+      "investmentFocus": [
+        "초기",
+        "IT",
+        "AI",
+        "글로벌"
+      ],
+      "fundSize": "소형",
+      "foundedYear": 2012,
+      "notablePortfolio": [
+        "미소",
+        "트레져데이터",
+        "파운트"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "와이콤비네이터",
+      "aliases": [
+        "Y Combinator",
+        "YC"
+      ],
+      "tier": "T3",
+      "type": "액셀러레이터",
+      "investmentFocus": [
+        "초기",
+        "글로벌",
+        "SaaS",
+        "AI"
+      ],
+      "fundSize": "대형",
+      "foundedYear": 2005,
+      "notablePortfolio": [
+        "센드버드",
+        "미소",
+        "서클"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "500글로벌",
+      "aliases": [
+        "500 Global",
+        "500 Startups"
+      ],
+      "tier": "T3",
+      "type": "액셀러레이터",
+      "investmentFocus": [
+        "초기",
+        "글로벌",
+        "핀테크",
+        "AI"
+      ],
+      "fundSize": "중형",
+      "foundedYear": 2010,
+      "notablePortfolio": [
+        "토스",
+        "직방",
+        "클래스101"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "디캠프",
+      "aliases": [
+        "D.CAMP",
+        "은행권청년창업재단"
+      ],
+      "tier": "T3",
+      "type": "비영리",
+      "investmentFocus": [
+        "초기",
+        "프로그램운영",
+        "네트워킹"
+      ],
+      "fundSize": "소형",
+      "foundedYear": 2012,
+      "notablePortfolio": [
+        "프로그램지원"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "신용보증기금",
+      "aliases": [
+        "KODIT",
+        "Korea Credit Guarantee Fund",
+        "신보"
+      ],
+      "tier": "T3",
+      "type": "정책금융",
+      "investmentFocus": [
+        "초기",
+        "기술보증",
+        "스타트업보증"
+      ],
+      "fundSize": "대형",
+      "foundedYear": 1976,
+      "notablePortfolio": [
+        "스타트업보증 다수"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "기술보증기금",
+      "aliases": [
+        "KIBO",
+        "Korea Technology Finance Corporation",
+        "기보"
+      ],
+      "tier": "T3",
+      "type": "정책금융",
+      "investmentFocus": [
+        "초기",
+        "기술평가",
+        "벤처인증"
+      ],
+      "fundSize": "대형",
+      "foundedYear": 1989,
+      "notablePortfolio": [
+        "벤처인증기업 다수"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "삼성벤처투자",
+      "aliases": [
+        "Samsung Venture Investment",
+        "삼성벤처"
+      ],
+      "tier": "CVC",
+      "type": "CVC",
+      "investmentFocus": [
+        "반도체",
+        "AI",
+        "바이오",
+        "소재"
+      ],
+      "fundSize": "대형",
+      "foundedYear": 1999,
+      "notablePortfolio": [
+        "레인보우로보틱스",
+        "파두",
+        "사피엔반도체"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "삼성넥스트",
+      "aliases": [
+        "Samsung NEXT"
+      ],
+      "tier": "CVC",
+      "type": "CVC",
+      "investmentFocus": [
+        "AI",
+        "클라우드",
+        "보안",
+        "글로벌"
+      ],
+      "fundSize": "대형",
+      "foundedYear": 2013,
+      "notablePortfolio": [
+        "버즈빌",
+        "스켈터랩스",
+        "코어닷투데이"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "현대자동차그룹",
+      "aliases": [
+        "Hyundai Motor Group",
+        "현대차투자",
+        "현대차그룹"
+      ],
+      "tier": "CVC",
+      "type": "CVC",
+      "investmentFocus": [
+        "모빌리티",
+        "로보틱스",
+        "UAM",
+        "수소"
+      ],
+      "fundSize": "대형",
+      "foundedYear": 1967,
+      "notablePortfolio": [
+        "보스턴다이나믹스",
+        "모셔널",
+        "42dot"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "SK텔레콤인베스트먼트",
+      "aliases": [
+        "SKT Investment",
+        "SK텔레콤투자"
+      ],
+      "tier": "CVC",
+      "type": "CVC",
+      "investmentFocus": [
+        "AI",
+        "통신",
+        "클라우드",
+        "메타버스"
+      ],
+      "fundSize": "대형",
+      "foundedYear": 2000,
+      "notablePortfolio": [
+        "이프랜드",
+        "루닛",
+        "사피엔반도체"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "네이버D2SF",
+      "aliases": [
+        "Naver D2 Startup Factory",
+        "D2SF",
+        "네이버D2스타트업팩토리"
+      ],
+      "tier": "CVC",
+      "type": "CVC",
+      "investmentFocus": [
+        "초기",
+        "AI",
+        "딥테크",
+        "SaaS"
+      ],
+      "fundSize": "소형",
+      "foundedYear": 2015,
+      "notablePortfolio": [
+        "스켈터랩스",
+        "보이저엑스",
+        "뤼이드"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "카카오인베스트먼트",
+      "aliases": [
+        "Kakao Investment"
+      ],
+      "tier": "CVC",
+      "type": "CVC",
+      "investmentFocus": [
+        "콘텐츠",
+        "커머스",
+        "모빌리티",
+        "AI"
+      ],
+      "fundSize": "대형",
+      "foundedYear": 2012,
+      "notablePortfolio": [
+        "카카오뱅크",
+        "카카오모빌리티",
+        "카카오엔터"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "LG테크놀로지벤처스",
+      "aliases": [
+        "LG Technology Ventures",
+        "LGTV",
+        "LG벤처스"
+      ],
+      "tier": "CVC",
+      "type": "CVC",
+      "investmentFocus": [
+        "AI",
+        "로보틱스",
+        "에너지",
+        "소재"
+      ],
+      "fundSize": "대형",
+      "foundedYear": 2018,
+      "notablePortfolio": [
+        "베어로보틱스",
+        "에너지볼트",
+        "솔리드에너지시스템"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "롯데벤처스",
+      "aliases": [
+        "Lotte Ventures"
+      ],
+      "tier": "CVC",
+      "type": "CVC",
+      "investmentFocus": [
+        "커머스",
+        "물류",
+        "F&B",
+        "리테일테크"
+      ],
+      "fundSize": "중형",
+      "foundedYear": 2018,
+      "notablePortfolio": [
+        "오아시스",
+        "메쉬코리아",
+        "올웨이즈"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "CJ인베스트먼트",
+      "aliases": [
+        "CJ Investment",
+        "씨제이인베스트먼트"
+      ],
+      "tier": "CVC",
+      "type": "CVC",
+      "investmentFocus": [
+        "바이오",
+        "콘텐츠",
+        "물류",
+        "F&B"
+      ],
+      "fundSize": "중형",
+      "foundedYear": 1999,
+      "notablePortfolio": [
+        "올리브영",
+        "CJ대한통운스타트업"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "GS리테일",
+      "aliases": [
+        "GS Retail",
+        "GS벤처투자"
+      ],
+      "tier": "CVC",
+      "type": "CVC",
+      "investmentFocus": [
+        "리테일테크",
+        "F&B",
+        "물류",
+        "플랫폼"
+      ],
+      "fundSize": "중형",
+      "foundedYear": 1971,
+      "notablePortfolio": [
+        "요기요",
+        "컬리",
+        "마켓보로"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "한화인베스트먼트",
+      "aliases": [
+        "Hanwha Investment",
+        "한화벤처투자"
+      ],
+      "tier": "CVC",
+      "type": "CVC",
+      "investmentFocus": [
+        "방산",
+        "에너지",
+        "우주항공",
+        "AI"
+      ],
+      "fundSize": "대형",
+      "foundedYear": 2001,
+      "notablePortfolio": [
+        "한화시스템스타트업",
+        "원익QnC"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "한국산업은행",
+      "aliases": [
+        "KDB",
+        "Korea Development Bank",
+        "산은"
+      ],
+      "tier": "정책금융",
+      "type": "정책금융",
+      "investmentFocus": [
+        "인프라",
+        "에너지",
+        "반도체",
+        "바이오"
+      ],
+      "fundSize": "초대형",
+      "foundedYear": 1954,
+      "notablePortfolio": [
+        "한화에어로스페이스",
+        "HMM",
+        "대우조선"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "한국벤처투자",
+      "aliases": [
+        "KVIC",
+        "Korea Venture Investment Corp"
+      ],
+      "tier": "정책금융",
+      "type": "정책금융",
+      "investmentFocus": [
+        "모태펀드",
+        "펀드출자",
+        "정책펀드운용"
+      ],
+      "fundSize": "초대형",
+      "foundedYear": 2005,
+      "notablePortfolio": [
+        "모태펀드 운용 총괄"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "중소벤처기업부",
+      "aliases": [
+        "MSS",
+        "Ministry of SMEs and Startups",
+        "중기부"
+      ],
+      "tier": "정책금융",
+      "type": "정책금융",
+      "investmentFocus": [
+        "TIPS",
+        "창업지원",
+        "정책자금"
+      ],
+      "fundSize": "초대형",
+      "foundedYear": 2017,
+      "notablePortfolio": [
+        "TIPS 프로그램 운영"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "한국성장금융투자운용",
+      "aliases": [
+        "Korea Growth Investment Corp",
+        "성장금융투자운용"
+      ],
+      "tier": "정책금융",
+      "type": "정책금융",
+      "investmentFocus": [
+        "성장사다리",
+        "스케일업",
+        "혁신성장"
+      ],
+      "fundSize": "대형",
+      "foundedYear": 2013,
+      "notablePortfolio": [
+        "성장사다리펀드 다수"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "모태펀드",
+      "aliases": [
+        "Fund of Funds",
+        "한국모태펀드"
+      ],
+      "tier": "정책금융",
+      "type": "정책금융",
+      "investmentFocus": [
+        "펀드출자",
+        "정책목적투자",
+        "지역균형발전"
+      ],
+      "fundSize": "초대형",
+      "foundedYear": 2005,
+      "notablePortfolio": [
+        "국내 VC 다수 출자"
+      ],
+      "source": "manual"
+    },
+    {
+      "name": "알수없는VC",
+      "aliases": [],
+      "tier": "unknown",
+      "type": "VC",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "auto-detected"
+    }
+  ]
+}
