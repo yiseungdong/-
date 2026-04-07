@@ -55,9 +55,11 @@ function toSheet1Row(company, today) {
     ? `[리드] ${leadVC}${otherVCs.length > 0 ? ' / ' + otherVCs.join(' / ') : ''}`
     : (latestRound.investors || []).join(' / ') || '-';
 
-  // 강점/리스크 통합 (" / " 구분자)
-  const strengths = (company.strengths || []).filter(Boolean).join(' / ') || '-';
-  const risks = (company.risks || []).filter(Boolean).join(' / ') || '-';
+  // 강점/리스크 통합 (" / " 구분자) — 문자열 또는 배열 모두 처리
+  const rawStr = company.strengths || company.coreStrengths || [];
+  const strengths = (typeof rawStr === 'string' ? rawStr : (Array.isArray(rawStr) ? rawStr.filter(Boolean).join(' / ') : '-')) || '-';
+  const rawRisk = company.risks || company.coreRisks || [];
+  const risks = (typeof rawRisk === 'string' ? rawRisk : (Array.isArray(rawRisk) ? rawRisk.filter(Boolean).join(' / ') : '-')) || '-';
 
   return [
     today,

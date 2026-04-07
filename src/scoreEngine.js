@@ -553,19 +553,68 @@ async function calculateScore(company) {
     const finalScore = Math.round((premiumScore / 100) * 10 * 10) / 10;
     const cappedScore = Math.min(10, Math.max(0, finalScore));
 
+    // ── 추가 가감점 ──
+    let bonusPoints = 0;
+
+    // 16-1. 투자자 티어 가산
+    const investorTier = company.investorTier || {};
+    const leadTier = investorTier.leadTier;
+    if (leadTier === 'T1') bonusPoints += 1.0;
+    else if (leadTier === 'T2') bonusPoints += 0.5;
+    else if (leadTier === 'CVC') bonusPoints += 0.8;
+    else if (leadTier === '정책금융') bonusPoints += 0.7;
+
+    // 16-2. 밸류소스 신뢰도 가중 (rawScore의 밸류 관련 점수에 적용)
+    // 이미 scoreResult.total에 반영된 상태이므로 여기서는 패널티만 적용
+    const valuSource = company.valuation?.valuationSource || company.valuSource;
+    if (valuSource === 'VC-역산') bonusPoints -= 0.2; // 80% 신뢰
+    else if (valuSource === '시세기반') bonusPoints -= 0.2;
+    else if (!valuSource && !company.valuation?.fairValue) bonusPoints -= 0.5; // 밸류 없음
+
+    // 16-3. 밸류 상승률 가산
+    const rounds = company.vcHistory?.rounds || [];
+    if (rounds.length >= 2) {
+      const cur = parseFloat(rounds[0].valuation) || 0;
+      const prev = parseFloat(rounds[1].valuation) || 0;
+      if (cur > 0 && prev > 0) {
+        const growthRate = ((cur - prev) / prev) * 100;
+        if (growthRate >= 200) bonusPoints += 0.5;
+        else if (growthRate >= 100) bonusPoints += 0.3;
+        else if (growthRate >= 50) bonusPoints += 0.1;
+        else if (growthRate < 0) bonusPoints -= 0.5; // 다운라운드
+      }
+    }
+
+    // 16-4. 후속투자 가산
+    const followOn = company.followOn || {};
+    const followOnScore = followOn.followOnScore || 0;
+    if (followOnScore >= 10) bonusPoints += 0.5; // 3연속+
+    else if (followOnScore >= 5) bonusPoints += 0.3; // 2연속
+
+    // 16-5. 크로스체크 보정
+    const crossCheck = company.crossCheck || {};
+    if (crossCheck.deviation !== undefined) {
+      if (crossCheck.deviation < 10) bonusPoints += 0.2; // 일치
+      else if (crossCheck.deviation >= 20) bonusPoints -= 0.3; // 불일치
+    }
+
+    // 최종 점수
+    const finalWithBonus = Math.min(10, Math.max(0, Math.round((cappedScore + bonusPoints) * 10) / 10));
+
     // 점수 세부내역 문자열 생성
     const breakdownStr = Object.entries(scoreResult.breakdown)
       .map(([k, v]) => `${k}:${v}`)
       .join(' | ');
 
     return {
-      score: cappedScore,
+      score: finalWithBonus,
       rawScore,
       sectorPremium,
       premiumScore: Math.round(premiumScore),
       breakdown: scoreResult.breakdown,
       breakdownStr,
-      bonus: scoreResult.bonus || 0
+      bonus: scoreResult.bonus || 0,
+      bonusPoints, // 새 가감점 합계
     };
   } catch (err) {
     console.error('[scoreEngine] 점수 계산 실패:', err.message);
