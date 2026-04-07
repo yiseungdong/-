@@ -22,70 +22,6 @@ function findLastFile() {
   return files.length > 0 ? path.join(EXCEL_DIR, files[0]) : null;
 }
 
-// ── 컬럼 매핑 (밀림 방지) ─────────────────────────────────────────────────────
-const COLUMN_MAP = {
-  date: 1, companyName: 2, sector: 3, attractivenessScore: 4,
-  latestRound: 5, investmentAmount: 6, previousValuation: 7,
-  currentValuation: 8, valuationSource: 9, cumulativeInvestment: 10,
-  participatingVC: 11, comm38: 12, stockPlus: 13, patentCount: 14,
-  coreStrengths: 15, coreRisks: 16, ipoOutlook: 17, sourceLink: 18
-};
-const SHEET1_COL_COUNT = 18;
-
-/**
- * 기존 26칸 데이터를 18칸으로 변환 (마이그레이션)
- */
-function migrateOldRow(old) {
-  if (!old || old.length <= SHEET1_COL_COUNT) return old; // 이미 18칸 이하
-  const mergeStr = (...items) => items.filter(v => v && v !== '-' && v !== '').join(' / ') || '-';
-  return [
-    old[0] || '', old[1] || '', old[2] || '',
-    old[4] || 0,          // 매력도 (index4)
-    old[8] || '-',        // 최신라운드 (index8)
-    old[9] || '-',        // 투자금액 (index9)
-    '',                   // 직전밸류 (신규)
-    old[10] || '',        // 현재밸류=밸류에이션 (index10)
-    '',                   // 밸류소스 (신규)
-    old[13] || '-',       // 누적투자총액 (index13)
-    old[14] || '-',       // 참여VC (index14)
-    old[15] || '미등록',  // 38커뮤 (index15)
-    old[16] || '미등록',  // 증권플러스 (index16)
-    old[17] || 0,         // 특허수 (index17)
-    mergeStr(old[18], old[19], old[20]), // 핵심강점
-    mergeStr(old[21], old[22], old[23]), // 핵심리스크
-    old[24] || '-',       // IPO전망 (index24)
-    old[25] || '-',       // 출처링크 (index25)
-  ];
-}
-
-/**
- * 중복 제거: 같은 날짜+회사명 → 매력도 높은 것 우선, 빈값 병합
- */
-function deduplicateRows(rows) {
-  const map = new Map();
-  for (const row of rows) {
-    const key = `${row[0]}|${row[1]}`;
-    if (!map.has(key)) {
-      map.set(key, row);
-    } else {
-      const existing = map.get(key);
-      const newScore = parseFloat(row[3]) || 0;
-      const existingScore = parseFloat(existing[3]) || 0;
-      const base = newScore >= existingScore ? [...row] : [...existing];
-      const other = newScore >= existingScore ? existing : row;
-      for (let i = 0; i < SHEET1_COL_COUNT; i++) {
-        if (!base[i] || base[i] === '' || base[i] === '-' || base[i] === 0) {
-          if (other[i] && other[i] !== '' && other[i] !== '-' && other[i] !== 0) {
-            base[i] = other[i];
-          }
-        }
-      }
-      map.set(key, base);
-    }
-  }
-  return [...map.values()];
-}
-
 // ── Sheet1 행 변환 ────────────────────────────────────────────────────────────
 
 function toSheet1Row(company, today) {
@@ -405,10 +341,6 @@ async function updateExcel(companies) {
       }
     }
 
-    // 기존 데이터 마이그레이션 (26칸→18칸) + 중복 제거
-    existingSheet1Data = deduplicateRows(existingSheet1Data.map(migrateOldRow));
-    existingSheet2Data = deduplicateRows(existingSheet2Data);
-
     // 새 워크북 생성
     workbook = new ExcelJS.Workbook();
 
@@ -449,10 +381,17 @@ async function updateExcel(companies) {
       }
     });
 
-    // 기존 데이터 + 새 데이터 병합 (중복 시 덮어쓰기)
-    const newRows = companies.map(c => toSheet1Row(c, today));
-    const allSheet1 = deduplicateRows([...existingSheet1Data, ...newRows]);
-    for (const row of allSheet1) sheet1.addRow(row.slice(0, SHEET1_COL_COUNT));
+    // 기존 데이터 복원
+    for (const row of existingSheet1Data) sheet1.addRow(row);
+
+    // 새 데이터 추가 (중복: 같은 회사명 + 같은 날짜 스킵)
+    for (const company of companies) {
+      const isDuplicate = existingSheet1Data.some(
+        row => row[1] === company.name && row[0] === today
+      );
+      if (isDuplicate) continue;
+      sheet1.addRow(toSheet1Row(company, today));
+    }
 
     // ㄱㄴㄷ 정렬 (회사명 → 날짜 오름차순)
     const allRows1 = [];
@@ -487,10 +426,17 @@ async function updateExcel(companies) {
       cell.alignment = { vertical: 'middle', horizontal: 'center' };
     });
 
-    // 기존 + 새 데이터 병합 (중복 시 덮어쓰기)
-    const newSheet2Rows = companies.map(c => toSheet2Row(c, today));
-    const allSheet2 = deduplicateRows([...existingSheet2Data, ...newSheet2Rows]);
-    for (const row of allSheet2) sheet2.addRow(row);
+    // 기존 데이터 복원
+    for (const row of existingSheet2Data) sheet2.addRow(row);
+
+    // 새 데이터 추가 (중복 스킵)
+    for (const company of companies) {
+      const isDuplicate = existingSheet2Data.some(
+        row => row[1] === company.name && row[0] === today
+      );
+      if (isDuplicate) continue;
+      sheet2.addRow(toSheet2Row(company, today));
+    }
 
     // ㄱㄴㄷ 정렬
     const allRows2 = [];
