@@ -247,12 +247,18 @@ async function analyze(companies) {
     }
 
     // 섹터별 매력도 점수 계산 (scoreEngine)
-    const scoreResult = await calculateSectorScore(analyzedCompany);
-    analyzedCompany.score = scoreResult.score;
-    analyzedCompany.rawScore = scoreResult.rawScore;
-    analyzedCompany.sectorPremium = scoreResult.sectorPremium;
-    analyzedCompany.scoreBreakdown = scoreResult.breakdown;
-    analyzedCompany.scoreBreakdownStr = scoreResult.breakdownStr;
+    try {
+      const scoreResult = await calculateSectorScore(analyzedCompany);
+      analyzedCompany.score = scoreResult.score;
+      analyzedCompany.rawScore = scoreResult.rawScore;
+      analyzedCompany.sectorPremium = scoreResult.sectorPremium;
+      analyzedCompany.scoreBreakdown = scoreResult.breakdown;
+      analyzedCompany.scoreBreakdownStr = scoreResult.breakdownStr;
+    } catch (err) {
+      console.error(`[analyzer] "${company.name}" 점수 계산 실패:`, err.message);
+      analyzedCompany.score = 0;
+      analyzedCompany.rawScore = 0;
+    }
 
     results.push(analyzedCompany);
 
