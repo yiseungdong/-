@@ -1,14 +1,42 @@
+const fs = require('fs');
+const path = require('path');
+
+// vc-database.json에서 티어 목록 동적 로드
+function loadVCTiers() {
+  try {
+    const dbPath = path.join(__dirname, '..', 'public', 'data', 'vc-database.json');
+    const db = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
+    const t1Names = db.vcList
+      .filter(v => v.tier === 'T1')
+      .flatMap(v => [v.name, ...(v.aliases || [])])
+      .map(n => n.toLowerCase());
+    const t2Names = db.vcList
+      .filter(v => v.tier === 'T2')
+      .flatMap(v => [v.name, ...(v.aliases || [])])
+      .map(n => n.toLowerCase());
+    return { t1Names, t2Names };
+  } catch (err) {
+    console.error('[scoreEngine] vc-database.json 로드 실패, 기본값 사용:', err.message);
+    return {
+      t1Names: ['소프트뱅크', 'imm', '한국투자파트너스', 'kb인베스트먼트', '알토스'],
+      t2Names: ['스파크랩', '블루포인트', '퓨처플레이', '본엔젤스']
+    };
+  }
+}
+
+// 캐싱 (매번 파일 읽기 방지)
+let _vcTiers = null;
+function getVCTiers() {
+  if (!_vcTiers) _vcTiers = loadVCTiers();
+  return _vcTiers;
+}
+
 // VC 티어 판단
 function getVCTier(investors) {
-  const TOP_TIER = ['소프트뱅크', 'imm', '카카오벤처스', '네이버', 'kdb', '한국투자파트너스',
-    '스톤브릿지', 'kb인베스트먼트', '한화', 'lg테크놀로지', '삼성벤처',
-    'sk', '현대', '알토스', '본드', '세쿼이아', 'softbank'];
-  const MID_TIER = ['스파크랩', '블루포인트', '퓨처플레이', '본엔젤스', '캡스톤',
-    '매쉬업', '프라이머', '해시드', '디캠프', '롯데', '신한'];
-
+  const { t1Names, t2Names } = getVCTiers();
   const names = (investors || []).map(v => v.toLowerCase());
-  if (names.some(v => TOP_TIER.some(t => v.includes(t)))) return 4;
-  if (names.some(v => MID_TIER.some(t => v.includes(t)))) return 3;
+  if (names.some(v => t1Names.some(t => v.includes(t)))) return 4;
+  if (names.some(v => t2Names.some(t => v.includes(t)))) return 3;
   if (names.length > 0) return 2;
   return 0;
 }

@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-04-09",
+  "lastUpdated": "2026-04-08",
   "vcList": [
     {
       "name": "소프트뱅크벤처스",
@@ -419,7 +419,7 @@
         "Company K Partners",
         "컴퍼니K파트너스"
       ],
-      "tier": "T1",
+      "tier": "T2",
       "type": "VC",
       "investmentFocus": [
         "IT",
@@ -439,20 +439,23 @@
     {
       "name": "스마일게이트인베스트먼트",
       "aliases": [
-        "Smilegate Investment"
+        "Smilegate Investment",
+        "스마일게이트"
       ],
       "tier": "T2",
       "type": "CVC",
       "investmentFocus": [
         "게임",
-        "콘텐츠",
+        "엔터테인먼트",
         "AI",
-        "IT"
+        "메타버스"
       ],
       "fundSize": "중형",
-      "foundedYear": 2015,
+      "foundedYear": 2012,
       "notablePortfolio": [
-        "다수 게임/콘텐츠"
+        "인프런",
+        "쿼터백",
+        "파이오링크"
       ],
       "source": "manual"
     },
@@ -462,7 +465,7 @@
         "Atinum Investment",
         "아티넘"
       ],
-      "tier": "T1",
+      "tier": "T2",
       "type": "VC",
       "investmentFocus": [
         "바이오",
@@ -482,18 +485,23 @@
     {
       "name": "대성창업투자",
       "aliases": [
-        "Daesung Ventures"
+        "Daesung Venture Capital",
+        "대성창투"
       ],
       "tier": "T2",
       "type": "VC",
       "investmentFocus": [
         "에너지",
-        "환경",
+        "소재",
+        "바이오",
         "IT"
       ],
       "fundSize": "중형",
-      "foundedYear": 1999,
-      "notablePortfolio": [],
+      "foundedYear": 1986,
+      "notablePortfolio": [
+        "에코프로비엠",
+        "포스코퓨처엠"
+      ],
       "source": "manual"
     },
     {
@@ -502,7 +510,7 @@
         "KTB Network",
         "케이티비네트워크"
       ],
-      "tier": "T1",
+      "tier": "T2",
       "type": "VC",
       "investmentFocus": [
         "IT",
@@ -567,20 +575,23 @@
     {
       "name": "아주IB투자",
       "aliases": [
-        "Aju IB Investment"
+        "Aju IB Investment",
+        "아주아이비투자"
       ],
-      "tier": "T1",
+      "tier": "T2",
       "type": "VC",
       "investmentFocus": [
         "IT",
         "바이오",
-        "제조",
-        "소재"
+        "소재",
+        "에너지"
       ],
-      "fundSize": "대형",
-      "foundedYear": 1998,
+      "fundSize": "중형",
+      "foundedYear": 1974,
       "notablePortfolio": [
-        "다수"
+        "쏘카",
+        "마이리얼트립",
+        "원티드랩"
       ],
       "source": "manual"
     },
@@ -590,7 +601,7 @@
         "InterVest",
         "인터베스트벤처투자"
       ],
-      "tier": "T1",
+      "tier": "T2",
       "type": "VC",
       "investmentFocus": [
         "IT",
@@ -632,20 +643,22 @@
     {
       "name": "코오롱인베스트먼트",
       "aliases": [
-        "Kolon Investment"
+        "Kolon Investment",
+        "코오롱인베"
       ],
-      "tier": "T1",
+      "tier": "T2",
       "type": "VC",
       "investmentFocus": [
         "소재",
         "바이오",
-        "딥테크",
-        "에너지"
+        "에너지",
+        "IT"
       ],
-      "fundSize": "대형",
-      "foundedYear": 2000,
+      "fundSize": "중형",
+      "foundedYear": 1999,
       "notablePortfolio": [
-        "소재/바이오 다수"
+        "코오롱티슈진",
+        "에이프로젠"
       ],
       "source": "manual"
     },
@@ -675,39 +688,46 @@
     {
       "name": "프라이머",
       "aliases": [
-        "Primer"
+        "Primer",
+        "프라이머엑셀러레이터"
       ],
-      "tier": "T2",
+      "tier": "T3",
       "type": "액셀러레이터",
       "investmentFocus": [
         "초기",
-        "IT",
-        "커머스"
+        "플랫폼",
+        "커머스",
+        "SaaS"
       ],
       "fundSize": "소형",
       "foundedYear": 2010,
       "notablePortfolio": [
-        "다수 초기기업"
+        "마이리얼트립",
+        "숨고",
+        "원티드"
       ],
       "source": "manual"
     },
     {
       "name": "본엔젤스",
       "aliases": [
-        "Bon Angels"
+        "BonAngels",
+        "본엔젤스벤처파트너스"
       ],
-      "tier": "T2",
+      "tier": "T3",
       "type": "VC",
       "investmentFocus": [
         "초기",
-        "IT",
-        "커머스"
+        "딥테크",
+        "AI",
+        "SaaS"
       ],
-      "fundSize": "중형",
-      "foundedYear": 2011,
+      "fundSize": "소형",
+      "foundedYear": 2012,
       "notablePortfolio": [
-        "배달의민족",
-        "직방"
+        "센드버드",
+        "스켈터랩스",
+        "뤼이드"
       ],
       "source": "manual"
     },
@@ -759,18 +779,24 @@
     {
       "name": "소풍벤처스",
       "aliases": [
-        "Sopoong Ventures"
+        "Sopoong Ventures",
+        "소풍"
       ],
-      "tier": "T2",
+      "tier": "T3",
       "type": "VC",
       "investmentFocus": [
-        "임팩트",
-        "ESG",
-        "초기"
+        "초기",
+        "임팩트투자",
+        "소셜벤처",
+        "ESG"
       ],
       "fundSize": "소형",
-      "foundedYear": 2013,
-      "notablePortfolio": [],
+      "foundedYear": 2008,
+      "notablePortfolio": [
+        "트리플",
+        "마린이노베이션",
+        "빅웨이브"
+      ],
       "source": "manual"
     },
     {
@@ -778,57 +804,66 @@
       "aliases": [
         "FuturePlay"
       ],
-      "tier": "T2",
+      "tier": "T3",
       "type": "액셀러레이터",
       "investmentFocus": [
+        "초기",
         "딥테크",
         "AI",
-        "로봇",
-        "초기"
+        "로보틱스"
       ],
-      "fundSize": "중형",
-      "foundedYear": 2015,
+      "fundSize": "소형",
+      "foundedYear": 2014,
       "notablePortfolio": [
-        "다수 딥테크"
+        "뤼이드",
+        "스켈터랩스",
+        "닷"
       ],
       "source": "manual"
     },
     {
       "name": "블루포인트파트너스",
       "aliases": [
-        "Bluepoint Partners"
+        "Bluepoint Partners",
+        "블루포인트"
       ],
-      "tier": "T2",
+      "tier": "T3",
       "type": "액셀러레이터",
       "investmentFocus": [
-        "딥테크",
-        "AI",
-        "바이오",
-        "초기"
+        "초기",
+        "IT",
+        "플랫폼",
+        "커머스"
       ],
-      "fundSize": "중형",
-      "foundedYear": 2016,
+      "fundSize": "소형",
+      "foundedYear": 2013,
       "notablePortfolio": [
-        "다수 딥테크"
+        "컬리",
+        "에이블리",
+        "오늘의집"
       ],
       "source": "manual"
     },
     {
       "name": "스파크랩",
       "aliases": [
-        "SparkLabs"
+        "SparkLabs",
+        "SparkLabs Korea"
       ],
-      "tier": "T2",
+      "tier": "T3",
       "type": "액셀러레이터",
       "investmentFocus": [
         "초기",
         "IT",
+        "AI",
         "글로벌"
       ],
-      "fundSize": "중형",
+      "fundSize": "소형",
       "foundedYear": 2012,
       "notablePortfolio": [
-        "다수 초기기업"
+        "미소",
+        "트레져데이터",
+        "파운트"
       ],
       "source": "manual"
     },
@@ -861,18 +896,20 @@
         "500 Global",
         "500 Startups"
       ],
-      "tier": "T1",
-      "type": "VC",
+      "tier": "T3",
+      "type": "액셀러레이터",
       "investmentFocus": [
-        "글로벌",
         "초기",
-        "다양섹터"
+        "글로벌",
+        "핀테크",
+        "AI"
       ],
-      "fundSize": "대형",
+      "fundSize": "중형",
       "foundedYear": 2010,
       "notablePortfolio": [
-        "크레딧카르마",
-        "깃랩"
+        "토스",
+        "직방",
+        "클래스101"
       ],
       "source": "manual"
     },
@@ -882,15 +919,18 @@
         "D.CAMP",
         "은행권청년창업재단"
       ],
-      "tier": "T2",
+      "tier": "T3",
       "type": "비영리",
       "investmentFocus": [
         "초기",
-        "다양섹터"
+        "프로그램운영",
+        "네트워킹"
       ],
       "fundSize": "소형",
       "foundedYear": 2012,
-      "notablePortfolio": [],
+      "notablePortfolio": [
+        "프로그램지원"
+      ],
       "source": "manual"
     },
     {
@@ -1102,19 +1142,20 @@
       "aliases": [
         "Lotte Ventures"
       ],
-      "tier": "T1",
+      "tier": "CVC",
       "type": "CVC",
       "investmentFocus": [
         "커머스",
         "물류",
-        "푸드테크",
-        "리테일"
+        "F&B",
+        "리테일테크"
       ],
-      "fundSize": "대형",
+      "fundSize": "중형",
       "foundedYear": 2018,
       "notablePortfolio": [
-        "컬리",
-        "오늘의집"
+        "오아시스",
+        "메쉬코리아",
+        "올웨이즈"
       ],
       "source": "manual"
     },
@@ -1687,735 +1728,6 @@
       "foundedYear": null,
       "notablePortfolio": [],
       "source": "auto-detected"
-    },
-    {
-      "name": "스톤브릿지벤처스",
-      "aliases": [
-        "Stonebridge Ventures",
-        "스톤브릿지"
-      ],
-      "tier": "T1",
-      "type": "VC",
-      "investmentFocus": [
-        "IT",
-        "바이오",
-        "핀테크",
-        "딥테크"
-      ],
-      "fundSize": "대형",
-      "foundedYear": 2008,
-      "notablePortfolio": [
-        "쿠팡",
-        "야놀자",
-        "직방"
-      ],
-      "source": "manual"
-    },
-    {
-      "name": "스트롱벤처스",
-      "aliases": [
-        "Strong Ventures"
-      ],
-      "tier": "T1",
-      "type": "VC",
-      "investmentFocus": [
-        "IT",
-        "플랫폼",
-        "SaaS",
-        "글로벌"
-      ],
-      "fundSize": "대형",
-      "foundedYear": 2012,
-      "notablePortfolio": [
-        "클래스101",
-        "퍼블리",
-        "스푼라디오"
-      ],
-      "source": "manual"
-    },
-    {
-      "name": "우리벤처파트너스",
-      "aliases": [
-        "Woori Venture Partners",
-        "우리벤처"
-      ],
-      "tier": "T1",
-      "type": "VC",
-      "investmentFocus": [
-        "IT",
-        "바이오",
-        "핀테크",
-        "딥테크"
-      ],
-      "fundSize": "대형",
-      "foundedYear": 2000,
-      "notablePortfolio": [
-        "카카오",
-        "엔씨소프트",
-        "넷마블"
-      ],
-      "source": "manual"
-    },
-    {
-      "name": "한화투자증권",
-      "aliases": [
-        "한화벤처스"
-      ],
-      "tier": "T1",
-      "type": "VC",
-      "investmentFocus": [
-        "방산",
-        "에너지",
-        "바이오",
-        "딥테크"
-      ],
-      "fundSize": "대형",
-      "foundedYear": 2000,
-      "notablePortfolio": [
-        "한화에어로스페이스",
-        "한화오션"
-      ],
-      "source": "manual"
-    },
-    {
-      "name": "포스코기술투자",
-      "aliases": [
-        "POSCO Technology Investment",
-        "포스코벤처스"
-      ],
-      "tier": "T1",
-      "type": "VC",
-      "investmentFocus": [
-        "소재",
-        "에너지",
-        "제조",
-        "딥테크"
-      ],
-      "fundSize": "대형",
-      "foundedYear": 2001,
-      "notablePortfolio": [
-        "에코프로",
-        "포스코퓨처엠"
-      ],
-      "source": "manual"
-    },
-    {
-      "name": "GS벤처스",
-      "aliases": [
-        "GS Ventures",
-        "GS홈쇼핑"
-      ],
-      "tier": "T1",
-      "type": "VC",
-      "investmentFocus": [
-        "커머스",
-        "에너지",
-        "물류",
-        "플랫폼"
-      ],
-      "fundSize": "대형",
-      "foundedYear": 2015,
-      "notablePortfolio": [
-        "컬리",
-        "오늘의집",
-        "직방"
-      ],
-      "source": "manual"
-    },
-    {
-      "name": "뮤렉스파트너스",
-      "aliases": [
-        "Murex Partners"
-      ],
-      "tier": "T1",
-      "type": "VC",
-      "investmentFocus": [
-        "바이오",
-        "헬스케어",
-        "의료기기"
-      ],
-      "fundSize": "대형",
-      "foundedYear": 2015,
-      "notablePortfolio": [
-        "바이오 다수"
-      ],
-      "source": "manual"
-    },
-    {
-      "name": "에이벤처스",
-      "aliases": [
-        "A Ventures"
-      ],
-      "tier": "T1",
-      "type": "VC",
-      "investmentFocus": [
-        "AI",
-        "딥테크",
-        "SaaS",
-        "핀테크"
-      ],
-      "fundSize": "중형",
-      "foundedYear": 2016,
-      "notablePortfolio": [
-        "뤼튼",
-        "포티투마루"
-      ],
-      "source": "manual"
-    },
-    {
-      "name": "프리미어파트너스",
-      "aliases": [
-        "Premier Partners"
-      ],
-      "tier": "T1",
-      "type": "VC",
-      "investmentFocus": [
-        "IT",
-        "플랫폼",
-        "커머스",
-        "핀테크"
-      ],
-      "fundSize": "대형",
-      "foundedYear": 2005,
-      "notablePortfolio": [
-        "크래프톤",
-        "배달의민족"
-      ],
-      "source": "manual"
-    },
-    {
-      "name": "세마트랜스링크",
-      "aliases": [
-        "SEMA Translink"
-      ],
-      "tier": "T1",
-      "type": "VC",
-      "investmentFocus": [
-        "글로벌",
-        "딥테크",
-        "AI",
-        "바이오"
-      ],
-      "fundSize": "대형",
-      "foundedYear": 2010,
-      "notablePortfolio": [
-        "다수 글로벌 진출 기업"
-      ],
-      "source": "manual"
-    },
-    {
-      "name": "나우IB캐피탈",
-      "aliases": [
-        "Now IB Capital"
-      ],
-      "tier": "T1",
-      "type": "VC",
-      "investmentFocus": [
-        "IT",
-        "바이오",
-        "핀테크"
-      ],
-      "fundSize": "대형",
-      "foundedYear": 2000,
-      "notablePortfolio": [
-        "카카오게임즈",
-        "에이블리"
-      ],
-      "source": "manual"
-    },
-    {
-      "name": "동문파트너즈",
-      "aliases": [
-        "Dongmun Partners"
-      ],
-      "tier": "T1",
-      "type": "VC",
-      "investmentFocus": [
-        "바이오",
-        "헬스케어",
-        "의료기기"
-      ],
-      "fundSize": "대형",
-      "foundedYear": 2003,
-      "notablePortfolio": [
-        "바이오 다수"
-      ],
-      "source": "manual"
-    },
-    {
-      "name": "TS인베스트먼트",
-      "aliases": [
-        "TS Investment"
-      ],
-      "tier": "T1",
-      "type": "VC",
-      "investmentFocus": [
-        "IT",
-        "바이오",
-        "핀테크",
-        "딥테크"
-      ],
-      "fundSize": "대형",
-      "foundedYear": 2002,
-      "notablePortfolio": [
-        "크래프톤",
-        "카카오"
-      ],
-      "source": "manual"
-    },
-    {
-      "name": "현대기술투자",
-      "aliases": [
-        "Hyundai Technology Investment"
-      ],
-      "tier": "T1",
-      "type": "VC",
-      "investmentFocus": [
-        "모빌리티",
-        "에너지",
-        "제조",
-        "딥테크"
-      ],
-      "fundSize": "대형",
-      "foundedYear": 2000,
-      "notablePortfolio": [
-        "모빌리티 다수"
-      ],
-      "source": "manual"
-    },
-    {
-      "name": "메가인베스트먼트",
-      "aliases": [
-        "Mega Investment"
-      ],
-      "tier": "T1",
-      "type": "VC",
-      "investmentFocus": [
-        "IT",
-        "바이오",
-        "핀테크"
-      ],
-      "fundSize": "대형",
-      "foundedYear": 2001,
-      "notablePortfolio": [
-        "다수"
-      ],
-      "source": "manual"
-    },
-    {
-      "name": "위벤처스",
-      "aliases": [
-        "We Ventures"
-      ],
-      "tier": "T1",
-      "type": "VC",
-      "investmentFocus": [
-        "IT",
-        "커머스",
-        "콘텐츠",
-        "플랫폼"
-      ],
-      "fundSize": "중형",
-      "foundedYear": 2014,
-      "notablePortfolio": [
-        "다수"
-      ],
-      "source": "manual"
-    },
-    {
-      "name": "퀀텀벤처스",
-      "aliases": [
-        "Quantum Ventures Korea"
-      ],
-      "tier": "T1",
-      "type": "VC",
-      "investmentFocus": [
-        "딥테크",
-        "AI",
-        "반도체",
-        "소재"
-      ],
-      "fundSize": "대형",
-      "foundedYear": 2012,
-      "notablePortfolio": [
-        "딥테크 다수"
-      ],
-      "source": "manual"
-    },
-    {
-      "name": "스파크랩글로벌",
-      "aliases": [
-        "SparkLabs Global"
-      ],
-      "tier": "T1",
-      "type": "VC",
-      "investmentFocus": [
-        "글로벌",
-        "AI",
-        "SaaS",
-        "핀테크"
-      ],
-      "fundSize": "대형",
-      "foundedYear": 2012,
-      "notablePortfolio": [
-        "다수 글로벌"
-      ],
-      "source": "manual"
-    },
-    {
-      "name": "케이투인베스트먼트",
-      "aliases": [
-        "K2 Investment"
-      ],
-      "tier": "T1",
-      "type": "VC",
-      "investmentFocus": [
-        "바이오",
-        "헬스케어",
-        "IT"
-      ],
-      "fundSize": "대형",
-      "foundedYear": 2005,
-      "notablePortfolio": [
-        "다수"
-      ],
-      "source": "manual"
-    },
-    {
-      "name": "넥스트드림엔젤클럽",
-      "aliases": [
-        "Next Dream Angel Club"
-      ],
-      "tier": "T2",
-      "type": "VC",
-      "investmentFocus": [
-        "초기",
-        "IT",
-        "다양섹터"
-      ],
-      "fundSize": "소형",
-      "foundedYear": 2013,
-      "notablePortfolio": [],
-      "source": "manual"
-    },
-    {
-      "name": "해시드",
-      "aliases": [
-        "Hashed"
-      ],
-      "tier": "T2",
-      "type": "VC",
-      "investmentFocus": [
-        "블록체인",
-        "Web3",
-        "AI"
-      ],
-      "fundSize": "중형",
-      "foundedYear": 2017,
-      "notablePortfolio": [
-        "클레이튼",
-        "위메이드"
-      ],
-      "source": "manual"
-    },
-    {
-      "name": "패스트벤처스",
-      "aliases": [
-        "Fast Ventures"
-      ],
-      "tier": "T2",
-      "type": "VC",
-      "investmentFocus": [
-        "초기",
-        "IT",
-        "커머스",
-        "핀테크"
-      ],
-      "fundSize": "중형",
-      "foundedYear": 2013,
-      "notablePortfolio": [
-        "다수 초기기업"
-      ],
-      "source": "manual"
-    },
-    {
-      "name": "TBT",
-      "aliases": [
-        "The Thumb"
-      ],
-      "tier": "T2",
-      "type": "VC",
-      "investmentFocus": [
-        "IT",
-        "커머스",
-        "콘텐츠"
-      ],
-      "fundSize": "중형",
-      "foundedYear": 2014,
-      "notablePortfolio": [
-        "다수"
-      ],
-      "source": "manual"
-    },
-    {
-      "name": "린벤처스",
-      "aliases": [
-        "Lean Ventures"
-      ],
-      "tier": "T2",
-      "type": "VC",
-      "investmentFocus": [
-        "초기",
-        "IT",
-        "SaaS"
-      ],
-      "fundSize": "소형",
-      "foundedYear": 2015,
-      "notablePortfolio": [],
-      "source": "manual"
-    },
-    {
-      "name": "매쉬업벤처스",
-      "aliases": [
-        "Mash UP Ventures"
-      ],
-      "tier": "T2",
-      "type": "VC",
-      "investmentFocus": [
-        "IT",
-        "핀테크",
-        "SaaS",
-        "초기"
-      ],
-      "fundSize": "중형",
-      "foundedYear": 2015,
-      "notablePortfolio": [
-        "다수"
-      ],
-      "source": "manual"
-    },
-    {
-      "name": "넥슨인베스트먼트",
-      "aliases": [
-        "Nexon Investment"
-      ],
-      "tier": "T2",
-      "type": "CVC",
-      "investmentFocus": [
-        "게임",
-        "메타버스",
-        "AI",
-        "콘텐츠"
-      ],
-      "fundSize": "중형",
-      "foundedYear": 2016,
-      "notablePortfolio": [
-        "다수 게임"
-      ],
-      "source": "manual"
-    },
-    {
-      "name": "엔씨소프트인베스트먼트",
-      "aliases": [
-        "NCSoft Investment"
-      ],
-      "tier": "T2",
-      "type": "CVC",
-      "investmentFocus": [
-        "게임",
-        "AI",
-        "콘텐츠"
-      ],
-      "fundSize": "중형",
-      "foundedYear": 2017,
-      "notablePortfolio": [],
-      "source": "manual"
-    },
-    {
-      "name": "한국창업투자",
-      "aliases": [],
-      "tier": "T2",
-      "type": "VC",
-      "investmentFocus": [
-        "초기",
-        "다양섹터"
-      ],
-      "fundSize": "중형",
-      "foundedYear": 1998,
-      "notablePortfolio": [],
-      "source": "manual"
-    },
-    {
-      "name": "SV인베스트먼트",
-      "aliases": [
-        "SV Investment"
-      ],
-      "tier": "T2",
-      "type": "VC",
-      "investmentFocus": [
-        "IT",
-        "바이오",
-        "핀테크"
-      ],
-      "fundSize": "중형",
-      "foundedYear": 2006,
-      "notablePortfolio": [
-        "다수"
-      ],
-      "source": "manual"
-    },
-    {
-      "name": "큐캐피탈파트너스",
-      "aliases": [
-        "Q Capital Partners"
-      ],
-      "tier": "T2",
-      "type": "VC",
-      "investmentFocus": [
-        "바이오",
-        "헬스케어",
-        "IT"
-      ],
-      "fundSize": "중형",
-      "foundedYear": 2010,
-      "notablePortfolio": [],
-      "source": "manual"
-    },
-    {
-      "name": "글로벌브레인",
-      "aliases": [
-        "Global Brain"
-      ],
-      "tier": "T2",
-      "type": "VC",
-      "investmentFocus": [
-        "글로벌",
-        "AI",
-        "딥테크"
-      ],
-      "fundSize": "중형",
-      "foundedYear": 1998,
-      "notablePortfolio": [],
-      "source": "manual"
-    },
-    {
-      "name": "크립톤",
-      "aliases": [
-        "Krypton"
-      ],
-      "tier": "T2",
-      "type": "액셀러레이터",
-      "investmentFocus": [
-        "초기",
-        "IT",
-        "커머스"
-      ],
-      "fundSize": "소형",
-      "foundedYear": 2014,
-      "notablePortfolio": [],
-      "source": "manual"
-    },
-    {
-      "name": "임팩트스퀘어",
-      "aliases": [
-        "Impact Square"
-      ],
-      "tier": "T2",
-      "type": "VC",
-      "investmentFocus": [
-        "임팩트",
-        "ESG",
-        "소셜벤처"
-      ],
-      "fundSize": "소형",
-      "foundedYear": 2011,
-      "notablePortfolio": [],
-      "source": "manual"
-    },
-    {
-      "name": "엔에이치벤처투자",
-      "aliases": [
-        "NH Venture Investment"
-      ],
-      "tier": "T2",
-      "type": "VC",
-      "investmentFocus": [
-        "농업",
-        "푸드테크",
-        "IT"
-      ],
-      "fundSize": "중형",
-      "foundedYear": 2010,
-      "notablePortfolio": [],
-      "source": "manual"
-    },
-    {
-      "name": "씨엔티테크",
-      "aliases": [
-        "CNT Tech"
-      ],
-      "tier": "T2",
-      "type": "액셀러레이터",
-      "investmentFocus": [
-        "초기",
-        "IT",
-        "AI"
-      ],
-      "fundSize": "소형",
-      "foundedYear": 2013,
-      "notablePortfolio": [],
-      "source": "manual"
-    },
-    {
-      "name": "젠엑시스",
-      "aliases": [
-        "GenAxis"
-      ],
-      "tier": "T2",
-      "type": "VC",
-      "investmentFocus": [
-        "바이오",
-        "헬스케어",
-        "의료기기"
-      ],
-      "fundSize": "중형",
-      "foundedYear": 2007,
-      "notablePortfolio": [],
-      "source": "manual"
-    },
-    {
-      "name": "이음벤처스",
-      "aliases": [
-        "Eum Ventures"
-      ],
-      "tier": "T2",
-      "type": "VC",
-      "investmentFocus": [
-        "초기",
-        "IT",
-        "커머스"
-      ],
-      "fundSize": "소형",
-      "foundedYear": 2016,
-      "notablePortfolio": [],
-      "source": "manual"
-    },
-    {
-      "name": "데일리파트너스",
-      "aliases": [
-        "Daily Partners"
-      ],
-      "tier": "T2",
-      "type": "VC",
-      "investmentFocus": [
-        "IT",
-        "커머스",
-        "콘텐츠"
-      ],
-      "fundSize": "소형",
-      "foundedYear": 2015,
-      "notablePortfolio": [],
-      "source": "manual"
     }
   ]
 }
