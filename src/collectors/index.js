@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { collectNews } = require('./naverNews');
+const { collectRssNews } = require('./rssCollector');
 const { collectVcTrends } = require('./vcTrends');
 const { collectDart } = require('./dartApi');
 const { collectPrice } = require('./priceTracker');
@@ -46,6 +47,7 @@ function sleep(ms) {
 async function run() {
   // === 1. 뉴스 수집 ===
   let newsArticles = [];
+  let rssArticles = [];
   let vcArticles = [];
 
   try {
@@ -56,13 +58,29 @@ async function run() {
   }
 
   try {
+    rssArticles = await collectRssNews();
+    console.log(`[collectors] RSS ${rssArticles.length}건`);
+  } catch (err) {
+    console.error('[collectors] RSS 수집 오류:', err.message);
+  }
+
+  try {
     vcArticles = await collectVcTrends();
     console.log(`[collectors] VC/박람회 ${vcArticles.length}건`);
   } catch (err) {
     console.error('[collectors] VC 수집 오류:', err.message);
   }
 
-  const allArticles = [...newsArticles, ...vcArticles];
+  // 병합 + 중복 제거 (URL 기준)
+  const seenUrls = new Set();
+  const allArticles = [];
+  for (const article of [...newsArticles, ...rssArticles, ...vcArticles]) {
+    const url = article.link || article.originallink || '';
+    if (url && seenUrls.has(url)) continue;
+    if (url) seenUrls.add(url);
+    allArticles.push(article);
+  }
+  console.log(`[collectors] 네이버 ${newsArticles.length}건 + RSS ${rssArticles.length}건 + VC ${vcArticles.length}건 → 중복제거 후 ${allArticles.length}건`);
   if (allArticles.length === 0) {
     console.log('[collectors] 수집된 기사 없음');
     return [];

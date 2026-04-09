@@ -2,6 +2,7 @@ const axios = require('axios');
 
 const BASE_URL = 'https://openapi.naver.com/v1/search/news.json';
 const KEYWORDS = [
+  // 기존
   '투자유치 비상장',
   '시리즈A',
   '시리즈B',
@@ -18,9 +19,30 @@ const KEYWORDS = [
   '스타트업 프리IPO',
   '비상장 기업가치',
   '비상장 밸류에이션',
+  // 신규 추가
+  '시드투자 스타트업',
+  'Pre-A 투자',
+  '엔젤투자 스타트업',
+  '브릿지라운드',
+  '시리즈D',
+  '시리즈E',
+  '후속투자 스타트업',
+  '스타트업 시드',
+  '초기투자 스타트업',
+  '스타트업 누적투자',
+  '벤처투자 유치',
+  '스타트업 밸류에이션',
 ];
 
-const PRIORITY_SOURCES = ['한국경제', '매일경제', '더벨'];
+const PRIORITY_SOURCES = [
+  '한국경제',
+  '매일경제',
+  '더벨',
+  '서울경제',
+  '벤처스퀘어',
+  '플래텀',
+  '블로터',
+];
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
