@@ -65,8 +65,37 @@ async function migrateSortAccumulated() {
 
   console.log(`날짜 컬럼: ${dateIdx}번째, 회사명 컬럼: ${companyIdx}번째`);
 
+  // 중복 제거 (같은 날짜 + 같은 회사명 → 매력도 높은 것 유지, 빈값 병합)
+  const scoreIdx = headerRow.findIndex(h => typeof h === 'string' && h.includes('매력도'));
+  const dedupMap = new Map();
+  for (const row of dataRows) {
+    const dateStr = row[dateIdx] instanceof Date
+      ? row[dateIdx].toISOString().slice(0, 10)
+      : String(row[dateIdx] || '');
+    const key = `${dateStr}|${row[companyIdx]}`;
+    if (!dedupMap.has(key)) {
+      dedupMap.set(key, row);
+    } else {
+      const existing = dedupMap.get(key);
+      const newScore = parseFloat(row[scoreIdx >= 0 ? scoreIdx : 3]) || 0;
+      const existingScore = parseFloat(existing[scoreIdx >= 0 ? scoreIdx : 3]) || 0;
+      const base = newScore >= existingScore ? [...row] : [...existing];
+      const other = newScore >= existingScore ? existing : row;
+      for (let i = 0; i < base.length; i++) {
+        if (!base[i] || base[i] === '' || base[i] === '-' || base[i] === 0) {
+          if (other[i] && other[i] !== '' && other[i] !== '-' && other[i] !== 0) {
+            base[i] = other[i];
+          }
+        }
+      }
+      dedupMap.set(key, base);
+    }
+  }
+  const dedupedRows = [...dedupMap.values()];
+  console.log(`중복 제거: ${dataRows.length}개 → ${dedupedRows.length}개 (${dataRows.length - dedupedRows.length}개 제거)`);
+
   // 정렬
-  dataRows.sort((a, b) => {
+  dedupedRows.sort((a, b) => {
     const nameA = String(a[companyIdx] || '');
     const nameB = String(b[companyIdx] || '');
     const nameCompare = nameA.localeCompare(nameB, 'ko');
@@ -86,7 +115,7 @@ async function migrateSortAccumulated() {
   }
 
   // 정렬된 데이터 다시 삽입
-  dataRows.forEach((rowData, idx) => {
+  dedupedRows.forEach((rowData, idx) => {
     const newRow = sheet1.insertRow(idx + 2, rowData);
     if (rowData[dateIdx] instanceof Date) {
       newRow.getCell(dateIdx + 1).numFmt = 'yyyy-mm-dd';
@@ -100,7 +129,7 @@ async function migrateSortAccumulated() {
 
   // 결과 미리보기 (상위 10개)
   console.log('\n정렬 결과 미리보기 (상위 10행):');
-  dataRows.slice(0, 10).forEach((row, i) => {
+  dedupedRows.slice(0, 10).forEach((row, i) => {
     console.log(`  ${i+1}. [${row[dateIdx]}] ${row[companyIdx]}`);
   });
 }
