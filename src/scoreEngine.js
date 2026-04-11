@@ -2222,52 +2222,217 @@ function scoreMedicalDevice(company) {
   return scoreMedtechPipeline(company);
 }
 
-function scoreBeauty(company) {
-  const breakdown = {};
-  const fin = company.financials?.financials?.[0];
+// ─── 뷰티 공통: VC 점수 ───
+
+function getBeautyVCScores(company) {
+  const vcTotal = 25;
   const vc = company.vcHistory;
   const rounds = vc?.rounds || [];
   const latestRound = rounds[0] || {};
+  const hasVC = rounds.length > 0;
+  const result = {};
 
-  // A. 브랜드·매출 (30점)
-  breakdown.매출규모 = fin?.revenue >= 1000 ? 10 : fin?.revenue >= 500 ? 8 : fin?.revenue >= 200 ? 6 : 3;
-  breakdown.매출성장률 = getRevenueGrowthScore(fin?.revenueGrowth, 10);
-  breakdown.브랜드인지도 = 5;
+  if (!hasVC) {
+    result.라운드별투자금액 = null;
+    result.투자자티어 = null;
+    result.투자금액상승 = null;
+    result.후속참여 = null;
+    return { result, hasVC };
+  }
 
-  // B. 글로벌 수출 (20점)
-  breakdown.해외매출비중 = 5;
-  breakdown.진출국가채널 = 8;
+  // 라운드별 투자금액 (12.5점 → 13점 반올림)
+  const maxRound = Math.round(vcTotal * 0.5);
+  let bestLevel = 99;
+  let bestScore = 0;
+  for (const round of rounds) {
+    const rn = (round.roundName || '').toLowerCase();
+    const amt = parseFloat(round.amount) || 0;
+    let level = 99;
+    let score = 0;
+    if (rn.includes('프리ipo') || rn.includes('pre-ipo') || rn.includes('브릿지') || rn.includes('시리즈c') || rn.includes('series c')) {
+      level = 1;
+      score = amt >= 200000000000 ? maxRound : amt >= 100000000000 ? Math.round(maxRound * 0.8) : amt >= 50000000000 ? Math.round(maxRound * 0.6) : amt >= 10000000000 ? Math.round(maxRound * 0.4) : Math.round(maxRound * 0.2);
+    } else if (rn.includes('시리즈b') || rn.includes('series b')) {
+      level = 2;
+      score = amt >= 100000000000 ? maxRound : amt >= 50000000000 ? Math.round(maxRound * 0.75) : amt >= 20000000000 ? Math.round(maxRound * 0.55) : amt >= 10000000000 ? Math.round(maxRound * 0.35) : Math.round(maxRound * 0.15);
+    } else if (rn.includes('시리즈a') || rn.includes('series a')) {
+      level = 3;
+      score = amt >= 50000000000 ? Math.round(maxRound * 0.7) : amt >= 20000000000 ? Math.round(maxRound * 0.5) : amt >= 10000000000 ? Math.round(maxRound * 0.35) : Math.round(maxRound * 0.15);
+    } else if (rn.includes('시드') || rn.includes('seed') || rn.includes('엔젤')) {
+      level = 4;
+      score = amt >= 10000000000 ? Math.round(maxRound * 0.4) : amt >= 5000000000 ? Math.round(maxRound * 0.25) : Math.round(maxRound * 0.1);
+    }
+    if (level < bestLevel) { bestLevel = level; bestScore = score; }
+  }
+  result.라운드별투자금액 = bestScore;
 
-  // C. 제품·성분 경쟁력 (15점)
-  breakdown.독자성분기술 = getPatentScore(company.patents?.totalCount, 7);
-  breakdown.인증수상 = 5;
-  breakdown.제품라인업 = 3;
+  // 투자자 티어 (7.5점 → 8점 반올림)
+  const maxTier = Math.round(vcTotal * 0.3);
+  const { t1Names, t2Names } = getVCTiers();
+  const investors = (latestRound.investors || []).map(v => v.toLowerCase());
+  const hasT1 = investors.some(v => t1Names.some(t => v.includes(t)));
+  const hasT2 = investors.some(v => t2Names.some(t => v.includes(t)));
+  result.투자자티어 = hasT1 ? maxTier : hasT2 ? Math.round(maxTier * 0.7) : investors.length > 0 ? Math.round(maxTier * 0.3) : 0;
 
-  // D. VC 투자 밸류 등급 (15점)
-  breakdown.VC밸류등급 = company.valuation?.undervalueRate <= -30 ? 15
-    : company.valuation?.undervalueRate <= 30 ? 10
-    : company.valuation?.undervalueRate <= 100 ? 6 : 2;
+  // 투자금액 상승 (2.5점 → 3점 반올림)
+  const maxUp = Math.round(vcTotal * 0.1);
+  if (rounds.length < 2) {
+    result.투자금액상승 = 0;
+  } else {
+    const curr = parseFloat(rounds[0].amount) || 0;
+    const prev = parseFloat(rounds[1].amount) || 0;
+    const diff = curr - prev;
+    result.투자금액상승 = diff >= 50000000000 ? maxUp : diff >= 20000000000 ? Math.round(maxUp * 0.7) : diff > 0 ? Math.round(maxUp * 0.3) : 0;
+  }
 
-  // E. VC 투자 구조 (10점)
-  breakdown.투자라운드 = getRoundScore(latestRound.roundName, 3);
-  breakdown.참여VC티어 = Math.min(getVCTier(latestRound.investors), 3);
-  breakdown.전략적투자자 = 4;
+  // 후속참여 (2.5점 → 3점 반올림)
+  const maxFollow = Math.round(vcTotal * 0.1);
+  result.후속참여 = rounds.length >= 3 ? maxFollow : rounds.length >= 2 ? Math.round(maxFollow * 0.6) : Math.round(maxFollow * 0.3);
 
-  // F. 디지털·커머스 역량 (5점)
-  breakdown.SNS인플루언서 = 3;
-  breakdown.자사몰D2C = 2;
+  return { result, hasVC };
+}
 
-  // G. 팀·운영 (5점)
-  breakdown.창업팀퀄리티 = 3;
-  breakdown.창업경과시간 = 2;
+// ─── 뷰티 메인 함수 ───
 
-  // 가산점
-  let bonus = 0;
-  const hasSephora = company.source?.includes('세포라') || company.reason?.includes('세포라');
-  if (hasSephora) bonus += 5;
+function scoreBeauty(company) {
+  const breakdown = {};
+  const allFin = company.financials?.financials || [];
+  const fin = allFin.length > 0 ? allFin[allFin.length - 1] : null;
+  const hasDart = allFin.length > 0;
+  const cashFlows = company.financials?.cashFlows || [];
+  const latestCF = cashFlows.length > 0 ? cashFlows[cashFlows.length - 1] : null;
+  const shareholders = company.financials?.shareholders || [];
+  const newsText = (company.newsText || '');
 
-  const baseTotal = Object.values(breakdown).reduce((a, b) => a + b, 0);
-  return { total: Math.max(0, Math.min(115, baseTotal + bonus)), breakdown, bonus };
+  // A. VC 투자 (25점)
+  const { result: vcScores, hasVC } = getBeautyVCScores(company);
+  Object.assign(breakdown, vcScores);
+
+  // B. 기본재무 (32점)
+
+  // 매출규모 (12점)
+  if (!hasDart || fin?.revenue === null || fin?.revenue === undefined) {
+    breakdown.매출규모 = null;
+  } else {
+    const r = fin.revenue;
+    breakdown.매출규모 = r >= 100000000000 ? 12 : r >= 50000000000 ? 10 : r >= 10000000000 ? 7 : r >= 5000000000 ? 4 : 2;
+  }
+
+  // 매출성장률 (12점)
+  if (!hasDart) {
+    breakdown.매출성장률 = null;
+  } else if (allFin.length >= 3) {
+    const oldest = allFin[0].revenue || 0;
+    const newest = allFin[allFin.length - 1].revenue || 0;
+    const yrs = allFin.length - 1;
+    const cagr = oldest > 0 ? (Math.pow(newest / oldest, 1 / yrs) - 1) * 100 : null;
+    if (cagr === null) breakdown.매출성장률 = null;
+    else if (cagr >= 100) breakdown.매출성장률 = 12;
+    else if (cagr >= 50) breakdown.매출성장률 = 10;
+    else if (cagr >= 30) breakdown.매출성장률 = 8;
+    else if (cagr >= 10) breakdown.매출성장률 = 5;
+    else if (cagr >= 0) breakdown.매출성장률 = 3;
+    else breakdown.매출성장률 = 0;
+  } else if (allFin.length === 2) {
+    const prev = allFin[0].revenue || 0;
+    const curr = allFin[1].revenue || 0;
+    const g = prev > 0 ? ((curr - prev) / prev) * 100 : null;
+    if (g === null) breakdown.매출성장률 = null;
+    else if (g >= 100) breakdown.매출성장률 = 12;
+    else if (g >= 50) breakdown.매출성장률 = 10;
+    else if (g >= 30) breakdown.매출성장률 = 8;
+    else if (g >= 10) breakdown.매출성장률 = 5;
+    else if (g >= 0) breakdown.매출성장률 = 3;
+    else breakdown.매출성장률 = 0;
+  } else {
+    const r = allFin[0].revenue || 0;
+    breakdown.매출성장률 = r >= 100000000000 ? 12 : r >= 50000000000 ? 10 : r >= 10000000000 ? 7 : r > 0 ? 4 : 0;
+  }
+
+  // 영업이익률 (8점)
+  if (!hasDart || fin?.operatingProfit === null || fin?.operatingProfit === undefined || !fin?.revenue) {
+    breakdown.영업이익률 = null;
+  } else {
+    const margin = fin.revenue > 0 ? (fin.operatingProfit / fin.revenue) * 100 : null;
+    if (margin === null) breakdown.영업이익률 = null;
+    else if (margin >= 20) breakdown.영업이익률 = 8;
+    else if (margin >= 15) breakdown.영업이익률 = 6;
+    else if (margin >= 10) breakdown.영업이익률 = 5;
+    else if (margin >= 5) breakdown.영업이익률 = 3;
+    else if (margin >= 0) breakdown.영업이익률 = 1;
+    else breakdown.영업이익률 = 0;
+  }
+
+  // C. 글로벌수출 (18점)
+  const exportRatio = company.exportRatio || null;
+  const exportAmount = company.exportAmount || null;
+  if (exportRatio !== null) {
+    breakdown.글로벌수출 = exportRatio >= 50 ? 18 : exportRatio >= 30 ? 14 : exportRatio >= 10 ? 10 : 6;
+  } else if (exportAmount !== null) {
+    breakdown.글로벌수출 = exportAmount >= 1000 ? 18 : exportAmount >= 500 ? 14 : exportAmount >= 100 ? 10 : 6;
+  } else {
+    const globalKeywords = ['수출', '해외진출', '글로벌', '아마존', '세포라', '올리브영해외', '중국수출', '일본수출', '미국수출'];
+    breakdown.글로벌수출 = globalKeywords.some(k => newsText.includes(k)) ? 5 : 0;
+  }
+
+  // D. 핵심특허 (5점)
+  const patentCount = company.patents?.totalCount || 0;
+  breakdown.핵심특허 = patentCount >= 5 ? 5 : patentCount >= 3 ? 3 : patentCount >= 1 ? 1 : 0;
+
+  // E. 브랜드지표 (5점)
+  let brandScore = 0;
+  const awardKeywords = ['수상', '어워드', '베스트', '대상', '올리브영어워드', '코스모프로'];
+  if (awardKeywords.some(k => newsText.includes(k))) brandScore += 2;
+  const mediaKeywords = ['인플루언서', '유튜버', 'SNS', '바이럴', '뷰티크리에이터', '협찬'];
+  if (mediaKeywords.some(k => newsText.includes(k))) brandScore += 2;
+  const channelKeywords = ['올리브영', '세포라', '편집숍', '백화점', '무신사뷰티'];
+  if (channelKeywords.some(k => newsText.includes(k))) brandScore += 1;
+  breakdown.브랜드지표 = Math.min(5, brandScore);
+
+  // F. DART 신규 4개 항목
+
+  // 매출채권회전율 (5점)
+  if (!hasDart || !fin?.receivables || !fin?.revenue) {
+    breakdown.매출채권 = null;
+  } else {
+    const turnover = fin.receivables > 0 ? fin.revenue / fin.receivables : 0;
+    breakdown.매출채권 = turnover >= 12 ? 5 : turnover >= 6 ? 3 : turnover >= 3 ? 1 : 0;
+  }
+
+  // 주요주주 (3점)
+  if (!shareholders || shareholders.length === 0) {
+    breakdown.주요주주 = null;
+  } else {
+    const institutionalKeywords = ['투자', '벤처', 'VC', '파트너스', '인베스트', '캐피탈', '펀드'];
+    const hasInstitutional = shareholders.some(s =>
+      institutionalKeywords.some(k => (s.name || '').includes(k))
+    );
+    breakdown.주요주주 = hasInstitutional ? 3 : 1;
+  }
+
+  // 부채비율 (4점)
+  const debtRatio = fin?.debtRatio || null;
+  breakdown.부채비율 = debtRatio === null ? null : debtRatio < 100 ? 4 : debtRatio < 200 ? 2 : 0;
+
+  // 현금흐름 (3점)
+  const opCF = latestCF?.operatingCashFlow || null;
+  breakdown.현금흐름 = opCF === null ? null : opCF > 0 ? 3 : 0;
+
+  // ── 최대 배점 정의 ──
+  const maxScores = {
+    // VC 기반
+    라운드별투자금액: 13, 투자자티어: 8, 투자금액상승: 3, 후속참여: 3,
+    // DART 기반
+    매출규모: 12, 매출성장률: 12, 영업이익률: 8,
+    매출채권: 5, 주요주주: 3, 부채비율: 4, 현금흐름: 3,
+    // 기타
+    글로벌수출: 18, 핵심특허: 5, 브랜드지표: 5,
+  };
+
+  const vcKeys = ['라운드별투자금액', '투자자티어', '투자금액상승', '후속참여'];
+  const dartKeys = ['매출규모', '매출성장률', '영업이익률', '매출채권', '주요주주', '부채비율', '현금흐름'];
+
+  return normalizeScore(breakdown, maxScores, { hasVC, hasDart }, vcKeys, dartKeys);
 }
 
 function scoreDeepTech(company) {
