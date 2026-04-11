@@ -58,14 +58,21 @@ async function getFinancials(companyName, corpCode) {
           return item ? parseInt(item.thstrm_amount.replace(/,/g, ''), 10) || 0 : 0;
         };
 
+        const assets = getValue('자산총계');
+        const liabilities = getValue('부채총계');
+        const equity = getValue('자본총계');
+
         financials.push({
           year,
           revenue: getValue('매출액'),
           operatingProfit: getValue('영업이익'),
           netIncome: getValue('당기순이익'),
-          assets: getValue('자산총계'),
-          liabilities: getValue('부채총계'),
-          equity: getValue('자본총계'),
+          assets,
+          liabilities,
+          equity,
+          receivables: getValue('매출채권') || getValue('매출채권 및 기타채권') || getValue('단기매출채권'),
+          debtRatio: equity > 0 ? Math.round((liabilities / equity) * 100) : null,  // 부채비율 (%)
+          currentRatio: null, // 유동비율은 유동자산/유동부채 필요 — 별도 항목으로 추후 추가
           revenueGrowth: null, // 아래에서 계산
         });
       }
@@ -174,6 +181,86 @@ async function getTotalShares(corpCode) {
   }
 }
 
+async function getMajorShareholders(corpCode) {
+  const apiKey = process.env.DART_API_KEY;
+  if (!apiKey || !corpCode) return [];
+
+  try {
+    const response = await axios.get(`${BASE_URL}/majorstock.json`, {
+      params: {
+        crtfc_key: apiKey,
+        corp_code: corpCode,
+        bsns_year: String(new Date().getFullYear() - 1),
+        reprt_code: '11011', // 사업보고서
+      },
+      headers: { 'User-Agent': 'UnlistedResearch/1.0' },
+      timeout: 10000,
+    });
+
+    if (response.data.status === '000' && response.data.list) {
+      return response.data.list.map(item => ({
+        name: item.nm,                          // 주주명
+        relation: item.relate,                  // 관계 (최대주주 본인 등)
+        stockType: item.stock_knd,              // 주식 종류
+        shares: parseInt((item.bsis_posesn_stock_co || '0').replace(/,/g, '')) || 0,  // 보유 주식수
+        ratio: parseFloat(item.bsis_posesn_stock_qota_rt || '0'),                     // 지분율(%)
+      }));
+    }
+    return [];
+  } catch (err) {
+    console.error(`[dartApi] 주요주주 조회 실패:`, err.message);
+    return [];
+  }
+}
+
+async function getCashFlow(corpCode) {
+  const apiKey = process.env.DART_API_KEY;
+  if (!apiKey || !corpCode) return [];
+
+  const currentYear = new Date().getFullYear();
+  const years = [currentYear - 1, currentYear - 2];
+  const cashFlows = [];
+
+  for (const year of years) {
+    try {
+      const response = await axios.get(`${BASE_URL}/fnlttSinglAcnt.json`, {
+        params: {
+          crtfc_key: apiKey,
+          corp_code: corpCode,
+          bsns_year: year.toString(),
+          reprt_code: '11011',
+          fs_div: 'OFS',
+        },
+        headers: { 'User-Agent': 'UnlistedResearch/1.0' },
+        timeout: 10000,
+      });
+
+      if (response.data.status === '000' && response.data.list) {
+        const list = response.data.list;
+        const getCF = (accountNm) => {
+          const item = list.find(i =>
+            i.account_nm === accountNm || i.account_nm?.includes(accountNm)
+          );
+          return item ? parseInt((item.thstrm_amount || '0').replace(/,/g, ''), 10) || 0 : null;
+        };
+
+        cashFlows.push({
+          year,
+          operatingCashFlow: getCF('영업활동현금흐름') || getCF('영업활동으로인한현금흐름'),   // 영업활동
+          investingCashFlow: getCF('투자활동현금흐름') || getCF('투자활동으로인한현금흐름'),   // 투자활동
+          financingCashFlow: getCF('재무활동현금흐름') || getCF('재무활동으로인한현금흐름'),   // 재무활동
+          cashAndEquivalents: getCF('현금및현금성자산'),                                       // 기말 현금
+        });
+      }
+    } catch (err) {
+      console.error(`[dartApi] ${year}년 현금흐름표 조회 실패:`, err.message);
+    }
+    await sleep(2000);
+  }
+
+  return cashFlows;
+}
+
 async function collectDart(companyName) {
   const apiKey = process.env.DART_API_KEY;
   if (!apiKey) {
@@ -192,6 +279,9 @@ async function collectDart(companyName) {
     const financials = await getFinancials(companyName, corpCode);
     const investors = await getInvestorsFromDisclosures(corpCode);
     const totalShares = await getTotalShares(corpCode);
+    const shareholders = await getMajorShareholders(corpCode);
+    await sleep(1000);
+    const cashFlows = await getCashFlow(corpCode);
 
     console.log(`[dartApi] "${companyName}" — ${financials.length}년치 재무제표 수집 완료`);
     return {
@@ -201,6 +291,8 @@ async function collectDart(companyName) {
       investors,
       totalShares,
       marketCap: null,  // priceTracker에서 거래가와 조합하여 계산
+      shareholders,
+      cashFlows,
     };
   } catch (err) {
     console.error(`[dartApi] "${companyName}" 수집 실패:`, err.message);
@@ -208,4 +300,4 @@ async function collectDart(companyName) {
   }
 }
 
-module.exports = { collectDart, getTotalShares, getInvestorsFromDisclosures };
+module.exports = { collectDart, getTotalShares, getInvestorsFromDisclosures, getMajorShareholders, getCashFlow };
