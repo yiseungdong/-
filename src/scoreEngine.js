@@ -1305,50 +1305,296 @@ function scoreB2BSaaS(company) {
   return normalizeScore(breakdown, maxScores, { hasVC, hasDart }, vcKeys, dartKeys);
 }
 
-function scoreEntertainment(company) {
-  const breakdown = {};
-  const fin = company.financials?.financials?.[0];
+// ─── 엔터테인먼트 유형 자동 판별 ───
+
+function detectEnterType(company) {
+  const text = [
+    company.description || '',
+    company.newsText || '',
+    company.sector || ''
+  ].join(' ').toLowerCase();
+
+  // 플랫폼형 우선 판별
+  const platformKeywords = ['앱', '플랫폼', '구독', 'mau', '팬덤앱', '스트리밍', 'saas'];
+  if (platformKeywords.some(k => text.includes(k))) return 'PLATFORM';
+
+  // 제작사형
+  const productionKeywords = ['드라마', '영화', '제작사', 'ott', '시즌', '콘텐츠제작', '납품'];
+  if (productionKeywords.some(k => text.includes(k))) return 'PRODUCTION';
+
+  // 기본값: 기획사형
+  return 'AGENCY';
+}
+
+// ─── 엔터 공통: 기본재무 + 영업이익률 + 매출성장률 계산 ───
+
+function getEnterFinancials(company) {
+  const allFin = company.financials?.financials || [];
+  const fin = allFin.length > 0 ? allFin[allFin.length - 1] : null;
+  const hasDart = allFin.length > 0;
+  const result = {};
+
+  // 매출규모 (최대 15점)
+  if (!hasDart || fin?.revenue === null || fin?.revenue === undefined) {
+    result.매출규모 = null;
+  } else {
+    const r = fin.revenue;
+    result.매출규모 = r >= 100000000000 ? 15
+      : r >= 50000000000  ? 12
+      : r >= 10000000000  ? 8
+      : r >= 5000000000   ? 5
+      : 2;
+  }
+
+  // 매출성장률 (최대 15점)
+  if (!hasDart) {
+    result.매출성장률 = null;
+  } else if (allFin.length >= 3) {
+    const oldest = allFin[0].revenue || 0;
+    const newest = allFin[allFin.length - 1].revenue || 0;
+    const yrs = allFin.length - 1;
+    const cagr = oldest > 0 ? (Math.pow(newest / oldest, 1 / yrs) - 1) * 100 : null;
+    if (cagr === null) result.매출성장률 = null;
+    else if (cagr >= 100) result.매출성장률 = 15;
+    else if (cagr >= 50)  result.매출성장률 = 12;
+    else if (cagr >= 30)  result.매출성장률 = 9;
+    else if (cagr >= 10)  result.매출성장률 = 6;
+    else if (cagr >= 0)   result.매출성장률 = 3;
+    else result.매출성장률 = 0;
+  } else if (allFin.length === 2) {
+    const prev = allFin[0].revenue || 0;
+    const curr = allFin[1].revenue || 0;
+    const g = prev > 0 ? ((curr - prev) / prev) * 100 : null;
+    if (g === null) result.매출성장률 = null;
+    else if (g >= 100) result.매출성장률 = 15;
+    else if (g >= 50)  result.매출성장률 = 12;
+    else if (g >= 30)  result.매출성장률 = 9;
+    else if (g >= 10)  result.매출성장률 = 6;
+    else if (g >= 0)   result.매출성장률 = 3;
+    else result.매출성장률 = 0;
+  } else {
+    const r = allFin[0].revenue || 0;
+    result.매출성장률 = r >= 100000000000 ? 15
+      : r >= 50000000000  ? 12
+      : r >= 10000000000  ? 8
+      : r > 0             ? 5
+      : 0;
+  }
+
+  // 영업이익률 (최대 10점)
+  if (!hasDart || fin?.operatingProfit === null || fin?.operatingProfit === undefined || !fin?.revenue) {
+    result.영업이익률 = null;
+  } else {
+    const margin = fin.revenue > 0 ? (fin.operatingProfit / fin.revenue) * 100 : null;
+    if (margin === null) result.영업이익률 = null;
+    else if (margin >= 10)  result.영업이익률 = 10;
+    else if (margin >= 0)   result.영업이익률 = 7;
+    else if (margin >= -10) result.영업이익률 = 4;
+    else                    result.영업이익률 = 0;
+  }
+
+  return { result, hasDart };
+}
+
+// ─── 엔터 공통: VC 투자 점수 계산 ───
+
+function getEnterVCScores(company, maxTotal) {
   const vc = company.vcHistory;
   const rounds = vc?.rounds || [];
   const latestRound = rounds[0] || {};
+  const hasVC = rounds.length > 0;
+  const result = {};
 
-  // A. 기본 재무 지표 (15점)
-  breakdown.매출규모 = fin?.revenue >= 1000 ? 6 : fin?.revenue >= 500 ? 5 : fin?.revenue >= 200 ? 4 : 2;
-  breakdown.매출성장률 = getRevenueGrowthScore(fin?.revenueGrowth, 6);
-  breakdown.흑자여부 = fin?.netIncome > 0 ? 3 : 0;
+  if (!hasVC) {
+    result.투자라운드 = null;
+    result.투자금액 = null;
+    result.참여VC티어 = null;
+    result.투자금액상승 = null;
+    result.후속참여 = null;
+    return { result, hasVC };
+  }
 
-  // B. IP 가치 (25점)
-  breakdown.IP보유규모 = 7;
-  breakdown.IP확장성 = 8;
-  breakdown.IP지식재산권 = 7;
+  // 라운드별 투자금액 — 최고 라운드 1개 (최대 비례환산)
+  let bestLevel = 99;
+  let bestScore = 0;
+  for (const round of rounds) {
+    const rn = (round.roundName || '').toLowerCase();
+    const amt = parseFloat(round.amount) || 0;
+    let level = 99;
+    let score = 0;
+    if (rn.includes('프리ipo') || rn.includes('pre-ipo') || rn.includes('브릿지') || rn.includes('시리즈c') || rn.includes('series c')) {
+      level = 1;
+      score = amt >= 200000000000 ? 15 : amt >= 100000000000 ? 12 : amt >= 50000000000 ? 9 : amt >= 10000000000 ? 6 : amt >= 5000000000 ? 4 : 2;
+    } else if (rn.includes('시리즈b') || rn.includes('series b')) {
+      level = 2;
+      score = amt >= 100000000000 ? 15 : amt >= 50000000000 ? 11 : amt >= 30000000000 ? 9 : amt >= 10000000000 ? 7 : amt >= 5000000000 ? 5 : 2;
+    } else if (rn.includes('시리즈a') || rn.includes('series a')) {
+      level = 3;
+      score = amt >= 50000000000 ? 12 : amt >= 30000000000 ? 9 : amt >= 10000000000 ? 7 : amt >= 5000000000 ? 5 : amt >= 1000000000 ? 3 : 1;
+    } else if (rn.includes('시드') || rn.includes('seed') || rn.includes('엔젤')) {
+      level = 4;
+      score = amt >= 10000000000 ? 9 : amt >= 5000000000 ? 6 : amt >= 1000000000 ? 3 : 1;
+    }
+    if (level < bestLevel) { bestLevel = level; bestScore = score; }
+  }
+  result.투자라운드 = bestScore;
 
-  // C. 팬덤·플랫폼 (20점)
-  breakdown.팬덤규모 = 8;
-  breakdown.플랫폼채널 = 7;
-  breakdown.굿즈MD매출 = 5;
+  // 참여VC티어 (최대 5점)
+  result.참여VC티어 = Math.min(getVCTier(latestRound.investors), 4);
 
-  // D. VC 투자 관련 (20점)
-  breakdown.투자라운드 = getRoundScore(latestRound.roundName, 4);
-  breakdown.투자금액 = getAmountScore(latestRound.amount, 3);
-  breakdown.참여VC티어 = Math.min(getVCTier(latestRound.investors), 4);
-  breakdown.전략적투자자 = 5;
-  breakdown.밸류상승추이 = getValuationGrowthScore(vc?.valuationGrowth, 2);
-  breakdown.마지막투자경과 = getLastInvestmentScore(rounds, 2);
+  // 투자금액상승 (최대 5점)
+  if (rounds.length < 2) {
+    result.투자금액상승 = 0;
+  } else {
+    const curr = parseFloat(rounds[0].amount) || 0;
+    const prev = parseFloat(rounds[1].amount) || 0;
+    const diff = curr - prev;
+    result.투자금액상승 = diff >= 50000000000 ? 5 : diff >= 20000000000 ? 4 : diff >= 10000000000 ? 3 : diff >= 5000000000 ? 2 : diff > 0 ? 1 : 0;
+  }
 
-  // E. 글로벌 확장성 (10점)
-  breakdown.해외매출비중 = 5;
-  breakdown.글로벌수상인정 = 5;
+  // 후속참여 (최대 5점)
+  result.후속참여 = rounds.length >= 3 ? 5 : rounds.length >= 2 ? 3 : 2;
 
-  // F. 팀·운영 (5점)
-  breakdown.창업팀퀄리티 = 3;
-  breakdown.창업경과시간 = 2;
+  return { result, hasVC };
+}
 
-  // G. 대외신뢰도 (5점)
-  breakdown.미디어노출 = 3;
-  breakdown.대외수상 = 2;
+// ─── 기획사형 (AGENCY) ───
 
-  const total = Object.values(breakdown).reduce((a, b) => a + b, 0);
-  return { total: Math.max(0, Math.min(100, total)), breakdown };
+function scoreEnterAgency(company) {
+  const breakdown = {};
+  const { result: finScores, hasDart } = getEnterFinancials(company);
+  Object.assign(breakdown, finScores);
+
+  const newsText = (company.newsText || '').toLowerCase();
+
+  // B. 아티스트 IP (20점)
+  const artistKeywords = ['아티스트', '가수', '아이돌', '솔로', '그룹', '밴드', '래퍼', '보컬'];
+  const artistCount = artistKeywords.reduce((cnt, k) => cnt + (newsText.includes(k) ? 1 : 0), 0);
+  breakdown.소속아티스트 = artistCount >= 5 ? 5 : artistCount >= 3 ? 3 : artistCount >= 1 ? 1 : 0;
+
+  const globalKeywords = ['해외공연', '빌보드', '해외투어', '월드투어', '글로벌투어', '아시아투어'];
+  const globalCount = globalKeywords.reduce((cnt, k) => cnt + (newsText.includes(k) ? 1 : 0), 0);
+  breakdown.글로벌활동 = globalCount >= 3 ? 10 : globalCount >= 2 ? 7 : globalCount >= 1 ? 4 : 0;
+
+  const chartKeywords = ['멜론', '스포티파이', '빌보드', '차트', '음원'];
+  breakdown.음원차트 = chartKeywords.some(k => newsText.includes(k)) ? 5 : 0;
+
+  // C. 글로벌진출 (10점)
+  const globalBizKeywords = ['해외법인', '글로벌진출', '해외지사', '일본법인', '미국법인'];
+  breakdown.글로벌진출 = globalBizKeywords.some(k => newsText.includes(k)) ? 5 : 0;
+
+  // D. VC 투자 (30점)
+  const { result: vcScores, hasVC } = getEnterVCScores(company, 30);
+  Object.assign(breakdown, vcScores);
+
+  // 최대 배점 정의
+  const maxScores = {
+    매출규모: 15, 매출성장률: 15, 영업이익률: 10,
+    소속아티스트: 5, 글로벌활동: 10, 음원차트: 5,
+    글로벌진출: 10,
+    투자라운드: 15, 참여VC티어: 4, 투자금액상승: 5, 후속참여: 5,
+  };
+
+  const vcKeys = ['투자라운드', '참여VC티어', '투자금액상승', '후속참여'];
+  const dartKeys = ['매출규모', '매출성장률', '영업이익률'];
+
+  return normalizeScore(breakdown, maxScores, { hasVC, hasDart }, vcKeys, dartKeys);
+}
+
+// ─── 제작사형 (PRODUCTION) ───
+
+function scoreEnterProduction(company) {
+  const breakdown = {};
+  const { result: finScores, hasDart } = getEnterFinancials(company);
+  Object.assign(breakdown, finScores);
+
+  const newsText = (company.newsText || '').toLowerCase();
+
+  // B. 콘텐츠 IP (20점)
+  const ottKeywords = ['넷플릭스', '디즈니', '웨이브', '티빙', '쿠팡플레이', 'ott'];
+  const ottCount = ottKeywords.reduce((cnt, k) => cnt + (newsText.includes(k) ? 1 : 0), 0);
+  breakdown.OTT납품 = ottCount >= 3 ? 10 : ottCount >= 2 ? 7 : ottCount >= 1 ? 4 : 0;
+
+  const sequelKeywords = ['시즌2', '속편', '리메이크'];
+  breakdown.시즌속편 = sequelKeywords.some(k => newsText.includes(k)) ? 5 : 0;
+
+  const exportKeywords = ['판권수출', '포맷판매', '해외리메이크', '해외판권'];
+  breakdown.해외판권 = exportKeywords.some(k => newsText.includes(k)) ? 5 : 0;
+
+  // C. 수주잔고 (10점) — 뉴스 기반
+  const contractKeywords = ['계약체결', '납품계약', '수주', '공급계약'];
+  const contractCount = contractKeywords.reduce((cnt, k) => cnt + (newsText.includes(k) ? 1 : 0), 0);
+  breakdown.수주잔고 = contractCount >= 2 ? 7 : contractCount >= 1 ? 4 : 0;
+
+  // D. VC 투자 (30점)
+  const { result: vcScores, hasVC } = getEnterVCScores(company, 30);
+  Object.assign(breakdown, vcScores);
+
+  // 최대 배점 정의
+  const maxScores = {
+    매출규모: 15, 매출성장률: 15, 영업이익률: 10,
+    OTT납품: 10, 시즌속편: 5, 해외판권: 5,
+    수주잔고: 10,
+    투자라운드: 15, 참여VC티어: 4, 투자금액상승: 5, 후속참여: 5,
+  };
+
+  const vcKeys = ['투자라운드', '참여VC티어', '투자금액상승', '후속참여'];
+  const dartKeys = ['매출규모', '매출성장률', '영업이익률'];
+
+  return normalizeScore(breakdown, maxScores, { hasVC, hasDart }, vcKeys, dartKeys);
+}
+
+// ─── 플랫폼형 (PLATFORM) ───
+
+function scoreEnterPlatform(company) {
+  const breakdown = {};
+  const { result: finScores, hasDart } = getEnterFinancials(company);
+  Object.assign(breakdown, finScores);
+
+  const newsText = (company.newsText || '').toLowerCase();
+
+  // B. 플랫폼 지표 (25점)
+  const userKeywords = ['mau', 'dau', '가입자', '이용자', '사용자'];
+  const hasUserMention = userKeywords.some(k => newsText.includes(k));
+  // 숫자 추출 시도 (만 단위)
+  const numMatch = newsText.match(/(\d+)\s*만/);
+  const userCount = numMatch ? parseInt(numMatch[1]) * 10000 : (hasUserMention ? 1 : 0);
+  breakdown.유저수 = userCount >= 1000000 ? 10 : userCount >= 500000 ? 7 : userCount >= 100000 ? 4 : hasUserMention ? 2 : 0;
+
+  const subKeywords = ['구독', '월정액', '멤버십', '프리미엄'];
+  breakdown.구독모델 = subKeywords.some(k => newsText.includes(k)) ? 5 : 0;
+
+  const appKeywords = ['앱스토어', '구글플레이', '인기앱', 'app store', 'google play'];
+  breakdown.앱스토어노출 = appKeywords.some(k => newsText.includes(k)) ? 5 : 0;
+
+  const patentCount = company.patents?.totalCount || 0;
+  breakdown.기술특허 = patentCount >= 3 ? 5 : patentCount >= 1 ? 3 : 0;
+
+  // D. VC 투자 (35점) — 플랫폼은 VC 비중 가장 높음
+  const { result: vcScores, hasVC } = getEnterVCScores(company, 35);
+  Object.assign(breakdown, vcScores);
+
+  // 최대 배점 정의
+  const maxScores = {
+    매출규모: 15, 매출성장률: 15, 영업이익률: 10,
+    유저수: 10, 구독모델: 5, 앱스토어노출: 5, 기술특허: 5,
+    투자라운드: 15, 참여VC티어: 4, 투자금액상승: 5, 후속참여: 5,
+  };
+
+  const vcKeys = ['투자라운드', '참여VC티어', '투자금액상승', '후속참여'];
+  const dartKeys = ['매출규모', '매출성장률', '영업이익률'];
+
+  return normalizeScore(breakdown, maxScores, { hasVC, hasDart }, vcKeys, dartKeys);
+}
+
+// ─── 엔터테인먼트 메인 함수 ───
+
+function scoreEntertainment(company) {
+  const type = detectEnterType(company);
+
+  if (type === 'AGENCY') return scoreEnterAgency(company);
+  if (type === 'PRODUCTION') return scoreEnterProduction(company);
+  return scoreEnterPlatform(company);
 }
 
 function scoreBio(company) {
