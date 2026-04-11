@@ -2435,51 +2435,200 @@ function scoreBeauty(company) {
   return normalizeScore(breakdown, maxScores, { hasVC, hasDart }, vcKeys, dartKeys);
 }
 
-function scoreDeepTech(company) {
-  const breakdown = {};
-  const fin = company.financials?.financials?.[0];
+// ─── 딥테크: 기술검증단계 ───
+
+function getDeeptechStageScore(company) {
+  const text = [company.newsText || '', company.description || ''].join(' ');
+
+  const stages = [
+    { score: 20, keywords: ['양산', '글로벌납품', '수출계약', '글로벌 납품', '해외 양산'] },
+    { score: 17, keywords: ['상용화', '양산돌입', '제품출시', '양산 돌입', '상용화 완료'] },
+    { score: 14, keywords: ['파일럿', 'PoC', '실증완료', '실증 완료', '실증사업', 'POC 완료'] },
+    { score: 10, keywords: ['파일럿진행', '실증중', '테스트베드', '파일럿 진행', '실증 중'] },
+    { score: 7, keywords: ['개발완료', '프로토타입', '데모', '개발 완료', 'prototype'] },
+    { score: 4, keywords: ['개발중', 'R&D', '연구개발', '개발 중', '기술개발'] },
+    { score: 1, keywords: ['창업초기', '스텔스', '초기단계'] },
+  ];
+
+  for (const stage of stages) {
+    if (stage.keywords.some(k => text.includes(k))) return stage.score;
+  }
+  return null;
+}
+
+// ─── 딥테크: 빅테크 파트너십 ───
+
+function getDeeptechPartnerScore(company) {
+  const text = [company.newsText || '', company.description || ''].join(' ');
+
+  const globalBigtech = ['구글', 'Google', 'Microsoft', 'MS', 'NVIDIA', '엔비디아', 'Amazon', 'AWS', 'Meta', 'Apple', 'Intel'];
+  const koreanConglomerate = ['삼성', '현대', 'SK', 'LG', '롯데', '포스코', '한화', 'KT', '두산'];
+  const koreanTech = ['네이버', '카카오', 'LG CNS', 'SK텔레콤', 'SKT'];
+
+  const hasGlobal = globalBigtech.some(k => text.includes(k));
+  const hasKoreanConglomerate = koreanConglomerate.some(k => text.includes(k));
+  const hasKoreanTech = koreanTech.some(k => text.includes(k));
+  const hasMOU = ['MOU', '파트너십', '업무협약', '전략적 제휴'].some(k => text.includes(k));
+
+  let baseScore = 0;
+  if (hasGlobal) baseScore = 15;
+  else if (hasKoreanConglomerate) baseScore = 10;
+  else if (hasKoreanTech) baseScore = 7;
+  else if (hasMOU) baseScore = 3;
+
+  const partnerCount = [hasGlobal, hasKoreanConglomerate, hasKoreanTech].filter(Boolean).length;
+  const bonus = partnerCount >= 2 ? 2 : 0;
+
+  return baseScore > 0 ? Math.min(15, baseScore + bonus) : null;
+}
+
+// ─── 딥테크: 정부R&D/수주 ───
+
+function getDeeptechRDScore(company) {
+  const text = [company.newsText || '', company.description || ''].join(' ');
+
+  const govKeywords = ['IITP', 'KETEP', '산업부', '과기부', '중기부', '국책과제', '정부R&D', '과제수주', '정부과제'];
+  const hasGov = govKeywords.some(k => text.includes(k));
+
+  const orderKeywords = ['수주', '계약체결', '공급계약', '납품계약'];
+  const hasOrder = orderKeywords.some(k => text.includes(k));
+
+  if (!hasGov && !hasOrder) return null;
+
+  const amount = company.rdAmount || null;
+
+  let baseScore = 0;
+  if (hasGov) {
+    baseScore = amount >= 100 ? 5 : amount >= 50 ? 4 : amount >= 10 ? 3 : 2;
+  } else if (hasOrder) {
+    baseScore = amount >= 100 ? 4 : 2;
+  }
+
+  const bonus = (hasGov && hasOrder) ? 1 : 0;
+  return Math.min(5, baseScore + bonus);
+}
+
+// ─── 딥테크 공통: VC 점수 ───
+
+function getDeeptechVCScores(company) {
+  const vcTotal = 50;
   const vc = company.vcHistory;
   const rounds = vc?.rounds || [];
   const latestRound = rounds[0] || {};
+  const hasVC = rounds.length > 0;
+  const result = {};
+
+  if (!hasVC) {
+    result.라운드별투자금액 = null;
+    result.투자자티어 = null;
+    result.투자금액상승 = null;
+    result.후속참여 = null;
+    return { result, hasVC };
+  }
+
+  const maxRound = Math.round(vcTotal * 0.5);
+  let bestLevel = 99;
+  let bestScore = 0;
+  for (const round of rounds) {
+    const rn = (round.roundName || '').toLowerCase();
+    const amt = parseFloat(round.amount) || 0;
+    let level = 99;
+    let score = 0;
+    if (rn.includes('프리ipo') || rn.includes('pre-ipo') || rn.includes('브릿지') || rn.includes('시리즈c') || rn.includes('series c')) {
+      level = 1;
+      score = amt >= 200000000000 ? maxRound : amt >= 100000000000 ? Math.round(maxRound * 0.8) : amt >= 50000000000 ? Math.round(maxRound * 0.6) : amt >= 10000000000 ? Math.round(maxRound * 0.4) : Math.round(maxRound * 0.2);
+    } else if (rn.includes('시리즈b') || rn.includes('series b')) {
+      level = 2;
+      score = amt >= 100000000000 ? maxRound : amt >= 50000000000 ? Math.round(maxRound * 0.75) : amt >= 20000000000 ? Math.round(maxRound * 0.55) : amt >= 10000000000 ? Math.round(maxRound * 0.35) : Math.round(maxRound * 0.15);
+    } else if (rn.includes('시리즈a') || rn.includes('series a')) {
+      level = 3;
+      score = amt >= 50000000000 ? Math.round(maxRound * 0.7) : amt >= 20000000000 ? Math.round(maxRound * 0.5) : amt >= 10000000000 ? Math.round(maxRound * 0.35) : Math.round(maxRound * 0.15);
+    } else if (rn.includes('시드') || rn.includes('seed') || rn.includes('엔젤')) {
+      level = 4;
+      score = amt >= 10000000000 ? Math.round(maxRound * 0.4) : amt >= 5000000000 ? Math.round(maxRound * 0.25) : Math.round(maxRound * 0.1);
+    }
+    if (level < bestLevel) { bestLevel = level; bestScore = score; }
+  }
+  result.라운드별투자금액 = bestScore;
+
+  const maxTier = Math.round(vcTotal * 0.3);
+  const { t1Names, t2Names } = getVCTiers();
+  const investors = (latestRound.investors || []).map(v => v.toLowerCase());
+  const hasT1 = investors.some(v => t1Names.some(t => v.includes(t)));
+  const hasT2 = investors.some(v => t2Names.some(t => v.includes(t)));
+  result.투자자티어 = hasT1 ? maxTier : hasT2 ? Math.round(maxTier * 0.7) : investors.length > 0 ? Math.round(maxTier * 0.3) : 0;
+
+  const maxUp = Math.round(vcTotal * 0.1);
+  if (rounds.length < 2) {
+    result.투자금액상승 = 0;
+  } else {
+    const curr = parseFloat(rounds[0].amount) || 0;
+    const prev = parseFloat(rounds[1].amount) || 0;
+    const diff = curr - prev;
+    result.투자금액상승 = diff >= 50000000000 ? maxUp : diff >= 20000000000 ? Math.round(maxUp * 0.7) : diff > 0 ? Math.round(maxUp * 0.3) : 0;
+  }
+
+  const maxFollow = Math.round(vcTotal * 0.1);
+  result.후속참여 = rounds.length >= 3 ? maxFollow : rounds.length >= 2 ? Math.round(maxFollow * 0.6) : Math.round(maxFollow * 0.3);
+
+  return { result, hasVC };
+}
+
+// ─── 딥테크 메인 함수 ───
+
+function scoreDeepTech(company) {
+  const breakdown = {};
+  const allFin = company.financials?.financials || [];
+  const fin = allFin.length > 0 ? allFin[allFin.length - 1] : null;
+  const hasDart = allFin.length > 0;
   const patentCount = company.patents?.totalCount || 0;
 
-  // A. 기술력·데이터 (30점)
-  breakdown.핵심기술수준 = patentCount >= 20 ? 12 : patentCount >= 10 ? 9 : patentCount >= 5 ? 6 : 3;
-  breakdown.데이터자산 = 8;
-  breakdown.SCI논문 = patentCount >= 10 ? 4 : 2;
-  breakdown.핵심AI특허 = getPatentScore(patentCount, 4);
+  // A. VC 투자 (50점)
+  const { result: vcScores, hasVC } = getDeeptechVCScores(company);
+  Object.assign(breakdown, vcScores);
 
-  // B. VC 투자 밸류 등급 (25점)
-  breakdown.VC밸류등급 = company.valuation?.undervalueRate <= -30 ? 25
-    : company.valuation?.undervalueRate <= 30 ? 18
-    : company.valuation?.undervalueRate <= 100 ? 10 : 3;
+  // B. 기술검증단계 (20점)
+  breakdown.기술검증단계 = getDeeptechStageScore(company);
 
-  // C. 고객·매출 구조 (20점)
-  breakdown.고객퀄리티 = 8;
-  breakdown.매출구조 = fin?.revenue > 0 ? 10 : 3;
+  // C. 빅테크파트너십 (15점)
+  breakdown.빅테크파트너십 = getDeeptechPartnerScore(company);
 
-  // D. 진입장벽 (15점)
-  breakdown.기술재현불가능성 = 7;
-  breakdown.네트워크데이터효과 = 5;
-  breakdown.전환비용 = 3;
+  // D. 정부RD수주 (5점)
+  breakdown.정부RD수주 = getDeeptechRDScore(company);
 
-  // E. VC 투자 구조 (10점)
-  breakdown.참여VC티어 = Math.min(getVCTier(latestRound.investors), 4);
-  breakdown.전략적투자자 = 4;
-  breakdown.기존투자자후속 = rounds.length > 1 ? 2 : 0;
+  // E. 핵심특허 (5점)
+  breakdown.핵심특허 = patentCount >= 5 ? 5 : patentCount >= 3 ? 3 : patentCount >= 1 ? 1 : 0;
 
-  // F. 팀·연구역량 (5점)
-  breakdown.창업팀퀄리티 = 3;
-  breakdown.연구역량 = 2;
+  // F. 매출재무 (5점)
+  if (!hasDart || fin?.revenue === null || fin?.revenue === undefined) {
+    breakdown.매출재무 = null;
+  } else {
+    const rev = fin.revenue;
+    const margin = fin.revenue > 0 && fin.operatingProfit !== undefined ? (fin.operatingProfit / fin.revenue) * 100 : null;
+    if (rev >= 10000000000 && margin !== null && margin > 0) breakdown.매출재무 = 5;
+    else if (rev >= 5000000000) breakdown.매출재무 = 4;
+    else if (rev >= 1000000000) breakdown.매출재무 = 3;
+    else if (rev > 0) breakdown.매출재무 = 2;
+    else breakdown.매출재무 = 0;
+  }
 
-  // 가산점
-  let bonus = 0;
-  const hasNvidia = company.source?.includes('엔비디아') || company.reason?.includes('엔비디아');
-  const hasGoogle = company.source?.includes('구글') || company.reason?.includes('구글');
-  if (hasNvidia || hasGoogle) bonus += 5;
+  const hasStage = breakdown.기술검증단계 !== null;
+  const hasPartner = breakdown.빅테크파트너십 !== null;
 
-  const baseTotal = Object.values(breakdown).reduce((a, b) => a + b, 0);
-  return { total: Math.max(0, Math.min(115, baseTotal + bonus)), breakdown, bonus };
+  if (!hasVC && !hasStage && !hasPartner && !hasDart) {
+    return { total: null, breakdown, dataStatus: '데이터부족' };
+  }
+
+  const maxScores = {
+    라운드별투자금액: 25, 투자자티어: 15, 투자금액상승: 5, 후속참여: 5,
+    기술검증단계: 20, 빅테크파트너십: 15, 정부RD수주: 5,
+    핵심특허: 5, 매출재무: 5,
+  };
+
+  const vcKeys = ['라운드별투자금액', '투자자티어', '투자금액상승', '후속참여'];
+  const dartKeys = ['매출재무'];
+
+  return normalizeScore(breakdown, maxScores, { hasVC: hasVC || hasStage || hasPartner, hasDart }, vcKeys, dartKeys);
 }
 
 // ─── 메인 점수 계산 ───
