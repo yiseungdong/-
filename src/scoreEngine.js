@@ -112,59 +112,419 @@ function getPatentScore(count, maxScore) {
   return 0;
 }
 
+/**
+ * 데이터 상황별 100점 환산 함수 (전 섹터 공통)
+ *
+ * 우선순위:
+ * 1순위: VC 투자 데이터
+ * 2순위: DART 기반 재무 데이터
+ *
+ * 처리 방식:
+ * - VC + DART 둘 다 없음 → 점수 미정 (null 반환)
+ * - VC만 있음 → 없는 항목 0점, VC 점수 비례로 채워서 100점 환산
+ * - VC + DART 둘 다 있음 → 없는 항목 0점, VC+DART 점수 비례로 채워서 100점 환산
+ * - DART만 있음 → 없는 항목 0점, DART 점수 비례로 채워서 100점 환산
+ *
+ * @param {Object} breakdown - 항목별 점수 객체 (null = 데이터 없음)
+ * @param {Object} maxScores - 항목별 최대 배점 객체
+ * @param {Object} dataFlags - { hasVC: bool, hasDart: bool }
+ * @param {Object} vcKeys - VC 관련 항목 키 배열
+ * @param {Object} dartKeys - DART 관련 항목 키 배열
+ * @returns {{ total: number|null, breakdown: Object, dataStatus: string }}
+ */
+function normalizeScore(breakdown, maxScores, dataFlags, vcKeys, dartKeys) {
+  const { hasVC, hasDart } = dataFlags;
+
+  // VC도 DART도 없으면 미정
+  if (!hasVC && !hasDart) {
+    return { total: null, breakdown, dataStatus: '데이터부족' };
+  }
+
+  // 각 항목 점수 계산
+  let totalScore = 0;        // 실제 획득 점수 합계
+  let totalMaxAvail = 0;     // 데이터 있는 항목의 최대 배점 합계
+  let totalMaxAll = 0;       // 전체 최대 배점 합계
+  let vcScore = 0;           // VC 항목 획득 점수
+  let vcMax = 0;             // VC 항목 최대 배점
+  let dartScore = 0;         // DART 항목 획득 점수
+  let dartMax = 0;           // DART 항목 최대 배점
+
+  for (const [key, maxVal] of Object.entries(maxScores)) {
+    totalMaxAll += Math.abs(maxVal);
+    const score = breakdown[key];
+
+    if (score !== null && score !== undefined) {
+      totalScore += score;
+      totalMaxAvail += Math.abs(maxVal);
+
+      if (vcKeys.includes(key)) {
+        vcScore += score;
+        vcMax += Math.abs(maxVal);
+      }
+      if (dartKeys.includes(key)) {
+        dartScore += score;
+        dartMax += Math.abs(maxVal);
+      }
+    }
+  }
+
+  // 없는 항목 배점 = 전체 최대 - 데이터 있는 항목 최대
+  const missingMax = totalMaxAll - totalMaxAvail;
+
+  // 비례 보정 점수 계산
+  let filledScore = totalScore;
+
+  if (missingMax > 0) {
+    if (hasVC && hasDart) {
+      // VC + DART 비례로 채움
+      const vcDartTotal = vcScore + dartScore;
+      const vcDartMax = vcMax + dartMax;
+      const fillRate = vcDartMax > 0 ? vcDartTotal / vcDartMax : 0;
+      filledScore = totalScore + (missingMax * fillRate);
+    } else if (hasVC) {
+      // VC 비례로 채움
+      const fillRate = vcMax > 0 ? vcScore / vcMax : 0;
+      filledScore = totalScore + (missingMax * fillRate);
+    } else if (hasDart) {
+      // DART 비례로 채움
+      const fillRate = dartMax > 0 ? dartScore / dartMax : 0;
+      filledScore = totalScore + (missingMax * fillRate);
+    }
+  }
+
+  // 100점 환산
+  const normalized = totalMaxAll > 0
+    ? Math.round((filledScore / totalMaxAll) * 100 * 10) / 10
+    : 0;
+
+  const dataStatus = hasVC && hasDart ? 'VC+DART'
+    : hasVC ? 'VC만'
+    : 'DART만';
+
+  return {
+    total: Math.max(-20, Math.min(100, normalized)),
+    breakdown,
+    dataStatus,
+  };
+}
+
 // ─── 섹터별 점수 계산 ───
 
 function scoreCommerce(company) {
   const breakdown = {};
-  let total = 0;
-  const fin = company.financials?.financials?.[0];
+  const allFin = company.financials?.financials || [];
+  const fin = allFin.length > 0 ? allFin[allFin.length - 1] : null; // 가장 최근
+  const prevFin = allFin.length >= 2 ? allFin[allFin.length - 2] : null;
   const vc = company.vcHistory;
   const rounds = vc?.rounds || [];
   const latestRound = rounds[0] || {};
 
-  // A. 기본 재무 지표 (25점)
-  const revenue = fin?.revenue || 0;
-  breakdown.매출규모 = revenue >= 1000 ? 8 : revenue >= 500 ? 7 : revenue >= 200 ? 5 : revenue >= 50 ? 4 : revenue > 0 ? 2 : 0;
-  breakdown.매출성장률 = getRevenueGrowthScore(fin?.revenueGrowth, 10);
-  breakdown.흑자여부 = fin?.netIncome > 0 ? 4 : fin?.netIncome === 0 ? 2 : 0;
-  breakdown.손익분기시점 = fin?.netIncome > 0 ? 3 : 2;
+  // 데이터 보유 여부 판단
+  const hasVC = rounds.length > 0;
+  const hasDart = allFin.length > 0;
 
-  // B. 매출 구조 (10점)
-  breakdown.반복매출비중 = 3;
-  breakdown.고객집중도 = 3;
+  // ── A. 기본 재무 ──
 
-  // C. VC 투자 관련 (30점)
-  breakdown.투자라운드 = getRoundScore(latestRound.roundName, 5);
-  breakdown.투자금액 = getAmountScore(latestRound.amount, 4);
-  breakdown.밸류상승추이 = getValuationGrowthScore(vc?.valuationGrowth, 4);
-  breakdown.참여VC티어 = getVCTier(latestRound.investors);
-  breakdown.전략적투자자 = 0;
-  breakdown.라운드텀 = getRoundSpeedScore(rounds, 3);
-  breakdown.마지막투자경과 = getLastInvestmentScore(rounds, 3);
-  breakdown.후속참여 = rounds.length > 1 ? 2 : 0;
+  // 매출규모 (최대 12점)
+  if (!hasDart || fin?.revenue === null || fin?.revenue === undefined) {
+    breakdown.매출규모 = null;
+  } else {
+    const r = fin.revenue;
+    breakdown.매출규모 = r >= 500000000000 ? 12
+      : r >= 200000000000 ? 8
+      : r >= 100000000000 ? 6
+      : r >= 50000000000  ? 4
+      : r > 0             ? 2
+      : 0;
+  }
 
-  // D. 기술·경쟁력 (15점)
-  breakdown.독점기술 = (company.patents?.totalCount || 0) >= 10 ? 4 : 2;
-  breakdown.진입장벽 = 2;
-  breakdown.수익모델명확성 = revenue > 0 ? 4 : 1;
-  breakdown.레퍼런스고객 = 0;
+  // 매출성장률 (최대 10점) — 3개년 CAGR, 2개년 전년대비, 1개년 절대값
+  if (!hasDart) {
+    breakdown.매출성장률 = null;
+  } else if (allFin.length >= 3) {
+    const oldest = allFin[0].revenue || 0;
+    const newest = allFin[allFin.length - 1].revenue || 0;
+    const yrs = allFin.length - 1;
+    const cagr = oldest > 0 ? (Math.pow(newest / oldest, 1 / yrs) - 1) * 100 : null;
+    if (cagr === null) breakdown.매출성장률 = null;
+    else if (cagr >= 100) breakdown.매출성장률 = 6;
+    else if (cagr >= 70)  breakdown.매출성장률 = 5;
+    else if (cagr >= 50)  breakdown.매출성장률 = 4;
+    else if (cagr >= 30)  breakdown.매출성장률 = 3;
+    else if (cagr >= 20)  breakdown.매출성장률 = 2;
+    else if (cagr >= 10)  breakdown.매출성장률 = 1;
+    else if (cagr >= 0)   breakdown.매출성장률 = 0;
+    else breakdown.매출성장률 = Math.max(-6, Math.round(cagr / 10));
+  } else if (allFin.length === 2) {
+    const prev = allFin[0].revenue || 0;
+    const curr = allFin[1].revenue || 0;
+    const g = prev > 0 ? ((curr - prev) / prev) * 100 : null;
+    if (g === null) breakdown.매출성장률 = null;
+    else if (g >= 100) breakdown.매출성장률 = 6;
+    else if (g >= 70)  breakdown.매출성장률 = 5;
+    else if (g >= 50)  breakdown.매출성장률 = 4;
+    else if (g >= 30)  breakdown.매출성장률 = 3;
+    else if (g >= 20)  breakdown.매출성장률 = 2;
+    else if (g >= 10)  breakdown.매출성장률 = 1;
+    else if (g >= 0)   breakdown.매출성장률 = 0;
+    else breakdown.매출성장률 = Math.max(-6, Math.round(g / 10));
+  } else {
+    // 1개년 — 절대값 기준
+    const r = allFin[0].revenue || 0;
+    breakdown.매출성장률 = r >= 500000000000 ? 6
+      : r >= 200000000000 ? 4
+      : r >= 50000000000  ? 2
+      : r > 0             ? 1
+      : 0;
+  }
 
-  // E. 시장·성장성 (10점)
-  breakdown.시장크기 = 3;
-  breakdown.글로벌확장성 = 1;
-  breakdown.경쟁구도 = 2;
+  // 영업이익률 (최대 5점, 감점 있음)
+  if (!hasDart || fin?.operatingProfit === null || fin?.operatingProfit === undefined || !fin?.revenue) {
+    breakdown.영업이익률 = null;
+  } else {
+    const margin = fin.revenue > 0 ? (fin.operatingProfit / fin.revenue) * 100 : null;
+    if (margin === null) breakdown.영업이익률 = null;
+    else if (margin >= 20)  breakdown.영업이익률 = 5;
+    else if (margin >= 10)  breakdown.영업이익률 = 3;
+    else if (margin >= 5)   breakdown.영업이익률 = 1;
+    else if (margin >= 0)   breakdown.영업이익률 = 0;
+    else if (margin >= -10) breakdown.영업이익률 = -1;
+    else if (margin >= -20) breakdown.영업이익률 = -2;
+    else                    breakdown.영업이익률 = -3;
+  }
 
-  // F. 팀·운영 (5점)
-  breakdown.창업팀퀄리티 = 2;
-  breakdown.창업경과시간 = 1;
+  // 매출채권 (매출액 대비 비율, 최대 2점, 감점 있음)
+  if (!hasDart || !fin?.receivables || !fin?.revenue) {
+    breakdown.매출채권 = null;
+  } else {
+    const ratio = (fin.receivables / fin.revenue) * 100;
+    breakdown.매출채권 = ratio <= 30 ? 2
+      : ratio <= 50 ? 1
+      : ratio <= 70 ? 0
+      : -2;
+  }
 
-  // G. 대외신뢰도 (5점)
-  breakdown.계약신뢰도 = 1;
-  breakdown.미디어노출 = 1;
-  breakdown.대외수상 = 0;
+  // ── C. VC 투자 ──
 
-  total = Object.values(breakdown).reduce((a, b) => a + b, 0);
-  return { total: Math.max(0, Math.min(100, total)), breakdown };
+  // 투자라운드 (최대 5점) — 기존 그대로
+  breakdown.투자라운드 = hasVC ? getRoundScore(latestRound.roundName, 5) : null;
+
+  // 밸류상승추이 — 절대 밸류에이션 기준 (최대 6점)
+  if (!hasVC) {
+    breakdown.밸류상승추이 = null;
+  } else {
+    const val = parseFloat(latestRound.valuation) || 0;
+    breakdown.밸류상승추이 = val >= 300000000000 ? 6
+      : val >= 200000000000 ? 5
+      : val >= 100000000000 ? 4
+      : val >= 50000000000  ? 3
+      : val >= 10000000000  ? 2
+      : val >= 5000000000   ? 1
+      : 0;
+  }
+
+  // 참여VC티어 (최대 4점) — 기존 그대로
+  breakdown.참여VC티어 = hasVC ? getVCTier(latestRound.investors) : null;
+
+  // 라운드텀 (최대 5점) — 기존 그대로
+  breakdown.라운드텀 = hasVC ? getRoundSpeedScore(rounds, 5) : null;
+
+  // 투자금액 상승 — 전라운드 대비 (최대 5점, 별도 항목)
+  if (!hasVC || rounds.length < 2) {
+    breakdown.투자금액상승 = hasVC ? 0 : null; // VC 있지만 전라운드 없으면 0점
+  } else {
+    const curr = parseFloat(rounds[0].amount) || 0;
+    const prev = parseFloat(rounds[1].amount) || 0;
+    const diff = curr - prev;
+    breakdown.투자금액상승 = diff >= 100000000000 ? 5
+      : diff >= 50000000000  ? 4
+      : diff >= 30000000000  ? 3
+      : diff >= 10000000000  ? 2
+      : diff >= 5000000000   ? 1
+      : 0;
+  }
+
+  // 라운드별 투자금액 — 최고 라운드 1개만 적용 (최대 15점)
+  if (!hasVC) {
+    breakdown.라운드별투자금액 = null;
+  } else {
+    let bestLevel = 99;
+    let bestScore = 0;
+
+    for (const round of rounds) {
+      const rn = (round.roundName || '').toLowerCase();
+      const amt = parseFloat(round.amount) || 0;
+      let level = 99;
+      let score = 0;
+
+      if (rn.includes('프리ipo') || rn.includes('pre-ipo') || rn.includes('브릿지')) {
+        level = 1;
+        score = amt >= 300000000000 ? 15 : amt >= 200000000000 ? 12 : amt >= 100000000000 ? 10 : amt >= 50000000000 ? 8 : amt >= 10000000000 ? 6 : amt >= 5000000000 ? 4 : 0;
+      } else if (rn.includes('시리즈c') || rn.includes('series c')) {
+        level = 2;
+        score = amt >= 200000000000 ? 15 : amt >= 150000000000 ? 12 : amt >= 100000000000 ? 11 : amt >= 50000000000 ? 9 : amt >= 20000000000 ? 7 : amt >= 10000000000 ? 6 : amt >= 5000000000 ? 3 : 0;
+      } else if (rn.includes('시리즈b') || rn.includes('series b')) {
+        level = 3;
+        score = amt >= 100000000000 ? 15 : amt >= 80000000000 ? 12 : amt >= 50000000000 ? 11 : amt >= 30000000000 ? 9 : amt >= 10000000000 ? 7 : amt >= 5000000000 ? 6 : amt >= 2000000000 ? 4 : 0;
+      } else if (rn.includes('시리즈a') || rn.includes('series a')) {
+        level = 4;
+        score = amt >= 80000000000 ? 12 : amt >= 50000000000 ? 10 : amt >= 30000000000 ? 9 : amt >= 10000000000 ? 8 : amt >= 5000000000 ? 6 : amt >= 2000000000 ? 4 : amt >= 1000000000 ? 3 : 0;
+      } else if (rn.includes('시드') || rn.includes('seed') || rn.includes('엔젤')) {
+        level = 5;
+        score = amt >= 10000000000 ? 10 : amt >= 8000000000 ? 9 : amt >= 6000000000 ? 8 : amt >= 4000000000 ? 6 : amt >= 2000000000 ? 4 : amt >= 1000000000 ? 3 : amt >= 500000000 ? 2 : 0;
+      }
+
+      if (level < bestLevel) {
+        bestLevel = level;
+        bestScore = score;
+      }
+    }
+    breakdown.라운드별투자금액 = bestScore;
+  }
+
+  // 후속참여 (최대 5점)
+  breakdown.후속참여 = hasVC
+    ? (rounds.length >= 3 ? 5 : rounds.length >= 2 ? 3 : 2)
+    : null;
+
+  // ── D. 기술·경쟁력 ──
+
+  // 독점기술 — 특허수 기준 (최대 4점)
+  const patentCount = company.patents?.totalCount || 0;
+  breakdown.독점기술 = patentCount >= 5 ? 4 : patentCount >= 3 ? 3 : patentCount >= 1 ? 2.5 : 2;
+
+  // 유저수 (최대 4점)
+  const userCount = company.userCount || null;
+  breakdown.유저수 = userCount === null ? null
+    : userCount >= 5000000 ? 4
+    : userCount >= 3000000 ? 3
+    : userCount >= 1000000 ? 2
+    : userCount >= 500000  ? 1
+    : 0;
+
+  // ── E. 시장·성장성 ──
+
+  // 시장크기 — Claude AI 섹터 분석 기반 (최대 3점)
+  const sectorName = company.sectorName || company.industry || '';
+  const largeTAM = ['이커머스', '커머스', '리테일', '플랫폼'];
+  breakdown.시장크기 = largeTAM.some(k => sectorName.includes(k)) ? 3 : 2;
+
+  // 경쟁구도 — Claude AI marketCompetition 기반 (최대 2점)
+  const competition = company.profile?.marketCompetition || '';
+  breakdown.경쟁구도 = competition.length > 50 ? 2 : competition.length > 0 ? 1 : 0;
+
+  // ── F. 팀·운영 (통합) ──
+
+  // 창업팀퀄리티 + 창업경과시간 → 설립일 기준 통합 (최대 3점)
+  const estDate = company.financials?.establishedDate || null;
+  if (!estDate) {
+    breakdown.팀운영 = null;
+  } else {
+    const estYear = parseInt(String(estDate).slice(0, 4));
+    const elapsed = new Date().getFullYear() - estYear;
+    breakdown.팀운영 = elapsed >= 7 ? 3
+      : elapsed >= 5 ? 2
+      : elapsed >= 3 ? 2
+      : elapsed >= 1 ? 1
+      : 0;
+  }
+
+  // ── G. 대외신뢰도 (통합) ──
+
+  // 계약신뢰도 + 미디어노출 + 대외수상 → 뉴스 수집 기반 통합 (최대 3점)
+  const newsCount = company.newsCount || 0;
+  breakdown.미디어노출 = newsCount >= 5 ? 3 : newsCount >= 2 ? 2 : newsCount >= 1 ? 1 : 0;
+
+  // ── 주요주주 ──
+  const shareholders = company.financials?.shareholders || [];
+  const majorHolder = shareholders.find(s => s.relation?.includes('최대주주') || s.relation?.includes('본인'));
+  const instHolder = shareholders.find(s => s.relation?.includes('기관'));
+
+  breakdown.대주주지분율 = !majorHolder ? null
+    : majorHolder.ratio >= 50 ? 5
+    : majorHolder.ratio >= 40 ? 4
+    : majorHolder.ratio >= 30 ? 3
+    : majorHolder.ratio >= 20 ? 2
+    : 1;
+
+  breakdown.기관주주지분율 = !instHolder ? null
+    : instHolder.ratio >= 30 ? 5
+    : instHolder.ratio >= 20 ? 4
+    : instHolder.ratio >= 10 ? 3
+    : instHolder.ratio >= 5  ? 2
+    : 1;
+
+  const otherRatio = majorHolder ? (100 - (majorHolder.ratio || 0)) : null;
+  breakdown.기타주주지분율 = otherRatio === null ? null
+    : otherRatio <= 10 ? 5
+    : otherRatio <= 20 ? 4
+    : otherRatio <= 30 ? 3
+    : otherRatio <= 40 ? 1
+    : -2;
+
+  // ── 부채비율 ──
+  const debtRatio = fin?.debtRatio || null;
+  const prevDebtRatio = prevFin?.debtRatio || null;
+
+  breakdown.부채비율절대 = debtRatio === null ? null
+    : debtRatio <= 20 ? 5
+    : debtRatio <= 30 ? 4
+    : debtRatio <= 40 ? 3
+    : debtRatio <= 50 ? 2
+    : debtRatio <= 70 ? 1
+    : -2;
+
+  if (debtRatio !== null && prevDebtRatio !== null) {
+    const dc = ((debtRatio - prevDebtRatio) / prevDebtRatio) * 100;
+    breakdown.부채비율변화 = dc < 0
+      ? (dc <= -70 ? 5 : dc <= -50 ? 4 : dc <= -40 ? 3 : dc <= -30 ? 2.5 : dc <= -20 ? 2 : 1.5)
+      : (dc >= 70 ? -5 : dc >= 50 ? -4 : dc >= 40 ? -3 : dc >= 30 ? -2.5 : dc >= 20 ? -2 : -1.5);
+  } else {
+    breakdown.부채비율변화 = null;
+  }
+
+  // ── 현금흐름 ──
+  const cashFlows = company.financials?.cashFlows || [];
+  const latestCF = cashFlows.length > 0 ? cashFlows[cashFlows.length - 1] : null;
+  const prevCF = cashFlows.length >= 2 ? cashFlows[cashFlows.length - 2] : null;
+
+  breakdown.기말현금 = !latestCF?.cashAndEquivalents ? null
+    : latestCF.cashAndEquivalents >= 100000000000 ? 5
+    : latestCF.cashAndEquivalents >= 70000000000  ? 4
+    : latestCF.cashAndEquivalents >= 50000000000  ? 3
+    : latestCF.cashAndEquivalents >= 20000000000  ? 2.5
+    : latestCF.cashAndEquivalents >= 10000000000  ? 2
+    : latestCF.cashAndEquivalents >= 5000000000   ? 1
+    : 0;
+
+  if (latestCF?.cashAndEquivalents && prevCF?.cashAndEquivalents) {
+    const diff = latestCF.cashAndEquivalents - prevCF.cashAndEquivalents;
+    breakdown.현금흐름변화 = diff >= 0
+      ? (diff >= 100000000000 ? 5 : diff >= 70000000000 ? 4 : diff >= 50000000000 ? 3 : diff >= 20000000000 ? 2.5 : diff >= 10000000000 ? 2 : 1)
+      : (diff <= -100000000000 ? -5 : diff <= -70000000000 ? -4 : diff <= -50000000000 ? -3 : diff <= -20000000000 ? -2.5 : diff <= -10000000000 ? -2 : -1);
+  } else {
+    breakdown.현금흐름변화 = null;
+  }
+
+  // ── 최대 배점 정의 ──
+  const maxScores = {
+    // DART 기반
+    매출규모: 12, 매출성장률: 10, 영업이익률: 5, 매출채권: 2,
+    부채비율절대: 5, 부채비율변화: 5,
+    기말현금: 5, 현금흐름변화: 5,
+    대주주지분율: 5, 기관주주지분율: 5, 기타주주지분율: 5,
+    팀운영: 3,
+    // VC 기반
+    투자라운드: 5, 밸류상승추이: 6, 참여VC티어: 4, 라운드텀: 5,
+    투자금액상승: 5, 라운드별투자금액: 15, 후속참여: 5,
+    // 기타 (항상 계산)
+    독점기술: 4, 유저수: 4, 시장크기: 3, 경쟁구도: 2, 미디어노출: 3,
+  };
+
+  const vcKeys = ['투자라운드', '밸류상승추이', '참여VC티어', '라운드텀', '투자금액상승', '라운드별투자금액', '후속참여'];
+  const dartKeys = ['매출규모', '매출성장률', '영업이익률', '매출채권', '부채비율절대', '부채비율변화', '기말현금', '현금흐름변화', '대주주지분율', '기관주주지분율', '기타주주지분율', '팀운영'];
+
+  return normalizeScore(breakdown, maxScores, { hasVC, hasDart }, vcKeys, dartKeys);
 }
 
 function scoreFintech(company) {
@@ -574,6 +934,22 @@ async function calculateScore(company) {
     // rawScore를 100점으로 cap 후 섹터 프리미엄 적용
     const sectorPremium = company.peerGroup?.sectorPremium || 1.0;
     const rawScore = scoreResult.total;
+
+    // null이면 데이터 부족 처리
+    if (rawScore === null) {
+      return {
+        score: null,
+        rawScore: null,
+        dataStatus: '데이터부족',
+        sectorPremium: 1.0,
+        premiumScore: null,
+        breakdown: scoreResult.breakdown,
+        breakdownStr: '데이터 부족으로 점수 산출 불가',
+        bonus: 0,
+        bonusPoints: 0,
+      };
+    }
+
     const cappedRaw = Math.min(100, rawScore);
     const premiumScore = cappedRaw * sectorPremium;
 
@@ -637,6 +1013,7 @@ async function calculateScore(company) {
     return {
       score: finalWithBonus,
       rawScore,
+      dataStatus: scoreResult.dataStatus || 'VC+DART',
       sectorPremium,
       premiumScore: Math.round(premiumScore),
       breakdown: scoreResult.breakdown,

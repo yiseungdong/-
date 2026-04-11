@@ -10,24 +10,20 @@ async function getCorpCode(companyName) {
   const apiKey = process.env.DART_API_KEY;
   try {
     const response = await axios.get(`${BASE_URL}/company.json`, {
-      params: {
-        crtfc_key: apiKey,
-        corp_name: companyName,
-      },
+      params: { crtfc_key: apiKey, corp_name: companyName },
       headers: { 'User-Agent': 'UnlistedResearch/1.0' },
       timeout: 10000,
     });
-
     if (response.data.status === '000') {
-      return response.data.corp_code;
+      return {
+        corpCode: response.data.corp_code,
+        establishedDate: response.data.est_dt || null, // YYYYMMDD 형식
+      };
     }
-
-    // corp_name 검색이 단일 회사 반환이 아닐 수 있으므로 corpCode.xml 활용 대안
-    // 우선 company.json 결과 사용
-    return null;
+    return { corpCode: null, establishedDate: null };
   } catch (err) {
     console.error(`[dartApi] corp_code 조회 실패 (${companyName}):`, err.message);
-    return null;
+    return { corpCode: null, establishedDate: null };
   }
 }
 
@@ -269,7 +265,7 @@ async function collectDart(companyName) {
   }
 
   try {
-    const corpCode = await getCorpCode(companyName);
+    const { corpCode, establishedDate } = await getCorpCode(companyName);
     if (!corpCode) {
       console.log(`[dartApi] "${companyName}" corp_code를 찾을 수 없습니다.`);
       return { financials: [], investors: [], totalShares: null, marketCap: null };
@@ -287,6 +283,7 @@ async function collectDart(companyName) {
     return {
       companyName,
       corpCode,
+      establishedDate,
       financials,
       investors,
       totalShares,
