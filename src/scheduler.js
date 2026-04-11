@@ -24,6 +24,8 @@ const { analyzeFollowOn } = require('./followOnTracker');
 const { findRelatedCompanies } = require('./vcPortfolioLinker');
 const { updateVCDatabase } = require('./vcDatabaseManager');
 
+const { checkBusinessDay } = require('./businessDay');
+
 // 출력 모듈
 const reportWriter = require('./reportWriter');
 const excelWriter = require('./excelWriter');
@@ -34,6 +36,18 @@ function log(msg) { console.log(`[${new Date().toLocaleTimeString('ko-KR')}] ${m
 
 async function run() {
   const today = new Date().toISOString().slice(0, 10);
+
+  // 영업일 체크 (FORCE_RUN=1 이면 우회)
+  if (process.env.FORCE_RUN !== '1') {
+    const { isBusinessDay, reason } = checkBusinessDay();
+    if (!isBusinessDay) {
+      log(`오늘은 ${reason}입니다. 리서치를 실행하지 않습니다.`);
+      return;
+    }
+  } else {
+    log('FORCE_RUN=1 — 영업일 체크 우회');
+  }
+
   const reportDir = path.join(__dirname, '../reports', today);
   const logDir = path.join(__dirname, '../logs');
   fs.ensureDirSync(logDir);
@@ -183,6 +197,27 @@ async function run() {
     } catch (e) { log('VC DB 업데이트 실패: ' + e.message); }
 
     appendLog(`완료 — ${companies.length}개 리포트`);
+
+    // IPO 트래커 실행
+    try {
+      const { runIpoTracker, getD2Companies } = require('../ipo_tracker');
+      log('');
+      log('[IPO 트래커] 청구/승인 종목 업데이트 시작...');
+      await runIpoTracker();
+
+      // D-2 종목 확인
+      const d2List = await getD2Companies();
+      if (d2List.length > 0) {
+        log(`[IPO D-2] ${d2List.length}개 종목 공모 D-2 감지`);
+        try {
+          const { generateIpoAddonReport } = require('../ipo_report_addon');
+          for (const company of d2List) {
+            await generateIpoAddonReport(company);
+          }
+        } catch (e) { log(`[IPO D-2] 리포트 생성 모듈 없음, 스킵: ${e.message}`); }
+      }
+    } catch (e) { log(`[IPO 트래커] 실행 실패: ${e.message}`); }
+
     log('============================');
     log(`완료! reports/${today}/ 에 ${companies.length}개 리포트`);
     log('============================');
