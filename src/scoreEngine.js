@@ -1597,56 +1597,364 @@ function scoreEntertainment(company) {
   return scoreEnterPlatform(company);
 }
 
-function scoreBio(company) {
-  const breakdown = {};
+// ─── 바이오 유형 자동 판별 ───
+
+function detectBioType(company) {
+  const text = [
+    company.description || '',
+    company.newsText || '',
+    company.sector || ''
+  ].join(' ').toLowerCase();
+
+  const biotechKeywords = ['제품판매', '매출성장', '흑자', '수출', '글로벌판매', '바이오시밀러', '진단키트', '의약품판매'];
+  const hasBiotechKeyword = biotechKeywords.some(k => text.includes(k));
+
+  const allFin = company.financials?.financials || [];
+  const hasRevenue = allFin.some(f => (parseFloat(f.revenue) || 0) > 0);
+
+  if (hasBiotechKeyword || hasRevenue) return 'BIOTECH';
+  return 'NEWDRUG';
+}
+
+// ─── 임상단계 키워드 탐지 ───
+
+function getClinicalStageScore(company, maxScore) {
+  const text = [
+    company.newsText || '',
+    company.description || '',
+    company.clinicalInfo || ''
+  ].join(' ');
+
+  const stages = [
+    { score: maxScore, keywords: ['FDA승인', 'FDA approval', '품목허가', '시판허가', '허가완료', '판매승인'] },
+    { score: Math.round(maxScore * 0.85), keywords: ['임상3상', '3상완료', '3상진입', '3상 진행', 'Phase 3', 'phase III', 'Phase III'] },
+    { score: Math.round(maxScore * 0.65), keywords: ['임상2상', '2상완료', '2상진입', '2상 진행', 'Phase 2', 'phase II', 'Phase II'] },
+    { score: Math.round(maxScore * 0.45), keywords: ['임상1상', '1상완료', '1상진입', '1상 진행', 'Phase 1', 'phase I', 'Phase I'] },
+    { score: Math.round(maxScore * 0.25), keywords: ['IND', '임상시험계획', '임상신청', '임상승인', '임상진입'] },
+    { score: Math.round(maxScore * 0.1), keywords: ['전임상', '비임상', '동물실험', '동물모델'] },
+  ];
+
+  for (const stage of stages) {
+    if (stage.keywords.some(k => text.includes(k))) return stage.score;
+  }
+  return 0;
+}
+
+// ─── 기술이전계약 점수 ───
+
+function getLicenseOutScore(company) {
+  const text = [company.newsText || '', company.description || ''].join(' ');
+
+  const licenseKeywords = ['기술이전', '라이선스아웃', 'License-out', 'L/O', '기술수출',
+    '글로벌파트너십', '마일스톤', 'milestone', '업프론트', 'upfront', '계약금',
+    '총 계약규모', '옵션계약', '공동개발'];
+  const hasLicense = licenseKeywords.some(k => text.includes(k));
+
+  if (!hasLicense) return { totalScore: null, upfrontScore: null };
+
+  let totalScore = 2;
+  const totalAmount = company.licenseOutTotal || null;
+
+  if (totalAmount !== null) {
+    totalScore = totalAmount >= 10000 ? 12
+      : totalAmount >= 5000  ? 10
+      : totalAmount >= 1000  ? 8
+      : totalAmount >= 500   ? 6
+      : totalAmount >= 100   ? 4
+      : 2;
+  }
+
+  let upfrontScore = null;
+  const upfrontAmount = company.licenseOutUpfront || null;
+
+  if (upfrontAmount !== null) {
+    upfrontScore = upfrontAmount >= 500 ? 8
+      : upfrontAmount >= 100 ? 6
+      : upfrontAmount >= 50  ? 4
+      : upfrontAmount >= 10  ? 2
+      : 1;
+  }
+
+  return { totalScore, upfrontScore };
+}
+
+// ─── 바이오 공통: VC 점수 계산 ───
+
+function getBioVCScores(company, vcTotal) {
   const vc = company.vcHistory;
   const rounds = vc?.rounds || [];
   const latestRound = rounds[0] || {};
+  const hasVC = rounds.length > 0;
+  const result = {};
+
+  if (!hasVC) {
+    result.라운드별투자금액 = null;
+    result.투자자티어 = null;
+    result.투자금액상승 = null;
+    result.후속참여 = null;
+    return { result, hasVC };
+  }
+
+  // 라운드별 투자금액 (vcTotal의 50%)
+  const maxRound = Math.round(vcTotal * 0.5);
+  let bestLevel = 99;
+  let bestScore = 0;
+  for (const round of rounds) {
+    const rn = (round.roundName || '').toLowerCase();
+    const amt = parseFloat(round.amount) || 0;
+    let level = 99;
+    let score = 0;
+    if (rn.includes('프리ipo') || rn.includes('pre-ipo') || rn.includes('브릿지') || rn.includes('시리즈c') || rn.includes('series c')) {
+      level = 1;
+      score = amt >= 200000000000 ? maxRound : amt >= 100000000000 ? Math.round(maxRound * 0.8) : amt >= 50000000000 ? Math.round(maxRound * 0.6) : amt >= 10000000000 ? Math.round(maxRound * 0.4) : Math.round(maxRound * 0.2);
+    } else if (rn.includes('시리즈b') || rn.includes('series b')) {
+      level = 2;
+      score = amt >= 100000000000 ? maxRound : amt >= 50000000000 ? Math.round(maxRound * 0.75) : amt >= 20000000000 ? Math.round(maxRound * 0.55) : amt >= 10000000000 ? Math.round(maxRound * 0.35) : Math.round(maxRound * 0.15);
+    } else if (rn.includes('시리즈a') || rn.includes('series a')) {
+      level = 3;
+      score = amt >= 50000000000 ? Math.round(maxRound * 0.7) : amt >= 20000000000 ? Math.round(maxRound * 0.5) : amt >= 10000000000 ? Math.round(maxRound * 0.35) : Math.round(maxRound * 0.15);
+    } else if (rn.includes('시드') || rn.includes('seed') || rn.includes('엔젤')) {
+      level = 4;
+      score = amt >= 10000000000 ? Math.round(maxRound * 0.4) : amt >= 5000000000 ? Math.round(maxRound * 0.25) : Math.round(maxRound * 0.1);
+    }
+    if (level < bestLevel) { bestLevel = level; bestScore = score; }
+  }
+  result.라운드별투자금액 = bestScore;
+
+  // 투자자 티어 (vcTotal의 30%)
+  const maxTier = Math.round(vcTotal * 0.3);
+  const { t1Names, t2Names } = getVCTiers();
+  const investors = (latestRound.investors || []).map(v => v.toLowerCase());
+  const hasT1 = investors.some(v => t1Names.some(t => v.includes(t)));
+  const hasT2 = investors.some(v => t2Names.some(t => v.includes(t)));
+  result.투자자티어 = hasT1 ? maxTier : hasT2 ? Math.round(maxTier * 0.7) : investors.length > 0 ? Math.round(maxTier * 0.3) : 0;
+
+  // 투자금액 상승 (vcTotal의 10%)
+  const maxUp = Math.round(vcTotal * 0.1);
+  if (rounds.length < 2) {
+    result.투자금액상승 = 0;
+  } else {
+    const curr = parseFloat(rounds[0].amount) || 0;
+    const prev = parseFloat(rounds[1].amount) || 0;
+    const diff = curr - prev;
+    result.투자금액상승 = diff >= 50000000000 ? maxUp : diff >= 20000000000 ? Math.round(maxUp * 0.7) : diff > 0 ? Math.round(maxUp * 0.3) : 0;
+  }
+
+  // 후속참여 (vcTotal의 10%)
+  const maxFollow = Math.round(vcTotal * 0.1);
+  result.후속참여 = rounds.length >= 3 ? maxFollow : rounds.length >= 2 ? Math.round(maxFollow * 0.6) : Math.round(maxFollow * 0.3);
+
+  return { result, hasVC };
+}
+
+// ─── 신약개발사 (NEWDRUG) ───
+
+function scoreNewdrug(company) {
+  const breakdown = {};
+  const allFin = company.financials?.financials || [];
+  const fin = allFin.length > 0 ? allFin[allFin.length - 1] : null;
+  const cashFlows = company.financials?.cashFlows || [];
+  const latestCF = cashFlows.length > 0 ? cashFlows[cashFlows.length - 1] : null;
+  const hasDart = allFin.length > 0;
   const patentCount = company.patents?.totalCount || 0;
-  const regulations = company.regulations?.regulations || [];
+  const newsText = (company.newsText || '').toLowerCase();
 
-  // A. VC 투자 밸류 등급 (35점)
-  breakdown.VC밸류등급 = company.valuation?.undervalueRate <= -30 ? 35
-    : company.valuation?.undervalueRate <= 30 ? 25
-    : company.valuation?.undervalueRate <= 100 ? 15 : 5;
-  breakdown.시장규모보정 = 3;
+  // 재무 유무에 따라 배점 조정
+  const vcTotal = hasDart ? 40 : 50;
+  const clinicalMax = hasDart ? 15 : 20;
+  const licenseMax = hasDart ? 15 : 20;
 
-  // B. 임상 파이프라인 (25점)
-  const hasPhase3 = regulations.some(r => r.title?.includes('3상') || r.title?.includes('phase 3'));
-  const hasPhase2 = regulations.some(r => r.title?.includes('2상') || r.title?.includes('phase 2'));
-  const hasPhase1 = regulations.some(r => r.title?.includes('1상') || r.title?.includes('phase 1'));
+  // VC 투자
+  const { result: vcScores, hasVC } = getBioVCScores(company, vcTotal);
+  Object.assign(breakdown, vcScores);
 
-  breakdown.최고단계파이프라인 = hasPhase3 ? 15 : hasPhase2 ? 9 : hasPhase1 ? 4 : 1;
-  breakdown.파이프라인수 = regulations.length >= 5 ? 10 : regulations.length >= 3 ? 7 : regulations.length >= 2 ? 4 : 2;
+  // 임상단계
+  breakdown.임상단계 = getClinicalStageScore(company, clinicalMax);
 
-  // C. 기술력·특허 (15점)
-  breakdown.핵심특허 = getPatentScore(patentCount, 8);
-  breakdown.기술독창성 = 5;
-  breakdown.기술이전실적 = 0;
+  // 기술이전계약
+  const license = getLicenseOutScore(company);
+  breakdown.기술이전총액 = license.totalScore;
+  breakdown.기술이전업프론트 = license.upfrontScore;
 
-  // E. 재무 생존력 (10점)
-  breakdown.런웨이추정 = rounds.length > 0 ? 5 : 0;
-  breakdown.매출여부 = company.financials?.financials?.[0]?.revenue > 0 ? 3 : 0;
+  // 파이프라인 수 (5점)
+  const pipelineKeywords = ['파이프라인', '후보물질', '적응증'];
+  const pipelineCount = pipelineKeywords.reduce((cnt, k) => cnt + (newsText.includes(k) ? 1 : 0), 0);
+  breakdown.파이프라인수 = pipelineCount >= 3 ? 5 : pipelineCount >= 2 ? 3 : pipelineCount >= 1 ? 2 : 0;
 
-  // F. VC 투자 구조 (10점)
-  breakdown.참여VC티어 = Math.min(getVCTier(latestRound.investors), 4);
-  breakdown.전략적투자자 = 4;
-  breakdown.기존투자자후속 = rounds.length > 1 ? 2 : 0;
+  // 핵심특허 (5점)
+  breakdown.핵심특허 = patentCount >= 10 ? 5 : patentCount >= 5 ? 3 : patentCount >= 1 ? 1 : 0;
 
-  // G. 팀·전문성 (5점)
-  breakdown.창업팀퀄리티 = 2;
-  breakdown.임상경험 = 1;
+  // 재무구조 (20점) — 재무 있을 때만
+  if (hasDart) {
+    // 현금및현금성자산 (8점)
+    const cash = latestCF?.cashAndEquivalents || null;
+    breakdown.현금보유 = cash === null ? null
+      : cash >= 50000000000 ? 8
+      : cash >= 20000000000 ? 6
+      : cash >= 10000000000 ? 4
+      : cash >= 5000000000  ? 2
+      : 0;
 
-  // 가산점 (바이오 특수)
-  let bonus = 0;
-  const hasFDA = regulations.some(r => r.title?.includes('FDA'));
-  const hasGlobal = regulations.some(r => r.title?.includes('글로벌') || r.title?.includes('해외'));
-  if (hasFDA) bonus += 5;
-  if (hasGlobal) bonus += 3;
+    // 부채비율 (6점)
+    const debtRatio = fin?.debtRatio || null;
+    breakdown.부채비율 = debtRatio === null ? null
+      : debtRatio < 50  ? 6
+      : debtRatio < 100 ? 4
+      : debtRatio < 200 ? 2
+      : 0;
 
-  const baseTotal = Object.values(breakdown).reduce((a, b) => a + b, 0);
-  const total = Math.max(0, Math.min(115, baseTotal + bonus));
-  return { total, breakdown, bonus };
+    // 영업현금흐름 (6점)
+    const opCF = latestCF?.operatingCashFlow || null;
+    breakdown.영업현금흐름 = opCF === null ? null
+      : opCF > 0 ? 6
+      : 0;
+  }
+
+  // 최대 배점 정의
+  const vcMaxRound = Math.round(vcTotal * 0.5);
+  const vcMaxTier = Math.round(vcTotal * 0.3);
+  const vcMaxUp = Math.round(vcTotal * 0.1);
+  const vcMaxFollow = Math.round(vcTotal * 0.1);
+
+  const maxScores = {
+    라운드별투자금액: vcMaxRound, 투자자티어: vcMaxTier, 투자금액상승: vcMaxUp, 후속참여: vcMaxFollow,
+    임상단계: clinicalMax,
+    기술이전총액: 12, 기술이전업프론트: 8,
+    파이프라인수: 5, 핵심특허: 5,
+  };
+
+  if (hasDart) {
+    maxScores.현금보유 = 8;
+    maxScores.부채비율 = 6;
+    maxScores.영업현금흐름 = 6;
+  }
+
+  const vcKeys = ['라운드별투자금액', '투자자티어', '투자금액상승', '후속참여'];
+  const dartKeys = hasDart ? ['현금보유', '부채비율', '영업현금흐름'] : [];
+  // 임상/기술이전은 VC도 DART도 아닌 독립 항목이므로, hasVC 또는 임상단계>0 이면 점수 산출 가능
+  const hasClinical = breakdown.임상단계 > 0 || license.totalScore !== null;
+
+  // VC도 임상/기술이전도 없으면 데이터부족
+  if (!hasVC && !hasDart && !hasClinical) {
+    return { total: null, breakdown, dataStatus: '데이터부족' };
+  }
+
+  return normalizeScore(breakdown, maxScores, { hasVC: hasVC || hasClinical, hasDart }, vcKeys, dartKeys);
+}
+
+// ─── 바이오테크 (BIOTECH) ───
+
+function scoreBiotech(company) {
+  const breakdown = {};
+  const allFin = company.financials?.financials || [];
+  const fin = allFin.length > 0 ? allFin[allFin.length - 1] : null;
+  const hasDart = allFin.length > 0;
+  const patentCount = company.patents?.totalCount || 0;
+  const newsText = (company.newsText || '').toLowerCase();
+
+  // VC 투자 (40점)
+  const { result: vcScores, hasVC } = getBioVCScores(company, 40);
+  Object.assign(breakdown, vcScores);
+
+  // 매출규모 (12점)
+  if (!hasDart || fin?.revenue === null || fin?.revenue === undefined) {
+    breakdown.매출규모 = null;
+  } else {
+    const r = fin.revenue;
+    breakdown.매출규모 = r >= 100000000000 ? 12
+      : r >= 50000000000  ? 10
+      : r >= 10000000000  ? 7
+      : r >= 5000000000   ? 4
+      : 2;
+  }
+
+  // 매출성장률 (13점)
+  if (!hasDart) {
+    breakdown.매출성장률 = null;
+  } else if (allFin.length >= 3) {
+    const oldest = allFin[0].revenue || 0;
+    const newest = allFin[allFin.length - 1].revenue || 0;
+    const yrs = allFin.length - 1;
+    const cagr = oldest > 0 ? (Math.pow(newest / oldest, 1 / yrs) - 1) * 100 : null;
+    if (cagr === null) breakdown.매출성장률 = null;
+    else if (cagr >= 100) breakdown.매출성장률 = 13;
+    else if (cagr >= 50)  breakdown.매출성장률 = 10;
+    else if (cagr >= 30)  breakdown.매출성장률 = 8;
+    else if (cagr >= 10)  breakdown.매출성장률 = 5;
+    else if (cagr >= 0)   breakdown.매출성장률 = 3;
+    else breakdown.매출성장률 = 0;
+  } else if (allFin.length === 2) {
+    const prev = allFin[0].revenue || 0;
+    const curr = allFin[1].revenue || 0;
+    const g = prev > 0 ? ((curr - prev) / prev) * 100 : null;
+    if (g === null) breakdown.매출성장률 = null;
+    else if (g >= 100) breakdown.매출성장률 = 13;
+    else if (g >= 50)  breakdown.매출성장률 = 10;
+    else if (g >= 30)  breakdown.매출성장률 = 8;
+    else if (g >= 10)  breakdown.매출성장률 = 5;
+    else if (g >= 0)   breakdown.매출성장률 = 3;
+    else breakdown.매출성장률 = 0;
+  } else {
+    const r = allFin[0].revenue || 0;
+    breakdown.매출성장률 = r >= 100000000000 ? 13
+      : r >= 50000000000  ? 10
+      : r >= 10000000000  ? 7
+      : r > 0             ? 4
+      : 0;
+  }
+
+  // 영업이익률 (15점)
+  if (!hasDart || fin?.operatingProfit === null || fin?.operatingProfit === undefined || !fin?.revenue) {
+    breakdown.영업이익률 = null;
+  } else {
+    const margin = fin.revenue > 0 ? (fin.operatingProfit / fin.revenue) * 100 : null;
+    if (margin === null) breakdown.영업이익률 = null;
+    else if (margin >= 50)  breakdown.영업이익률 = 15;
+    else if (margin >= 30)  breakdown.영업이익률 = 12;
+    else if (margin >= 20)  breakdown.영업이익률 = 9;
+    else if (margin >= 10)  breakdown.영업이익률 = 6;
+    else if (margin >= 0)   breakdown.영업이익률 = 3;
+    else breakdown.영업이익률 = 0;
+  }
+
+  // 핵심특허 (5점)
+  breakdown.핵심특허 = patentCount >= 10 ? 5 : patentCount >= 5 ? 3 : patentCount >= 1 ? 1 : 0;
+
+  // 글로벌수출 (15점)
+  const exportKeywords = ['수출', '글로벌판매', '해외매출', '수출비중', '글로벌진출'];
+  const hasExportNews = exportKeywords.some(k => newsText.includes(k));
+  const exportRatio = company.exportRatio || null;
+
+  if (exportRatio !== null) {
+    breakdown.글로벌수출 = exportRatio >= 50 ? 15
+      : exportRatio >= 30 ? 12
+      : exportRatio >= 10 ? 9
+      : 7;
+  } else if (hasExportNews) {
+    breakdown.글로벌수출 = 5;
+  } else {
+    breakdown.글로벌수출 = 0;
+  }
+
+  // 최대 배점 정의
+  const maxScores = {
+    라운드별투자금액: 20, 투자자티어: 12, 투자금액상승: 4, 후속참여: 4,
+    매출규모: 12, 매출성장률: 13, 영업이익률: 15,
+    핵심특허: 5, 글로벌수출: 15,
+  };
+
+  const vcKeys = ['라운드별투자금액', '투자자티어', '투자금액상승', '후속참여'];
+  const dartKeys = ['매출규모', '매출성장률', '영업이익률'];
+
+  return normalizeScore(breakdown, maxScores, { hasVC, hasDart }, vcKeys, dartKeys);
+}
+
+// ─── 바이오 메인 함수 ───
+
+function scoreBio(company) {
+  const type = detectBioType(company);
+  if (type === 'BIOTECH') return scoreBiotech(company);
+  return scoreNewdrug(company);
 }
 
 function scoreMedicalDevice(company) {
