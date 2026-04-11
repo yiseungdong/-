@@ -1956,54 +1956,270 @@ function scoreBio(company) {
   return scoreNewdrug(company);
 }
 
-function scoreMedicalDevice(company) {
-  const breakdown = {};
-  const fin = company.financials?.financials?.[0];
+// ─── 의료기기 유형 자동 판별 ───
+
+function detectMedtechType(company) {
+  const text = [
+    company.description || '',
+    company.newsText || '',
+    company.sector || ''
+  ].join(' ').toLowerCase();
+
+  const approvedKeywords = [
+    'fda 허가', 'fda approval', 'fda clearance', '510k 승인',
+    'ce 인증완료', 'ce marking', '식약처 허가완료', '품목허가 완료',
+    '보험급여', '급여등재'
+  ];
+  const hasApproved = approvedKeywords.some(k => text.includes(k));
+
+  const allFin = company.financials?.financials || [];
+  const hasRevenue = allFin.some(f => (parseFloat(f.revenue) || 0) > 0);
+
+  if (hasApproved || hasRevenue) return 'APPROVED';
+  return 'PIPELINE';
+}
+
+// ─── 인허가 단계 점수 ───
+
+function getApprovalStageScore(company, maxScore) {
+  const text = [
+    company.newsText || '',
+    company.description || ''
+  ].join(' ');
+
+  const stages = [
+    { score: maxScore, keywords: ['FDA approval', 'FDA 허가', 'FDA clearance', '510k 승인'] },
+    { score: Math.round(maxScore * 0.88), keywords: ['CE marking', 'CE 인증완료', 'CE 인증 완료', 'CE mark'] },
+    { score: Math.round(maxScore * 0.80), keywords: ['식약처 허가완료', '품목허가 완료', '식약처 승인완료'] },
+    { score: Math.round(maxScore * 0.64), keywords: ['임상완료', '임상시험 종료', '임상시험완료'] },
+    { score: Math.round(maxScore * 0.48), keywords: ['임상진행', '임상시험 중', '임상시험 진행'] },
+    { score: Math.round(maxScore * 0.36), keywords: ['허가심사', '식약처 신청', '식약처 심사'] },
+    { score: Math.round(maxScore * 0.24), keywords: ['임상신청', 'IND 제출', '임상시험 신청'] },
+    { score: Math.round(maxScore * 0.12), keywords: ['전임상완료', '동물실험완료', '전임상 완료'] },
+    { score: Math.round(maxScore * 0.04), keywords: ['전임상', '동물실험', '비임상'] },
+  ];
+
+  for (const stage of stages) {
+    if (stage.keywords.some(k => text.includes(k))) return stage.score;
+  }
+  return 0;
+}
+
+// ─── 인정기술/인증 점수 ───
+
+function getCertificationScore(company, maxScore) {
+  const text = [company.newsText || '', company.description || ''].join(' ');
+
+  let baseScore = 0;
+  if (text.includes('보험급여') || text.includes('급여등재')) baseScore = maxScore;
+  else if (text.includes('신의료기술')) baseScore = maxScore;
+  else if (text.includes('혁신의료기기')) baseScore = Math.round(maxScore * 0.8);
+  else if (text.includes('MDSAP') || text.includes('mdsap')) baseScore = Math.round(maxScore * 0.7);
+  else if (text.includes('ISO 13485') || text.includes('iso 13485')) baseScore = Math.round(maxScore * 0.5);
+
+  const certCount = [
+    text.includes('보험급여') || text.includes('급여등재'),
+    text.includes('신의료기술'),
+    text.includes('혁신의료기기'),
+    text.includes('MDSAP') || text.includes('mdsap'),
+    text.includes('ISO 13485') || text.includes('iso 13485')
+  ].filter(Boolean).length;
+
+  const bonus = certCount >= 2 ? 2 : 0;
+  return Math.min(maxScore, baseScore + bonus);
+}
+
+// ─── 의료기기 공통: VC 점수 ───
+
+function getMedtechVCScores(company, vcTotal) {
   const vc = company.vcHistory;
   const rounds = vc?.rounds || [];
   const latestRound = rounds[0] || {};
+  const hasVC = rounds.length > 0;
+  const result = {};
+
+  if (!hasVC) {
+    result.라운드별투자금액 = null;
+    result.투자자티어 = null;
+    result.투자금액상승 = null;
+    result.후속참여 = null;
+    return { result, hasVC };
+  }
+
+  const maxRound = Math.round(vcTotal * 0.5);
+  let bestLevel = 99;
+  let bestScore = 0;
+  for (const round of rounds) {
+    const rn = (round.roundName || '').toLowerCase();
+    const amt = parseFloat(round.amount) || 0;
+    let level = 99;
+    let score = 0;
+    if (rn.includes('프리ipo') || rn.includes('pre-ipo') || rn.includes('브릿지') || rn.includes('시리즈c') || rn.includes('series c')) {
+      level = 1;
+      score = amt >= 200000000000 ? maxRound : amt >= 100000000000 ? Math.round(maxRound * 0.8) : amt >= 50000000000 ? Math.round(maxRound * 0.6) : amt >= 10000000000 ? Math.round(maxRound * 0.4) : Math.round(maxRound * 0.2);
+    } else if (rn.includes('시리즈b') || rn.includes('series b')) {
+      level = 2;
+      score = amt >= 100000000000 ? maxRound : amt >= 50000000000 ? Math.round(maxRound * 0.75) : amt >= 20000000000 ? Math.round(maxRound * 0.55) : amt >= 10000000000 ? Math.round(maxRound * 0.35) : Math.round(maxRound * 0.15);
+    } else if (rn.includes('시리즈a') || rn.includes('series a')) {
+      level = 3;
+      score = amt >= 50000000000 ? Math.round(maxRound * 0.7) : amt >= 20000000000 ? Math.round(maxRound * 0.5) : amt >= 10000000000 ? Math.round(maxRound * 0.35) : Math.round(maxRound * 0.15);
+    } else if (rn.includes('시드') || rn.includes('seed') || rn.includes('엔젤')) {
+      level = 4;
+      score = amt >= 10000000000 ? Math.round(maxRound * 0.4) : amt >= 5000000000 ? Math.round(maxRound * 0.25) : Math.round(maxRound * 0.1);
+    }
+    if (level < bestLevel) { bestLevel = level; bestScore = score; }
+  }
+  result.라운드별투자금액 = bestScore;
+
+  const maxTier = Math.round(vcTotal * 0.3);
+  const { t1Names, t2Names } = getVCTiers();
+  const investors = (latestRound.investors || []).map(v => v.toLowerCase());
+  const hasT1 = investors.some(v => t1Names.some(t => v.includes(t)));
+  const hasT2 = investors.some(v => t2Names.some(t => v.includes(t)));
+  result.투자자티어 = hasT1 ? maxTier : hasT2 ? Math.round(maxTier * 0.7) : investors.length > 0 ? Math.round(maxTier * 0.3) : 0;
+
+  const maxUp = Math.round(vcTotal * 0.1);
+  if (rounds.length < 2) {
+    result.투자금액상승 = 0;
+  } else {
+    const curr = parseFloat(rounds[0].amount) || 0;
+    const prev = parseFloat(rounds[1].amount) || 0;
+    const diff = curr - prev;
+    result.투자금액상승 = diff >= 50000000000 ? maxUp : diff >= 20000000000 ? Math.round(maxUp * 0.7) : diff > 0 ? Math.round(maxUp * 0.3) : 0;
+  }
+
+  const maxFollow = Math.round(vcTotal * 0.1);
+  result.후속참여 = rounds.length >= 3 ? maxFollow : rounds.length >= 2 ? Math.round(maxFollow * 0.6) : Math.round(maxFollow * 0.3);
+
+  return { result, hasVC };
+}
+
+// ─── 인허가 전 (PIPELINE) ───
+
+function scoreMedtechPipeline(company) {
+  const breakdown = {};
   const patentCount = company.patents?.totalCount || 0;
-  const regulations = company.regulations?.regulations || [];
+  const newsText = (company.newsText || '').toLowerCase();
 
-  // A. VC 투자 밸류 등급 (30점)
-  breakdown.VC밸류등급 = company.valuation?.undervalueRate <= -30 ? 30
-    : company.valuation?.undervalueRate <= 30 ? 22
-    : company.valuation?.undervalueRate <= 100 ? 14 : 5;
+  const { result: vcScores, hasVC } = getMedtechVCScores(company, 50);
+  Object.assign(breakdown, vcScores);
 
-  // B. 인허가·매출 (25점)
-  const hasFDA = regulations.some(r => r.title?.includes('FDA') || r.source?.includes('FDA'));
-  const hasCE = regulations.some(r => r.title?.includes('CE'));
-  const hasKFDA = regulations.some(r => r.source?.includes('식약처'));
-  breakdown.인허가현황 = hasFDA ? 15 : hasCE ? 12 : hasKFDA ? 10 : 2;
-  breakdown.매출발생여부 = fin?.revenue > 0 ? (fin?.revenue >= 100 ? 10 : 7) : 0;
+  breakdown.인허가단계 = getApprovalStageScore(company, 25);
+  breakdown.핵심특허 = patentCount >= 5 ? 10 : patentCount >= 3 ? 7 : patentCount >= 1 ? 4 : 0;
+  breakdown.인정기술인증 = getCertificationScore(company, 10);
 
-  // C. 기술력·특허 (20점)
-  breakdown.핵심특허 = getPatentScore(patentCount, 8);
-  breakdown.기술독창성 = 5;
-  breakdown.임상데이터우월성 = 5;
+  const pipelineKeywords = ['파이프라인', '후보제품', '적응증', '제품군'];
+  const pipelineCount = pipelineKeywords.reduce((cnt, k) => cnt + (newsText.includes(k) ? 1 : 0), 0);
+  breakdown.파이프라인수 = pipelineCount >= 3 ? 5 : pipelineCount >= 2 ? 3 : pipelineCount >= 1 ? 2 : 0;
 
-  // D. 시장·영업력 (10점)
-  breakdown.유통망영업네트워크 = 3;
-  breakdown.병원레퍼런스 = 5;
+  const hasApproval = breakdown.인허가단계 > 0 || breakdown.인정기술인증 > 0;
+  if (!hasVC && !hasApproval) {
+    return { total: null, breakdown, dataStatus: '데이터부족' };
+  }
 
-  // E. VC 투자 구조 (10점)
-  breakdown.참여VC티어 = Math.min(getVCTier(latestRound.investors), 4);
-  breakdown.전략적투자자 = 4;
-  breakdown.기존투자자후속 = rounds.length > 1 ? 2 : 0;
+  const maxScores = {
+    라운드별투자금액: 25, 투자자티어: 15, 투자금액상승: 5, 후속참여: 5,
+    인허가단계: 25, 핵심특허: 10, 인정기술인증: 10, 파이프라인수: 5,
+  };
 
-  // F. 재무 생존력 (5점)
-  breakdown.런웨이추정 = rounds.length > 0 ? 3 : 0;
-  breakdown.수익성 = fin?.netIncome > 0 ? 2 : 0;
+  const vcKeys = ['라운드별투자금액', '투자자티어', '투자금액상승', '후속참여'];
+  return normalizeScore(breakdown, maxScores, { hasVC: hasVC || hasApproval, hasDart: false }, vcKeys, []);
+}
 
-  // 가산점
-  let bonus = 0;
-  if (hasFDA) bonus += 4;
-  if (hasCE) bonus += 3;
-  const hasCES = company.source?.includes('CES') || company.reason?.includes('CES');
-  if (hasCES) bonus += 3;
+// ─── 인허가 후 (APPROVED) ───
 
-  const baseTotal = Object.values(breakdown).reduce((a, b) => a + b, 0);
-  return { total: Math.max(0, Math.min(115, baseTotal + bonus)), breakdown, bonus };
+function scoreMedtechApproved(company) {
+  const breakdown = {};
+  const allFin = company.financials?.financials || [];
+  const fin = allFin.length > 0 ? allFin[allFin.length - 1] : null;
+  const hasDart = allFin.length > 0;
+  const patentCount = company.patents?.totalCount || 0;
+  const newsText = (company.newsText || '').toLowerCase();
+
+  const { result: vcScores, hasVC } = getMedtechVCScores(company, 40);
+  Object.assign(breakdown, vcScores);
+
+  if (!hasDart || fin?.revenue === null || fin?.revenue === undefined) {
+    breakdown.매출규모 = null;
+  } else {
+    const r = fin.revenue;
+    breakdown.매출규모 = r >= 100000000000 ? 12 : r >= 50000000000 ? 10 : r >= 10000000000 ? 7 : r >= 5000000000 ? 4 : 2;
+  }
+
+  if (!hasDart) {
+    breakdown.매출성장률 = null;
+  } else if (allFin.length >= 3) {
+    const oldest = allFin[0].revenue || 0;
+    const newest = allFin[allFin.length - 1].revenue || 0;
+    const yrs = allFin.length - 1;
+    const cagr = oldest > 0 ? (Math.pow(newest / oldest, 1 / yrs) - 1) * 100 : null;
+    if (cagr === null) breakdown.매출성장률 = null;
+    else if (cagr >= 100) breakdown.매출성장률 = 13;
+    else if (cagr >= 50) breakdown.매출성장률 = 10;
+    else if (cagr >= 30) breakdown.매출성장률 = 8;
+    else if (cagr >= 10) breakdown.매출성장률 = 5;
+    else if (cagr >= 0) breakdown.매출성장률 = 3;
+    else breakdown.매출성장률 = 0;
+  } else if (allFin.length === 2) {
+    const prev = allFin[0].revenue || 0;
+    const curr = allFin[1].revenue || 0;
+    const g = prev > 0 ? ((curr - prev) / prev) * 100 : null;
+    if (g === null) breakdown.매출성장률 = null;
+    else if (g >= 100) breakdown.매출성장률 = 13;
+    else if (g >= 50) breakdown.매출성장률 = 10;
+    else if (g >= 30) breakdown.매출성장률 = 8;
+    else if (g >= 10) breakdown.매출성장률 = 5;
+    else if (g >= 0) breakdown.매출성장률 = 3;
+    else breakdown.매출성장률 = 0;
+  } else {
+    const r = allFin[0].revenue || 0;
+    breakdown.매출성장률 = r >= 100000000000 ? 13 : r >= 50000000000 ? 10 : r >= 10000000000 ? 7 : r > 0 ? 4 : 0;
+  }
+
+  if (!hasDart || fin?.operatingProfit === null || fin?.operatingProfit === undefined || !fin?.revenue) {
+    breakdown.영업이익률 = null;
+  } else {
+    const margin = fin.revenue > 0 ? (fin.operatingProfit / fin.revenue) * 100 : null;
+    if (margin === null) breakdown.영업이익률 = null;
+    else if (margin >= 20) breakdown.영업이익률 = 10;
+    else if (margin >= 15) breakdown.영업이익률 = 8;
+    else if (margin >= 10) breakdown.영업이익률 = 6;
+    else if (margin >= 5) breakdown.영업이익률 = 4;
+    else if (margin >= 0) breakdown.영업이익률 = 2;
+    else breakdown.영업이익률 = 0;
+  }
+
+  const exportKeywords = ['수출', '글로벌판매', '해외매출', '수출비중', '글로벌진출'];
+  const hasExportNews = exportKeywords.some(k => newsText.includes(k));
+  const exportRatio = company.exportRatio || null;
+  if (exportRatio !== null) {
+    breakdown.글로벌수출 = exportRatio >= 50 ? 15 : exportRatio >= 30 ? 12 : exportRatio >= 10 ? 9 : 7;
+  } else if (hasExportNews) {
+    breakdown.글로벌수출 = 5;
+  } else {
+    breakdown.글로벌수출 = 0;
+  }
+
+  breakdown.핵심특허 = patentCount >= 5 ? 5 : patentCount >= 3 ? 3 : patentCount >= 1 ? 1 : 0;
+  breakdown.인정기술인증 = getCertificationScore(company, 5);
+
+  const maxScores = {
+    라운드별투자금액: 20, 투자자티어: 12, 투자금액상승: 4, 후속참여: 4,
+    매출규모: 12, 매출성장률: 13, 영업이익률: 10,
+    글로벌수출: 15, 핵심특허: 5, 인정기술인증: 5,
+  };
+
+  const vcKeys = ['라운드별투자금액', '투자자티어', '투자금액상승', '후속참여'];
+  const dartKeys = ['매출규모', '매출성장률', '영업이익률'];
+  return normalizeScore(breakdown, maxScores, { hasVC, hasDart }, vcKeys, dartKeys);
+}
+
+// ─── 의료기기 메인 함수 ───
+
+function scoreMedicalDevice(company) {
+  const type = detectMedtechType(company);
+  if (type === 'APPROVED') return scoreMedtechApproved(company);
+  return scoreMedtechPipeline(company);
 }
 
 function scoreBeauty(company) {
