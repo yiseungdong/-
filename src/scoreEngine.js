@@ -278,19 +278,18 @@ function scoreCommerce(company) {
       : 0;
   }
 
-  // 영업이익률 (최대 5점, 감점 있음)
+  // 영업이익률 (최대 10점)
   if (!hasDart || fin?.operatingProfit === null || fin?.operatingProfit === undefined || !fin?.revenue) {
     breakdown.영업이익률 = null;
   } else {
     const margin = fin.revenue > 0 ? (fin.operatingProfit / fin.revenue) * 100 : null;
     if (margin === null) breakdown.영업이익률 = null;
-    else if (margin >= 20)  breakdown.영업이익률 = 5;
-    else if (margin >= 10)  breakdown.영업이익률 = 3;
-    else if (margin >= 5)   breakdown.영업이익률 = 1;
-    else if (margin >= 0)   breakdown.영업이익률 = 0;
-    else if (margin >= -10) breakdown.영업이익률 = -1;
-    else if (margin >= -20) breakdown.영업이익률 = -2;
-    else                    breakdown.영업이익률 = -3;
+    else if (margin >= 20) breakdown.영업이익률 = 10;
+    else if (margin >= 15) breakdown.영업이익률 = 8;
+    else if (margin >= 10) breakdown.영업이익률 = 6;
+    else if (margin >= 5)  breakdown.영업이익률 = 4;
+    else if (margin >= 0)  breakdown.영업이익률 = 2;
+    else                   breakdown.영업이익률 = 0;
   }
 
   // 매출채권 (매출액 대비 비율, 최대 2점, 감점 있음)
@@ -509,7 +508,7 @@ function scoreCommerce(company) {
   // ── 최대 배점 정의 ──
   const maxScores = {
     // DART 기반
-    매출규모: 12, 매출성장률: 10, 영업이익률: 5, 매출채권: 2,
+    매출규모: 12, 매출성장률: 10, 영업이익률: 10, 매출채권: 2,
     부채비율절대: 5, 부채비율변화: 5,
     기말현금: 5, 현금흐름변화: 5,
     대주주지분율: 5, 기관주주지분율: 5, 기타주주지분율: 5,
@@ -596,19 +595,18 @@ function scoreFintech(company) {
       : 0;
   }
 
-  // 영업이익률 (최대 5점, 감점 있음)
+  // 영업이익률 (최대 10점)
   if (!hasDart || fin?.operatingProfit === null || fin?.operatingProfit === undefined || !fin?.revenue) {
     breakdown.영업이익률 = null;
   } else {
     const margin = fin.revenue > 0 ? (fin.operatingProfit / fin.revenue) * 100 : null;
     if (margin === null) breakdown.영업이익률 = null;
-    else if (margin >= 20)  breakdown.영업이익률 = 5;
-    else if (margin >= 10)  breakdown.영업이익률 = 3;
-    else if (margin >= 5)   breakdown.영업이익률 = 1;
-    else if (margin >= 0)   breakdown.영업이익률 = 0;
-    else if (margin >= -10) breakdown.영업이익률 = -1;
-    else if (margin >= -20) breakdown.영업이익률 = -2;
-    else                    breakdown.영업이익률 = -3;
+    else if (margin >= 20) breakdown.영업이익률 = 10;
+    else if (margin >= 15) breakdown.영업이익률 = 8;
+    else if (margin >= 10) breakdown.영업이익률 = 6;
+    else if (margin >= 5)  breakdown.영업이익률 = 4;
+    else if (margin >= 0)  breakdown.영업이익률 = 2;
+    else                   breakdown.영업이익률 = 0;
   }
 
   // ── B. 규제·허가 ──
@@ -812,7 +810,7 @@ function scoreFintech(company) {
   // ── 최대 배점 정의 ──
   const maxScores = {
     // DART 기반
-    매출규모: 15, 매출성장률: 15, 영업이익률: 5,
+    매출규모: 15, 매출성장률: 15, 영업이익률: 10,
     인허가등급: 10, 인허가수: 5, 규제리스크: 5,
     수익모델안정성: 8, 매출채권회전율: 4,
     핵심특허: 5, 영업현금흐름비율: 5,
@@ -900,19 +898,18 @@ function scoreMobility(company) {
       : 0;
   }
 
-  // 영업이익률 (최대 5점, 감점 있음)
+  // 영업이익률 (최대 10점)
   if (!hasDart || fin?.operatingProfit === null || fin?.operatingProfit === undefined || !fin?.revenue) {
     breakdown.영업이익률 = null;
   } else {
     const margin = fin.revenue > 0 ? (fin.operatingProfit / fin.revenue) * 100 : null;
     if (margin === null) breakdown.영업이익률 = null;
-    else if (margin >= 20)  breakdown.영업이익률 = 5;
-    else if (margin >= 10)  breakdown.영업이익률 = 3;
-    else if (margin >= 5)   breakdown.영업이익률 = 1;
-    else if (margin >= 0)   breakdown.영업이익률 = 0;
-    else if (margin >= -10) breakdown.영업이익률 = -1;
-    else if (margin >= -20) breakdown.영업이익률 = -2;
-    else                    breakdown.영업이익률 = -3;
+    else if (margin >= 20) breakdown.영업이익률 = 10;
+    else if (margin >= 15) breakdown.영업이익률 = 8;
+    else if (margin >= 10) breakdown.영업이익률 = 6;
+    else if (margin >= 5)  breakdown.영업이익률 = 4;
+    else if (margin >= 0)  breakdown.영업이익률 = 2;
+    else                   breakdown.영업이익률 = 0;
   }
 
   // ── B. 기술·특허 (모빌리티 특화) ──
@@ -1101,7 +1098,7 @@ function scoreMobility(company) {
   // ── 최대 배점 정의 ──
   const maxScores = {
     // DART 기반
-    매출규모: 15, 매출성장률: 15, 영업이익률: 5,
+    매출규모: 15, 매출성장률: 15, 영업이익률: 10,
     핵심특허: 10, 정부RD과제: 5, 영업현금흐름비율: 5,
     수익모델안정성: 8, 매출채권회전율: 4,
     팀운영: 3,
@@ -1188,10 +1185,11 @@ function scoreB2BSaaS(company) {
   } else {
     const margin = fin.revenue > 0 ? (fin.operatingProfit / fin.revenue) * 100 : null;
     if (margin === null) breakdown.영업이익률 = null;
-    else if (margin >= 10)  breakdown.영업이익률 = 10;
-    else if (margin >= 0)   breakdown.영업이익률 = 7;
-    else if (margin >= -10) breakdown.영업이익률 = 4;
-    else                    breakdown.영업이익률 = 0;
+    else if (margin >= 30) breakdown.영업이익률 = 10;
+    else if (margin >= 20) breakdown.영업이익률 = 7;
+    else if (margin >= 10) breakdown.영업이익률 = 4;
+    else if (margin >= 0)  breakdown.영업이익률 = 2;
+    else                   breakdown.영업이익률 = 0;
   }
 
   // 매출채권회전율 (최대 5점)
@@ -1387,10 +1385,11 @@ function getEnterFinancials(company) {
   } else {
     const margin = fin.revenue > 0 ? (fin.operatingProfit / fin.revenue) * 100 : null;
     if (margin === null) result.영업이익률 = null;
-    else if (margin >= 10)  result.영업이익률 = 10;
-    else if (margin >= 0)   result.영업이익률 = 7;
-    else if (margin >= -10) result.영업이익률 = 4;
-    else                    result.영업이익률 = 0;
+    else if (margin >= 30) result.영업이익률 = 10;
+    else if (margin >= 20) result.영업이익률 = 7;
+    else if (margin >= 10) result.영업이익률 = 4;
+    else if (margin >= 0)  result.영업이익률 = 2;
+    else                   result.영업이익률 = 0;
   }
 
   return { result, hasDart };
