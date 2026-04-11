@@ -833,48 +833,290 @@ function scoreFintech(company) {
 
 function scoreMobility(company) {
   const breakdown = {};
-  const fin = company.financials?.financials?.[0];
+  const allFin = company.financials?.financials || [];
+  const fin = allFin.length > 0 ? allFin[allFin.length - 1] : null;
+  const prevFin = allFin.length >= 2 ? allFin[allFin.length - 2] : null;
   const vc = company.vcHistory;
   const rounds = vc?.rounds || [];
   const latestRound = rounds[0] || {};
+  const regulations = company.regulations?.regulations || [];
+  const shareholders = company.financials?.shareholders || [];
+  const cashFlows = company.financials?.cashFlows || [];
 
-  // A. 기본 재무 지표 (20점)
-  breakdown.매출규모 = fin?.revenue >= 1000 ? 7 : fin?.revenue >= 500 ? 6 : fin?.revenue >= 200 ? 4 : 2;
-  breakdown.매출성장률 = getRevenueGrowthScore(fin?.revenueGrowth, 8);
-  breakdown.흑자여부 = fin?.netIncome > 0 ? 5 : 0;
+  const hasVC = rounds.length > 0;
+  const hasDart = allFin.length > 0;
 
-  // B. 인프라·운영 효율 (20점)
-  breakdown.인프라규모 = 5;
-  breakdown.운영효율성 = 5;
-  breakdown.단위경제성 = 5;
+  // ── A. 기본 재무 ──
 
-  // C. ESG·정책 수혜 (15점)
-  breakdown.친환경전환 = 5;
-  breakdown.정부정책수혜 = 3;
-  breakdown.탄소중립인증 = 2;
+  // 매출규모 (최대 15점)
+  if (!hasDart || fin?.revenue === null || fin?.revenue === undefined) {
+    breakdown.매출규모 = null;
+  } else {
+    const r = fin.revenue;
+    breakdown.매출규모 = r >= 500000000000 ? 15
+      : r >= 200000000000 ? 12
+      : r >= 100000000000 ? 9
+      : r >= 50000000000  ? 6
+      : r > 0             ? 3
+      : 0;
+  }
 
-  // D. VC 투자 관련 (25점)
-  breakdown.투자라운드 = getRoundScore(latestRound.roundName, 5);
-  breakdown.투자금액 = getAmountScore(latestRound.amount, 5);
-  breakdown.참여VC티어 = getVCTier(latestRound.investors);
-  breakdown.전략적투자자 = 3;
-  breakdown.밸류상승추이 = getValuationGrowthScore(vc?.valuationGrowth, 3);
-  breakdown.마지막투자경과 = getLastInvestmentScore(rounds, 3);
+  // 매출성장률 (최대 15점) — 3개년 CAGR, 2개년 전년대비, 1개년 절대값
+  if (!hasDart) {
+    breakdown.매출성장률 = null;
+  } else if (allFin.length >= 3) {
+    const oldest = allFin[0].revenue || 0;
+    const newest = allFin[allFin.length - 1].revenue || 0;
+    const yrs = allFin.length - 1;
+    const cagr = oldest > 0 ? (Math.pow(newest / oldest, 1 / yrs) - 1) * 100 : null;
+    if (cagr === null) breakdown.매출성장률 = null;
+    else if (cagr >= 100) breakdown.매출성장률 = 15;
+    else if (cagr >= 70)  breakdown.매출성장률 = 12;
+    else if (cagr >= 50)  breakdown.매출성장률 = 10;
+    else if (cagr >= 30)  breakdown.매출성장률 = 8;
+    else if (cagr >= 20)  breakdown.매출성장률 = 6;
+    else if (cagr >= 10)  breakdown.매출성장률 = 4;
+    else if (cagr >= 0)   breakdown.매출성장률 = 0;
+    else breakdown.매출성장률 = Math.max(-10, Math.round(cagr / 10));
+  } else if (allFin.length === 2) {
+    const prev = allFin[0].revenue || 0;
+    const curr = allFin[1].revenue || 0;
+    const g = prev > 0 ? ((curr - prev) / prev) * 100 : null;
+    if (g === null) breakdown.매출성장률 = null;
+    else if (g >= 100) breakdown.매출성장률 = 15;
+    else if (g >= 70)  breakdown.매출성장률 = 12;
+    else if (g >= 50)  breakdown.매출성장률 = 10;
+    else if (g >= 30)  breakdown.매출성장률 = 8;
+    else if (g >= 20)  breakdown.매출성장률 = 6;
+    else if (g >= 10)  breakdown.매출성장률 = 4;
+    else if (g >= 0)   breakdown.매출성장률 = 0;
+    else breakdown.매출성장률 = Math.max(-10, Math.round(g / 10));
+  } else {
+    const r = allFin[0].revenue || 0;
+    breakdown.매출성장률 = r >= 500000000000 ? 15
+      : r >= 200000000000 ? 12
+      : r >= 50000000000  ? 8
+      : r > 0             ? 4
+      : 0;
+  }
 
-  // E. 기술·경쟁력 (10점)
-  breakdown.핵심기술 = (company.patents?.totalCount || 0) >= 10 ? 5 : 2;
-  breakdown.진입장벽 = 3;
+  // 영업이익률 (최대 5점, 감점 있음)
+  if (!hasDart || fin?.operatingProfit === null || fin?.operatingProfit === undefined || !fin?.revenue) {
+    breakdown.영업이익률 = null;
+  } else {
+    const margin = fin.revenue > 0 ? (fin.operatingProfit / fin.revenue) * 100 : null;
+    if (margin === null) breakdown.영업이익률 = null;
+    else if (margin >= 20)  breakdown.영업이익률 = 5;
+    else if (margin >= 10)  breakdown.영업이익률 = 3;
+    else if (margin >= 5)   breakdown.영업이익률 = 1;
+    else if (margin >= 0)   breakdown.영업이익률 = 0;
+    else if (margin >= -10) breakdown.영업이익률 = -1;
+    else if (margin >= -20) breakdown.영업이익률 = -2;
+    else                    breakdown.영업이익률 = -3;
+  }
 
-  // F. 시장·성장성 (5점)
-  breakdown.시장크기 = 3;
-  breakdown.글로벌확장성 = 2;
+  // ── B. 기술·특허 (모빌리티 특화) ──
 
-  // G. 팀·운영 (5점)
-  breakdown.창업팀퀄리티 = 3;
-  breakdown.창업경과시간 = 2;
+  // 핵심특허 (최대 10점)
+  const patentCount = company.patents?.totalCount || 0;
+  breakdown.핵심특허 = patentCount >= 5 ? 10
+    : patentCount >= 3 ? 8
+    : patentCount >= 2 ? 6
+    : patentCount >= 1 ? 4
+    : 0;
 
-  const total = Object.values(breakdown).reduce((a, b) => a + b, 0);
-  return { total: Math.max(0, Math.min(100, total)), breakdown };
+  // 정부 R&D 과제 수혜 (최대 5점) — DART 공시 파싱
+  const hasRegulation = regulations.length > 0;
+  if (!hasRegulation) {
+    breakdown.정부RD과제 = null;
+  } else {
+    const rdCount = regulations.filter(r =>
+      (r.title || '').includes('R&D') ||
+      (r.title || '').includes('연구개발') ||
+      (r.title || '').includes('과제') ||
+      (r.title || '').includes('정부지원')
+    ).length;
+    breakdown.정부RD과제 = rdCount >= 3 ? 5 : rdCount >= 2 ? 3 : rdCount >= 1 ? 2 : 0;
+  }
+
+  // 영업현금흐름비율 (최대 5점, 감점 있음)
+  const latestCF = cashFlows.length > 0 ? cashFlows[cashFlows.length - 1] : null;
+  if (!hasDart || !latestCF?.operatingCashFlow || !fin?.revenue) {
+    breakdown.영업현금흐름비율 = null;
+  } else {
+    const ratio = (latestCF.operatingCashFlow / fin.revenue) * 100;
+    breakdown.영업현금흐름비율 = ratio >= 20 ? 5 : ratio >= 10 ? 4 : ratio >= 5 ? 3 : ratio >= 0 ? 1 : -2;
+  }
+
+  // ── C. 매출 구조 ──
+
+  // 수익모델안정성 (최대 8점)
+  if (!hasDart || fin?.revenue === null || fin?.revenue === undefined) {
+    breakdown.수익모델안정성 = null;
+  } else {
+    const r = fin.revenue;
+    breakdown.수익모델안정성 = r >= 100000000000 ? 8
+      : r >= 50000000000  ? 6
+      : r >= 20000000000  ? 4
+      : r >= 5000000000   ? 2
+      : r > 0             ? 1
+      : 0;
+  }
+
+  // 매출채권회전율 (최대 4점, 감점 있음)
+  if (!hasDart || !fin?.receivables || !fin?.revenue) {
+    breakdown.매출채권회전율 = null;
+  } else {
+    const ratio = (fin.receivables / fin.revenue) * 100;
+    breakdown.매출채권회전율 = ratio <= 30 ? 4
+      : ratio <= 50 ? 2
+      : ratio <= 70 ? 0
+      : -2;
+  }
+
+  // ── D. VC 투자 (커머스/핀테크 동일) ──
+
+  breakdown.투자라운드 = hasVC ? getRoundScore(latestRound.roundName, 5) : null;
+
+  const val = parseFloat(latestRound.valuation) || 0;
+  breakdown.밸류상승추이 = !hasVC ? null
+    : val >= 300000000000 ? 6 : val >= 200000000000 ? 5 : val >= 100000000000 ? 4
+    : val >= 50000000000  ? 3 : val >= 10000000000  ? 2 : val >= 5000000000 ? 1 : 0;
+
+  breakdown.참여VC티어 = hasVC ? getVCTier(latestRound.investors) : null;
+  breakdown.라운드텀 = hasVC ? getRoundSpeedScore(rounds, 5) : null;
+
+  if (!hasVC || rounds.length < 2) {
+    breakdown.투자금액상승 = hasVC ? 0 : null;
+  } else {
+    const curr = parseFloat(rounds[0].amount) || 0;
+    const prev = parseFloat(rounds[1].amount) || 0;
+    const diff = curr - prev;
+    breakdown.투자금액상승 = diff >= 100000000000 ? 5 : diff >= 50000000000 ? 4
+      : diff >= 30000000000 ? 3 : diff >= 10000000000 ? 2 : diff >= 5000000000 ? 1 : 0;
+  }
+
+  // 라운드별 투자금액 — 최고 라운드 1개만
+  if (!hasVC) {
+    breakdown.라운드별투자금액 = null;
+  } else {
+    let bestLevel = 99;
+    let bestScore = 0;
+    for (const round of rounds) {
+      const rn = (round.roundName || '').toLowerCase();
+      const amt = parseFloat(round.amount) || 0;
+      let level = 99;
+      let score = 0;
+      if (rn.includes('프리ipo') || rn.includes('pre-ipo') || rn.includes('브릿지')) {
+        level = 1;
+        score = amt >= 300000000000 ? 15 : amt >= 200000000000 ? 12 : amt >= 100000000000 ? 10 : amt >= 50000000000 ? 8 : amt >= 10000000000 ? 6 : amt >= 5000000000 ? 4 : 0;
+      } else if (rn.includes('시리즈c') || rn.includes('series c')) {
+        level = 2;
+        score = amt >= 200000000000 ? 15 : amt >= 150000000000 ? 12 : amt >= 100000000000 ? 11 : amt >= 50000000000 ? 9 : amt >= 20000000000 ? 7 : amt >= 10000000000 ? 6 : amt >= 5000000000 ? 3 : 0;
+      } else if (rn.includes('시리즈b') || rn.includes('series b')) {
+        level = 3;
+        score = amt >= 100000000000 ? 15 : amt >= 80000000000 ? 12 : amt >= 50000000000 ? 11 : amt >= 30000000000 ? 9 : amt >= 10000000000 ? 7 : amt >= 5000000000 ? 6 : amt >= 2000000000 ? 4 : 0;
+      } else if (rn.includes('시리즈a') || rn.includes('series a')) {
+        level = 4;
+        score = amt >= 80000000000 ? 12 : amt >= 50000000000 ? 10 : amt >= 30000000000 ? 9 : amt >= 10000000000 ? 8 : amt >= 5000000000 ? 6 : amt >= 2000000000 ? 4 : amt >= 1000000000 ? 3 : 0;
+      } else if (rn.includes('시드') || rn.includes('seed') || rn.includes('엔젤')) {
+        level = 5;
+        score = amt >= 10000000000 ? 10 : amt >= 8000000000 ? 9 : amt >= 6000000000 ? 8 : amt >= 4000000000 ? 6 : amt >= 2000000000 ? 4 : amt >= 1000000000 ? 3 : amt >= 500000000 ? 2 : 0;
+      }
+      if (level < bestLevel) { bestLevel = level; bestScore = score; }
+    }
+    breakdown.라운드별투자금액 = bestScore;
+  }
+
+  breakdown.후속참여 = !hasVC ? null
+    : rounds.length >= 3 ? 5 : rounds.length >= 2 ? 3 : 2;
+
+  // ── E. 시장·성장성 ──
+
+  // 시장크기 (Claude AI 기반, 최대 5점) — 모빌리티 키워드
+  const sectorName = company.sectorName || company.industry || '';
+  const mobilityTAM = ['모빌리티', '전기차', '자율주행', '물류', '배터리', '운송'];
+  breakdown.시장크기 = mobilityTAM.some(k => sectorName.includes(k)) ? 5 : 3;
+
+  // ── F. 팀·운영 (커머스 동일) ──
+  const estDate = company.financials?.establishedDate || null;
+  if (!estDate) {
+    breakdown.팀운영 = null;
+  } else {
+    const elapsed = new Date().getFullYear() - parseInt(String(estDate).slice(0, 4));
+    breakdown.팀운영 = elapsed >= 7 ? 3 : elapsed >= 5 ? 2 : elapsed >= 3 ? 2 : elapsed >= 1 ? 1 : 0;
+  }
+
+  // ── G. 신규추가 (커머스 동일) ──
+
+  // 매출채권 (최대 5점)
+  if (!hasDart || !fin?.receivables || !fin?.revenue) {
+    breakdown.매출채권 = null;
+  } else {
+    const ratio = (fin.receivables / fin.revenue) * 100;
+    breakdown.매출채권 = ratio <= 30 ? 2 : ratio <= 50 ? 1 : ratio <= 70 ? 0 : -2;
+  }
+
+  // 대주주지분율 (최대 5점)
+  const majorHolder = shareholders.find(s => s.relation?.includes('최대주주') || s.relation?.includes('본인'));
+  breakdown.대주주지분율 = !majorHolder ? null
+    : majorHolder.ratio >= 50 ? 5 : majorHolder.ratio >= 40 ? 4
+    : majorHolder.ratio >= 30 ? 3 : majorHolder.ratio >= 20 ? 2 : 1;
+
+  // 부채비율 (최대 5점, 감점 있음)
+  const debtRatio = fin?.debtRatio || null;
+  const prevDebtRatio = prevFin?.debtRatio || null;
+  breakdown.부채비율절대 = debtRatio === null ? null
+    : debtRatio <= 20 ? 5 : debtRatio <= 30 ? 4 : debtRatio <= 40 ? 3
+    : debtRatio <= 50 ? 2 : debtRatio <= 70 ? 1 : -2;
+
+  if (debtRatio !== null && prevDebtRatio !== null) {
+    const dc = ((debtRatio - prevDebtRatio) / prevDebtRatio) * 100;
+    breakdown.부채비율변화 = dc < 0
+      ? (dc <= -70 ? 5 : dc <= -50 ? 4 : dc <= -40 ? 3 : dc <= -30 ? 2.5 : dc <= -20 ? 2 : 1.5)
+      : (dc >= 70 ? -5 : dc >= 50 ? -4 : dc >= 40 ? -3 : dc >= 30 ? -2.5 : dc >= 20 ? -2 : -1.5);
+  } else {
+    breakdown.부채비율변화 = null;
+  }
+
+  // 현금흐름 (최대 5점)
+  const prevCF = cashFlows.length >= 2 ? cashFlows[cashFlows.length - 2] : null;
+  breakdown.기말현금 = !latestCF?.cashAndEquivalents ? null
+    : latestCF.cashAndEquivalents >= 100000000000 ? 5
+    : latestCF.cashAndEquivalents >= 70000000000  ? 4
+    : latestCF.cashAndEquivalents >= 50000000000  ? 3
+    : latestCF.cashAndEquivalents >= 20000000000  ? 2.5
+    : latestCF.cashAndEquivalents >= 10000000000  ? 2
+    : latestCF.cashAndEquivalents >= 5000000000   ? 1 : 0;
+
+  if (latestCF?.cashAndEquivalents && prevCF?.cashAndEquivalents) {
+    const diff = latestCF.cashAndEquivalents - prevCF.cashAndEquivalents;
+    breakdown.현금흐름변화 = diff >= 0
+      ? (diff >= 100000000000 ? 5 : diff >= 70000000000 ? 4 : diff >= 50000000000 ? 3 : diff >= 20000000000 ? 2.5 : diff >= 10000000000 ? 2 : 1)
+      : (diff <= -100000000000 ? -5 : diff <= -70000000000 ? -4 : diff <= -50000000000 ? -3 : diff <= -20000000000 ? -2.5 : diff <= -10000000000 ? -2 : -1);
+  } else {
+    breakdown.현금흐름변화 = null;
+  }
+
+  // ── 최대 배점 정의 ──
+  const maxScores = {
+    // DART 기반
+    매출규모: 15, 매출성장률: 15, 영업이익률: 5,
+    핵심특허: 10, 정부RD과제: 5, 영업현금흐름비율: 5,
+    수익모델안정성: 8, 매출채권회전율: 4,
+    팀운영: 3,
+    매출채권: 5, 대주주지분율: 5, 부채비율절대: 5, 부채비율변화: 5, 기말현금: 5, 현금흐름변화: 5,
+    // VC 기반
+    투자라운드: 5, 밸류상승추이: 6, 참여VC티어: 4, 라운드텀: 5,
+    투자금액상승: 5, 라운드별투자금액: 15, 후속참여: 5,
+    // 기타
+    시장크기: 5,
+  };
+
+  const vcKeys = ['투자라운드', '밸류상승추이', '참여VC티어', '라운드텀', '투자금액상승', '라운드별투자금액', '후속참여'];
+  const dartKeys = ['매출규모', '매출성장률', '영업이익률', '핵심특허', '정부RD과제', '영업현금흐름비율', '수익모델안정성', '매출채권회전율', '팀운영', '매출채권', '대주주지분율', '부채비율절대', '부채비율변화', '기말현금', '현금흐름변화'];
+
+  return normalizeScore(breakdown, maxScores, { hasVC, hasDart }, vcKeys, dartKeys);
 }
 
 function scoreB2BSaaS(company) {
