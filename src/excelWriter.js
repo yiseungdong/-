@@ -59,28 +59,80 @@ function migrateOldRow(old) {
 }
 
 /**
- * 중복 제거: 같은 날짜+회사명 → 매력도 높은 것 우선, 빈값 병합
+ * Sheet1 중복 처리:
+ * - 1주일(7일) 이내 같은 회사명 → 최신 데이터로 덮어쓰기 + 빈값 병합 (행 1개 유지)
+ * - 1주일 초과 → 새 행으로 누적 추가 (기존 방식)
  */
 function deduplicateRows(rows) {
+  // 날짜 파싱 헬퍼
+  function parseDate(val) {
+    if (!val) return null;
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  // rows를 날짜 오름차순 정렬 후 처리
+  const sorted = [...rows].sort((a, b) =>
+    String(a[0] || '').localeCompare(String(b[0] || ''))
+  );
+
+  const result = [];
+
+  for (const row of sorted) {
+    const companyName = row[1];
+    const rowDate = parseDate(row[0]);
+
+    // 같은 회사명으로 result에 이미 있는 행 중 1주일 이내인 것 찾기
+    const withinWeekIdx = result.findIndex(r => {
+      if (r[1] !== companyName) return false;
+      const existDate = parseDate(r[0]);
+      if (!existDate || !rowDate) return false;
+      const diffDays = Math.abs((rowDate - existDate) / (1000 * 60 * 60 * 24));
+      return diffDays <= 7;
+    });
+
+    if (withinWeekIdx >= 0) {
+      // 1주일 이내 → 최신 데이터로 덮어쓰되 빈값은 기존값으로 채움
+      const existing = result[withinWeekIdx];
+      const newScore = parseFloat(row[3]) || 0;
+      const existScore = parseFloat(existing[3]) || 0;
+      const base = newScore >= existScore ? [...row] : [...existing];
+      const other = newScore >= existScore ? existing : row;
+      for (let i = 0; i < SHEET1_COL_COUNT; i++) {
+        const isEmpty = v => !v || v === '' || v === '-' || v === 0;
+        if (isEmpty(base[i]) && !isEmpty(other[i])) base[i] = other[i];
+      }
+      result[withinWeekIdx] = base;
+    } else {
+      // 1주일 초과이거나 첫 등장 → 새 행으로 누적
+      result.push([...row]);
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Sheet2 중복 처리: 회사명 기준 최신 데이터 1행만 유지
+ */
+function deduplicateSheet2(rows) {
   const map = new Map();
   for (const row of rows) {
-    const key = `${row[0]}|${row[1]}`;
-    if (!map.has(key)) {
-      map.set(key, row);
+    const companyName = row[1];
+    if (!map.has(companyName)) {
+      map.set(companyName, row);
     } else {
-      const existing = map.get(key);
-      const newScore = parseFloat(row[3]) || 0;
-      const existingScore = parseFloat(existing[3]) || 0;
-      const base = newScore >= existingScore ? [...row] : [...existing];
-      const other = newScore >= existingScore ? existing : row;
-      for (let i = 0; i < SHEET1_COL_COUNT; i++) {
-        if (!base[i] || base[i] === '' || base[i] === '-' || base[i] === 0) {
-          if (other[i] && other[i] !== '' && other[i] !== '-' && other[i] !== 0) {
-            base[i] = other[i];
-          }
-        }
+      const existing = map.get(companyName);
+      const existDate = String(existing[0] || '');
+      const newDate = String(row[0] || '');
+      // 더 최신 날짜 우선, 빈값은 기존값으로 채움
+      const base = newDate >= existDate ? [...row] : [...existing];
+      const other = newDate >= existDate ? existing : row;
+      for (let i = 0; i < base.length; i++) {
+        const isEmpty = v => !v || v === '' || v === '-';
+        if (isEmpty(base[i]) && !isEmpty(other[i])) base[i] = other[i];
       }
-      map.set(key, base);
+      map.set(companyName, base);
     }
   }
   return [...map.values()];
@@ -162,24 +214,9 @@ function toSheet1Row(company, today) {
 function toSheet2Row(company, today) {
   const profile = company.profile || {};
 
-  // 사업요약: 한줄소개 + 주요제품서비스 + 핵심기술 + 핵심경쟁력 + 비즈니스모델 통합
-  const bizParts = [
-    profile.oneLineIntro,
-    profile.mainProducts,
-    profile.coreTechnology,
-    profile.coreCompetency,
-    profile.businessModel
-  ].filter(Boolean);
-  const bizSummary = bizParts.join(' | ') || '-';
-
-  // 시장/경쟁: 타겟시장 + 주요고객사 + 경쟁사 + 성장전략 통합
-  const marketParts = [
-    profile.targetMarket,
-    profile.keyClients,
-    profile.competitors,
-    profile.growthStrategy
-  ].filter(Boolean);
-  const marketCompetition = marketParts.join(' | ') || '-';
+  // analyzer.js가 반환하는 필드명 그대로 사용 (businessSummary / marketCompetition)
+  const bizSummary = profile.businessSummary || '-';
+  const marketCompetition = profile.marketCompetition || '-';
 
   return [
     today,
@@ -265,9 +302,12 @@ function buildPriceAlertSheet(sheet, changes, today, companies) {
   const upCount   = changes.filter(c => c.alertType === '급등').length;
   const downCount = changes.filter(c => c.alertType === '급락').length;
 
-  sheet.addRow([`기준일: ${today} | 급등 ${upCount}개 | 급락 ${downCount}개 | 총 ${changes.length}개 종목`]);
-  sheet.addRow([]);
+  // 행1: 타이틀 (병합 없이 A1에만)
+  const titleRow = sheet.addRow([`기준일: ${today} | 급등 ${upCount}개 | 급락 ${downCount}개 | 총 ${changes.length}개 종목`]);
+  titleRow.getCell(1).font = { bold: true, size: 12 };
+  titleRow.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFD699' } };
 
+  // 행2: 헤더
   const headers = [
     '회사명', '기준일',
     '38_전일가', '38_현재가', '38_변동폭',
@@ -278,6 +318,7 @@ function buildPriceAlertSheet(sheet, changes, today, companies) {
   headerRow.eachCell(cell => {
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC00000' } };
     cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+    cell.alignment = { vertical: 'middle', horizontal: 'center' };
   });
 
   for (const c of changes) {
@@ -417,7 +458,7 @@ async function updateExcel(companies) {
 
     // 기존 데이터 마이그레이션 (26칸→18칸) + 중복 제거
     existingSheet1Data = deduplicateRows(existingSheet1Data.map(migrateOldRow));
-    existingSheet2Data = deduplicateRows(existingSheet2Data);
+    existingSheet2Data = deduplicateSheet2(existingSheet2Data);
 
     // 새 워크북 생성
     workbook = new ExcelJS.Workbook();
@@ -497,9 +538,9 @@ async function updateExcel(companies) {
       cell.alignment = { vertical: 'middle', horizontal: 'center' };
     });
 
-    // 기존 + 새 데이터 병합 (중복 시 덮어쓰기)
+    // 기존 + 새 데이터 병합 (회사명 기준 최신 1행 유지)
     const newSheet2Rows = companies.map(c => toSheet2Row(c, today));
-    const allSheet2 = deduplicateRows([...existingSheet2Data, ...newSheet2Rows]);
+    const allSheet2 = deduplicateSheet2([...existingSheet2Data, ...newSheet2Rows]);
     for (const row of allSheet2) sheet2.addRow(row);
 
     // ㄱㄴㄷ 정렬

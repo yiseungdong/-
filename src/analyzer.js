@@ -272,10 +272,8 @@ async function analyze(companies) {
       analyzedCompany.fairValuation = valuationResult.fairValue;
       analyzedCompany.valuation = valuationResult;
 
-      // industry를 섹터명으로 통일
-      if (sectorResult.sectorName && sectorResult.sectorName !== '기타') {
-        analyzedCompany.industry = sectorResult.sectorName;
-      }
+      // 섹터는 항상 sectorClassifier 결과로 통일 (Claude AI 판단 무시)
+      analyzedCompany.industry = sectorResult.sectorName || analyzedCompany.industry || '기타';
     } catch (err) {
       console.error(`[analyzer] "${company.name}" 섹터/밸류 분석 실패:`, err.message);
     }

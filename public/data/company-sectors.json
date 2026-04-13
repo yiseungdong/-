@@ -1,4 +1,229 @@
 {
-  "lastUpdated": "2026-04-07",
-  "companies": {}
+  "lastUpdated": "2026-04-13",
+  "companies": {
+    "오픈엣지": {
+      "sectorCode": "DEEPTECH",
+      "sectorName": "딥테크·AI",
+      "classifiedDate": "2026-04-07",
+      "confidence": "ai",
+      "source": "Claude AI"
+    },
+    "닷": {
+      "sectorCode": "DEEPTECH",
+      "sectorName": "딥테크·AI",
+      "classifiedDate": "2026-04-07",
+      "confidence": "ai",
+      "source": "Claude AI"
+    },
+    "넥서스비": {
+      "sectorCode": "B2B_SAAS",
+      "sectorName": "B2B·SaaS",
+      "classifiedDate": "2026-04-07",
+      "confidence": "ai",
+      "source": "Claude AI"
+    },
+    "스탁키퍼": {
+      "sectorCode": "FINTECH",
+      "sectorName": "핀테크·금융",
+      "classifiedDate": "2026-04-07",
+      "confidence": "ai",
+      "source": "Claude AI"
+    },
+    "신스타프리젠츠": {
+      "sectorCode": "ENTERTAINMENT",
+      "sectorName": "엔터·콘텐츠",
+      "classifiedDate": "2026-04-07",
+      "confidence": "ai",
+      "source": "Claude AI"
+    },
+    "메이사": {
+      "sectorCode": "DEEPTECH",
+      "sectorName": "딥테크·AI",
+      "classifiedDate": "2026-04-07",
+      "confidence": "ai",
+      "source": "Claude AI"
+    },
+    "위플로": {
+      "sectorCode": "MOBILITY",
+      "sectorName": "모빌리티·물류",
+      "classifiedDate": "2026-04-07",
+      "confidence": "ai",
+      "source": "Claude AI"
+    },
+    "퓨리오사AI": {
+      "sectorCode": "FINTECH",
+      "sectorName": "핀테크·금융",
+      "classifiedDate": "2026-04-07",
+      "confidence": "high",
+      "source": "키워드"
+    },
+    "HL로보틱스": {
+      "sectorCode": "DEEPTECH",
+      "sectorName": "딥테크·AI",
+      "classifiedDate": "2026-04-08",
+      "confidence": "ai",
+      "source": "Claude AI"
+    },
+    "딥엑스": {
+      "sectorCode": "DEEPTECH",
+      "sectorName": "딥테크·AI",
+      "classifiedDate": "2026-04-08",
+      "confidence": "ai",
+      "source": "Claude AI"
+    },
+    "고성엔지니어링": {
+      "sectorCode": "DEEPTECH",
+      "sectorName": "딥테크·AI",
+      "classifiedDate": "2026-04-08",
+      "confidence": "ai",
+      "source": "Claude AI"
+    },
+    "아리아 네트웍스": {
+      "sectorCode": "DEEPTECH",
+      "sectorName": "딥테크·AI",
+      "classifiedDate": "2026-04-08",
+      "confidence": "ai",
+      "source": "Claude AI"
+    },
+    "업스테이지": {
+      "sectorCode": "DEEPTECH",
+      "sectorName": "딥테크·AI",
+      "classifiedDate": "2026-04-10",
+      "confidence": "ai",
+      "source": "Claude AI"
+    },
+    "씨너지": {
+      "sectorCode": "COMMERCE",
+      "sectorName": "커머스·플랫폼",
+      "classifiedDate": "2026-04-10",
+      "confidence": "ai",
+      "source": "Claude AI"
+    },
+    "블룸에이아이": {
+      "sectorCode": "DEEPTECH",
+      "sectorName": "딥테크·AI",
+      "classifiedDate": "2026-04-10",
+      "confidence": "ai",
+      "source": "Claude AI"
+    },
+    "도구공간": {
+      "sectorCode": "B2B_SAAS",
+      "sectorName": "B2B·SaaS",
+      "classifiedDate": "2026-04-10",
+      "confidence": "ai",
+      "source": "Claude AI"
+    },
+    "스픽": {
+      "sectorCode": "ENTERTAINMENT",
+      "sectorName": "엔터·콘텐츠",
+      "classifiedDate": "2026-04-10",
+      "confidence": "ai",
+      "source": "Claude AI"
+    },
+    "핍 랩스": {
+      "sectorCode": "DEEPTECH",
+      "sectorName": "딥테크·AI",
+      "classifiedDate": "2026-04-10",
+      "confidence": "ai",
+      "source": "Claude AI"
+    },
+    "뤼튼테크놀로지스": {
+      "sectorCode": "B2B_SAAS",
+      "sectorName": "B2B·SaaS",
+      "classifiedDate": "2026-04-10",
+      "confidence": "ai",
+      "source": "Claude AI"
+    },
+    "짐캐리": {
+      "sectorCode": "MOBILITY",
+      "sectorName": "모빌리티·물류",
+      "classifiedDate": "2026-04-10",
+      "confidence": "ai",
+      "source": "Claude AI"
+    },
+    "한국신용데이터": {
+      "sectorCode": "FINTECH",
+      "sectorName": "핀테크·금융",
+      "classifiedDate": "2026-04-10",
+      "confidence": "high",
+      "source": "키워드"
+    },
+    "디플에이치알": {
+      "sectorCode": "B2B_SAAS",
+      "sectorName": "B2B·SaaS",
+      "classifiedDate": "2026-04-10",
+      "confidence": "ai",
+      "source": "Claude AI"
+    },
+    "스캐터랩": {
+      "sectorCode": "DEEPTECH",
+      "sectorName": "딥테크·AI",
+      "classifiedDate": "2026-04-10",
+      "confidence": "ai",
+      "source": "Claude AI"
+    },
+    "플러그링크": {
+      "sectorCode": "MOBILITY",
+      "sectorName": "모빌리티·물류",
+      "classifiedDate": "2026-04-10",
+      "confidence": "ai",
+      "source": "Claude AI"
+    },
+    "엑스엘에이트": {
+      "sectorCode": "DEEPTECH",
+      "sectorName": "딥테크·AI",
+      "classifiedDate": "2026-04-10",
+      "confidence": "ai",
+      "source": "Claude AI"
+    },
+    "스카이랩스": {
+      "sectorCode": "MEDICAL_DEVICE",
+      "sectorName": "의료기기",
+      "classifiedDate": "2026-04-10",
+      "confidence": "ai",
+      "source": "Claude AI"
+    },
+    "리벨리온": {
+      "sectorCode": "DEEPTECH",
+      "sectorName": "딥테크·AI",
+      "classifiedDate": "2026-04-10",
+      "confidence": "ai",
+      "source": "Claude AI"
+    },
+    "트위니": {
+      "sectorCode": "DEEPTECH",
+      "sectorName": "딥테크·AI",
+      "classifiedDate": "2026-04-10",
+      "confidence": "ai",
+      "source": "Claude AI"
+    },
+    "아바타테라퓨틱스": {
+      "sectorCode": "BIO",
+      "sectorName": "바이오·신약",
+      "classifiedDate": "2026-04-13",
+      "confidence": "ai",
+      "source": "Claude AI"
+    },
+    "에임인텔리전스": {
+      "sectorCode": "DEEPTECH",
+      "sectorName": "딥테크·AI",
+      "classifiedDate": "2026-04-13",
+      "confidence": "ai",
+      "source": "Claude AI"
+    },
+    "모빌린트": {
+      "sectorCode": "DEEPTECH",
+      "sectorName": "딥테크·AI",
+      "classifiedDate": "2026-04-13",
+      "confidence": "ai",
+      "source": "Claude AI"
+    },
+    "레신저스": {
+      "sectorCode": "DEEPTECH",
+      "sectorName": "딥테크·AI",
+      "classifiedDate": "2026-04-13",
+      "confidence": "ai",
+      "source": "Claude AI"
+    }
+  }
 }

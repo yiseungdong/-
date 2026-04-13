@@ -1,4 +1,5 @@
 const axios = require('axios');
+const { enrichArticlesWithContent } = require('./articleCrawler');
 
 const BASE_URL = 'https://openapi.naver.com/v1/search/news.json';
 const KEYWORDS = [
@@ -143,7 +144,13 @@ async function collectNews() {
   );
 
   console.log(`[naverNews] 총 ${allArticles.length}건 수집 완료 (중복 제거 후)`);
-  return allArticles;
+
+  // 기사 본문 크롤링 (상위 50개만 — 비용/시간 균형)
+  const topArticles = allArticles.slice(0, 50);
+  const rest = allArticles.slice(50);
+  const enriched = await enrichArticlesWithContent(topArticles);
+
+  return [...enriched, ...rest];
 }
 
 module.exports = { collectNews };

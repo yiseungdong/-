@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-04-09",
+  "lastUpdated": "2026-04-13",
   "vcList": [
     {
       "name": "소프트뱅크벤처스",
@@ -2416,6 +2416,270 @@
       "foundedYear": 2015,
       "notablePortfolio": [],
       "source": "manual"
+    },
+    {
+      "name": "기타",
+      "aliases": [],
+      "tier": "unknown",
+      "type": "VC",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "auto-detected"
+    },
+    {
+      "name": "Accel",
+      "aliases": [],
+      "tier": "unknown",
+      "type": "VC",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "auto-detected"
+    },
+    {
+      "name": "TCV",
+      "aliases": [],
+      "tier": "unknown",
+      "type": "VC",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "auto-detected"
+    },
+    {
+      "name": "Lachy Groom",
+      "aliases": [],
+      "tier": "unknown",
+      "type": "VC",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "auto-detected"
+    },
+    {
+      "name": "모간스탠리 MSTV",
+      "aliases": [],
+      "tier": "unknown",
+      "type": "VC",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "auto-detected"
+    },
+    {
+      "name": "LG AI연구원",
+      "aliases": [],
+      "tier": "unknown",
+      "type": "VC",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "auto-detected"
+    },
+    {
+      "name": "클럽원",
+      "aliases": [],
+      "tier": "unknown",
+      "type": "VC",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "auto-detected"
+    },
+    {
+      "name": "컴퍼니빌더",
+      "aliases": [],
+      "tier": "unknown",
+      "type": "VC",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "auto-detected"
+    },
+    {
+      "name": "OpenAI",
+      "aliases": [],
+      "tier": "unknown",
+      "type": "VC",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "auto-detected"
+    },
+    {
+      "name": "SKT",
+      "aliases": [],
+      "tier": "unknown",
+      "type": "VC",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "auto-detected"
+    },
+    {
+      "name": "기타 투자자",
+      "aliases": [],
+      "tier": "unknown",
+      "type": "VC",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "auto-detected"
+    },
+    {
+      "name": "기타 전략적 투자자",
+      "aliases": [],
+      "tier": "unknown",
+      "type": "VC",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "auto-detected"
+    },
+    {
+      "name": "Goodwater Capital",
+      "aliases": [],
+      "tier": "unknown",
+      "type": "VC",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "auto-detected"
+    },
+    {
+      "name": "Sprinklr",
+      "aliases": [],
+      "tier": "unknown",
+      "type": "VC",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "auto-detected"
+    },
+    {
+      "name": "FI 20곳 이상 참여",
+      "aliases": [],
+      "tier": "unknown",
+      "type": "VC",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "auto-detected"
+    },
+    {
+      "name": "OpenAI Startup Fund",
+      "aliases": [],
+      "tier": "unknown",
+      "type": "VC",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "auto-detected"
+    },
+    {
+      "name": "Ribbit Capital",
+      "aliases": [],
+      "tier": "unknown",
+      "type": "VC",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "auto-detected"
+    },
+    {
+      "name": "Bessemer Venture Partners",
+      "aliases": [],
+      "tier": "unknown",
+      "type": "VC",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "auto-detected"
+    },
+    {
+      "name": "Morgan Stanley MSTV",
+      "aliases": [],
+      "tier": "unknown",
+      "type": "VC",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "auto-detected"
+    },
+    {
+      "name": "KT인베스트먼트",
+      "aliases": [],
+      "tier": "unknown",
+      "type": "VC",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "auto-detected"
+    },
+    {
+      "name": "SKT벤처스",
+      "aliases": [],
+      "tier": "unknown",
+      "type": "VC",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "auto-detected"
+    },
+    {
+      "name": "삼성전자",
+      "aliases": [],
+      "tier": "unknown",
+      "type": "VC",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "auto-detected"
+    },
+    {
+      "name": "글로벌 전략적투자자",
+      "aliases": [],
+      "tier": "unknown",
+      "type": "VC",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "auto-detected"
+    },
+    {
+      "name": "프랙시스캐피탈",
+      "aliases": [],
+      "tier": "unknown",
+      "type": "VC",
+      "investmentFocus": [],
+      "fundSize": null,
+      "foundedYear": null,
+      "notablePortfolio": [],
+      "source": "auto-detected"
     }
   ]
 }

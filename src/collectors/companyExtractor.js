@@ -16,7 +16,12 @@ async function extractCompanies(articles) {
   if (articles.length === 0) return [];
 
   const client = new Anthropic({ apiKey });
-  const titleList = articles.slice(0, 200).map(a => `${a.title} — ${a.description || ''}`).join('\n');
+  const titleList = articles.slice(0, 200).map(a => {
+    const body = a.content && a.content.length > 50
+      ? `\n  [본문] ${a.content.slice(0, 500)}`
+      : (a.description ? `\n  [요약] ${a.description}` : '');
+    return `[제목] ${a.title}${body}`;
+  }).join('\n\n');
 
   const prompt = `아래는 오늘 수집된 비상장/스타트업 투자 관련 뉴스 기사 목록입니다.
 
