@@ -669,7 +669,7 @@ const CV_MIN_SCALE=0.3,CV_MAX_SCALE=2.5;
 (function(){
   const vp=document.getElementById('cv'),wd=document.getElementById('cw');
   let drag=false,sx,sy,tx=0,ty=0;
-  function init(){const vw=vp.clientWidth,vh=vp.clientHeight;const ww=parseInt(wd.style.width)||1800;const wh=parseInt(wd.style.height)||1200;tx=vw/2-ww*cvScale/2;ty=vh/2-wh*cvScale/2;apply()}
+  function init(){if(window._rank1Centered){apply();return}const vw=vp.clientWidth,vh=vp.clientHeight;const ww=parseInt(wd.style.width)||1800;const wh=parseInt(wd.style.height)||1200;tx=vw/2-ww*cvScale/2;ty=vh/2-wh*cvScale/2;apply()}
   function apply(){wd.style.transform=`translate(${tx}px,${ty}px) scale(${cvScale})`;wd.style.transformOrigin='0 0'}
   window._cvApply=apply;window._cvSetTxTy=function(x,y){tx=x;ty=y};window._cvGetTxTy=function(){return{tx,ty}};
   setTimeout(init,60);window.addEventListener('resize',init);
@@ -1070,15 +1070,20 @@ function switchLeague(league) {
   // 뷰포트를 1등 중심으로 이동 (줌 스케일 반영)
   cvScale = 1;
   const vp = document.getElementById('cv');
-  const vw = vp ? vp.clientWidth : window.innerWidth;
-  const vh = vp ? vp.clientHeight : window.innerHeight;
+  const vw = (vp && vp.clientWidth > 0) ? vp.clientWidth : window.innerWidth;
+  const vh = (vp && vp.clientHeight > 0) ? vp.clientHeight : (window.innerHeight - 52);
   const firstX = positions[0] ? positions[0].x : CX;
   const firstY = positions[0] ? positions[0].y : CY;
-  const ntx = (vw > 0 ? vw : window.innerWidth) / 2 - firstX * cvScale;
-  const nty = (vh > 0 ? vh : window.innerHeight) / 2 - firstY * cvScale;
+  const ntx = vw / 2 - firstX * cvScale;
+  const nty = vh / 2 - firstY * cvScale;
   if (window._cvSetTxTy) window._cvSetTxTy(ntx, nty);
   cw.style.transformOrigin = '0 0';
   cw.style.transform = `translate(${ntx}px,${nty}px) scale(${cvScale})`;
+  window._rank1Centered = true;
+  setTimeout(function(){
+    if(window._cvSetTxTy)window._cvSetTxTy(ntx,nty);
+    cw.style.transform=`translate(${ntx}px,${nty}px) scale(${cvScale})`;
+  },100);
 
   // 리그 보더 카드 업데이트
   updateLeagueBorderCard(league);
