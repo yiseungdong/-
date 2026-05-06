@@ -163,7 +163,7 @@ textarea.rm-input{resize:vertical;min-height:60px}
 <div class="report-modal" id="platformReportModal">
   <div class="rm-card">
     <button class="rm-close" onclick="closeModal('platformReportModal')">✕</button>
-    <div class="rm-title">🚨 신고하기 — File Report</div>
+    <div class="rm-title">신고하기 — File Report</div>
     <div class="rm-group"><div class="rm-label">대상 유저 Target User</div><input class="rm-input" placeholder="닉네임 또는 성궤번호"></div>
     <div class="rm-group"><div class="rm-label">위반 유형 Violation Type</div><select class="rm-select"><option>데이터 조작 Data Manipulation</option><option>해킹 Hacking</option><option>어뷰징 Abusing</option><option>다중 계정 Multi-Account</option><option>암시장 거래 Black Market</option></select></div>
     <div class="rm-group"><div class="rm-label">상세 설명 Details</div><textarea class="rm-input" placeholder="구체적인 상황을 설명해주세요..."></textarea></div>
@@ -175,7 +175,7 @@ textarea.rm-input{resize:vertical;min-height:60px}
 <div class="report-modal" id="fandomReportModal">
   <div class="rm-card">
     <button class="rm-close" onclick="closeModal('fandomReportModal')">✕</button>
-    <div class="rm-title">🏛️ 자치 신고하기 — File Complaint</div>
+    <div class="rm-title">자치 신고하기 — File Complaint</div>
     <div class="rm-group"><div class="rm-label">대상 유저 Target User</div><input class="rm-input" placeholder="닉네임 또는 성궤번호"></div>
     <div class="rm-group"><div class="rm-label">위반 유형 Violation Type</div><select class="rm-select"><option>비방/욕설 Slander</option><option>허위사실 유포 Misinformation</option><option>분란 조장 Troublemaking</option><option>리더 권한 남용 Leader Abuse</option><option>여론 조작 Opinion Manipulation</option><option>활동 방해 Activity Obstruction</option></select></div>
     <div class="rm-group"><div class="rm-label">상세 설명 Details</div><textarea class="rm-input" placeholder="구체적인 상황을 설명해주세요..."></textarea></div>
@@ -191,18 +191,15 @@ textarea.rm-input{resize:vertical;min-height:60px}
 <div id="app">
   <nav class="top-nav">
     <a class="top-nav-item" href="/"><div class="top-nav-icon">🏠</div><div class="top-nav-label">홈</div></a>
+    <a class="top-nav-item" href="/fandom.html"><div class="top-nav-icon">🏘️</div><div class="top-nav-label">팬덤</div></a>
     <a class="top-nav-item" href="/astra.html"><div class="top-nav-icon">⭐</div><div class="top-nav-label">아스트라</div></a>
-    <a class="top-nav-item" href="/fandom.html"><div class="top-nav-icon">🏘️</div><div class="top-nav-label">내팬덤</div></a>
-    <a class="top-nav-item" href="/room3d.html"><div class="top-nav-icon">🏡</div><div class="top-nav-label">내 방</div></a>
-    <a class="top-nav-item" href="/league.html"><div class="top-nav-icon">🌌</div><div class="top-nav-label">성궤</div></a>
-    <a class="top-nav-item" href="/avatar.html"><div class="top-nav-icon">🎭</div><div class="top-nav-label">아바타</div></a>
+    <a class="top-nav-item" href="/room3d.html"><div class="top-nav-icon">🏡</div><div class="top-nav-label">내방</div></a>
     <a class="top-nav-item" href="/shop.html"><div class="top-nav-icon">🛒</div><div class="top-nav-label">상점</div></a>
-    <a class="top-nav-item" href="/competition.html">경쟁</a>
   </nav>
 
   <div class="track-tabs">
-    <div class="track-tab active" id="trackPlatform" onclick="switchTrack('platform')">⚡ 플랫폼 징계 공고<br><span style="font-size:9px;font-weight:400">Platform Sanctions</span></div>
-    <div class="track-tab" id="trackFandom" onclick="switchTrack('fandom')">🏛️ 팬클럽 자치 심의<br><span style="font-size:9px;font-weight:400">Fandom Court</span></div>
+    <div class="track-tab active" id="trackPlatform" onclick="switchTrack('platform')">플랫폼 징계 공고<br><span style="font-size:9px;font-weight:400">Platform Sanctions</span></div>
+    <div class="track-tab" id="trackFandom" onclick="switchTrack('fandom')">팬클럽 자치 심의<br><span style="font-size:9px;font-weight:400">Fandom Court</span></div>
   </div>
 
   <div class="court-main" id="courtMain"></div>
@@ -244,7 +241,7 @@ function renderPlatform(){
       <span style="font-size:10px">"The Empire's law is proven by data. All sanctions are disclosed with evidence."</span>
     </div>
     <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
-      <button class="btn btn-red" onclick="openModal('platformReportModal')">🚨 신고하기 Report</button>
+      <button class="btn btn-red" onclick="openModal('platformReportModal')">신고하기 Report</button>
     </div>
     ${SANCTIONS.map(s=>`
       <div class="sanction-card">
@@ -253,18 +250,18 @@ function renderPlatform(){
           <div class="sc-type ${s.severity}">${s.type}</div>
         </div>
         <div class="sc-target">대상 — ${s.target}</div>
-        <div class="sc-evidence">📋 ${s.evidence}</div>
-        <div class="sc-punishment">⚖️ ${s.punishment}</div>
+        <div class="sc-evidence">${s.evidence}</div>
+        <div class="sc-punishment">${s.punishment}</div>
         <div class="sc-status">
-          ${s.status==='final'?'<span class="sc-status-badge" style="background:rgba(16,185,129,.15);color:var(--green)">✅ 최종 확정 Final</span>'
-          :'<span class="sc-status-badge" style="background:rgba(245,158,11,.15);color:var(--yellow)">⏳ 이의신청 기간 Appeal Period</span><span class="sc-countdown">남은 시간: '+s.countdown+'</span>'}
+          ${s.status==='final'?'<span class="sc-status-badge" style="background:rgba(16,185,129,.15);color:var(--green)">최종 확정 Final</span>'
+          :'<span class="sc-status-badge" style="background:rgba(245,158,11,.15);color:var(--yellow)">이의신청 기간 Appeal Period</span><span class="sc-countdown">남은 시간: '+s.countdown+'</span>'}
         </div>
       </div>
     `).join('')}
     <div class="kpi-row">
       <div class="kpi"><div class="kpi-val" style="color:var(--red)">47</div><div class="kpi-label">시즌 총 징계 Total</div></div>
       <div class="kpi"><div class="kpi-val" style="color:var(--red)">12</div><div class="kpi-label">영구 추방 Banned</div></div>
-      <div class="kpi"><div class="kpi-val" style="color:var(--gold)">3.2M⭐</div><div class="kpi-label">자산 몰수 총액</div></div>
+      <div class="kpi"><div class="kpi-val" style="color:var(--gold)">3.2M</div><div class="kpi-label">자산 몰수 총액</div></div>
       <div class="kpi"><div class="kpi-val" style="color:var(--green)">2%</div><div class="kpi-label">이의 성공률</div></div>
     </div>
     <div class="section" style="text-align:center;padding:12px"><div style="font-size:10px;color:var(--muted)">내 신고 현황: 접수 2건 (처리완료 1 / 검토중 1) · 보상: ACT+3 획득</div></div>
@@ -306,29 +303,29 @@ function renderFandom(){
     ${filterHTML()}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <div style="font-size:12px;font-weight:700">진행중 심의 — Active Trials (${filtered.filter(t=>t.stage<4).length})</div>
-      <button class="btn btn-nova" onclick="openModal('fandomReportModal')">🏛️ 자치 신고 File Complaint</button>
+      <button class="btn btn-nova" onclick="openModal('fandomReportModal')">자치 신고 File Complaint</button>
     </div>
     ${filtered.map(t=>`
       <div class="trial-card ${t.stage<4?'active-trial':''}" onclick="showTrialDetail(${t.id})">
         <div class="tc-header">
-          <span class="tc-league" style="background:rgba(var(--${t.league==='quasar'?'gold':'nova'}),0.15);color:var(--${t.league})">${LI[t.league]} ${LN[t.league]}</span>
+          <span class="tc-league" style="background:rgba(var(--${t.league==='quasar'?'gold':'nova'}),0.15);color:var(--${t.league})">${LN[t.league]}</span>
           <span class="tc-fandom">${t.fandom}</span>
-          ${t.hot?'<span class="tc-hot">🔥 화제</span>':''}
+          ${t.hot?'<span class="tc-hot">화제</span>':''}
           <span style="margin-left:auto;font-size:10px;color:var(--muted)">👁️ ${t.viewers}</span>
         </div>
         <div class="tc-defendant">피고 — ${t.defendant}</div>
         <div class="tc-charge">혐의: <strong>${t.charge}</strong> — ${t.desc}</div>
-        <div class="stage-bar">${STAGES.map((s,i)=>`<div class="stage-step ${i<t.stage?'done':''} ${i===t.stage-1?'current':''}">${s}</div>`).join('')}</div>
+        <div class="stage-bar">${STAGES.map((s,i)=>`<div class="stage-step ${i<t.stage?'done':''} ${i===t.stage-1?'current':''}">${s.replace(/^./,'')}</div>`).join('')}</div>
         ${t.stage===3||t.stage===4?`
           <div class="jury-bar"><span style="font-size:9px;color:var(--muted)">심의 위원</span><div class="jury-track"><div class="jury-fill" style="width:${t.juryDone/t.juryTotal*100}%"></div></div><div class="jury-text">${t.juryDone}/${t.juryTotal}명</div></div>
           ${t.yes>0?`<div class="vote-bar"><div class="vote-yes" style="width:${t.yes}%">유죄 ${t.yes}%</div><div class="vote-no" style="width:${t.no}%">무죄 ${t.no}%</div></div>`:''}
         `:''}
-        ${t.verdict?`<div style="font-size:11px;color:var(--gold);font-weight:700;margin-top:4px">⚖️ 판정: ${t.verdict}</div>`:''}
+        ${t.verdict?`<div style="font-size:11px;color:var(--gold);font-weight:700;margin-top:4px">판정: ${t.verdict}</div>`:''}
       </div>
     `).join('')}
 
     <!-- 완료 아카이브 -->
-    <div class="collapsible-header" onclick="toggleCollapse(this)">📚 완료된 심의 아카이브 — Past Cases <span>▼</span></div>
+    <div class="collapsible-header" onclick="toggleCollapse(this)">완료된 심의 아카이브 — Past Cases <span>▼</span></div>
     <div class="collapsible-body">
       <div style="font-size:10px;color:var(--muted);margin-bottom:8px;font-style:italic">판례를 통해 배우세요 — Learn from precedents</div>
       <table class="data-table"><tr><th>날짜</th><th>팬클럽</th><th>혐의</th><th>판정</th><th>처벌</th></tr>
@@ -338,17 +335,17 @@ function renderFandom(){
 
     <!-- 심의 위원 자격 -->
     <div class="section chart-section" style="margin-top:14px">
-      <div class="chart-title">📜 심의 위원 자격 — JURY REQUIREMENTS</div>
+      <div class="chart-title">심의 위원 자격 — JURY REQUIREMENTS</div>
       <table class="data-table"><tr><th>리그</th><th>자격 레벨</th><th>위원 수</th><th>처벌 강도</th></tr>
-      ${JURY_REQ.map(j=>`<tr><td>${LI[j.league]} ${LN[j.league]}</td><td>Lv.${j.lv}+</td><td>${j.jury}명</td><td>${j.severity}</td></tr>`).join('')}
+      ${JURY_REQ.map(j=>`<tr><td>${LN[j.league]}</td><td>Lv.${j.lv}+</td><td>${j.jury}명</td><td>${j.severity}</td></tr>`).join('')}
       </table>
     </div>
 
     <!-- 정의 포인트 랭킹 -->
     <div class="section chart-section">
-      <div class="chart-title">⚖️ 정의의 수호자 랭킹 — JUSTICE GUARDIAN</div>
+      <div class="chart-title">정의의 수호자 랭킹 — JUSTICE GUARDIAN</div>
       <table class="data-table"><tr><th>#</th><th>닉네임</th><th>참여</th><th>포인트</th></tr>
-      ${justiceFiltered.map((j,i)=>`<tr${i===0?' style="background:rgba(240,192,64,.05)"':''}><td style="font-family:'Orbitron',monospace;color:${i===0?'var(--gold)':'var(--text)'}">${i===0?'👑':i+1}</td><td style="${i===0?'color:var(--gold);font-weight:900':''}">${j.name}</td><td>${j.count}회</td><td style="font-family:'Orbitron',monospace;color:var(--gold)">${j.points}</td></tr>`).join('')}
+      ${justiceFiltered.map((j,i)=>`<tr${i===0?' style="background:rgba(240,192,64,.05)"':''}><td style="font-family:'Orbitron',monospace;color:${i===0?'var(--gold)':'var(--text)'}">${i+1}</td><td style="${i===0?'color:var(--gold);font-weight:900':''}">${j.name}</td><td>${j.count}회</td><td style="font-family:'Orbitron',monospace;color:var(--gold)">${j.points}</td></tr>`).join('')}
       </table>
       <div style="font-size:9px;color:var(--muted);margin-top:8px;text-align:center">시즌 종료시 TOP 3 → "정의의 수호자" 특수 칭호 부여</div>
     </div>
@@ -362,18 +359,18 @@ function showTrialDetail(id){
   const t=TRIALS.find(x=>x.id===id);if(!t)return;
   document.getElementById('trialDetail').innerHTML=`
     <button class="cm-close" onclick="closeModal('trialModal')">✕</button>
-    <div class="cm-title">${LI[t.league]} ${t.fandom} — ${t.charge}</div>
-    <div class="cm-sub">피고: ${t.defendant} · 👁️ ${t.viewers}명 관전${t.hot?' · 🔥 화제 재판':''}</div>
-    <div class="stage-bar" style="margin-bottom:14px">${STAGES.map((s,i)=>`<div class="stage-step ${i<t.stage?'done':''} ${i===t.stage-1?'current':''}">${s}</div>`).join('')}</div>
-    <div class="cm-section">📋 혐의 내용 — CHARGE</div>
+    <div class="cm-title">${t.fandom} — ${t.charge}</div>
+    <div class="cm-sub">피고: ${t.defendant} · ${t.viewers}명 관전${t.hot?' · 화제 재판':''}</div>
+    <div class="stage-bar" style="margin-bottom:14px">${STAGES.map((s,i)=>`<div class="stage-step ${i<t.stage?'done':''} ${i===t.stage-1?'current':''}">${s.replace(/^./,'')}</div>`).join('')}</div>
+    <div class="cm-section">혐의 내용 — CHARGE</div>
     <div class="cm-box">${t.desc}</div>
-    <div class="cm-section">🔍 증거 — EVIDENCE</div>
+    <div class="cm-section">증거 — EVIDENCE</div>
     <div class="cm-box" style="border-left:3px solid var(--red)">${t.evidence}</div>
-    <div class="cm-section">📝 피고 소명문 — DEFENSE</div>
+    <div class="cm-section">피고 소명문 — DEFENSE</div>
     <div class="cm-box" style="border-left:3px solid var(--nova)">${t.soMyung}</div>
-    ${t.yes>0?`<div class="cm-section">🗳️ 심의 투표 현황 — VOTE</div><div class="vote-bar"><div class="vote-yes" style="width:${t.yes}%">유죄 ${t.yes}%</div><div class="vote-no" style="width:${t.no}%">무죄 ${t.no}%</div></div><div style="font-size:10px;color:var(--muted);margin-bottom:10px">심의 위원 ${t.juryDone}/${t.juryTotal}명 참여</div>`:''}
-    ${t.penalties.length?`<div class="cm-section">⚖️ 처벌 제안 — PENALTIES</div><div class="cm-penalty-list">${t.penalties.map(p=>`<div class="cm-penalty">${p}</div>`).join('')}</div>`:''}
-    ${t.verdict?`<div style="margin-top:14px;padding:12px;background:rgba(240,192,64,.08);border:1px solid rgba(240,192,64,.3);border-radius:10px;text-align:center;font-weight:900;color:var(--gold)">⚖️ 최종 판정: ${t.verdict}</div>`:''}
+    ${t.yes>0?`<div class="cm-section">심의 투표 현황 — VOTE</div><div class="vote-bar"><div class="vote-yes" style="width:${t.yes}%">유죄 ${t.yes}%</div><div class="vote-no" style="width:${t.no}%">무죄 ${t.no}%</div></div><div style="font-size:10px;color:var(--muted);margin-bottom:10px">심의 위원 ${t.juryDone}/${t.juryTotal}명 참여</div>`:''}
+    ${t.penalties.length?`<div class="cm-section">처벌 제안 — PENALTIES</div><div class="cm-penalty-list">${t.penalties.map(p=>`<div class="cm-penalty">${p}</div>`).join('')}</div>`:''}
+    ${t.verdict?`<div style="margin-top:14px;padding:12px;background:rgba(240,192,64,.08);border:1px solid rgba(240,192,64,.3);border-radius:10px;text-align:center;font-weight:900;color:var(--gold)">최종 판정: ${t.verdict}</div>`:''}
   `;
   document.getElementById('trialModal').classList.add('show');
 }

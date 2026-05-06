@@ -415,11 +415,8 @@ html,body {
   <a class="top-nav-item" href="/index.html">홈</a>
   <a class="top-nav-item" href="/fandom.html">팬덤</a>
   <a class="top-nav-item" href="/astra.html">아스트라</a>
-  <a class="top-nav-item" href="/fandom.html">내팬덤</a>
   <a class="top-nav-item" href="/room3d.html">내방</a>
-  <a class="top-nav-item active" href="/avatar.html">아바타</a>
   <a class="top-nav-item" href="/shop.html">상점</a>
-  <a class="top-nav-item" href="/competition.html">경쟁</a>
 </nav>
 <!-- 내 팬덤 버튼 (네비 바로 아래 중앙) -->
 <div id="subNavFandomBtn" style="
@@ -440,7 +437,7 @@ html,body {
     cursor: pointer;
     white-space: nowrap;
     backdrop-filter: blur(10px);
-  ">🏘️ 내 팬덤</button>
+  ">내 팬덤</button>
 </div>
 
 <canvas id="starCanvas"></canvas>
@@ -451,7 +448,7 @@ html,body {
   <!-- TOP BAR -->
   <div class="topbar">
     <div class="tb-title">아바타 꾸미기</div>
-    <button class="tb-save" onclick="saveAvatar()">저장 ✦</button>
+    <button class="tb-save" onclick="saveAvatar()">저장</button>
   </div>
 
   <!-- 아바타 프리뷰 -->
@@ -470,7 +467,7 @@ html,body {
     <div class="preview-info">
       <div class="preview-name" id="previewName">별빛 탐험가</div>
       <div id="previewSerial" style="font-size:11px;letter-spacing:2px;margin-top:2px;margin-bottom:2px;opacity:0.9;"></div>
-      <div class="preview-league" id="previewLeague">✨ 더스트 리그</div>
+      <div class="preview-league" id="previewLeague">더스트 리그</div>
     </div>
     <div class="auto-growth-bar">
       <div class="agb-row">
@@ -486,25 +483,25 @@ html,body {
   <!-- TAB NAV -->
   <div class="tab-nav" id="tabNav">
     <div class="tab-btn active" onclick="switchTab('face',this)">
-      <div class="tab-btn-icon">👤</div>캐릭터
+      <div class="tab-btn-icon"></div>캐릭터
     </div>
     <div class="tab-btn" onclick="switchTab('hair',this)">
-      <div class="tab-btn-icon">💇</div>헤어
+      <div class="tab-btn-icon"></div>헤어
     </div>
     <div class="tab-btn" onclick="switchTab('outfit',this)">
-      <div class="tab-btn-icon">👔</div>의상
+      <div class="tab-btn-icon"></div>의상
     </div>
     <div class="tab-btn" onclick="switchTab('aura',this)">
-      <div class="tab-btn-icon">✨</div>아우라
+      <div class="tab-btn-icon"></div>아우라
     </div>
     <div class="tab-btn" onclick="switchTab('acc',this)">
-      <div class="tab-btn-icon">👑</div>악세서리
+      <div class="tab-btn-icon"></div>악세서리
     </div>
     <div class="tab-btn" onclick="switchTab('emotion',this)">
-      <div class="tab-btn-icon">😊</div>표정
+      <div class="tab-btn-icon"></div>표정
     </div>
     <div class="tab-btn" onclick="switchTab('growth',this)">
-      <div class="tab-btn-icon">📈</div>성장
+      <div class="tab-btn-icon"></div>성장
     </div>
   </div>
 
@@ -543,7 +540,7 @@ html,body {
       <div class="ali-info">
         <div class="ali-title" id="aliTitle">더스트 리그 아우라</div>
         <div class="ali-desc" id="aliDesc">희미한 먼지 입자들이 당신 주변을 맴돕니다.</div>
-        <div class="ali-auto">🔄 활동량에 따라 자동으로 강해져요!</div>
+        <div class="ali-auto">활동량에 따라 자동으로 강해져요!</div>
       </div>
     </div>
     <div class="sec-title">아우라 선택</div>
@@ -552,11 +549,11 @@ html,body {
 
   <!-- ═══ 액세서리 탭 ═══ -->
   <div class="tab-content" id="tab-acc">
-    <div class="acc-category">👑 왕관 / 모자</div>
+    <div class="acc-category">왕관 / 모자</div>
     <div class="acc-grid" id="accCrown"></div>
-    <div class="acc-category">🪽 날개 / 등 장식</div>
+    <div class="acc-category">날개 / 등 장식</div>
     <div class="acc-grid" id="accWing"></div>
-    <div class="acc-category">⚔️ 무기 / 소품</div>
+    <div class="acc-category">무기 / 소품</div>
     <div class="acc-grid" id="accWeapon"></div>
   </div>
 
@@ -572,7 +569,7 @@ html,body {
   <div class="tab-content" id="tab-growth">
     <div class="growth-card">
       <div class="gc-header">
-        <div class="gc-title">🌱 자동 성장 현황</div>
+        <div class="gc-title">자동 성장 현황</div>
         <div class="gc-pct" id="gcPct">47%</div>
       </div>
       <div class="gc-bar-bg">
@@ -603,12 +600,12 @@ html,body {
 // DATA
 // ════════════════════════════════════
 const FACES = [
-  {id:'m1',emoji:'🟡',name:'루카 (남)',unlocked:true},
-  {id:'m2',emoji:'🔶',name:'제이 (남)',unlocked:true},
-  {id:'m3',emoji:'🔷',name:'코코 (남)',unlocked:true},
-  {id:'f1',emoji:'🌸',name:'아리 (여)',unlocked:true},
-  {id:'f2',emoji:'💜',name:'세나 (여)',unlocked:true},
-  {id:'f3',emoji:'🌙',name:'루나 (여)',unlocked:true},
+  {id:'m1',emoji:'',name:'루카 (남)',unlocked:true},
+  {id:'m2',emoji:'',name:'제이 (남)',unlocked:true},
+  {id:'m3',emoji:'',name:'코코 (남)',unlocked:true},
+  {id:'f1',emoji:'',name:'아리 (여)',unlocked:true},
+  {id:'f2',emoji:'',name:'세나 (여)',unlocked:true},
+  {id:'f3',emoji:'',name:'루나 (여)',unlocked:true},
 ];
 
 const SKINS = [
@@ -623,15 +620,15 @@ const SKINS = [
 ];
 
 const HAIRS = [
-  {id:'h1',emoji:'💆',name:'단발',unlocked:true},
-  {id:'h2',emoji:'👱',name:'장발',unlocked:true},
-  {id:'h3',emoji:'🧑',name:'단정한 단발',unlocked:true},
-  {id:'h4',emoji:'👩',name:'웨이브',unlocked:true},
-  {id:'h5',emoji:'🧕',name:'올림머리',unlocked:false,req:'Lv.15'},
-  {id:'h6',emoji:'💇',name:'투블럭',unlocked:false,req:'상점'},
-  {id:'h7',emoji:'🦱',name:'곱슬',unlocked:false,req:'Lv.25'},
-  {id:'h8',emoji:'🌟',name:'빛나는 머리',unlocked:false,req:'노바 리그'},
-  {id:'h9',emoji:'👸',name:'공주 머리',unlocked:false,req:'상점 한정'},
+  {id:'h1',emoji:'',name:'단발',unlocked:true},
+  {id:'h2',emoji:'',name:'장발',unlocked:true},
+  {id:'h3',emoji:'',name:'단정한 단발',unlocked:true},
+  {id:'h4',emoji:'',name:'웨이브',unlocked:true},
+  {id:'h5',emoji:'',name:'올림머리',unlocked:false,req:'Lv.15'},
+  {id:'h6',emoji:'',name:'투블럭',unlocked:false,req:'상점'},
+  {id:'h7',emoji:'',name:'곱슬',unlocked:false,req:'Lv.25'},
+  {id:'h8',emoji:'',name:'빛나는 머리',unlocked:false,req:'노바 리그'},
+  {id:'h9',emoji:'',name:'공주 머리',unlocked:false,req:'상점 한정'},
 ];
 
 const HAIR_COLORS = [
@@ -648,25 +645,25 @@ const OUTFIT_COLORS = [
 
 const OUTFITS = {
   top: [
-    {id:'t1',emoji:'👕',name:'기본 티셔츠',rarity:'common',equipped:true,unlocked:true},
-    {id:'t2',emoji:'🧥',name:'후드 집업',rarity:'rare',equipped:false,unlocked:true},
-    {id:'t3',emoji:'👔',name:'셔츠',rarity:'rare',equipped:false,unlocked:true},
-    {id:'t4',emoji:'🎽',name:'아이돌 무대복',rarity:'epic',equipped:false,unlocked:false,req:'상점 구매'},
-    {id:'t5',emoji:'✨',name:'빛의 드레스',rarity:'legendary',equipped:false,unlocked:false,req:'퀘이사 리그'},
-    {id:'t6',emoji:'👘',name:'황금 제복',rarity:'legendary',equipped:false,unlocked:false,req:'상점 한정'},
+    {id:'t1',emoji:'',name:'기본 티셔츠',rarity:'common',equipped:true,unlocked:true},
+    {id:'t2',emoji:'',name:'후드 집업',rarity:'rare',equipped:false,unlocked:true},
+    {id:'t3',emoji:'',name:'셔츠',rarity:'rare',equipped:false,unlocked:true},
+    {id:'t4',emoji:'',name:'아이돌 무대복',rarity:'epic',equipped:false,unlocked:false,req:'상점 구매'},
+    {id:'t5',emoji:'',name:'빛의 드레스',rarity:'legendary',equipped:false,unlocked:false,req:'퀘이사 리그'},
+    {id:'t6',emoji:'',name:'황금 제복',rarity:'legendary',equipped:false,unlocked:false,req:'상점 한정'},
   ],
   bottom: [
-    {id:'b1',emoji:'👖',name:'기본 바지',rarity:'common',equipped:true,unlocked:true},
-    {id:'b2',emoji:'🩳',name:'반바지',rarity:'common',equipped:false,unlocked:true},
-    {id:'b3',emoji:'👗',name:'미니 스커트',rarity:'rare',equipped:false,unlocked:true},
-    {id:'b4',emoji:'🌟',name:'별빛 스커트',rarity:'epic',equipped:false,unlocked:false,req:'상점 구매'},
-    {id:'b5',emoji:'💫',name:'궤도 팬츠',rarity:'legendary',equipped:false,unlocked:false,req:'플래닛 리그'},
+    {id:'b1',emoji:'',name:'기본 바지',rarity:'common',equipped:true,unlocked:true},
+    {id:'b2',emoji:'',name:'반바지',rarity:'common',equipped:false,unlocked:true},
+    {id:'b3',emoji:'',name:'미니 스커트',rarity:'rare',equipped:false,unlocked:true},
+    {id:'b4',emoji:'',name:'별빛 스커트',rarity:'epic',equipped:false,unlocked:false,req:'상점 구매'},
+    {id:'b5',emoji:'',name:'궤도 팬츠',rarity:'legendary',equipped:false,unlocked:false,req:'플래닛 리그'},
   ],
   full: [
-    {id:'f1',emoji:'🦺',name:'우주복',rarity:'epic',equipped:false,unlocked:false,req:'상점 구매'},
-    {id:'f2',emoji:'👘',name:'한복',rarity:'rare',equipped:false,unlocked:false,req:'미션 달성'},
-    {id:'f3',emoji:'🌌',name:'은하수 드레스',rarity:'legendary',equipped:false,unlocked:false,req:'노바 리그'},
-    {id:'f4',emoji:'⚡',name:'제국 군복',rarity:'legendary',equipped:false,unlocked:false,req:'퀘이사 리그'},
+    {id:'f1',emoji:'',name:'우주복',rarity:'epic',equipped:false,unlocked:false,req:'상점 구매'},
+    {id:'f2',emoji:'',name:'한복',rarity:'rare',equipped:false,unlocked:false,req:'미션 달성'},
+    {id:'f3',emoji:'',name:'은하수 드레스',rarity:'legendary',equipped:false,unlocked:false,req:'노바 리그'},
+    {id:'f4',emoji:'',name:'제국 군복',rarity:'legendary',equipped:false,unlocked:false,req:'�제이사 리그'},
   ],
 };
 

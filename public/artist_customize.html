@@ -202,27 +202,24 @@ html,body {
 <div id="app">
   <!-- TOP NAV -->
   <nav class="top-nav">
-    <a class="tni" href="/fandom.html"><div class="tni-icon">🏘️</div><div class="tni-label">팬덤</div></a>
-    <a class="tni" href="/"><div class="tni-icon">🏠</div><div class="tni-label">홈</div></a>
-    <a class="tni" href="/astra.html"><div class="tni-icon">⭐</div><div class="tni-label">아스트라</div></a>
-    <a class="tni" href="/fandom.html"><div class="tni-icon">💫</div><div class="tni-label">내팬덤</div></a>
-    <a class="tni" href="/room3d.html"><div class="tni-icon">🏡</div><div class="tni-label">내 방</div></a>
-    <a class="tni" href="/nebula.html"><div class="tni-icon">🌌</div><div class="tni-label">성궤</div></a>
-    <a class="tni" href="/avatar.html"><div class="tni-icon">🎭</div><div class="tni-label">아바타</div></a>
-    <a class="tni" href="/shop.html"><div class="tni-icon">🛒</div><div class="tni-label">상점</div></a>
+    <a class="tni" href="/fandom.html"><div class="tni-icon"></div><div class="tni-label">팬덤</div></a>
+    <a class="tni" href="/"><div class="tni-icon"></div><div class="tni-label">홈</div></a>
+    <a class="tni" href="/astra.html"><div class="tni-icon"></div><div class="tni-label">아스트라</div></a>
+    <a class="tni" href="/room3d.html"><div class="tni-icon"></div><div class="tni-label">내 방</div></a>
+    <a class="tni" href="/shop.html"><div class="tni-icon"></div><div class="tni-label">상점</div></a>
   </nav>
 
   <!-- TOP BAR -->
   <div class="topbar">
     <a class="tb-back" href="/nebula.html">←</a>
     <div class="tb-title">아티스트 꾸미기</div>
-    <button class="tb-chat" onclick="goToChat()">대화하기 💬</button>
-    <button class="tb-save" onclick="saveArtist()">저장 ✦</button>
+    <button class="tb-chat" onclick="goToChat()">대화하기</button>
+    <button class="tb-save" onclick="saveArtist()">저장</button>
   </div>
 
   <!-- 프리뷰 -->
   <div class="preview-area">
-    <div class="preview-stage-label">✦ 내 성궤의 아티스트</div>
+    <div class="preview-stage-label">내 성궤의 아티스트</div>
     <div class="chat-badge">대화에 반영됨</div>
     <div class="preview-canvas-wrap">
       <canvas id="artistCanvas" width="160" height="160"></canvas>
@@ -231,19 +228,19 @@ html,body {
       <div class="artist-name" id="previewName">LUNA</div>
       <div class="artist-role">아스테리아 메인 보컬</div>
       <div class="costume-tag">
-        <span id="costumeTag">✨ 스테이지 의상</span>
+        <span id="costumeTag">스테이지 의상</span>
       </div>
     </div>
   </div>
 
   <!-- 탭 -->
   <div class="tab-nav">
-    <div class="tab-btn active" onclick="switchTab('face',this)"><div class="tab-icon">👤</div>얼굴</div>
-    <div class="tab-btn" onclick="switchTab('hair',this)"><div class="tab-icon">💇</div>헤어</div>
-    <div class="tab-btn" onclick="switchTab('outfit',this)"><div class="tab-icon">👗</div>의상</div>
-    <div class="tab-btn" onclick="switchTab('aura',this)"><div class="tab-icon">✨</div>아우라</div>
-    <div class="tab-btn" onclick="switchTab('acc',this)"><div class="tab-icon">🎤</div>액세서리</div>
-    <div class="tab-btn" onclick="switchTab('emotion',this)"><div class="tab-icon">😊</div>표정</div>
+    <div class="tab-btn active" onclick="switchTab('face',this)"><div class="tab-icon"></div>얼굴</div>
+    <div class="tab-btn" onclick="switchTab('hair',this)"><div class="tab-icon"></div>헤어</div>
+    <div class="tab-btn" onclick="switchTab('outfit',this)"><div class="tab-icon"></div>의상</div>
+    <div class="tab-btn" onclick="switchTab('aura',this)"><div class="tab-icon"></div>아우라</div>
+    <div class="tab-btn" onclick="switchTab('acc',this)"><div class="tab-icon"></div>액세서리</div>
+    <div class="tab-btn" onclick="switchTab('emotion',this)"><div class="tab-icon"></div>표정</div>
   </div>
 
   <!-- ═══ 얼굴 탭 ═══ -->
@@ -265,9 +262,9 @@ html,body {
   <!-- ═══ 의상 탭 ═══ -->
   <div class="tab-content" id="tab-outfit">
     <div class="outfit-type-tabs">
-      <button class="ot-btn active" onclick="switchOutfitType('stage',this)">🎤 스테이지</button>
-      <button class="ot-btn" onclick="switchOutfitType('casual',this)">👕 일상복</button>
-      <button class="ot-btn" onclick="switchOutfitType('special',this)">✨ 특별복</button>
+      <button class="ot-btn active" onclick="switchOutfitType('stage',this)">스테이지</button>
+      <button class="ot-btn" onclick="switchOutfitType('casual',this)">일상복</button>
+      <button class="ot-btn" onclick="switchOutfitType('special',this)">특별복</button>
     </div>
     <div class="outfit-grid" id="outfitGrid"></div>
   </div>
@@ -275,7 +272,7 @@ html,body {
   <!-- ═══ 아우라 탭 ═══ -->
   <div class="tab-content" id="tab-aura">
     <div class="chat-reflect-banner">
-      <div class="crb-icon">💫</div>
+      <div class="crb-icon"></div>
       <div class="crb-info">
         <div class="crb-title">아우라도 대화에 반영돼요!</div>
         <div class="crb-desc">선택한 아우라가 LUNA의 분위기로 대화 스타일에도 영향을 줍니다.</div>
@@ -287,15 +284,15 @@ html,body {
   <!-- ═══ 액세서리 탭 ═══ -->
   <div class="tab-content" id="tab-acc">
     <div class="acc-section">
-      <div class="acc-section-title">🎤 마이크 / 악기</div>
+      <div class="acc-section-title">마이크 / 악기</div>
       <div class="acc-grid" id="accMic"></div>
     </div>
     <div class="acc-section">
-      <div class="acc-section-title">🎧 이어폰 / 헤드셋</div>
+      <div class="acc-section-title">이어폰 / 헤드셋</div>
       <div class="acc-grid" id="accEar"></div>
     </div>
     <div class="acc-section">
-      <div class="acc-section-title">👓 안경 / 선글라스</div>
+      <div class="acc-section-title">안경 / 선글라스</div>
       <div class="acc-grid" id="accGlass"></div>
     </div>
   </div>
@@ -303,7 +300,7 @@ html,body {
   <!-- ═══ 표정 탭 ═══ -->
   <div class="tab-content" id="tab-emotion">
     <div class="chat-reflect-banner">
-      <div class="crb-icon">💬</div>
+      <div class="crb-icon"></div>
       <div class="crb-info">
         <div class="crb-title">표정이 대화 분위기를 바꿔요!</div>
         <div class="crb-desc">선택한 표정에 따라 LUNA가 대화할 때 다른 감정과 말투로 반응합니다.</div>
@@ -333,92 +330,92 @@ html,body {
 // 데이터
 // ══════════════════════════════════
 const FACES = [
-  {id:'f1',emoji:'😊',name:'청순형',unlocked:true},
-  {id:'f2',emoji:'😎',name:'쿨한형',unlocked:true},
-  {id:'f3',emoji:'🌸',name:'발랄형',unlocked:true},
-  {id:'f4',emoji:'🌙',name:'신비형',unlocked:true},
-  {id:'f5',emoji:'⭐',name:'카리스마',unlocked:false,req:'Lv.30'},
-  {id:'f6',emoji:'💎',name:'우아형',unlocked:false,req:'상점'},
-  {id:'f7',emoji:'🔥',name:'강렬형',unlocked:false,req:'노바 리그'},
-  {id:'f8',emoji:'🌟',name:'천상계',unlocked:false,req:'퀘이사 전용'},
+  {id:'f1',emoji:'',name:'청순형',unlocked:true},
+  {id:'f2',emoji:'',name:'쿨한형',unlocked:true},
+  {id:'f3',emoji:'',name:'발랄형',unlocked:true},
+  {id:'f4',emoji:'',name:'신비형',unlocked:true},
+  {id:'f5',emoji:'',name:'카리스마',unlocked:false,req:'Lv.30'},
+  {id:'f6',emoji:'',name:'우아형',unlocked:false,req:'상점'},
+  {id:'f7',emoji:'',name:'강렬형',unlocked:false,req:'노바 리그'},
+  {id:'f8',emoji:'',name:'천상계',unlocked:false,req:'퀘이사 전용'},
 ];
 const SKINS = ['#FDBCB4','#F4A76F','#C68642','#8D4B2A','#FFF0D9','#E8B4B8','#C8B4E8','#B4D4E8'];
 const HAIRS = [
-  {id:'h1',emoji:'💆',name:'청순 단발',unlocked:true},
-  {id:'h2',emoji:'👱',name:'웨이브 장발',unlocked:true},
-  {id:'h3',emoji:'💇',name:'시크 단발',unlocked:true},
-  {id:'h4',emoji:'👸',name:'공주 웨이브',unlocked:true},
-  {id:'h5',emoji:'🌺',name:'올림머리',unlocked:false,req:'스타 리그'},
-  {id:'h6',emoji:'✨',name:'빛나는 헤어',unlocked:false,req:'상점'},
-  {id:'h7',emoji:'🌊',name:'물결 헤어',unlocked:false,req:'상점'},
-  {id:'h8',emoji:'🌈',name:'레인보우',unlocked:false,req:'퀘이사 전용'},
-  {id:'h9',emoji:'🎭',name:'투톤 컬러',unlocked:false,req:'노바 리그'},
+  {id:'h1',emoji:'',name:'청순 단발',unlocked:true},
+  {id:'h2',emoji:'',name:'웨이브 장발',unlocked:true},
+  {id:'h3',emoji:'',name:'시크 단발',unlocked:true},
+  {id:'h4',emoji:'',name:'공주 웨이브',unlocked:true},
+  {id:'h5',emoji:'',name:'올림머리',unlocked:false,req:'스타 리그'},
+  {id:'h6',emoji:'',name:'빛나는 헤어',unlocked:false,req:'상점'},
+  {id:'h7',emoji:'',name:'물결 헤어',unlocked:false,req:'상점'},
+  {id:'h8',emoji:'',name:'레인보우',unlocked:false,req:'퀘이사 전용'},
+  {id:'h9',emoji:'',name:'투톤 컬러',unlocked:false,req:'노바 리그'},
 ];
 const HAIR_COLORS = ['#1a1a1a','#3d2b1f','#c67c3a','#d4a853','#f7f3e9','#ff6b9d','#c084fc','#38bdf8','#f0c040','#ef4444','#10b981','#818cf8'];
 
 const OUTFITS = {
   stage: [
-    {id:'s1',emoji:'🌟',name:'갤럭시 스테이지',desc:'은하수를 담은 퍼포먼스 의상',rarity:'EPIC',unlocked:true,equipped:true},
-    {id:'s2',emoji:'💜',name:'보라빛 무대복',desc:'노바 리그 스타일 퍼포먼스',rarity:'RARE',unlocked:true,equipped:false},
-    {id:'s3',emoji:'🌸',name:'벚꽃 스테이지',desc:'한정판 봄 시즌 무대복',rarity:'EPIC',unlocked:false,req:'시즌 한정'},
-    {id:'s4',emoji:'⚡',name:'제국 퍼포먼스',desc:'퀘이사 리그 전용 의상',rarity:'LEGENDARY',unlocked:false,req:'퀘이사 전용'},
+    {id:'s1',emoji:'',name:'갤럭시 스테이지',desc:'은하수를 담은 퍼포먼스 의상',rarity:'EPIC',unlocked:true,equipped:true},
+    {id:'s2',emoji:'',name:'보라빛 무대복',desc:'노바 리그 스타일 퍼포먼스',rarity:'RARE',unlocked:true,equipped:false},
+    {id:'s3',emoji:'',name:'벚꽃 스테이지',desc:'한정판 봄 시즌 무대복',rarity:'EPIC',unlocked:false,req:'시즌 한정'},
+    {id:'s4',emoji:'',name:'제국 퍼포먼스',desc:'퀘이사 리그 전용 의상',rarity:'LEGENDARY',unlocked:false,req:'퀘이사 전용'},
   ],
   casual: [
-    {id:'c1',emoji:'👕',name:'캐주얼 데일리',desc:'LUNA의 편안한 일상복',rarity:'COMMON',unlocked:true,equipped:false},
-    {id:'c2',emoji:'🧥',name:'오버핏 후드',desc:'녹화 준비 중 즐겨 입는 옷',rarity:'RARE',unlocked:true,equipped:false},
-    {id:'c3',emoji:'👗',name:'원피스 데이트',desc:'팬미팅 때 입은 특별한 옷',rarity:'RARE',unlocked:false,req:'상점'},
-    {id:'c4',emoji:'🌿',name:'내추럴 홈웨어',desc:'연습실에서 편하게 입는 옷',rarity:'COMMON',unlocked:false,req:'미션'},
+    {id:'c1',emoji:'',name:'캐주얼 데일리',desc:'LUNA의 편안한 일상복',rarity:'COMMON',unlocked:true,equipped:false},
+    {id:'c2',emoji:'',name:'오버핏 후드',desc:'녹화 준비 중 즐겨 입는 옷',rarity:'RARE',unlocked:true,equipped:false},
+    {id:'c3',emoji:'',name:'원피스 데이트',desc:'팬미팅 때 입은 특별한 옷',rarity:'RARE',unlocked:false,req:'상점'},
+    {id:'c4',emoji:'',name:'내추럴 홈웨어',desc:'연습실에서 편하게 입는 옷',rarity:'COMMON',unlocked:false,req:'미션'},
   ],
   special: [
-    {id:'sp1',emoji:'👘',name:'한복 (설날 한정)',desc:'팬들에게 선물 받은 한복',rarity:'LEGENDARY',unlocked:false,req:'시즌 한정'},
-    {id:'sp2',emoji:'🎓',name:'데뷔 기념 의상',desc:'데뷔 당일 착용한 역사적인 의상',rarity:'GENESIS',unlocked:false,req:'개척자 전용'},
-    {id:'sp3',emoji:'🌙',name:'달빛 이브닝',desc:'시상식 레드카펫 의상',rarity:'EPIC',unlocked:false,req:'상점'},
-    {id:'sp4',emoji:'✨',name:'아스테리아 공식 유니폼',desc:'플랫폼 출시 기념 한정',rarity:'LEGENDARY',unlocked:false,req:'개척자 전용'},
+    {id:'sp1',emoji:'',name:'한복 (설날 한정)',desc:'팬들에게 선물 받은 한복',rarity:'LEGENDARY',unlocked:false,req:'시즌 한정'},
+    {id:'sp2',emoji:'',name:'데뷔 기념 의상',desc:'데뷔 당일 착용한 역사적인 의상',rarity:'GENESIS',unlocked:false,req:'개척자 전용'},
+    {id:'sp3',emoji:'',name:'달빛 이브닝',desc:'시상식 레드카펫 의상',rarity:'EPIC',unlocked:false,req:'상점'},
+    {id:'sp4',emoji:'',name:'아스테리아 공식 유니폼',desc:'플랫폼 출시 기념 한정',rarity:'LEGENDARY',unlocked:false,req:'개척자 전용'},
   ],
 };
 
 const AURAS = [
-  {id:'a1',emoji:'🌟',name:'별빛 오라',desc:'부드럽게 반짝이는 별빛',color:'#fbbf24',tag:'기본',chat:'따뜻하고 밝은 말투'},
-  {id:'a2',emoji:'💜',name:'보라 오라',desc:'신비로운 보라빛 아우라',color:'#c084fc',tag:'신비',chat:'차분하고 신비로운 말투'},
-  {id:'a3',emoji:'🌸',name:'벚꽃 오라',desc:'분홍 꽃잎이 흩날려요',color:'#f472b6',tag:'발랄',chat:'밝고 귀여운 말투'},
-  {id:'a4',emoji:'⚡',name:'황금 광채',desc:'제국의 빛이 뿜어져요',color:'#f0c040',tag:'카리스마',chat:'카리스마 넘치는 말투'},
-  {id:'a5',emoji:'❄️',name:'빙결 오라',desc:'차갑게 반짝이는 얼음',color:'#bae6fd',tag:'쿨',chat:'쿨하고 도도한 말투'},
-  {id:'a6',emoji:'🔥',name:'불꽃 오라',desc:'뜨겁게 타오르는 에너지',color:'#ef4444',tag:'열정',chat:'열정적이고 강렬한 말투',locked:true,req:'노바 리그'},
-  {id:'a7',emoji:'🌊',name:'파동 오라',desc:'물결처럼 흘러요',color:'#38bdf8',tag:'감성',chat:'감성적이고 깊은 말투',locked:true,req:'상점'},
-  {id:'a8',emoji:'🌌',name:'퀘이사 광채',desc:'우주를 관통하는 빛',color:'#818cf8',tag:'전설',chat:'웅장하고 신성한 말투',locked:true,req:'퀘이사 전용'},
+  {id:'a1',emoji:'',name:'별빛 오라',desc:'부드럽게 반짝이는 별빛',color:'#fbbf24',tag:'기본',chat:'따뜻하고 밝은 말투'},
+  {id:'a2',emoji:'',name:'보라 오라',desc:'신비로운 보라빛 아우라',color:'#c084fc',tag:'신비',chat:'차분하고 신비로운 말투'},
+  {id:'a3',emoji:'',name:'벚꽃 오라',desc:'분홍 꽃잎이 흩날려요',color:'#f472b6',tag:'발랄',chat:'밝고 귀여운 말투'},
+  {id:'a4',emoji:'',name:'황금 광채',desc:'제국의 빛이 뿜어져요',color:'#f0c040',tag:'카리스마',chat:'카리스마 넘치는 말투'},
+  {id:'a5',emoji:'',name:'빙결 오라',desc:'차갑게 반짝이는 얼음',color:'#bae6fd',tag:'쿨',chat:'쿨하고 도도한 말투'},
+  {id:'a6',emoji:'',name:'불꽃 오라',desc:'뜨겁게 타오르는 에너지',color:'#ef4444',tag:'열정',chat:'열정적이고 강렬한 말투',locked:true,req:'노바 리그'},
+  {id:'a7',emoji:'',name:'파동 오라',desc:'물결처럼 흘러요',color:'#38bdf8',tag:'감성',chat:'감성적이고 깊은 말투',locked:true,req:'상점'},
+  {id:'a8',emoji:'',name:'퀘이사 광채',desc:'우주를 관통하는 빛',color:'#818cf8',tag:'전설',chat:'웅장하고 신성한 말투',locked:true,req:'퀘이사 전용'},
 ];
 
 const ACCESSORIES = {
   mic: [
-    {id:'m1',emoji:'🎤',name:'기본 마이크',unlocked:true},
-    {id:'m2',emoji:'🎸',name:'기타',unlocked:true},
-    {id:'m3',emoji:'🎹',name:'키보드',unlocked:false,req:'상점'},
-    {id:'m4',emoji:'🪗',name:'아코디언',unlocked:false,req:'미션'},
+    {id:'m1',emoji:'',name:'기본 마이크',unlocked:true},
+    {id:'m2',emoji:'',name:'기타',unlocked:true},
+    {id:'m3',emoji:'',name:'키보드',unlocked:false,req:'상점'},
+    {id:'m4',emoji:'',name:'아코디언',unlocked:false,req:'미션'},
   ],
   ear: [
-    {id:'e1',emoji:'🎧',name:'헤드폰',unlocked:true},
-    {id:'e2',emoji:'🎵',name:'이어폰',unlocked:true},
-    {id:'e3',emoji:'📻',name:'레트로 헤드셋',unlocked:false,req:'상점'},
-    {id:'e4',emoji:'✨',name:'빛나는 이어폰',unlocked:false,req:'스타 리그'},
+    {id:'e1',emoji:'',name:'헤드폰',unlocked:true},
+    {id:'e2',emoji:'',name:'이어폰',unlocked:true},
+    {id:'e3',emoji:'',name:'레트로 헤드셋',unlocked:false,req:'상점'},
+    {id:'e4',emoji:'',name:'빛나는 이어폰',unlocked:false,req:'스타 리그'},
   ],
   glass: [
-    {id:'g1',emoji:'😎',name:'선글라스',unlocked:true},
-    {id:'g2',emoji:'🔮',name:'하트 안경',unlocked:true},
-    {id:'g3',emoji:'⭐',name:'별 안경',unlocked:false,req:'상점'},
-    {id:'g4',emoji:'💎',name:'다이아 안경',unlocked:false,req:'퀘이사 전용'},
+    {id:'g1',emoji:'',name:'선글라스',unlocked:true},
+    {id:'g2',emoji:'',name:'하트 안경',unlocked:true},
+    {id:'g3',emoji:'',name:'별 안경',unlocked:false,req:'상점'},
+    {id:'g4',emoji:'',name:'다이아 안경',unlocked:false,req:'퀘이사 전용'},
   ],
 };
 
 const EMOTIONS = [
-  {id:'e1',emoji:'😊',name:'따뜻한 미소',desc:'팬들에게 따뜻하게',chat:'다정하고 친근하게 대화해요'},
-  {id:'e2',emoji:'🥰',name:'사랑스럽게',desc:'팬을 사랑하는 표정',chat:'애정이 넘치는 말투로 대화해요'},
-  {id:'e3',emoji:'😎',name:'쿨하게',desc:'카리스마 넘치는',chat:'쿨하고 자신감 있게 대화해요'},
-  {id:'e4',emoji:'🤩',name:'신나게',desc:'에너지 넘치는',chat:'밝고 활기차게 대화해요'},
-  {id:'e5',emoji:'🥺',name:'애교있게',desc:'귀엽게 졸라요',chat:'귀엽고 애교있게 대화해요'},
-  {id:'e6',emoji:'😤',name:'당당하게',desc:'자신감 있게',chat:'당당하고 강하게 대화해요'},
-  {id:'e7',emoji:'🌙',name:'신비롭게',desc:'미스테리한 분위기',chat:'신비롭고 몽환적으로 대화해요'},
-  {id:'e8',emoji:'😇',name:'천사같이',desc:'순수하고 맑게',chat:'순수하고 맑게 대화해요'},
-  {id:'e9',emoji:'🔥',name:'열정적으로',desc:'뜨겁게 타오르며',chat:'열정적이고 힘차게 대화해요',locked:true,req:'노바 리그'},
+  {id:'e1',emoji:'',name:'따뜻한 미소',desc:'팬들에게 따뜻하게',chat:'다정하고 친근하게 대화해요'},
+  {id:'e2',emoji:'',name:'사랑스럽게',desc:'팬을 사랑하는 표정',chat:'애정이 넘치는 말투로 대화해요'},
+  {id:'e3',emoji:'',name:'쿨하게',desc:'카리스마 넘치는',chat:'쿨하고 자신감 있게 대화해요'},
+  {id:'e4',emoji:'',name:'신나게',desc:'에너지 넘치는',chat:'밝고 활기차게 대화해요'},
+  {id:'e5',emoji:'',name:'애교있게',desc:'귀엽게 졸라요',chat:'귀엽고 애교있게 대화해요'},
+  {id:'e6',emoji:'',name:'당당하게',desc:'자신감 있게',chat:'당당하고 강하게 대화해요'},
+  {id:'e7',emoji:'',name:'신비롭게',desc:'미스테리한 분위기',chat:'신비롭고 몽환적으로 대화해요'},
+  {id:'e8',emoji:'',name:'천사같이',desc:'순수하고 맑게',chat:'순수하고 맑게 대화해요'},
+  {id:'e9',emoji:'',name:'열정적으로',desc:'뜨겁게 타오르며',chat:'열정적이고 힘차게 대화해요',locked:true,req:'노바 리그'},
 ];
 
 // ══════════════════════════════════
@@ -426,7 +423,7 @@ const EMOTIONS = [
 // ══════════════════════════════════
 let artist = JSON.parse(localStorage.getItem('asteria_artist') || 'null') || {
   name: 'LUNA',
-  emoji: '🌙',
+  emoji: '',
   face: 'f1',
   skin: '#FDBCB4',
   hair: 'h1',

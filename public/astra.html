@@ -594,11 +594,8 @@ body::-webkit-scrollbar { width:0; }
   <a class="top-nav-item" href="/index.html">홈</a>
   <a class="top-nav-item" href="/fandom.html">팬덤</a>
   <a class="top-nav-item active" href="/astra.html">아스트라</a>
-  <a class="top-nav-item" href="/fandom.html">내팬덤</a>
   <a class="top-nav-item" href="/room3d.html">내방</a>
-  <a class="top-nav-item" href="/avatar.html">아바타</a>
   <a class="top-nav-item" href="/shop.html">상점</a>
-  <a class="top-nav-item" href="/competition.html">경쟁</a>
 </nav>
 
 <!-- 내 팬덤 버튼 (네비 바로 아래 중앙) -->
@@ -658,20 +655,26 @@ body::-webkit-scrollbar { width:0; }
   </div>
 
   <!-- 탭 바 -->
-  <div class="tab-bar">
-    <button class="tab-btn active" data-tab="character" onclick="switchTab('character')">
-      <span class="tab-icon">⭐</span>
-      <span class="tab-text">캐릭터</span>
-    </button>
-    <button class="tab-btn" data-tab="orbit" onclick="switchTab('orbit')">
-      <span class="tab-icon">🌌</span>
-      <span class="tab-text">성궤</span>
-    </button>
-    <button class="tab-btn" data-tab="record" onclick="switchTab('record')">
-      <span class="tab-icon">📜</span>
-      <span class="tab-text">전적</span>
-    </button>
-    <div class="tab-indicator" id="tabIndicator"></div>
+  <div style="display:flex; align-items:center; border-bottom: 1px solid rgba(255,255,255,0.08);">
+    <div class="tab-bar" style="flex:1; border-bottom:none;">
+      <button class="tab-btn active" data-tab="character" onclick="switchTab('character')">
+        <span class="tab-icon">⭐</span>
+        <span class="tab-text">캐릭터</span>
+      </button>
+      <button class="tab-btn" data-tab="orbit" onclick="switchTab('orbit')">
+        <span class="tab-icon">🌌</span>
+        <span class="tab-text">성궤</span>
+      </button>
+      <button class="tab-btn" data-tab="record" onclick="switchTab('record')">
+        <span class="tab-icon">📜</span>
+        <span class="tab-text">전적</span>
+      </button>
+      <div class="tab-indicator" id="tabIndicator"></div>
+    </div>
+    <div style="display:flex; gap:6px; padding-bottom:8px; flex-shrink:0; padding-right:12px;">
+      <button onclick="location.href='/avatar.html'" style="font-size:12px; padding:5px 14px; border-radius:20px; cursor:pointer; color:#c084fc; border:0.5px solid rgba(192,132,252,0.4); background:rgba(192,132,252,0.08); font-weight:500; white-space:nowrap;">아바타 꾸미기</button>
+      <button onclick="location.href='/competition.html'" style="font-size:12px; padding:5px 14px; border-radius:20px; cursor:pointer; color:#f0c040; border:0.5px solid rgba(240,192,64,0.4); background:rgba(240,192,64,0.08); font-weight:500; white-space:nowrap;">경쟁 참여</button>
+    </div>
   </div>
 
   <!-- 탭 컨텐츠 -->
@@ -739,35 +742,13 @@ body::-webkit-scrollbar { width:0; }
           <div class="profile-card" id="profCard"></div>
         </div>
 
-        <!-- 8. 경쟁 알림 배너 -->
-        <div class="comp-alert" id="compAlert">
-          <div class="comp-alert-icon">⚔️</div>
-          <div class="comp-alert-text">
-            <div class="comp-alert-title" id="alertTitle">팬덤 화력전 진행 중!</div>
-            <div class="comp-alert-sub" id="alertBody">우리 팬덤 현재 3위 — 2위까지 1,240pt 남음</div>
-          </div>
-          <button class="comp-alert-btn" id="alertBtn" onclick="doMission()">참여하기</button>
-        </div>
-
-        <!-- 9. 실시간 순위 -->
-        <div class="competition-panel">
-          <div class="section-title">✦ RANKING 팬덤 화력 순위</div>
-          <div class="comp-card">
-            <div class="comp-header">
-              <div class="comp-header-left">🏆 실시간 순위</div>
-              <div class="comp-live">LIVE</div>
-            </div>
-            <div class="comp-list" id="compRows"></div>
-          </div>
-        </div>
-
-        <!-- 10. 오늘의 성장 미션 -->
+        <!-- 8. 오늘의 성장 미션 -->
         <div class="missions-section">
           <div class="section-title">✦ MISSIONS 오늘의 성장 미션</div>
           <div class="mission-list" id="missionList"></div>
         </div>
 
-        <!-- 11. 리그 성장 로드맵 -->
+        <!-- 9. 리그 성장 로드맵 -->
         <div class="league-progress">
           <div class="section-title">✦ ROADMAP 리그 성장 로드맵</div>
           <div class="progress-track" id="leagueRoad"></div>
@@ -851,27 +832,27 @@ const LEAGUES = {
     bg:'radial-gradient(ellipse at 50% 30%,rgba(100,100,120,.25) 0%,transparent 65%)',
     orbitColor:'rgba(148,163,184,.15)',expColor:'linear-gradient(90deg,#64748b,#94a3b8)',
     gradeColor:'#94a3b8',unlockMsg:null,
-    aura:{name:'먼지의 잔상',emoji:'💨',color:'rgba(148,163,184,.3)',desc:'희미하게 빛나는 먼지 입자들이 주변을 맴돕니다.',effect:'dust'}},
-  star:{name:'스타 리그',nameEn:'STAR',icon:'🌟',color:'#fbbf24',color2:'#f59e0b',
+    aura:{name:'먼지의 잔상',emoji:'',color:'rgba(148,163,184,.3)',desc:'희미하게 빛나는 먼지 입자들이 주변을 맴돕니다.',effect:'dust'}},
+  star:{name:'스타 리그',nameEn:'STAR',icon:'',color:'#fbbf24',color2:'#f59e0b',
     bg:'radial-gradient(ellipse at 50% 30%,rgba(251,191,36,.2) 0%,rgba(192,132,252,.1) 50%,transparent 70%)',
     orbitColor:'rgba(251,191,36,.2)',expColor:'linear-gradient(90deg,#f59e0b,#fbbf24)',
     gradeColor:'#fbbf24',unlockMsg:'10만 멤버+클린활동지수',
-    aura:{name:'별빛 오라',emoji:'⭐',color:'rgba(251,191,36,.5)',desc:'열정이 빛이 되었습니다.',effect:'star'}},
-  planet:{name:'플래닛 리그',nameEn:'PLANET',icon:'🪐',color:'#34d399',color2:'#10b981',
+    aura:{name:'별빛 오라',emoji:'',color:'rgba(251,191,36,.5)',desc:'열정이 빛이 되었습니다.',effect:'star'}},
+  planet:{name:'플래닛 리그',nameEn:'PLANET',icon:'',color:'#34d399',color2:'#10b981',
     bg:'radial-gradient(ellipse at 40% 40%,rgba(52,211,153,.18) 0%,rgba(56,189,248,.1) 50%,transparent 70%)',
     orbitColor:'rgba(52,211,153,.2)',expColor:'linear-gradient(90deg,#10b981,#34d399)',
     gradeColor:'#34d399',unlockMsg:'50만+3개월우상향',
-    aura:{name:'행성 오라',emoji:'🪐',color:'rgba(52,211,153,.5)',desc:'단단한 구체의 중력이 느껴집니다.',effect:'planet'}},
-  nova:{name:'노바 리그',nameEn:'NOVA',icon:'💥',color:'#c084fc',color2:'#a855f7',
+    aura:{name:'행성 오라',emoji:'',color:'rgba(52,211,153,.5)',desc:'단단한 구체의 중력이 느껴집니다.',effect:'planet'}},
+  nova:{name:'노바 리그',nameEn:'NOVA',icon:'',color:'#c084fc',color2:'#a855f7',
     bg:'radial-gradient(ellipse at 50% 25%,rgba(192,132,252,.3) 0%,rgba(239,68,68,.1) 40%,transparent 70%)',
     orbitColor:'rgba(192,132,252,.25)',expColor:'linear-gradient(90deg,#a855f7,#c084fc)',
     gradeColor:'#c084fc',unlockMsg:'500만+글로벌활동',
-    aura:{name:'초신성 오라',emoji:'💫',color:'rgba(192,132,252,.7)',desc:'폭발하듯 퍼져나가는 에너지.',effect:'nova'}},
-  quasar:{name:'퀘이사 리그',nameEn:'QUASAR',icon:'⚡',color:'#f0c040',color2:'#e6a800',
+    aura:{name:'초신성 오라',emoji:'',color:'rgba(192,132,252,.7)',desc:'폭발하듯 퍼져나가는 에너지.',effect:'nova'}},
+  quasar:{name:'퀘이사 리그',nameEn:'QUASAR',icon:'',color:'#f0c040',color2:'#e6a800',
     bg:'radial-gradient(ellipse at 50% 20%,rgba(240,192,64,.35) 0%,rgba(192,132,252,.2) 35%,rgba(56,189,248,.1) 60%,transparent 80%)',
     orbitColor:'rgba(240,192,64,.3)',expColor:'linear-gradient(90deg,#f0c040,#ffd700)',
     gradeColor:'#f0c040',unlockMsg:'1000만+8단계조직',
-    aura:{name:'퀘이사 광채',emoji:'🌌',color:'rgba(240,192,64,.9)',desc:'우주를 관통하는 빛. 제국 그 자체.',effect:'quasar'}},
+    aura:{name:'퀘이사 광채',emoji:'',color:'rgba(240,192,64,.9)',desc:'우주를 관통하는 빛. 제국 그 자체.',effect:'quasar'}},
 };
 
 const GRADES=[
@@ -888,29 +869,29 @@ const GRADES=[
 ];
 
 const STAT_CONFIG=[
-  {key:'loy',label:'LOY',icon:'🌟',color:'#f0c040',name:'성실'},
-  {key:'act',label:'ACT',icon:'⚡',color:'#ef4444',name:'행동'},
-  {key:'soc',label:'SOC',icon:'💬',color:'#38bdf8',name:'사회'},
-  {key:'eco',label:'ECO',icon:'💰',color:'#10b981',name:'경제'},
-  {key:'cre',label:'CRE',icon:'🎨',color:'#a78bfa',name:'창의'},
-  {key:'int',label:'INT',icon:'📚',color:'#fbbf24',name:'지성'},
+  {key:'loy',label:'LOY',icon:'',color:'#f0c040',name:'성실'},
+  {key:'act',label:'ACT',icon:'',color:'#ef4444',name:'행동'},
+  {key:'soc',label:'SOC',icon:'',color:'#38bdf8',name:'사회'},
+  {key:'eco',label:'ECO',icon:'',color:'#10b981',name:'경제'},
+  {key:'cre',label:'CRE',icon:'',color:'#a78bfa',name:'창의'},
+  {key:'int',label:'INT',icon:'',color:'#fbbf24',name:'지성'},
 ];
 
 const MISSIONS=[
-  {id:'stream',icon:'🎵',name:'스트리밍 총공',desc:'음원 15분 이상 청취',ap:20,stat:'loy',completed:false},
-  {id:'vote',icon:'🗳️',name:'음방 투표',desc:'오늘의 음악방송 투표',ap:100,stat:'act',completed:false},
-  {id:'post',icon:'✍️',name:'응원 게시물',desc:'팬클럽 게시판에 글 작성',ap:5,stat:'soc',completed:false},
-  {id:'share',icon:'📢',name:'SNS 해시태그',desc:'#아스테리아 게시물 공유',ap:50,stat:'act',completed:true},
-  {id:'quiz',icon:'🔮',name:'아티스트 퀴즈',desc:'오라클 아카데미 1문제',ap:50,stat:'int',completed:false},
-  {id:'decor',icon:'🪑',name:'성궤 꾸미기',desc:'아이템 1개 배치',ap:30,stat:'cre',completed:false},
+  {id:'stream',icon:'',name:'스트리밍 총공',desc:'음원 15분 이상 청취',ap:20,stat:'loy',completed:false},
+  {id:'vote',icon:'',name:'음방 투표',desc:'오늘의 음악방송 투표',ap:100,stat:'act',completed:false},
+  {id:'post',icon:'',name:'응원 게시물',desc:'팬클럽 게시판에 글 작성',ap:5,stat:'soc',completed:false},
+  {id:'share',icon:'',name:'SNS 해시태그',desc:'#아스테리아 게시물 공유',ap:50,stat:'act',completed:true},
+  {id:'quiz',icon:'',name:'아티스트 퀴즈',desc:'오라클 아카데미 1문제',ap:50,stat:'int',completed:false},
+  {id:'decor',icon:'',name:'성궤 꾸미기',desc:'아이템 1개 배치',ap:30,stat:'cre',completed:false},
 ];
 
 const RANKING=[
-  {rank:1,name:'SERENADE',emoji:'🌟',qp:'127,450',delta:'+1,200',up:true,me:false},
-  {rank:2,name:'NOVA CORE',emoji:'💜',qp:'98,320',delta:'+890',up:true,me:false},
-  {rank:3,name:'ECLIPSE',emoji:'🔵',qp:'82,100',delta:'-320',up:false,me:false},
-  {rank:4,name:'AURORA',emoji:'💚',qp:'71,880',delta:'+2,100',up:true,me:true},
-  {rank:5,name:'SOLARIS',emoji:'🔴',qp:'63,240',delta:'-180',up:false,me:false},
+  {rank:1,name:'SERENADE',emoji:'',qp:'127,450',delta:'+1,200',up:true,me:false},
+  {rank:2,name:'NOVA CORE',emoji:'',qp:'98,320',delta:'+890',up:true,me:false},
+  {rank:3,name:'ECLIPSE',emoji:'',qp:'82,100',delta:'-320',up:false,me:false},
+  {rank:4,name:'AURORA',emoji:'',qp:'71,880',delta:'+2,100',up:true,me:true},
+  {rank:5,name:'SOLARIS',emoji:'',qp:'63,240',delta:'-180',up:false,me:false},
 ];
 
 const LEAGUE_ROAD=[
@@ -923,7 +904,7 @@ const LEAGUE_ROAD=[
 
 // ═══ STATE ═══
 let state={
-  name:'별빛 탐험가',emoji:'🌟',level:23,ap:4820,league:'dust',
+  name:'별빛 탐험가',emoji:'',level:23,ap:4820,league:'dust',
   stats:{loy:145,act:89,soc:67,eco:34,cre:112,int:78},
   tapCount:0,archetype:'수호자 Guardian',title:'먼지 속의 별 Star in Dust',
   fandom:'ARMY',joinDate:'2024.03.15',
@@ -1084,7 +1065,7 @@ function renderAll(){
   const aD=document.getElementById('auraDesc');if(aD)aD.textContent=league.aura.desc;
   const aU=document.getElementById('auraUnlock');
   if(aU&&league.unlockMsg){aU.textContent='🔓 '+league.unlockMsg;aU.style.color=league.color;}
-  renderStatList(league);drawHex();renderRanking();renderMissions();
+  renderStatList(league);drawHex();renderMissions();
   renderLeagueRoad(league);renderLeagueTabs();renderSummary();
 }
 
@@ -1240,10 +1221,10 @@ function renderRecordTab(){
   // 뱃지
   const bg=document.getElementById('badgeGrid');
   if(bg){bg.innerHTML=[
-    {emoji:'🌟',name:'탐험가',locked:false},{emoji:'🔥',name:'열정',locked:false},
-    {emoji:'💜',name:'팬심',locked:false},{emoji:'🏆',name:'우승',locked:true},
-    {emoji:'👑',name:'소버린',locked:true},{emoji:'💎',name:'제네시스',locked:true},
-    {emoji:'⚡',name:'퀘이사',locked:true},{emoji:'🌌',name:'은하',locked:true},
+    {emoji:'',name:'탐험가',locked:false},{emoji:'',name:'열정',locked:false},
+    {emoji:'',name:'팬심',locked:false},{emoji:'',name:'우승',locked:true},
+    {emoji:'',name:'소버린',locked:true},{emoji:'',name:'제네시스',locked:true},
+    {emoji:'',name:'퀘이사',locked:true},{emoji:'',name:'은하',locked:true},
   ].map(b=>'<div class="badge-item '+(b.locked?'locked':'')+'"><div class="badge-emoji">'+b.emoji+'</div><div class="badge-name">'+b.name+'</div></div>').join('');}
 }
 
@@ -1326,7 +1307,7 @@ function rotateAlert(){
   const btn=document.getElementById('alertBtn');if(btn){btn.style.background=a.btnColor;btn.textContent=a.btn;}
   alertIdx++;
 }
-setInterval(rotateAlert,5000);
+// setInterval(rotateAlert,5000);
 
 // ═══ 별빛 배경 ═══
 (function(){
@@ -1399,15 +1380,8 @@ if(typeof initAvatarCardSync === 'function') {
     { id:'orbitAvatarCard', options:{ size:'sm', layout:'horizontal', showName:true, showLevel:true, showLeague:true, showAura:true, showSerial:true } }
   ]);
 }
-rotateAlert();
+// rotateAlert();
 restoreTab();
-
-setInterval(()=>{
-  RANKING.forEach(r=>{const d=Math.floor(Math.random()*50)-20;
-    r.delta=(d>0?'+':'')+d.toLocaleString();r.up=d>0;});
-  renderRanking();
-},3000);
-
 
 function renderAstraId(el, serial) {
   if(!el || !serial) return;

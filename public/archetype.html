@@ -111,14 +111,11 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 
 <div id="app">
   <nav class="top-nav">
-    <a class="top-nav-item" href="/"><div class="top-nav-icon">🏠</div><div class="top-nav-label">홈</div></a>
-    <a class="top-nav-item" href="/astra.html"><div class="top-nav-icon">⭐</div><div class="top-nav-label">아스트라</div></a>
-    <a class="top-nav-item" href="/fandom.html"><div class="top-nav-icon">🏘️</div><div class="top-nav-label">내팬덤</div></a>
-    <a class="top-nav-item" href="/room3d.html"><div class="top-nav-icon">🏡</div><div class="top-nav-label">내 방</div></a>
-    <a class="top-nav-item" href="/league.html"><div class="top-nav-icon">🌌</div><div class="top-nav-label">리그</div></a>
-    <a class="top-nav-item active" href="/archetype.html"><div class="top-nav-icon">🎭</div><div class="top-nav-label">아키타입</div></a>
-    <a class="top-nav-item" href="/shop.html"><div class="top-nav-icon">🛒</div><div class="top-nav-label">상점</div></a>
-    <a class="top-nav-item" href="/competition.html">경쟁</a>
+    <a class="top-nav-item" href="/"><div class="top-nav-icon"></div><div class="top-nav-label">홈</div></a>
+    <a class="top-nav-item" href="/fandom.html"><div class="top-nav-icon"></div><div class="top-nav-label">팬덤</div></a>
+    <a class="top-nav-item" href="/astra.html"><div class="top-nav-icon"></div><div class="top-nav-label">아스트라</div></a>
+    <a class="top-nav-item" href="/room3d.html"><div class="top-nav-icon"></div><div class="top-nav-label">내방</div></a>
+    <a class="top-nav-item" href="/shop.html"><div class="top-nav-icon"></div><div class="top-nav-label">상점</div></a>
   </nav>
 
   <div class="page-title">ARCHETYPE PROFILE</div>
@@ -139,9 +136,9 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
         <div class="card-season">
           <div class="card-season-title">SEASON HISTORY — 시즌 기록</div>
           <div class="card-badges">
-            <div class="season-badge"><div class="sb-circle">🛡️</div><div class="sb-label">S1</div></div>
-            <div class="season-badge"><div class="sb-circle">♟️</div><div class="sb-label">S2</div></div>
-            <div class="season-badge"><div class="sb-circle">✨</div><div class="sb-label">S3</div></div>
+            <div class="season-badge"><div class="sb-circle"></div><div class="sb-label">S1</div></div>
+            <div class="season-badge"><div class="sb-circle"></div><div class="sb-label">S2</div></div>
+            <div class="season-badge"><div class="sb-circle"></div><div class="sb-label">S3</div></div>
           </div>
         </div>
         <div class="card-watermark">ASTERIA — ARCHETYPE CARD</div>
@@ -150,10 +147,10 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
   </div>
 
   <div class="share-row">
-    <button class="share-btn insta" onclick="shareCard('instagram')"><span class="s-icon">📸</span>인스타</button>
-    <button class="share-btn twitter" onclick="shareCard('twitter')"><span class="s-icon">🐦</span>X</button>
-    <button class="share-btn kakao" onclick="shareCard('kakao')"><span class="s-icon">💬</span>카카오</button>
-    <button class="share-btn link" onclick="shareCard('link')"><span class="s-icon">🔗</span>링크복사</button>
+    <button class="share-btn insta" onclick="shareCard('instagram')"><span class="s-icon"></span>인스타</button>
+    <button class="share-btn twitter" onclick="shareCard('twitter')"><span class="s-icon"></span>X</button>
+    <button class="share-btn kakao" onclick="shareCard('kakao')"><span class="s-icon"></span>카카오</button>
+    <button class="share-btn link" onclick="shareCard('link')"><span class="s-icon"></span>링크복사</button>
   </div>
 </div>
 
@@ -188,27 +185,27 @@ STATS_DEF.forEach(s=>{myStats[s.key]=stored?.[s.key]??DEFAULT_STATS[s.key]});
 const savedChars=JSON.parse(localStorage.getItem('asteria_chars')||'null');
 const NICKNAME=savedChars?.my?.name||'별빛 탐험가';
 const ORBIT_NUM='#00,000,001';
-const LEAGUE='⭐ 스타 리그 · Lv.23 — Star League';
+const LEAGUE='스타 리그 · Lv.23 — Star League';
 
 // ══════════════════════════════════════════
 //  15종 아키타입 매핑
 // ══════════════════════════════════════════
 const ARCHETYPES={
-  'LOY+ACT':{en:'GUARDIAN',kr:'수호자형',icon:'🛡️',desc:'팬덤의 방패, 묵묵히 지키는 수호자 / The silent shield of the fandom'},
-  'LOY+SOC':{en:'HEALER',kr:'힐러형',icon:'💚',desc:'따뜻한 위로로 팬덤을 치유하는 존재 / A warm presence that heals the fandom'},
-  'LOY+INT':{en:'SAGE',kr:'현자형',icon:'📜',desc:'깊은 지혜로 팬덤을 이끄는 현인 / A wise guide leading the fandom'},
-  'LOY+CRE':{en:'DREAMER',kr:'몽상가형',icon:'🌙',desc:'별빛 속 꿈을 그리는 몽상가 / A dreamer painting dreams among stars'},
-  'LOY+ECO':{en:'PIONEER',kr:'개척자형',icon:'🚀',desc:'새로운 길을 여는 팬덤의 개척자 / A pioneer carving new paths'},
-  'ACT+SOC':{en:'CHEERLEADER',kr:'응원단장형',icon:'📣',desc:'열정적인 에너지로 팬덤을 이끄는 단장 / Leading the fandom with passionate energy'},
-  'ACT+CRE':{en:'EXPLORER',kr:'모험가형',icon:'🗺️',desc:'끝없는 도전과 탐험의 모험가 / An adventurer of endless challenges'},
-  'ACT+ECO':{en:'WARRIOR',kr:'전사형',icon:'⚔️',desc:'팬덤을 위해 싸우는 전사 / A warrior fighting for the fandom'},
-  'ACT+INT':{en:'STRATEGIST',kr:'전략가형',icon:'♟️',desc:'정확한 분석으로 승리를 이끄는 전략가 / A strategist leading through analysis'},
-  'SOC+CRE':{en:'DIPLOMAT',kr:'외교관형',icon:'🤝',desc:'사람을 연결하고 조화를 이끄는 외교관 / A diplomat creating harmony'},
-  'SOC+INT':{en:'ANALYST',kr:'분석가형',icon:'🔍',desc:'데이터로 팬덤을 읽는 분석가 / An analyst reading the fandom through data'},
-  'SOC+ECO':{en:'COLLECTOR',kr:'수집가형',icon:'💎',desc:'희귀한 것들을 모으는 열정적 수집가 / A passionate collector of rare treasures'},
-  'CRE+INT':{en:'CREATOR',kr:'창작자형',icon:'✨',desc:'새로운 콘텐츠를 만드는 창작자 / A creator crafting new content'},
-  'CRE+ECO':{en:'ARTIST',kr:'예술가형',icon:'🎨',desc:'아름다움을 창조하는 예술가 / An artist creating beauty'},
-  'INT+ECO':{en:'COMMANDER',kr:'지휘관형',icon:'👑',desc:'전체를 지휘하는 팬덤의 지휘관 / A commander directing the fandom'},
+  'LOY+ACT':{en:'GUARDIAN',kr:'수호자형',icon:'',desc:'팬덤의 방패, 묵묵히 지키는 수호자 / The silent shield of the fandom'},
+  'LOY+SOC':{en:'HEALER',kr:'힐러형',icon:'',desc:'따뜻한 위로로 팬덤을 치유하는 존재 / A warm presence that heals the fandom'},
+  'LOY+INT':{en:'SAGE',kr:'현자형',icon:'',desc:'깊은 지혜로 팬덤을 이끄는 현인 / A wise guide leading the fandom'},
+  'LOY+CRE':{en:'DREAMER',kr:'몽상가형',icon:'',desc:'별빛 속 꿈을 그리는 몽상가 / A dreamer painting dreams among stars'},
+  'LOY+ECO':{en:'PIONEER',kr:'개척자형',icon:'',desc:'새로운 길을 여는 팬덤의 개척자 / A pioneer carving new paths'},
+  'ACT+SOC':{en:'CHEERLEADER',kr:'응원단장형',icon:'',desc:'열정적인 에너지로 팬덤을 이끄는 단장 / Leading the fandom with passionate energy'},
+  'ACT+CRE':{en:'EXPLORER',kr:'모험가형',icon:'',desc:'끝없는 도전과 탐험의 모험가 / An adventurer of endless challenges'},
+  'ACT+ECO':{en:'WARRIOR',kr:'전사형',icon:'',desc:'팬덤을 위해 싸우는 전사 / A warrior fighting for the fandom'},
+  'ACT+INT':{en:'STRATEGIST',kr:'전략가형',icon:'',desc:'정확한 분석으로 승리를 이끄는 전략가 / A strategist leading through analysis'},
+  'SOC+CRE':{en:'DIPLOMAT',kr:'외교관형',icon:'',desc:'사람을 연결하고 조화를 이끄는 외교관 / A diplomat creating harmony'},
+  'SOC+INT':{en:'ANALYST',kr:'분석가형',icon:'',desc:'데이터로 팬덤을 읽는 분석가 / An analyst reading the fandom through data'},
+  'SOC+ECO':{en:'COLLECTOR',kr:'수집가형',icon:'',desc:'희귀한 것들을 모으는 열정적 수집가 / A passionate collector of rare treasures'},
+  'CRE+INT':{en:'CREATOR',kr:'창작자형',icon:'',desc:'새로운 콘텐츠를 만드는 창작자 / A creator crafting new content'},
+  'CRE+ECO':{en:'ARTIST',kr:'예술가형',icon:'',desc:'아름다움을 창조하는 예술가 / An artist creating beauty'},
+  'INT+ECO':{en:'COMMANDER',kr:'지휘관형',icon:'',desc:'전체를 지휘하는 팬덤의 지휘관 / A commander directing the fandom'},
 };
 
 function getArchetype(){
@@ -332,7 +329,7 @@ async function shareCard(platform){
 
     if(platform==='link'){
       await navigator.clipboard?.writeText(location.href);
-      showToast('🔗 링크가 복사되었습니다! — Link copied!');
+      showToast('링크가 복사되었습니다! — Link copied!');
       return;
     }
 
@@ -348,7 +345,7 @@ async function shareCard(platform){
       kakao:`https://story.kakao.com/share?url=${encodeURIComponent(location.href)}`,
     };
     if(urls[platform]) setTimeout(()=>window.open(urls[platform],'_blank'),500);
-    showToast('📸 카드 이미지가 저장되었습니다! — Card saved!');
+    showToast('카드 이미지가 저장되었습니다! — Card saved!');
   }catch(e){
     console.error(e);
     showToast('공유 중 오류가 발생했습니다');
@@ -386,10 +383,10 @@ renderCard();
 .bug-submit{background:linear-gradient(90deg,#4a90d9,#7c5ce0);color:#fff}
 .bug-cancel{background:transparent;border:1px solid rgba(200,175,80,0.2)!important;color:#e8ecf4}
 </style>
-<button class="bug-report-btn" onclick="document.getElementById('bugModal').classList.add('open')" title="버그 신고">🐛</button>
+<button class="bug-report-btn" onclick="document.getElementById('bugModal').classList.add('open')" title="버그 신고"></button>
 <div class="bug-modal-overlay" id="bugModal" onclick="if(event.target===this)this.classList.remove('open')">
 <div class="bug-modal">
-<h3>🐛 버그 신고</h3>
+<h3>버그 신고</h3>
 <label>어떤 페이지에서 문제가 발생했나요?</label>
 <select id="bugPage"><option value="home">홈</option><option value="astra">아스트라</option><option value="room">내 방</option><option value="nebula">성궤</option><option value="avatar">아바타</option><option value="shop">상점</option><option value="chat">채팅</option><option value="league">리그</option><option value="stats">스탯</option><option value="archetype">아키타입</option><option value="other">기타</option></select>
 <label>어떤 문제인가요?</label>

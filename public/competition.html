@@ -120,11 +120,8 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
   <a class="top-nav-item" href="/index.html">홈</a>
   <a class="top-nav-item" href="/fandom.html">팬덤</a>
   <a class="top-nav-item" href="/astra.html">아스트라</a>
-  <a class="top-nav-item" href="/fandom.html">내팬덤</a>
   <a class="top-nav-item" href="/room3d.html">내방</a>
-  <a class="top-nav-item" href="/avatar.html">아바타</a>
   <a class="top-nav-item" href="/shop.html">상점</a>
-  <a class="top-nav-item active" href="/competition.html">경쟁</a>
 </nav>
 
 <!-- 내 팬덤 버튼 (경쟁 탭 바로 아래 우측) -->
@@ -162,33 +159,33 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 
   <!-- 탭 -->
   <div class="tab-bar">
-    <button class="ctab active" data-tab="statking">⚡ 스탯킹</button>
-    <button class="ctab" data-tab="hexagon">🔷 헥사곤</button>
-    <button class="ctab" data-tab="statrace">🏁 스탯레이스</button>
-    <button class="ctab" data-tab="marathon">🌱 성장마라톤</button>
-    <button class="ctab" data-tab="challenge">🎯 도전과제</button>
+    <button class="ctab active" data-tab="statking">스탯킹</button>
+    <button class="ctab" data-tab="hexagon">헥사곤</button>
+    <button class="ctab" data-tab="statrace">스탯레이스</button>
+    <button class="ctab" data-tab="marathon">성장마라톤</button>
+    <button class="ctab" data-tab="challenge">도전과제</button>
   </div>
 
   <!-- ═══════════ sec-statking ═══════════ -->
   <div id="sec-statking" class="sec active">
-    <div class="sec-title"><h2>👑 스탯킹 | Stat King</h2><p>6대 스탯 각 부문 1위에게 왕관이 주어집니다</p></div>
+    <div class="sec-title"><h2>스탯킹 | Stat King</h2><p>6대 스탯 각 부문 1위에게 왕관이 주어집니다</p></div>
 
     <div class="league-filter" id="leagueFilter">
-      <button class="league-btn on" data-l="dust" onclick="pickLeague('dust',this)">✨ 더스트</button>
-      <button class="league-btn" data-l="star" onclick="pickLeague('star',this)">🌟 스타</button>
-      <button class="league-btn" data-l="planet" onclick="pickLeague('planet',this)">🪐 플래닛</button>
-      <button class="league-btn" data-l="nova" onclick="pickLeague('nova',this)">💥 노바</button>
-      <button class="league-btn" data-l="quasar" onclick="pickLeague('quasar',this)">⚡ 퀘이사</button>
+      <button class="league-btn on" data-l="dust" onclick="pickLeague('dust',this)">더스트</button>
+      <button class="league-btn" data-l="star" onclick="pickLeague('star',this)">스타</button>
+      <button class="league-btn" data-l="planet" onclick="pickLeague('planet',this)">플래닛</button>
+      <button class="league-btn" data-l="nova" onclick="pickLeague('nova',this)">노바</button>
+      <button class="league-btn" data-l="quasar" onclick="pickLeague('quasar',this)">퀘이사</button>
     </div>
 
     <div class="stat-bar" id="statBar">
-      <button class="schip on" onclick="pickStat('total',this)">🏆 종합</button>
-      <button class="schip" onclick="pickStat('loy',this)">❤️ LOY</button>
-      <button class="schip" onclick="pickStat('act',this)">⚡ ACT</button>
-      <button class="schip" onclick="pickStat('soc',this)">💬 SOC</button>
-      <button class="schip" onclick="pickStat('eco',this)">💰 ECO</button>
-      <button class="schip" onclick="pickStat('cre',this)">🎨 CRE</button>
-      <button class="schip" onclick="pickStat('int',this)">🧠 INT</button>
+      <button class="schip on" onclick="pickStat('total',this)">종합</button>
+      <button class="schip" onclick="pickStat('loy',this)">LOY</button>
+      <button class="schip" onclick="pickStat('act',this)">ACT</button>
+      <button class="schip" onclick="pickStat('soc',this)">SOC</button>
+      <button class="schip" onclick="pickStat('eco',this)">ECO</button>
+      <button class="schip" onclick="pickStat('cre',this)">CRE</button>
+      <button class="schip" onclick="pickStat('int',this)">INT</button>
     </div>
 
     <div style="padding:8px 0"><div id="skList"></div></div>
@@ -196,7 +193,7 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 
   <!-- ═══════════ sec-hexagon ═══════════ -->
   <div id="sec-hexagon" class="sec">
-    <div class="sec-title"><h2>🔷 헥사곤 배틀 | Hexagon Battle</h2><p>6대 스탯 균형 대결 — 누가 더 완벽한 헥사곤?</p></div>
+    <div class="sec-title"><h2>헥사곤 배틀 | Hexagon Battle</h2><p>6대 스탯 균형 대결 — 누가 더 완벽한 헥사곤?</p></div>
 
     <div style="display:flex;align-items:center;justify-content:center;gap:12px;padding:12px 16px">
       <div class="hex-player"><div style="font-size:10px;color:var(--muted);margin-bottom:4px">나</div><div style="font-size:13px;font-weight:700;color:#38bdf8" id="hexMyName">별빛탐험가</div></div>
@@ -215,10 +212,10 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 
   <!-- ═══════════ sec-statrace ═══════════ -->
   <div id="sec-statrace" class="sec">
-    <div class="sec-title"><h2>🏁 스탯 레이스 | Stat Race</h2><p>이번 달 지정 스탯을 집중 경쟁합니다</p></div>
+    <div class="sec-title"><h2>스탯 레이스 | Stat Race</h2><p>이번 달 지정 스탯을 집중 경쟁합니다</p></div>
 
     <div class="card" style="margin:12px 16px;text-align:center">
-      <div style="font-size:20px;margin-bottom:4px">⚡</div>
+      <div style="font-size:20px;margin-bottom:4px"></div>
       <div style="font-family:'Orbitron',monospace;font-size:16px;font-weight:900;color:var(--gold)">ACT — 행동력</div>
       <div style="font-size:11px;color:var(--muted);margin-top:4px">이번 달 집중 경쟁 스탯</div>
       <div style="font-size:12px;color:#ef4444;font-weight:700;margin-top:6px" id="raceCountdown"></div>
@@ -244,21 +241,21 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
     <div class="card" style="margin:0 16px 12px">
       <div style="font-size:13px;color:var(--muted);margin-bottom:12px">내 이번 달 성장량</div>
       <div style="display:flex;flex-direction:column;gap:8px">
-        <div style="display:flex;justify-content:space-between"><span style="color:#c084fc">💜 LOY</span><span style="color:rgba(220,210,240,0.7)">1,200 → 1,458</span><span style="color:#4ade80;font-weight:700">+258</span></div>
-        <div style="display:flex;justify-content:space-between"><span style="color:#f59e0b">⚡ ACT</span><span style="color:rgba(220,210,240,0.7)">1,900 → 2,340</span><span style="color:#4ade80;font-weight:700">+440 ⭐</span></div>
-        <div style="display:flex;justify-content:space-between"><span style="color:#34d399">🌐 SOC</span><span style="color:rgba(220,210,240,0.7)">780 → 890</span><span style="color:#4ade80;font-weight:700">+110</span></div>
-        <div style="display:flex;justify-content:space-between"><span style="color:#fbbf24">💰 ECO</span><span style="color:rgba(220,210,240,0.7)">2,800 → 3,120</span><span style="color:#4ade80;font-weight:700">+320</span></div>
-        <div style="display:flex;justify-content:space-between"><span style="color:#f472b6">✨ CRE</span><span style="color:rgba(220,210,240,0.7)">450 → 560</span><span style="color:#4ade80;font-weight:700">+110</span></div>
-        <div style="display:flex;justify-content:space-between"><span style="color:#38bdf8">📚 INT</span><span style="color:rgba(220,210,240,0.7)">1,700 → 1,980</span><span style="color:#4ade80;font-weight:700">+280</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:#c084fc">LOY</span><span style="color:rgba(220,210,240,0.7)">1,200 → 1,458</span><span style="color:#4ade80;font-weight:700">+258</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:#f59e0b">ACT</span><span style="color:rgba(220,210,240,0.7)">1,900 → 2,340</span><span style="color:#4ade80;font-weight:700">+440</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:#34d399">SOC</span><span style="color:rgba(220,210,240,0.7)">780 → 890</span><span style="color:#4ade80;font-weight:700">+110</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:#fbbf24">ECO</span><span style="color:rgba(220,210,240,0.7)">2,800 → 3,120</span><span style="color:#4ade80;font-weight:700">+320</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:#f472b6">CRE</span><span style="color:rgba(220,210,240,0.7)">450 → 560</span><span style="color:#4ade80;font-weight:700">+110</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:#38bdf8">INT</span><span style="color:rgba(220,210,240,0.7)">1,700 → 1,980</span><span style="color:#4ade80;font-weight:700">+280</span></div>
       </div>
       <div style="border-top:1px solid rgba(180,150,255,0.13);margin-top:14px;padding-top:14px;text-align:center">
         <span style="font-family:'Orbitron',monospace;color:#f0c040;font-size:22px;font-weight:700">총 성장량 +1,518</span>
-        <div style="color:#4ade80;font-size:13px;margin-top:6px">🌱 현재 리그 내 3위 성장 중!</div>
+        <div style="color:#4ade80;font-size:13px;margin-top:6px">현재 리그 내 3위 성장 중!</div>
       </div>
     </div>
 
     <div style="padding:0 0 8px"><div id="mrList"></div></div>
-    <p style="text-align:center;color:rgba(220,210,240,0.5);font-size:12px;padding:12px 16px">💡 매일 꾸준히 활동하면 누구든 성장왕이 될 수 있어요!</p>
+    <p style="text-align:center;color:rgba(220,210,240,0.5);font-size:12px;padding:12px 16px">매일 꾸준히 활동하면 누구든 성장왕이 될 수 있어요!</p>
   </div>
 
   <!-- ═══════════ sec-challenge ═══════════ -->
@@ -280,11 +277,11 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
     </div>
 
     <!-- 빙고 5x5 -->
-    <div style="padding:0 16px 4px;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1px;margin-bottom:6px">📋 도전과제 빙고판</div>
+    <div style="padding:0 16px 4px;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1px;margin-bottom:6px">도전과제 빙고판</div>
     <div class="bingo" id="bingoGrid"></div>
 
     <!-- 도전과제 랭킹 -->
-    <div style="padding:4px 16px 4px;font-size:11px;font-weight:700;color:var(--muted)">🏆 도전과제 랭킹 TOP 7</div>
+    <div style="padding:4px 16px 4px;font-size:11px;font-weight:700;color:var(--muted)">도전과제 랭킹 TOP 7</div>
     <div style="padding:0 0 8px" id="chList"></div>
   </div>
 
@@ -371,7 +368,7 @@ function renderSK(){
     if(cv==='0'){cc='eq';ct='—';}else if(cv.charAt(0)==='+'){cc='up';ct='↑'+cv.slice(1);}else{cc='dn';ct='↓'+cv.slice(1);}
     h+='<div class="ri '+cls+'" style="animation-delay:'+(i*.04)+'s">';
     h+='<span class="rk">'+(medal||num)+'</span>';
-    h+='<span class="nm">'+r.nm+(r.me?' <span style="font-size:9px;color:#38bdf8">← 나</span>':'')+'</span>';
+    h+='<span class="nm">'+r.nm+(r.me?' <span style="font-size:9px;color:#38bdf8">나</span>':'')+'</span>';
     h+='<span class="sc">'+r.sc.toLocaleString()+'</span>';
     h+='<span class="ch '+cc+'">'+ct+'</span></div>';
   });
@@ -442,7 +439,7 @@ function renderSR(){
     var cls=i===0?'g':i===1?'s':i===2?'b':'';if(r.me)cls+=' me';
     var cv=r.ch,cc,ct;
     if(cv==='0'){cc='eq';ct='—';}else if(cv.charAt(0)==='+'){cc='up';ct='↑'+cv.slice(1);}else{cc='dn';ct='↓'+cv.slice(1);}
-    h+='<div class="ri '+cls+'" style="animation-delay:'+(i*.04)+'s"><span class="rk">'+(i<3?m[i]:r.rk)+'</span><span class="nm">'+r.nm+(r.me?' <span style="font-size:9px;color:#38bdf8">← 나</span>':'')+'</span><span class="sc">'+r.sc.toLocaleString()+'</span><span class="ch '+cc+'">'+ct+'</span></div>';
+    h+='<div class="ri '+cls+'" style="animation-delay:'+(i*.04)+'s"><span class="rk">'+(i<3?m[i]:r.rk)+'</span><span class="nm">'+r.nm+(r.me?' <span style="font-size:9px;color:#38bdf8">나</span>':'')+'</span><span class="sc">'+r.sc.toLocaleString()+'</span><span class="ch '+cc+'">'+ct+'</span></div>';
   });
   document.getElementById('srList').innerHTML=h;
   // countdown
@@ -464,7 +461,7 @@ function renderMR(){
   var h='',m=['👑','🥈','🥉'];
   MR_DATA.forEach(function(r,i){
     var cls=i===0?'g':i===1?'s':i===2?'b':'';if(r.me)cls+=' me';
-    h+='<div class="ri '+cls+'" style="animation-delay:'+(i*.04)+'s"><span class="rk">'+(i<3?m[i]:r.rk)+'</span><span class="nm">'+r.nm+(r.me?' <span style="font-size:9px;color:#34d399">← 나</span>':'')+'</span><span class="sc">+'+r.sc.toLocaleString()+'</span><span class="tag">'+r.tag+'</span></div>';
+    h+='<div class="ri '+cls+'" style="animation-delay:'+(i*.04)+'s"><span class="rk">'+(i<3?m[i]:r.rk)+'</span><span class="nm">'+r.nm+(r.me?' <span style="font-size:9px;color:#34d399">나</span>':'')+'</span><span class="sc">+'+r.sc.toLocaleString()+'</span><span class="tag">'+r.tag+'</span></div>';
   });
   document.getElementById('mrList').innerHTML=h;
 }
@@ -487,7 +484,7 @@ function renderCH(){
   // bingo
   var g=document.getElementById('bingoGrid'),h='';
   BINGO.forEach(function(c){
-    var icon=c.s==='done'?'✅':c.s==='prog'?'🔄':'🔒';
+    var icon=c.s==='done'?'':c.s==='prog'?''':'';
     var sub=c.p?'<div style="font-size:7px;margin-top:1px;opacity:.8">'+c.p+'</div>':'';
     h+='<div class="bcell '+c.s+'"><div>'+icon+'</div><div style="margin-top:2px">'+c.t.replace(/\n/g,'<br>')+'</div>'+sub+'</div>';
   });

@@ -590,11 +590,8 @@ html,body {
   <a class="top-nav-item" href="/index.html">홈</a>
   <a class="top-nav-item" href="/fandom.html">팬덤</a>
   <a class="top-nav-item" href="/astra.html">아스트라</a>
-  <a class="top-nav-item" href="/fandom.html">내팬덤</a>
   <a class="top-nav-item active" href="/room3d.html">내방</a>
-  <a class="top-nav-item" href="/avatar.html">아바타</a>
   <a class="top-nav-item" href="/shop.html">상점</a>
-  <a class="top-nav-item" href="/competition.html">경쟁</a>
 </nav>
 
 <!-- 내 팬덤 버튼 (네비 바로 아래 중앙) -->
@@ -616,7 +613,7 @@ html,body {
     cursor: pointer;
     white-space: nowrap;
     backdrop-filter: blur(10px);
-  ">🏘️ 내 팬덤</button>
+  ">내 팬덤</button>
 </div>
 
 <canvas id="starCanvas"></canvas>
@@ -639,7 +636,7 @@ html,body {
   <div class="memory-card" id="memoryCard">
     <div class="mc-header">
       <div class="mc-date" id="mcDate"></div>
-      <button class="mc-close" onclick="closeMemory()">✕</button>
+      <button class="mc-close" onclick="closeMemory()">&times;</button>
     </div>
     <div class="mc-body">
       <div class="mc-text" id="mcText"></div>
@@ -648,7 +645,7 @@ html,body {
         <input class="mc-memo-input" id="mcMemo" placeholder="이날의 기억을 남겨주세요 — Leave a note" maxlength="100">
         <button class="mc-memo-send" onclick="saveMemoryMemo()">저장</button>
       </div>
-      <div class="mc-saved" id="mcSaved">✨ 기억이 저장되었습니다 — Memory saved</div>
+      <div class="mc-saved" id="mcSaved">기억이 저장되었습니다 — Memory saved</div>
     </div>
   </div>
 </div>
@@ -658,16 +655,16 @@ html,body {
   <div class="diary-card">
     <div class="dc-header">
       <div><div class="dc-date" id="dcDate">2026.03.28</div><div class="dc-time" id="dcTime">아침 — Morning</div></div>
-      <button class="dc-close" onclick="closeMusicDiary()">✕</button>
+      <button class="dc-close" onclick="closeMusicDiary()">&times;</button>
     </div>
     <div class="dc-body"><div class="dc-text" id="dcText"></div></div>
     <div class="dc-reactions">
-      <button class="dc-react" onclick="diaryReact(this)">❤️</button>
+      <button class="dc-react" onclick="diaryReact(this)"></button>
       <button class="dc-react" onclick="diaryReact(this)">💪</button>
       <button class="dc-react" onclick="diaryReact(this)">😢</button>
       <button class="dc-react" onclick="diaryReact(this)">😂</button>
-      <button class="dc-react" onclick="diaryReact(this)">🔥</button>
-      <button class="dc-react" onclick="diaryReact(this)">💫</button>
+      <button class="dc-react" onclick="diaryReact(this)"></button>
+      <button class="dc-react" onclick="diaryReact(this)"></button>
     </div>
     <div class="dc-comment">
       <input class="dc-input" id="dcInput" placeholder="한 줄 응원을 남겨주세요 — Leave a message" maxlength="100">
@@ -687,10 +684,10 @@ html,body {
   <!-- TOP BAR -->
   <div class="topbar">
     <a class="tb-back" href="/">←</a>
-    <div class="tb-title" id="roomTitle">🏡 별빛 탐험가의 방</div>
+    <div class="tb-title" id="roomTitle">별빛 탐험가의 방</div>
     <div class="tb-actions">
-      <button class="tb-btn tb-share" onclick="shareRoom()">공유 📤</button>
-      <button class="tb-btn tb-edit" id="editBtn" onclick="toggleEdit()">꾸미기 ✏️</button>
+      <button class="tb-btn tb-share" onclick="shareRoom()">공유</button>
+      <button class="tb-btn tb-edit" id="editBtn" onclick="toggleEdit()">꾸미기</button>
     </div>
   </div>
 
@@ -703,10 +700,10 @@ html,body {
       <!-- 프로필 -->
       <div class="lp-section">
         <div class="profile-row">
-          <div class="profile-av">🌟</div>
+          <div class="profile-av"></div>
           <div class="profile-info">
             <div class="profile-name" id="roomProfileName">별빛 탐험가</div>
-            <div class="profile-grade" id="roomProfileGrade">✨ 더스트 리그 · Lv.1</div>
+            <div class="profile-grade" id="roomProfileGrade">더스트 리그 · Lv.1</div>
             <div class="profile-stats">
               <div class="ps-item">방문 <span id="visitCnt">127</span></div>
               <div class="ps-item">하트 <span id="heartCnt">89</span></div>
@@ -726,7 +723,7 @@ html,body {
             <div class="sdot" id="sd3"></div>
           </div>
           <div class="stage-txt">
-            <div class="stage-name" id="stageName">🌑 Void</div>
+            <div class="stage-name" id="stageName">Void</div>
             <div class="stage-desc" id="stageDesc">아이템을 더 배치하세요!</div>
           </div>
           <div class="stage-cnt" id="stageCnt">1/4</div>
@@ -751,9 +748,9 @@ html,body {
       <!-- 통계 -->
       <div class="lp-section">
         <div class="stats-grid">
-          <div class="stat-card"><div class="stat-icon">👁️</div><div class="stat-val" id="sv">127</div><div class="stat-label">방문</div></div>
-          <div class="stat-card"><div class="stat-icon">💜</div><div class="stat-val" id="sh">89</div><div class="stat-label">하트</div></div>
-          <div class="stat-card" style="grid-column:span 2"><div class="stat-icon">⚡</div><div class="stat-val" id="sc">380</div><div class="stat-label">문화력 CP</div></div>
+          <div class="stat-card"><div class="stat-icon"></div><div class="stat-val" id="sv">127</div><div class="stat-label">방문</div></div>
+          <div class="stat-card"><div class="stat-icon"></div><div class="stat-val" id="sh">89</div><div class="stat-label">하트</div></div>
+          <div class="stat-card" style="grid-column:span 2"><div class="stat-icon"></div><div class="stat-val" id="sc">380</div><div class="stat-label">문화력 CP</div></div>
         </div>
       </div>
 
@@ -773,10 +770,10 @@ html,body {
       <div class="lp-section">
         <div class="lp-title">뽐내기</div>
         <div class="share-btns">
-          <button class="share-btn" onclick="shareToSNS('instagram')"><div class="share-btn-icon">📸</div>인스타</button>
-          <button class="share-btn" onclick="shareToSNS('twitter')"><div class="share-btn-icon">🐦</div>X</button>
-          <button class="share-btn" onclick="shareToSNS('kakao')"><div class="share-btn-icon">💬</div>카카오</button>
-          <button class="share-btn" onclick="shareToSNS('copy')"><div class="share-btn-icon">🔗</div>링크</button>
+          <button class="share-btn" onclick="shareToSNS('instagram')"><div class="share-btn-icon"></div>인스타</button>
+          <button class="share-btn" onclick="shareToSNS('twitter')"><div class="share-btn-icon"></div>X</button>
+          <button class="share-btn" onclick="shareToSNS('kakao')"><div class="share-btn-icon"></div>카카오</button>
+          <button class="share-btn" onclick="shareToSNS('copy')"><div class="share-btn-icon"></div>링크</button>
         </div>
       </div>
 
@@ -793,7 +790,7 @@ html,body {
         <div class="artist-chat-bar" id="artistChatBar">
           <div class="artist-timer" id="artistTimer">10:00</div>
           <input class="artist-chat-input" id="artistInput" placeholder="아티스트에게 말하기..." maxlength="200">
-          <button class="artist-chat-send" onclick="sendArtistMsg()">✦</button>
+          <button class="artist-chat-send" onclick="sendArtistMsg()"></button>
         </div>
 
         <!-- 아티스트 꾸미기 패널 -->
@@ -810,7 +807,7 @@ html,body {
           <div class="acp-swatches" id="acpAura"></div>
           <div class="acp-btns">
             <button class="acp-cancel" onclick="toggleArtistCustom()">닫기</button>
-            <button class="acp-save" onclick="saveArtistCustom()">저장 ✦</button>
+            <button class="acp-save" onclick="saveArtistCustom()">저장</button>
           </div>
         </div>
 
@@ -822,7 +819,7 @@ html,body {
             <div class="giftbox-ribbon-h"></div>
             <div class="giftbox-ribbon-v"></div>
             <div class="giftbox-text">선물<br>Gift</div>
-            <div class="giftbox-star">⭐</div>
+            <div class="giftbox-star"></div>
           </div>
         </div>
 
@@ -831,13 +828,13 @@ html,body {
           <div class="ctrl-btn" onclick="resetCamera()" title="카메라 리셋">🔄</div>
           <div class="ctrl-btn" onclick="zoomIn()" title="확대">🔍</div>
           <div class="ctrl-btn" onclick="zoomOut()" title="축소">🔎</div>
-          <div class="ctrl-btn" onclick="toggleLight()" title="조명 변경">💡</div>
+          <div class="ctrl-btn" onclick="toggleLight()" title="조명 변경"></div>
           <div class="ctrl-btn" onclick="toggleArtist()" title="아티스트 초대" id="artistBtn">🎤</div>
           <div class="ctrl-btn" onclick="toggleArtistCustom()" title="아티스트 꾸미기" id="artistCustomBtn">🎨</div>
         </div>
         <!-- 꾸미기 상단 바 -->
         <div class="edit-topbar">
-          <div class="et-title">✏️ ROOM EDIT</div>
+          <div class="et-title">ROOM EDIT</div>
           <button class="et-done" onclick="toggleEdit()">완료 ✓</button>
         </div>
 
@@ -853,7 +850,7 @@ html,body {
         <div class="gb-title">방명록</div>
         <div class="gb-entries" id="gbEntries"></div>
         <div class="gb-input-row">
-          <input class="gb-input" id="gbInput" placeholder="방명록을 남겨보세요 ✨" maxlength="100">
+          <input class="gb-input" id="gbInput" placeholder="방명록을 남겨보세요" maxlength="100">
           <button class="gb-send" onclick="sendGuestbook()">남기기</button>
         </div>
       </div>
@@ -1682,7 +1679,7 @@ function zoomOut() { camRadius = Math.min(12, camRadius+0.8); updateCameraPos();
 function toggleLight() {
   lightMode=(lightMode+1)%3;
   // 실제 intensity는 animate 루프에서 lightMode 기준값으로 반영됨
-  showToast(['🔆 기본 조명','☀️ 밝은 조명','🌙 무드 조명'][lightMode]);
+  showToast(['기본 조명','밝은 조명','무드 조명'][lightMode]);
 }
 
 // ══════════════════════════════════════════
@@ -1701,11 +1698,11 @@ function applyTheme(themeId) {
 //  편집 모드
 // ══════════════════════════════════════════
 const EDIT_CATEGORIES = [
-  { id:'furniture', name:'가구', icon:'🪑', filter:i=>['별빛 조명','오라클 테이블','소파','책장'].includes(i.name) },
-  { id:'wall',      name:'벽장식', icon:'🖼️', filter:i=>['포스터','포토카드','화환'].includes(i.name) },
-  { id:'lighting',  name:'조명', icon:'💡', filter:i=>['별빛 조명','홀로그램'].includes(i.name) },
+  { id:'furniture', name:'가구', icon:'', filter:i=>['별빛 조명','오라클 테이블','소파','책장'].includes(i.name) },
+  { id:'wall',      name:'벽장식', icon:'', filter:i=>['포스터','포토카드','화환'].includes(i.name) },
+  { id:'lighting',  name:'조명', icon:'', filter:i=>['별빛 조명','홀로그램'].includes(i.name) },
   { id:'goods',     name:'굿즈', icon:'🎤', filter:i=>['응원봉','앨범'].includes(i.name) },
-  { id:'effect',    name:'이펙트', icon:'✨', filter:i=>['홀로그램','제네시스 오브','황금 시계'].includes(i.name) },
+  { id:'effect',    name:'이펙트', icon:'', filter:i=>['홀로그램','제네시스 오브','황금 시계'].includes(i.name) },
 ];
 let editCategory = 'furniture';
 
@@ -1719,14 +1716,14 @@ function toggleEdit() {
     renderEditItems();
     document.getElementById('canvasContainer').style.paddingBottom = '190px';
     setTimeout(function(){ if(typeof onResize === 'function') onResize(); }, 100);
-    showToast('✏️ 아이템을 선택해서 배치하세요!');
+    showToast('아이템을 선택해서 배치하세요!');
   } else {
     app.classList.remove('edit-active');
     document.getElementById('canvasContainer').style.paddingBottom = '0';
     camTheta = 0.3; camPhi = 0.55; camRadius = 7.5;
     updateCameraPos();
     setTimeout(function(){ if(typeof onResize === 'function') onResize(); }, 100);
-    showToast('✓ 꾸미기 완료!');
+    showToast('꾸미기 완료!');
   }
 }
 
@@ -1756,7 +1753,7 @@ function renderEditItems() {
 function onItemClick(itemId) {
   const item = ITEMS.find(i=>i.id===itemId);
   if(!item) return;
-  if(item.locked) { showToast(`🔒 ${item.lockMsg} 달성 시 해금!`); return; }
+  if(item.locked) { showToast(`${item.lockMsg} 달성 시 해금!`); return; }
   if(item.placed) { removeItem(itemId); return; }
   openModal(item);
 }
@@ -1815,7 +1812,7 @@ function renderItems() {
   document.getElementById('itemGrid').innerHTML=ITEMS.map(item=>`
     <div class="item-card ${item.placed?'placed':''} ${item.locked?'locked':''}" onclick="onItemClick(${item.id})">
       ${item.placed?'<div class="item-check">✓</div>':''}
-      ${item.locked?`<div class="item-lock">🔒</div>`:''}
+      ${item.locked?`<div class="item-lock"></div>`:''}
       <div class="item-emoji">${item.emoji}</div>
       <div class="item-name">${item.name}</div>
       <div class="item-rarity rarity-${item.rarity}">${item.rarity.toUpperCase()}</div>
@@ -1845,7 +1842,7 @@ function renderGuestbook() {
       </div>
       <div class="gb-right">
         <div class="gb-time">${g.time}</div>
-        <div class="gb-heart" onclick="heartGB(${i})">❤️ ${g.hearts}</div>
+        <div class="gb-heart" onclick="heartGB(${i})">${g.hearts}</div>
       </div>
     </div>
   `).join('');
@@ -1854,24 +1851,24 @@ function renderGuestbook() {
 function heartGB(idx) {
   GUESTBOOK[idx].hearts++;
   renderGuestbook();
-  showToast('💜 하트를 남겼어요!');
+  showToast('하트를 남겼어요!');
 }
 
 function sendGuestbook() {
   const inp=document.getElementById('gbInput');
   const msg=inp.value.trim();
   if(!msg) return;
-  GUESTBOOK.unshift({name:'나',emoji:'🌟',msg,time:'방금',hearts:0});
+  GUESTBOOK.unshift({name:'나',emoji:'',msg,time:'방금',hearts:0});
   inp.value='';
   renderGuestbook();
-  showToast('✨ 방명록 등록!');
+  showToast('방명록 등록!');
 }
 
 function updateStage() {
   const cnt=ITEMS.filter(i=>i.placed).length;
-  let stage=1, name='🌑 Void', desc, next;
-  if(cnt>=8){stage=3;name='🌟 Supernova';desc='최고 단계!';next='MAX';}
-  else if(cnt>=4){stage=2;name='🔥 Ignition';desc=`${8-cnt}개 더 배치하면 Supernova!`;next=`${cnt}/8`;}
+  let stage=1, name='Void', desc, next;
+  if(cnt>=8){stage=3;name='Supernova';desc='최고 단계!';next='MAX';}
+  else if(cnt>=4){stage=2;name='Ignition';desc=`${8-cnt}개 더 배치하면 Supernova!`;next=`${cnt}/8`;}
   else{desc=`${4-cnt}개 더 배치하면 Ignition!`;next=`${cnt}/4`;}
   for(let i=1;i<=3;i++) document.getElementById(`sd${i}`).classList.toggle('on',i<=stage);
   document.getElementById('stageName').textContent=name;
@@ -1886,12 +1883,12 @@ function updateStage() {
 //  공유
 // ══════════════════════════════════════════
 function shareRoom() {
-  navigator.clipboard?.writeText('https://asteria.me.kr/room3d.html').then(()=>showToast('🔗 링크 복사됐어요!'));
+  navigator.clipboard?.writeText('https://asteria.me.kr/room3d.html').then(()=>showToast('링크 복사됐어요!'));
 }
 function shareToSNS(p) {
   var url=encodeURIComponent('https://asteria.me.kr/room3d.html');
-  var txt=encodeURIComponent('별빛 탐험가의 3D 방을 구경하세요! 🌟 #아스테리아');
-  if(p==='copy'){navigator.clipboard?.writeText('https://asteria.me.kr/room3d.html').then(function(){showToast('🔗 복사됐어요!')});return;}
+  var txt=encodeURIComponent('별빛 탐험가의 3D 방을 구경하세요! #아스테리아');
+  if(p==='copy'){navigator.clipboard?.writeText('https://asteria.me.kr/room3d.html').then(function(){showToast('복사됐어요!')});return;}
   if(p==='twitter'){window.open('https://twitter.com/intent/tweet?text='+txt+'&url='+url,'_blank');return;}
   if(p==='kakao'){window.open('https://story.kakao.com/share?url='+url,'_blank');return;}
   if(p==='instagram'){
@@ -1901,13 +1898,13 @@ function shareToSNS(p) {
         if(!blob){showToast('❌ 캡처 실패');return;}
         if(navigator.share && navigator.canShare){
           var file = new File([blob], 'asteria-room.png', {type:'image/png'});
-          navigator.share({title:'아스테리아 내 방',text:'별빛 탐험가의 3D 방을 구경하세요! 🌟 #아스테리아',files:[file]}).then(function(){showToast('📤 공유됐어요!')}).catch(function(){downloadBlob(blob)});
+          navigator.share({title:'아스테리아 내 방',text:'별빛 탐험가의 3D 방을 구경하세요! #아스테리아',files:[file]}).then(function(){showToast('공유됐어요!')}).catch(function(){downloadBlob(blob)});
         } else { downloadBlob(blob); }
       }, 'image/png');
     } catch(e){showToast('❌ 캡처 실패');}
     return;
   }
-  showToast('📤 공유됐어요!');
+  showToast('공유됐어요!');
 }
 function downloadBlob(blob){
   var a=document.createElement('a');
@@ -1915,7 +1912,7 @@ function downloadBlob(blob){
   a.download='asteria-room-'+Date.now()+'.png';
   document.body.appendChild(a);a.click();document.body.removeChild(a);
   URL.revokeObjectURL(a.href);
-  showToast('📸 방 스크린샷 저장! 인스타에 올려보세요!');
+  showToast('방 스크린샷 저장! 인스타에 올려보세요!');
 }
 
 // ══════════════════════════════════════════
@@ -1956,8 +1953,8 @@ window.addEventListener('load', ()=>{
     var level=localStorage.getItem('asteria_level')||'1';
     var league=localStorage.getItem('asteria_league')||'더스트';
     var pn=document.getElementById('roomProfileName');if(pn)pn.textContent=nick;
-    var pg=document.getElementById('roomProfileGrade');if(pg)pg.textContent='✨ '+league+' 리그 · Lv.'+level;
-    var rt=document.getElementById('roomTitle');if(rt)rt.textContent='🏡 '+nick+'의 방';
+    var pg=document.getElementById('roomProfileGrade');if(pg)pg.textContent=league+' 리그 · Lv.'+level;
+    var rt=document.getElementById('roomTitle');if(rt)rt.textContent=nick+'의 방';
   })();
   renderItems();
   renderThemes();
@@ -2124,13 +2121,13 @@ window.addEventListener('load', ()=>{
 // ══════════════════════════════════
 (function(){
   const LEAGUE_BOX={dust:'box-dust',star:'box-star',planet:'box-planet',nova:'box-nova',quasar:'box-quasar'};
-  const LEAGUE_SEAL={dust:'🔒',star:'⭐',planet:'🪐',nova:'💜',quasar:'👑'};
+  const LEAGUE_SEAL={dust:'',star:'',planet:'',nova:'',quasar:''};
   const TIME_SLOTS=[{kr:'아침',en:'Morning'},{kr:'점심',en:'Lunch'},{kr:'오후',en:'Afternoon'},{kr:'자기 전',en:'Bedtime'}];
   const SAMPLES=[
     '오늘 아침에 눈을 뜨자마자 창문으로 햇살이 쏟아졌어. 연습실 가는 길에 좋아하는 노래 들으면서 걸었는데, 문득 너희 생각이 났어. 이 노래도 너희가 추천해줬잖아 💛\n\nThe morning sunlight poured through my window today. Walking to practice, listening to a song you recommended — it made me think of you.',
-    '안무 연습 끝나고 잠깐 쉬는 시간. 오늘 거울 앞에서 새 안무 맞추다가 웃음이 터졌어. 아직 비밀인데... 곧 보여줄 수 있을 것 같아. 기대해도 좋아 🔥\n\nJust finished choreography practice. I burst out laughing trying the new moves. It\'s still a secret... but I can show you soon.',
+    '안무 연습 끝나고 잠깐 쉬는 시간. 오늘 거울 앞에서 새 안무 맞추다가 웃음이 터졌어. 아직 비밀인데... 곧 보여줄 수 있을 것 같아. 기대해도 좋아\n\nJust finished choreography practice. I burst out laughing trying the new moves. It\'s still a secret... but I can show you soon.',
     '하루가 정말 길었어. 녹음하고, 회의하고, 또 연습하고. 근데 팬레터 읽었는데... 진짜 울 뻔했어. 어제 너희가 보내준 응원 다 봤어 💛 고마워, 진심으로.\n\nWhat a long day. But I read your fan letters... I almost cried. I saw all your support yesterday. Thank you, truly.',
-    '비 오는 아침이야. 커피 마시면서 창밖 보는데, 빗소리가 좋더라. 오늘은 작업실에서 새 곡 작업! 너희한테 제일 먼저 들려주고 싶은 멜로디가 있어 🎵\n\nRainy morning. Sipping coffee, watching the rain. Today I\'ll work on a new song. There\'s a melody I want you to hear first.',
+    '비 오는 아침이야. 커피 마시면서 창밖 보는데, 빗소리가 좋더라. 오늘은 작업실에서 새 곡 작업! 너희한테 제일 먼저 들려주고 싶은 멜로디가 있어\n\nRainy morning. Sipping coffee, watching the rain. Today I\'ll work on a new song. There\'s a melody I want you to hear first.',
     '점심에 멤버들이랑 떡볶이 먹었어! 맵다고 난리 났는데 나는 괜찮았거든 ㅋㅋ 😎 오후에 팬미팅 준비하는데 벌써부터 설레. 너희 만날 생각에!\n\nHad tteokbokki with the members! Everyone was dying from the spice but I was fine 😎 Getting ready for the fan meeting — excited to see you!',
   ];
 
@@ -2222,7 +2219,7 @@ window.addEventListener('load', ()=>{
     const d=diaries[curIdx];if(!d||d.commented)return;
     d.commented=true;inp.value='';inp.placeholder='응원이 전달되었습니다 💛';
     const cs=parseInt(localStorage.getItem('asteria_soc')||'0');localStorage.setItem('asteria_soc',String(cs+2));
-    reward('💬 댓글 작성 — SOC +2  |  Comment sent');
+    reward('댓글 작성 — SOC +2  |  Comment sent');
   };
 })();
 
@@ -2748,13 +2745,13 @@ function summonArtist(){
     updateTimerDisplay();
     if(artistTimeLeft <= 0){
       clearInterval(artistTimer);
-      showArtistBubble('오늘 즐거웠어! 또 올게~ ✨');
+      showArtistBubble('오늘 즐거웠어! 또 올게~');
       setTimeout(function(){ dismissArtist(); }, 3000);
     }
   }, 1000);
   // 인사말
   setTimeout(function(){
-    showArtistBubble('안녕! 방이 정말 예쁘다~ 💫');
+    showArtistBubble('안녕! 방이 정말 예쁘다~');
   }, 1000);
   // 자동 이동 시작
   startArtistWander();
@@ -2836,13 +2833,13 @@ function sendArtistMsg(){
     })
     .then(function(r){return r.json()})
     .then(function(data){
-      var reply = (data.content && data.content[0] && data.content[0].text) || '헤헤, 좋아~ 💫';
+      var reply = (data.content && data.content[0] && data.content[0].text) || '헤헤, 좋아~';
       artistChatHistory.push({role:'assistant',content:reply});
       if(artistChatHistory.length > 10) artistChatHistory = artistChatHistory.slice(-10);
       showArtistBubble(reply);
     })
     .catch(function(){
-      var fallbacks = ['헤헤, 좋아~ 💫','방 진짜 예쁘다! 🌟','오늘 기분 좋아? 😊','같이 있어서 행복해~ 💜','우와 이거 어디서 구한 거야? ✨'];
+      var fallbacks = ['헤헤, 좋아~','방 진짜 예쁘다!','오늘 기분 좋아?','같이 있어서 행복해~','우와 이거 어디서 구한 거야?'];
       var reply = fallbacks[Math.floor(Math.random()*fallbacks.length)];
       artistChatHistory.push({role:'assistant',content:reply});
       showArtistBubble(reply);
@@ -2871,7 +2868,7 @@ var BODY_OPTIONS = [
 ];
 var ACC_OPTIONS = [
   {id:'none',name:'없음',emoji:'❌'},{id:'crown',name:'왕관',emoji:'👑'},{id:'ribbon',name:'리본',emoji:'🎀'},
-  {id:'starpin',name:'별핀',emoji:'⭐'},{id:'heart_earring',name:'하트귀걸이',emoji:'💖'}
+  {id:'starpin',name:'별핀',emoji:''},{id:'heart_earring',name:'하트귀걸이',emoji:''}
 ];
 var AURA_OPTIONS = [
   {color:'#f0c040',name:'골드'},{color:'#f472b6',name:'핑크'},{color:'#c084fc',name:'보라'},{color:'#38bdf8',name:'하늘'},
@@ -2928,7 +2925,7 @@ function saveArtistCustom() {
     }
   }
   toggleArtistCustom();
-  if(typeof showToast === 'function') showToast('아티스트 스타일 저장 완료! ✨');
+  if(typeof showToast === 'function') showToast('아티스트 스타일 저장 완료!');
 }
 </script>
 <script>

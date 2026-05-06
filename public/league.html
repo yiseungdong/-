@@ -109,15 +109,11 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 
 <div id="app">
   <nav class="top-nav">
-    <a class="top-nav-item" href="/fandom.html"><div class="top-nav-icon">🏘️</div><div class="top-nav-label">팬덤</div></a>
     <a class="top-nav-item" href="/"><div class="top-nav-icon">🏠</div><div class="top-nav-label">홈</div></a>
+    <a class="top-nav-item" href="/fandom.html"><div class="top-nav-icon">🏘️</div><div class="top-nav-label">팬덤</div></a>
     <a class="top-nav-item" href="/astra.html"><div class="top-nav-icon">⭐</div><div class="top-nav-label">아스트라</div></a>
-    <a class="top-nav-item" href="/fandom.html"><div class="top-nav-icon">🏘️</div><div class="top-nav-label">내팬덤</div></a>
-    <a class="top-nav-item" href="/room3d.html"><div class="top-nav-icon">🏡</div><div class="top-nav-label">내 방</div></a>
-    <a class="top-nav-item" href="/nebula.html"><div class="top-nav-icon">🌌</div><div class="top-nav-label">성궤</div></a>
-    <a class="top-nav-item" href="/avatar.html"><div class="top-nav-icon">🎭</div><div class="top-nav-label">아바타</div></a>
+    <a class="top-nav-item" href="/room3d.html"><div class="top-nav-icon">🏡</div><div class="top-nav-label">내방</div></a>
     <a class="top-nav-item" href="/shop.html"><div class="top-nav-icon">🛒</div><div class="top-nav-label">상점</div></a>
-    <a class="top-nav-item" href="/competition.html">경쟁</a>
   </nav>
 
   <div class="main">
@@ -135,7 +131,7 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
           <button class="zoom-btn" onclick="zoomMap(0.8)">🔎</button>
           <button class="zoom-btn" onclick="resetZoom()">🔄</button>
         </div>
-        <button class="goto-mine" onclick="goToMine()">📍 내 팬클럽 — My Fanclub</button>
+        <button class="goto-mine" onclick="goToMine()">내 팬클럽 — My Fanclub</button>
       </div>
       <div class="compare-bar bottom">
         <div class="cb-label">강등 — Relegate</div>
@@ -426,8 +422,8 @@ function showDetail(c){
     <div class="dc-stat"><div class="dc-stat-val">${c.members.toLocaleString()}</div><div class="dc-stat-label">멤버 — Members</div></div>
     <div class="dc-stat"><div class="dc-stat-val">#${c.rank}</div><div class="dc-stat-label">순위 — Rank</div></div>`;
   const ch=c.change;
-  document.getElementById('dcChange').innerHTML=(ch>0?`<span class="up">▲ ${ch}칸 상승 — Up ${ch}</span>`:ch<0?`<span class="down">▼ ${Math.abs(ch)}칸 하락 — Down ${Math.abs(ch)}</span>`:'— 변동 없음 — No change')
-    +`<div style="margin-top:12px"><button onclick="location.href='/fandom.html?name=${encodeURIComponent(c.name)}&league=${currentLeague}&rank=${c.rank}'" style="padding:10px 20px;border-radius:16px;border:1px solid var(--gold);background:rgba(240,192,64,.1);color:var(--gold);font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">🏘️ 팬덤 마을 방문 — Visit Village</button></div>`;
+  document.getElementById('dcChange').innerHTML=(ch>0?`<span class="up">${ch}칸 상승 — Up ${ch}</span>`:ch<0?`<span class="down">${Math.abs(ch)}칸 하락 — Down ${Math.abs(ch)}</span>`:'변동 없음 — No change')
+    +`<div style="margin-top:12px"><button onclick="location.href='/fandom.html?name=${encodeURIComponent(c.name)}&league=${currentLeague}&rank=${c.rank}'" style="padding:10px 20px;border-radius:16px;border:1px solid var(--gold);background:rgba(240,192,64,.1);color:var(--gold);font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif">팬덤 마을 방문 — Visit Village</button></div>`;
   document.getElementById('detailOv').classList.add('show');
 }
 function closeDetail(){document.getElementById('detailOv').classList.remove('show')}
@@ -456,10 +452,10 @@ setTimeout(()=>goToMine(),200);
 .bug-submit{background:linear-gradient(90deg,#4a90d9,#7c5ce0);color:#fff}
 .bug-cancel{background:transparent;border:1px solid rgba(200,175,80,0.2)!important;color:#e8ecf4}
 </style>
-<button class="bug-report-btn" onclick="document.getElementById('bugModal').classList.add('open')" title="버그 신고">🐛</button>
+<button class="bug-report-btn" onclick="document.getElementById('bugModal').classList.add('open')" title="버그 신고"></button>
 <div class="bug-modal-overlay" id="bugModal" onclick="if(event.target===this)this.classList.remove('open')">
 <div class="bug-modal">
-<h3>🐛 버그 신고</h3>
+<h3>버그 신고</h3>
 <label>어떤 페이지에서 문제가 발생했나요?</label>
 <select id="bugPage"><option value="home">홈</option><option value="astra">아스트라</option><option value="room">내 방</option><option value="nebula">성궤</option><option value="avatar">아바타</option><option value="shop">상점</option><option value="chat">채팅</option><option value="league">리그</option><option value="stats">스탯</option><option value="archetype">아키타입</option><option value="other">기타</option></select>
 <label>어떤 문제인가요?</label>

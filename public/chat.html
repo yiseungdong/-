@@ -311,11 +311,8 @@ html,body {
   <a class="top-nav-item" href="/index.html">홈</a>
   <a class="top-nav-item" href="/fandom.html">팬덤</a>
   <a class="top-nav-item" href="/astra.html">아스트라</a>
-  <a class="top-nav-item" href="/fandom.html">내팬덤</a>
   <a class="top-nav-item" href="/room3d.html">내방</a>
-  <a class="top-nav-item" href="/avatar.html">아바타</a>
   <a class="top-nav-item" href="/shop.html">상점</a>
-  <a class="top-nav-item" href="/competition.html">경쟁</a>
 </nav>
 
 <canvas id="starCanvas"></canvas>
@@ -327,20 +324,20 @@ html,body {
   <div class="eo-av" id="eoAv"></div>
   <div class="eo-name" id="eoName"></div>
   <div class="eo-role" id="eoRole"></div>
-  <div class="eo-desc">나만의 특별한 공간에 찾아온 당신에게<br>오늘 하루 어떤 이야기를 나눌까요? ✨</div>
+  <div class="eo-desc">나만의 특별한 공간에 찾아온 당신에게<br>오늘 하루 어떤 이야기를 나눌까요?</div>
   <div class="eo-time-card">
     <div class="eo-time-label">오늘 대화 가능 시간 — Available Time</div>
     <div class="eo-time-val" id="eoTimeVal">10:00</div>
-    <div class="eo-time-bonus" id="eoTimeBonus">✦ 기본 600초</div>
+    <div class="eo-time-bonus" id="eoTimeBonus">기본 600초</div>
   </div>
-  <button class="eo-start-btn" onclick="startChat()">✦ 대화 시작하기 — Start Chat</button>
+  <button class="eo-start-btn" onclick="startChat()">대화 시작하기 — Start Chat</button>
 </div>
 
 <!-- 대화 종료 -->
 <div class="end-overlay" id="endOverlay">
-  <div style="font-size:56px;margin-bottom:14px">💜</div>
+  <div style="font-size:56px;margin-bottom:14px"></div>
   <div class="endo-title">오늘 대화 종료 — Chat Ended</div>
-  <div class="endo-desc">오늘도 함께해줘서 고마워요 ✨<br>내일 또 만나요!</div>
+  <div class="endo-desc">오늘도 함께해줘서 고마워요<br>내일 또 만나요!</div>
   <button class="endo-btn" onclick="location.href='/room3d.html'">내 방으로 돌아가기 — Back to Room</button>
 </div>
 
@@ -348,12 +345,12 @@ html,body {
 <div class="diary-overlay" id="diaryOverlay">
   <div class="diary-card">
     <div class="diary-header">
-      <div class="diary-title">📖 별빛 다이어리 — Starlight Diary</div>
+      <div class="diary-title">별빛 다이어리 — Starlight Diary</div>
       <button class="diary-close" onclick="closeDiary()">✕</button>
     </div>
     <div class="diary-tabs">
       <div class="diary-tab active" onclick="switchDiaryTab('all',this)">전체 대화 — All</div>
-      <div class="diary-tab" onclick="switchDiaryTab('bookmark',this)">⭐ 명대사 — Favorites</div>
+      <div class="diary-tab" onclick="switchDiaryTab('bookmark',this)">명대사 — Favorites</div>
     </div>
     <div class="diary-body" id="diaryBody"></div>
   </div>
@@ -377,24 +374,24 @@ html,body {
         <div class="timer-label">남은 시간</div>
         <div class="timer-display" id="timerDisplay">--:--</div>
       </div>
-      <div class="diary-btn" onclick="openDiary()" title="별빛 다이어리">📖</div>
+      <div class="diary-btn" onclick="openDiary()" title="별빛 다이어리"></div>
     </div>
   </div>
 
   <!-- 채팅 영역 -->
   <div class="chat-area" id="chatArea">
-    <div class="sys-msg">대화를 시작해보세요 ✨ — Start a conversation</div>
+    <div class="sys-msg">대화를 시작해보세요 — Start a conversation</div>
   </div>
 
   <!-- 입력 영역 -->
   <div class="input-area">
     <div class="emoji-bar">
-      <button class="emoji-btn" onclick="sendEmoji('❤️')">❤️</button>
-      <button class="emoji-btn" onclick="sendEmoji('💪')">💪</button>
-      <button class="emoji-btn" onclick="sendEmoji('😂')">😂</button>
-      <button class="emoji-btn" onclick="sendEmoji('🔥')">🔥</button>
-      <button class="emoji-btn" onclick="sendEmoji('😢')">😢</button>
-      <button class="emoji-btn" onclick="sendEmoji('💫')">💫</button>
+      <button class="emoji-btn" onclick="sendEmoji('❤️')"></button>
+      <button class="emoji-btn" onclick="sendEmoji('💪')"></button>
+      <button class="emoji-btn" onclick="sendEmoji('😂')"></button>
+      <button class="emoji-btn" onclick="sendEmoji('🔥')"></button>
+      <button class="emoji-btn" onclick="sendEmoji('😢')"></button>
+      <button class="emoji-btn" onclick="sendEmoji('💫')"></button>
     </div>
     <div class="input-row">
       <textarea class="msg-input" id="msgInput"
@@ -521,13 +518,13 @@ function startChat(){
   timerInterval=setInterval(()=>{
     timeLeft--;
     updateTimer();
-    if(timeLeft===60) showToast('⏰ 1분 남았어요!');
+    if(timeLeft===60) showToast('1분 남았어요!');
     if(timeLeft<=0){clearInterval(timerInterval);endChat()}
   },1000);
-  addSysMsg(`${ARTIST_NAME}와의 대화가 시작됐어요 ✨ — Chat started`);
+  addSysMsg(`${ARTIST_NAME}와의 대화가 시작됐어요 — Chat started`);
   // 첫 인사
   setTimeout(()=>{
-    addArtistMessage('안녕! 오늘도 만나서 반가워 💜 무슨 얘기 할까?\n\nHey! So glad to see you today! What shall we talk about?');
+    addArtistMessage('안녕! 오늘도 만나서 반가워 무슨 얘기 할까?\n\nHey! So glad to see you today! What shall we talk about?');
   },800);
 }
 
@@ -593,7 +590,7 @@ function sendEmoji(emoji){
       '😢':'왜 슬퍼? 괜찮아? 내가 옆에 있을게 💜\nWhy sad? It\'s okay, I\'m here for you.',
       '💫':'우와 반짝반짝! 오늘 특별한 날인가? ✨\nWow sparkly! Is today a special day?',
     };
-    addArtistMessage(reactions[emoji]||'💜');
+    addArtistMessage(reactions[emoji]||'');
     isTyping=false;
   },600);
 }
@@ -602,7 +599,7 @@ function addArtistMessage(text,isRare){
   addMessage('artist',ARTIST_NAME,ARTIST_EMOJI,text,isRare);
   saveChatLog('artist',text,isRare);
   currentMood=detectMood(text);
-  if(isRare) showToast('✦ 레어 대사 획득! — Rare Dialogue!');
+  if(isRare) showToast('레어 대사 획득! — Rare Dialogue!');
 }
 
 // ══════════════════════════════════════════
@@ -624,7 +621,7 @@ function addMessage(type,name,emoji,text,isRare){
       <div class="msg-bubble ${isMe?'me':'artist'} ${isRare?'rare':''}">${text.replace(/\n/g,'<br>')}</div>
       <div style="display:flex;align-items:center;gap:4px;${isMe?'flex-direction:row-reverse':''}">
         <div class="msg-time">${time}</div>
-        ${!isMe?`<span class="msg-bookmark" data-id="${msgId}" onclick="toggleBookmark(this,'${msgId}')">⭐</span>`:''}
+        ${!isMe?`<span class="msg-bookmark" data-id="${msgId}" onclick="toggleBookmark(this,'${msgId}')"></span>`:''}
       </div>
     </div>
   `;
@@ -668,7 +665,7 @@ function saveChatLog(type,text,isRare){
 function toggleBookmark(el,msgId){
   const idx=bookmarks.indexOf(msgId);
   if(idx>=0){bookmarks.splice(idx,1);el.classList.remove('saved')}
-  else{bookmarks.push(msgId);el.classList.add('saved');showToast('⭐ 명대사 저장! — Saved!')}
+  else{bookmarks.push(msgId);el.classList.add('saved');showToast('명대사 저장! — Saved!')}
   localStorage.setItem('asteria_chat_bm',JSON.stringify(bookmarks));
 }
 
@@ -712,8 +709,8 @@ function renderDiary(){
       <div style="font-size:10px;color:var(--gold);font-family:'Orbitron',monospace;margin-bottom:6px">${date.replace(/-/g,'.')}</div>
       ${msgs.map(m=>`
         <div class="diary-entry">
-          <span class="diary-entry-bm ${bookmarks.includes(m.id)?'saved':''}" onclick="toggleDiaryBm('${m.id}',this)">⭐</span>
-          <div class="diary-entry-date">${m.time||''} ${m.isRare?'<span style="color:var(--gold)">✦ RARE</span>':''}</div>
+          <span class="diary-entry-bm ${bookmarks.includes(m.id)?'saved':''}" onclick="toggleDiaryBm('${m.id}',this)"></span>
+          <div class="diary-entry-date">${m.time||''} ${m.isRare?'<span style="color:var(--gold)">RARE</span>':''}</div>
           <div class="diary-entry-text">${m.text.replace(/\n/g,'<br>')}</div>
         </div>
       `).join('')}

@@ -319,11 +319,8 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
   <a class="top-nav-item active" href="/index.html">홈</a>
   <a class="top-nav-item" href="/fandom.html">팬덤</a>
   <a class="top-nav-item" href="/astra.html">아스트라</a>
-  <a class="top-nav-item" href="/fandom.html">내팬덤</a>
   <a class="top-nav-item" href="/room3d.html">내방</a>
-  <a class="top-nav-item" href="/avatar.html">아바타</a>
   <a class="top-nav-item" href="/shop.html">상점</a>
-  <a class="top-nav-item" href="/competition.html">경쟁</a>
 </nav>
 
 <!-- 별빛 배경 -->
@@ -349,7 +346,7 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
     <div class="login-title">ASTERIA</div>
     <div class="login-sub">아스테리아 제국에 오신 것을 환영합니다</div>
     <div class="login-field"><label>닉네임 / Nickname</label><input type="text" id="loginNick" placeholder="별빛 탐험가" maxlength="12"></div>
-    <div class="login-field"><label>아바타 이모지 / Emoji</label><input type="text" id="loginEmoji" placeholder="🌟" maxlength="2"></div>
+    <div class="login-field"><label>아바타 이모지 / Emoji</label><input type="text" id="loginEmoji" placeholder="" maxlength="2"></div>
     <button class="login-submit" onclick="doLogin()">제국에 입장하기 / Enter</button>
     <p class="signup-link">처음이신가요? <a href="#" onclick="doLogin()">제국에 참여하기</a></p>
   </div>
@@ -431,7 +428,7 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
     <div class="lc" onclick="goLeagueMap('NOVA')" style="border-color:rgba(192,132,252,.3)"><div class="lc-icon">🌠</div><div class="lc-name" style="color:#c084fc">NOVA</div><div class="lc-desc">폭발적인 성장<br>노바 리그</div><div class="lc-tier">1부 리그</div></div>
     <div class="lc" onclick="goLeagueMap('NEBULA')" style="border-color:rgba(129,140,248,.3)"><div class="lc-icon">🌌</div><div class="lc-name" style="color:#818cf8">NEBULA</div><div class="lc-desc">성운의 힘으로<br>도약하라</div><div class="lc-tier">2부 리그</div></div>
     <div class="lc" onclick="goLeagueMap('COMET')" style="border-color:rgba(56,189,248,.3)"><div class="lc-icon">☄️</div><div class="lc-name" style="color:#38bdf8">COMET</div><div class="lc-desc">빠르게 치고<br>올라가는 혜성</div><div class="lc-tier">3부 리그</div></div>
-    <div class="lc" onclick="goLeagueMap('DUST')" style="border-color:rgba(148,163,184,.3)"><div class="lc-icon">✨</div><div class="lc-name" style="color:#94a3b8">DUST</div><div class="lc-desc">별먼지에서<br>퀘이사로</div><div class="lc-tier">4부 리그</div></div>
+    <div class="lc" onclick="goLeagueMap('DUST')" style="border-color:rgba(148,163,184,.3)"><div class="lc-icon"></div><div class="lc-name" style="color:#94a3b8">DUST</div><div class="lc-desc">별먼지에서<br>퀘이사로</div><div class="lc-tier">4부 리그</div></div>
   </div>
   <button class="btn-back-ls" onclick="showPage('page-home')">← 홈으로</button>
 </div>
@@ -470,7 +467,7 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
         <div class="cn" style="left:1050px;top:500px"><div class="cb">📸</div><div class="cn-name">포토 갤러리</div></div>
         <div class="cn" style="left:650px;top:1200px"><div class="cb">⚔️</div><div class="cn-name">배틀 존</div></div>
         <div class="cn" style="left:1400px;top:700px"><div class="cb">🏆</div><div class="cn-name">리그 본부</div></div>
-        <div class="cn" style="left:300px;top:1300px"><div class="cb">🌟</div><div class="cn-name">스타 존</div></div>
+        <div class="cn" style="left:300px;top:1300px"><div class="cb"></div><div class="cn-name">스타 존</div></div>
         <div class="cn" style="left:2000px;top:800px"><div class="cb">🎪</div><div class="cn-name">이벤트 존</div></div>
         <div class="cn" style="left:1700px;top:400px"><div class="cb">📢</div><div class="cn-name">공지 광장</div></div>
         <div class="av" id="avnode" style="display:none;left:1090px;top:680px">
@@ -496,9 +493,9 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
       </div></div>
       <div id="tp1" class="tp" style="display:flex;flex-direction:column;height:calc(100% - 49px)">
         <div class="chat-area" id="chatArea">
-          <div class="cm"><div class="ca" style="background:linear-gradient(135deg,#c084fc,#818cf8)">💜</div><div><div class="cb2"><div class="cs">NovaFan99</div><div class="ct">퀘이사 리그 진입했다!! 🎉</div><div class="cti">12:34</div></div></div></div>
+          <div class="cm"><div class="ca" style="background:linear-gradient(135deg,#c084fc,#818cf8)"></div><div><div class="cb2"><div class="cs">NovaFan99</div><div class="ct">퀘이사 리그 진입했다!!</div><div class="cti">12:34</div></div></div></div>
           <div class="cm"><div class="ca" style="background:linear-gradient(135deg,#38bdf8,#818cf8)">💎</div><div><div class="cb2"><div class="cs">CaratShine</div><div class="ct">ARMY 팬덤 진짜 화력 넘사벽이네요</div><div class="cti">12:35</div></div></div></div>
-          <div class="cm"><div class="ca" style="background:linear-gradient(135deg,#f0c040,#e6a800)">🌟</div><div><div class="cb2"><div class="cs">StarQueen</div><div class="ct">오늘 이벤트 시간에 같이 화력 쏘실 분~?</div><div class="cti">12:36</div></div></div></div>
+          <div class="cm"><div class="ca" style="background:linear-gradient(135deg,#f0c040,#e6a800)"></div><div><div class="cb2"><div class="cs">StarQueen</div><div class="ct">오늘 이벤트 시간에 같이 화력 쏘실 분~?</div><div class="cti">12:36</div></div></div></div>
         </div>
         <div class="chat-in">
           <input class="chat-input" id="chatInput" placeholder="로그인 후 채팅 가능합니다" disabled onkeydown="if(event.key==='Enter')sendChat()">
@@ -614,11 +611,11 @@ const FANCLUB_DATA = {
     { rank: 20, artist: '레드벨벳', fanclub: 'ReVeluv', emoji: '🎀', color: '#f43f5e' }
   ],
   star: [
-    { rank: 36, artist: '오마이걸', fanclub: 'MIRACLE', emoji: '✨', color: '#818cf8' },
+    { rank: 36, artist: '오마이걸', fanclub: 'MIRACLE', emoji: '', color: '#818cf8' },
     { rank: 37, artist: 'BTOB', fanclub: 'MELODY', emoji: '🎵', color: '#3b82f6' },
     { rank: 38, artist: 'MAMAMOO', fanclub: 'MooMoo', emoji: '🌻', color: '#fbbf24' },
     { rank: 39, artist: 'B1A4', fanclub: 'BANA', emoji: '🍌', color: '#facc15' },
-    { rank: 40, artist: '크러쉬', fanclub: 'Crush', emoji: '💜', color: '#a855f7' }
+    { rank: 40, artist: '크러쉬', fanclub: 'Crush', emoji: '', color: '#a855f7' }
   ],
   dust: [
     { rank: 76, artist: '드리핀', fanclub: 'LEANON', emoji: '🌧️', color: '#64748b' },
@@ -646,7 +643,7 @@ let curUser=null;
 function doLogin(){
   const nick=document.getElementById('loginNick').value.trim()||'별빛 탐험가';
   localStorage.setItem('asteria_nick', nick);
-  const emoji=document.getElementById('loginEmoji').value.trim()||'🌟';
+  const emoji=document.getElementById('loginEmoji').value.trim()||'';
   curUser={nick,emoji};
   // 상단 헤더 업데이트
   document.getElementById('loginBtn').textContent='👤 '+nick;
@@ -833,9 +830,9 @@ const LEAGUE_DATA = {
   dust: {
     name:'DUST LEAGUE', subtitle:'모든 별의 시작점 · 신생 팬클럽', color:'#94a3b8', bg:'#030308', colors:DUST_COLORS,
     fanclubs:[
-      {name:'STARDUST',score:12450,icon:'⭐'},{name:'MOONLIGHT',score:11200,icon:'🌙'},
+      {name:'STARDUST',score:12450,icon:''},{name:'MOONLIGHT',score:11200,icon:''},
       {name:'TWILIGHT',score:10100,icon:'🌅'},{name:'NEBULA KIDS',score:9200,icon:'💫'},
-      {name:'FIRST LIGHT',score:8500,icon:'✨'},{name:'ECHO',score:7900,icon:'🔊'},
+      {name:'FIRST LIGHT',score:8500,icon:''},{name:'ECHO',score:7900,icon:''},
       {name:'MIST',score:7300,icon:'🌫️'},{name:'SPARK',score:6800,icon:'⚡'},
       {name:'PETAL',score:6300,icon:'🌸'},{name:'SHADE',score:5900,icon:'🌑'},
       {name:'DRIFT',score:5500,icon:'🍂'},{name:'EMBER',score:5100,icon:'🔥'},
@@ -867,20 +864,20 @@ const LEAGUE_DATA = {
       {name:'LIGHTBEAM',score:39500,icon:'💡'},{name:'HONEY BEE',score:37200,icon:'🐝'},
       {name:'SUNRISE',score:34800,icon:'🌅'},{name:'AMBER',score:32600,icon:'💛'},
       {name:'TOPAZ',score:30500,icon:'💎'},{name:'CANDLE',score:28700,icon:'🕯️'},
-      {name:'GLEAM',score:27000,icon:'✨'},{name:'FLARE',score:25400,icon:'🌟'},
+      {name:'GLEAM',score:27000,icon:''},{name:'FLARE',score:25400,icon:''},
       {name:'BEACON',score:24000,icon:'🔦'},{name:'CORONA',score:22600,icon:'👑'},
       {name:'BLAZE',score:21300,icon:'🔥'},{name:'PRISM',score:20100,icon:'🌈'},
       {name:'SHIMMER',score:19000,icon:'💫'},{name:'LUMEN',score:17900,icon:'💡'},
       {name:'RADIANT',score:16900,icon:'☀️'},{name:'SPARK',score:16000,icon:'⚡'},
-      {name:'GLITTER',score:15100,icon:'✨'},{name:'HALO',score:14300,icon:'😇'},
+      {name:'GLITTER',score:15100,icon:''},{name:'HALO',score:14300,icon:''},
       {name:'TORCH',score:13500,icon:'🔥'},{name:'RAY',score:12800,icon:'☀️'},
       {name:'FLASH',score:12100,icon:'📸'},{name:'BRILLIANCE',score:11500,icon:'💎'},
       {name:'GLOW BUG',score:10900,icon:'🐛'},{name:'PHOTON',score:10300,icon:'⚛️'},
-      {name:'NOVA LITE',score:9800,icon:'🌠'},{name:'TWINKLE',score:9300,icon:'⭐'},
+      {name:'NOVA LITE',score:9800,icon:''},{name:'TWINKLE',score:9300,icon:''},
       {name:'FIREFLY',score:8800,icon:'🪲'},{name:'LANTERN',score:8400,icon:'🏮'},
       {name:'KINDLE',score:8000,icon:'📖'},{name:'EMBER',score:7600,icon:'🔥'},
       {name:'IGNIS',score:7200,icon:'🌋'},{name:'PIXEL',score:6900,icon:'🟡'},
-      {name:'AURA',score:6600,icon:'🌟'},{name:'GLINT',score:6300,icon:'✨'},
+      {name:'AURA',score:6600,icon:''},{name:'GLINT',score:6300,icon:''},
       {name:'STREAK',score:6000,icon:'☄️'},{name:'FLICKER',score:5700,icon:'🕯️'},
       {name:'WARMTH',score:5400,icon:'🧣'},{name:'DAYBREAK',score:5200,icon:'🌅'}
     ]
@@ -903,8 +900,8 @@ const LEAGUE_DATA = {
   nova: {
     name:'NOVA LEAGUE', subtitle:'폭발하는 에너지 · 영향력 있는 팬클럽', color:'#c084fc', bg:'#0d0020', colors:NOVA_COLORS,
     fanclubs:[
-      {name:'SUPERNOVA',score:112000,icon:'💜'},{name:'PURPLE RAIN',score:98700,icon:'🔮'},
-      {name:'COSMOS',score:87300,icon:'🌌'},{name:'MYSTIC',score:76500,icon:'✨'},
+      {name:'SUPERNOVA',score:112000,icon:''},{name:'PURPLE RAIN',score:98700,icon:''},
+      {name:'COSMOS',score:87300,icon:''},{name:'MYSTIC',score:76500,icon:''},
       {name:'VIOLET',score:65200,icon:'💟'},{name:'PRISM',score:56800,icon:'🌈'},
       {name:'PHANTOM',score:48400,icon:'👻'},{name:'NEBULA X',score:41200,icon:'🌠'},
       {name:'AURORA B',score:35600,icon:'🌃'},{name:'VORTEX',score:29800,icon:'🌀'}

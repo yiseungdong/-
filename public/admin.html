@@ -108,7 +108,7 @@ textarea.form-input{resize:vertical;min-height:50px}
   <div class="sidebar">
     <div class="sb-logo"><div class="sb-logo-text">ASTERIA<br>ADMIN</div><div class="sb-logo-sub">관리자 패널 — Admin Panel</div></div>
     <div class="sb-nav" id="sbNav"></div>
-    <div class="sb-footer"><div class="sb-footer-name">🛡️ Admin_001</div><span>최고 관리자 — Super Admin</span></div>
+    <div class="sb-footer"><div class="sb-footer-name">Admin_001</div><span>최고 관리자 — Super Admin</span></div>
   </div>
   <div class="main-area" id="mainArea"></div>
 </div>
@@ -122,13 +122,13 @@ textarea.form-input{resize:vertical;min-height:50px}
 // 전역 상태
 // ══════════════════════════════════
 const TABS=[
-  {id:'dashboard',icon:'📊',name:'대시보드',en:'Dashboard'},
-  {id:'users',icon:'👥',name:'유저 분석',en:'Users'},
-  {id:'fandom',icon:'🏛️',name:'팬덤 관리',en:'Fandom'},
-  {id:'report',icon:'🛡️',name:'신고 처리',en:'Guard'},
-  {id:'economy',icon:'💎',name:'경제 감시',en:'Economy'},
-  {id:'settings',icon:'⚙️',name:'설정',en:'Settings'},
-  {id:'court',icon:'⚖️',name:'재판소',en:'Court'},
+  {id:'dashboard',icon:'',name:'대시보드',en:'Dashboard'},
+  {id:'users',icon:'',name:'유저 분석',en:'Users'},
+  {id:'fandom',icon:'',name:'팬덤 관리',en:'Fandom'},
+  {id:'report',icon:'',name:'신고 처리',en:'Guard'},
+  {id:'economy',icon:'',name:'경제 감시',en:'Economy'},
+  {id:'settings',icon:'',name:'설정',en:'Settings'},
+  {id:'court',icon:'',name:'재판소',en:'Court'},
 ];
 let currentTab='dashboard';
 let currentLeague='all'; // 리그 필터
@@ -170,14 +170,14 @@ const LD={
 };
 
 const FANDOMS={
-  quasar:[{name:'ASTRANOVA',score:248000,health:'🟢',voteRate:'87%',reportRate:'0.3%'},{name:'CELESTIA',score:231000,health:'🟢',voteRate:'82%',reportRate:'0.2%'}],
-  nova:[{name:'STELLARIS',score:158000,health:'🟢',voteRate:'72%',reportRate:'0.8%'},{name:'INFINITEA',score:142000,health:'🟢',voteRate:'68%',reportRate:'0.6%'},{name:'DREAMWAVE',score:134000,health:'🟡',voteRate:'55%',reportRate:'1.0%'}],
-  planet:[{name:'LUMINOUS',score:97000,health:'🟡',voteRate:'58%',reportRate:'1.2%'},{name:'STARDUST',score:85700,health:'🟢',voteRate:'63%',reportRate:'0.7%'}],
-  star:[{name:'POLARIS',score:82400,health:'🟢',voteRate:'65%',reportRate:'0.5%'},{name:'AURORA',score:79100,health:'🟢',voteRate:'61%',reportRate:'0.4%'},{name:'SPARKLE',score:72000,health:'🟡',voteRate:'48%',reportRate:'0.9%'}],
-  dust:[{name:'NEBULA KIDS',score:28000,health:'🔴',voteRate:'34%',reportRate:'2.1%'},{name:'FIRST LIGHT',score:22000,health:'🟡',voteRate:'41%',reportRate:'1.5%'}],
+  quasar:[{name:'ASTRANOVA',score:248000,health:'',voteRate:'87%',reportRate:'0.3%'},{name:'CELESTIA',score:231000,health:'',voteRate:'82%',reportRate:'0.2%'}],
+  nova:[{name:'STELLARIS',score:158000,health:'',voteRate:'72%',reportRate:'0.8%'},{name:'INFINITEA',score:142000,health:'',voteRate:'68%',reportRate:'0.6%'},{name:'DREAMWAVE',score:134000,health:'',voteRate:'55%',reportRate:'1.0%'}],
+  planet:[{name:'LUMINOUS',score:97000,health:'',voteRate:'58%',reportRate:'1.2%'},{name:'STARDUST',score:85700,health:'',voteRate:'63%',reportRate:'0.7%'}],
+  star:[{name:'POLARIS',score:82400,health:'',voteRate:'65%',reportRate:'0.5%'},{name:'AURORA',score:79100,health:'',voteRate:'61%',reportRate:'0.4%'},{name:'SPARKLE',score:72000,health:'',voteRate:'48%',reportRate:'0.9%'}],
+  dust:[{name:'NEBULA KIDS',score:28000,health:'',voteRate:'34%',reportRate:'2.1%'},{name:'FIRST LIGHT',score:22000,health:'',voteRate:'41%',reportRate:'1.5%'}],
 };
 
-const LEAGUE_ICONS={dust:'🌑',star:'⭐',planet:'🪐',nova:'💜',quasar:'👑'};
+const LEAGUE_ICONS={dust:'',star:'',planet:'',nova:'',quasar:''};
 const LEAGUE_NAMES={dust:'더스트',star:'스타',planet:'플래닛',nova:'노바',quasar:'퀘이사'};
 const PROMO_FORMULA={
   dust:'D→S: S=(IAI×0.7)+(GSI×0.3)-Penalty',
@@ -191,7 +191,7 @@ const PROMO_FORMULA={
 // 공통 함수
 // ══════════════════════════════════
 function filterHTML(){
-  const leagues=[{id:'all',label:'🌌 전체 ALL'},{id:'dust',label:'더스트 DUST'},{id:'star',label:'스타 STAR'},{id:'planet',label:'플래닛 PLANET'},{id:'nova',label:'노바 NOVA'},{id:'quasar',label:'퀘이사 QUASAR'}];
+  const leagues=[{id:'all',label:'전체 ALL'},{id:'dust',label:'더스트 DUST'},{id:'star',label:'스타 STAR'},{id:'planet',label:'플래닛 PLANET'},{id:'nova',label:'노바 NOVA'},{id:'quasar',label:'퀘이사 QUASAR'}];
   return `<div class="league-filter">${leagues.map(l=>`<button class="filter-btn ${l.id===currentLeague?'active':''}" data-league="${l.id}" onclick="setLeague('${l.id}')">${l.label}</button>`).join('')}</div>`;
 }
 function setLeague(id){currentLeague=id;renderTab()}
@@ -223,7 +223,7 @@ function tabDashboard(){
   :`<div class="chart-section"><div class="chart-title">${LEAGUE_ICONS[currentLeague]} ${LEAGUE_NAMES[currentLeague]} 팬클럽별 분포</div>
     ${(FANDOMS[currentLeague]||[]).map(f=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="flex:1;font-size:11px">${f.name}</span><div style="flex:2;height:8px;background:rgba(255,255,255,.06);border-radius:4px"><div style="height:100%;width:${Math.floor(f.score/2500)}%;background:var(--${currentLeague});border-radius:4px"></div></div><span style="font-size:9px;color:var(--muted)">${f.score.toLocaleString()}</span></div>`).join('')}
   </div>`;
-  return `<div class="page-title">📊 DASHBOARD</div><div class="page-sub">실시간 운영 현황 — Overview${!isAll?' · '+LEAGUE_NAMES[currentLeague]+' 리그':''}</div>
+  return `<div class="page-title">DASHBOARD</div><div class="page-sub">실시간 운영 현황 — Overview${!isAll?' · '+LEAGUE_NAMES[currentLeague]+' 리그':''}</div>
   ${filterHTML()}
   <div class="card-row c4">
     <div class="kpi-card"><div class="kpi-label">유저수 — USERS</div><div class="kpi-val" style="color:var(--blue)">${dd.users.toLocaleString()}</div><div class="kpi-change up">▲ ${dd.newToday.toLocaleString()}</div></div>
@@ -232,9 +232,9 @@ function tabDashboard(){
     <div class="kpi-card"><div class="kpi-label">평균 체류 — AVG</div><div class="kpi-val" style="color:var(--nova)">${dd.avgTime}</div></div>
   </div>
   <div style="display:flex;gap:8px;flex-wrap:wrap">
-    <div class="kpi-card" style="flex:1;cursor:pointer" onclick="switchTab('report')"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:20px">🚨</span><div><div style="font-family:'Orbitron',monospace;font-size:16px;font-weight:900;color:var(--red)">${dd.reports}</div><div style="font-size:8px;color:var(--muted)">미처리 신고</div></div></div></div>
-    <div class="kpi-card" style="flex:1;cursor:pointer" onclick="switchTab('report')"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:20px">🤖</span><div><div style="font-family:'Orbitron',monospace;font-size:16px;font-weight:900;color:var(--yellow)">${dd.bots}</div><div style="font-size:8px;color:var(--muted)">봇 의심</div></div></div></div>
-    <div class="kpi-card" style="flex:1;cursor:pointer" onclick="switchTab('fandom')"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:20px">📋</span><div><div style="font-family:'Orbitron',monospace;font-size:16px;font-weight:900;color:var(--blue)">${dd.urgent}</div><div style="font-size:8px;color:var(--muted)">긴급 안건</div></div></div></div>
+    <div class="kpi-card" style="flex:1;cursor:pointer" onclick="switchTab('report')"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:20px"></span><div><div style="font-family:'Orbitron',monospace;font-size:16px;font-weight:900;color:var(--red)">${dd.reports}</div><div style="font-size:8px;color:var(--muted)">미처리 신고</div></div></div></div>
+    <div class="kpi-card" style="flex:1;cursor:pointer" onclick="switchTab('report')"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:20px"></span><div><div style="font-family:'Orbitron',monospace;font-size:16px;font-weight:900;color:var(--yellow)">${dd.bots}</div><div style="font-size:8px;color:var(--muted)">봇 의심</div></div></div></div>
+    <div class="kpi-card" style="flex:1;cursor:pointer" onclick="switchTab('fandom')"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:20px"></span><div><div style="font-family:'Orbitron',monospace;font-size:16px;font-weight:900;color:var(--blue)">${dd.urgent}</div><div style="font-size:8px;color:var(--muted)">긴급 안건</div></div></div></div>
   </div>
   <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px">
     <div class="chart-section"><div class="chart-title">시간대별 활동량 — HOURLY</div>${barChart(hours)}</div>
@@ -250,9 +250,9 @@ function tabDashboard(){
 // ══════════════════════════════════
 function tabUsers(){
   const dd=d();const days=randomBars(14,300,1500);
-  return `<div class="page-title">👥 USER ANALYTICS</div><div class="page-sub">유저 분석</div>
+  return `<div class="page-title">USER ANALYTICS</div><div class="page-sub">유저 분석</div>
   ${filterHTML()}
-  <input class="search-input" placeholder="닉네임/성궤번호 검색 — Search" onkeydown="if(event.key==='Enter')showToast('🔍 백엔드 연동 후 활성화')">
+  <input class="search-input" placeholder="닉네임/성궤번호 검색 — Search" onkeydown="if(event.key==='Enter')showToast('백엔드 연동 후 활성화')">
   <div class="card-row c4">
     <div class="kpi-card"><div class="kpi-label">총 유저 USERS</div><div class="kpi-val" style="color:var(--blue)">${dd.users.toLocaleString()}</div></div>
     <div class="kpi-card"><div class="kpi-label">DAU</div><div class="kpi-val" style="color:var(--gold)">${dd.dau.toLocaleString()}</div></div>
@@ -270,10 +270,10 @@ function tabUsers(){
     <div class="card-row c4">${[['D+1',dd.retention.d1],['D+7',dd.retention.d7],['D+30',dd.retention.d30],['D+90',dd.retention.d90]].map(([l,v])=>`<div style="text-align:center"><div style="font-family:'Orbitron',monospace;font-size:16px;font-weight:900;color:var(--gold)">${v}</div><div style="font-size:9px;color:var(--muted)">${l}</div></div>`).join('')}</div>
   </div>
   <div class="seg-row">
-    <div class="seg-card"><div class="seg-icon">🐋</div><div class="seg-pct" style="color:var(--gold)">${dd.seg.whale}%</div><div class="seg-label">고래</div></div>
-    <div class="seg-card"><div class="seg-icon">🔥</div><div class="seg-pct" style="color:var(--red)">${dd.seg.active}%</div><div class="seg-label">열혈</div></div>
-    <div class="seg-card"><div class="seg-icon">😴</div><div class="seg-pct" style="color:var(--blue)">${dd.seg.sleeper}%</div><div class="seg-label">슬리퍼</div></div>
-    <div class="seg-card"><div class="seg-icon">⚠️</div><div class="seg-pct" style="color:var(--yellow)">${dd.seg.atrisk}%</div><div class="seg-label">이탈위험</div></div>
+    <div class="seg-card"><div class="seg-icon"></div><div class="seg-pct" style="color:var(--gold)">${dd.seg.whale}%</div><div class="seg-label">고래</div></div>
+    <div class="seg-card"><div class="seg-icon"></div><div class="seg-pct" style="color:var(--red)">${dd.seg.active}%</div><div class="seg-label">열혈</div></div>
+    <div class="seg-card"><div class="seg-icon"></div><div class="seg-pct" style="color:var(--blue)">${dd.seg.sleeper}%</div><div class="seg-label">슬리퍼</div></div>
+    <div class="seg-card"><div class="seg-icon"></div><div class="seg-pct" style="color:var(--yellow)">${dd.seg.atrisk}%</div><div class="seg-label">이탈위험</div></div>
   </div>`;
 }
 
@@ -286,34 +286,34 @@ function tabFandom(){
   let fcTable='';
   if(isAll){
     Object.entries(FANDOMS).forEach(([lg,fs])=>{
-      fcTable+=`<tr><td colspan="6" style="background:rgba(255,255,255,.02);font-weight:700;color:var(--${lg})">${LEAGUE_ICONS[lg]} ${LEAGUE_NAMES[lg]}</td></tr>`;
-      fs.forEach(f=>{fcTable+=`<tr><td>${f.name}</td><td>${f.score.toLocaleString()}</td><td>${f.health}</td><td>${f.voteRate}</td><td>${f.reportRate}</td><td><button class="btn btn-gold" onclick="showToast('📋 ${f.name} 상세')">상세</button></td></tr>`});
+      fcTable+=`<tr><td colspan="6" style="background:rgba(255,255,255,.02);font-weight:700;color:var(--${lg})"> ${LEAGUE_NAMES[lg]}</td></tr>`;
+      fs.forEach(f=>{fcTable+=`<tr><td>${f.name}</td><td>${f.score.toLocaleString()}</td><td>${f.health}</td><td>${f.voteRate}</td><td>${f.reportRate}</td><td><button class="btn btn-gold" onclick="showToast(' ${f.name} 상세')">상세</button></td></tr>`});
     });
   } else {
-    (FANDOMS[currentLeague]||[]).forEach(f=>{fcTable+=`<tr><td>${f.name}</td><td>${f.score.toLocaleString()}</td><td>${f.health}</td><td>${f.voteRate}</td><td>${f.reportRate}</td><td><button class="btn btn-gold" onclick="showToast('📋 ${f.name} 상세')">상세</button></td></tr>`});
+    (FANDOMS[currentLeague]||[]).forEach(f=>{fcTable+=`<tr><td>${f.name}</td><td>${f.score.toLocaleString()}</td><td>${f.health}</td><td>${f.voteRate}</td><td>${f.reportRate}</td><td><button class="btn btn-gold" onclick="showToast(' ${f.name} 상세')">상세</button></td></tr>`});
   }
   // 화력 대전 데이터
   const fireFcs=fcs.sort((a,b)=>b.score-a.score);
-  return `<div class="page-title">🏛️ FANDOM MANAGEMENT</div><div class="page-sub">팬덤 관리${!isAll?' · '+LEAGUE_NAMES[currentLeague]:''}</div>
+  return `<div class="page-title">FANDOM MANAGEMENT</div><div class="page-sub">팬덤 관리${!isAll?' · '+LEAGUE_NAMES[currentLeague]:''}</div>
   ${filterHTML()}
   <div class="chart-section"><div class="chart-title">팬클럽 현황 — FANCLUB STATUS</div>
     <table class="data-table"><tr><th>팬클럽</th><th>점수</th><th>건강도</th><th>투표참여</th><th>신고율</th><th>관리</th></tr>${fcTable}</table>
   </div>
-  ${!isAll&&fcs.length>=2?`<div class="chart-section"><div class="chart-title">⚔️ 라이벌 비교 — RIVAL</div>
+  ${!isAll&&fcs.length>=2?`<div class="chart-section"><div class="chart-title">라이벌 비교 — RIVAL</div>
     <div class="rival-card">
       <div class="rival-team"><div class="rival-team-name" style="color:var(--gold)">${fcs[0].name} #1</div><div class="rival-team-score" style="color:var(--gold)">${fcs[0].score.toLocaleString()}</div></div>
       <div class="rival-vs">VS</div>
       <div class="rival-team"><div class="rival-team-name">${fcs[1].name} #2</div><div class="rival-team-score" style="color:var(--blue)">${fcs[1].score.toLocaleString()}</div></div>
-      <div class="rival-gap"><div class="rival-gap-val" style="color:${(fcs[0].score-fcs[1].score)<10000?'var(--danger)':'var(--safe)'}">${(fcs[0].score-fcs[1].score).toLocaleString()}</div><div style="font-size:8px;color:var(--muted)">${(fcs[0].score-fcs[1].score)<10000?'🔴 접전':'🟢 안전'}</div></div>
+      <div class="rival-gap"><div class="rival-gap-val" style="color:${(fcs[0].score-fcs[1].score)<10000?'var(--danger)':'var(--safe)'}">${(fcs[0].score-fcs[1].score).toLocaleString()}</div><div style="font-size:8px;color:var(--muted)">${(fcs[0].score-fcs[1].score)<10000?' 접전':' 안전'}</div></div>
     </div>
-    <button class="btn btn-gold" onclick="showToast('🏆 라이벌 이벤트 발행!')">🏆 라이벌 이벤트 — Rival Event</button>
+    <button class="btn btn-gold" onclick="showToast(' 라이벌 이벤트 발행!')">라이벌 이벤트 — Rival Event</button>
   </div>`:``}
-  <div class="chart-section"><div class="chart-title">🔥 화력 랭킹 — AP RANKING</div>
+  <div class="chart-section"><div class="chart-title">화력 랭킹 — AP RANKING</div>
     <table class="data-table"><tr><th>#</th><th>팬클럽</th><th>점수</th><th>리그</th></tr>
-    ${fireFcs.map((f,i)=>`<tr${i===0?' style="background:rgba(240,192,64,.06)"':''}><td style="font-family:'Orbitron',monospace;color:${i===0?'var(--gold)':'var(--text)'}">${i===0?'👑':i+1}</td><td style="${i===0?'color:var(--gold);font-weight:900':''}">${f.name}</td><td style="font-family:'Orbitron',monospace;color:var(--gold)">${f.score.toLocaleString()}</td><td>${LEAGUE_ICONS[f.league]}</td></tr>`).join('')}
+    ${fireFcs.map((f,i)=>`<tr${i===0?' style="background:rgba(240,192,64,.06)"':''}><td style="font-family:'Orbitron',monospace;color:${i===0?'var(--gold)':'var(--text)'}">${i===0?'':i+1}</td><td style="${i===0?'color:var(--gold);font-weight:900':''}">${f.name}</td><td style="font-family:'Orbitron',monospace;color:var(--gold)">${f.score.toLocaleString()}</td><td>${LEAGUE_ICONS[f.league]}</td></tr>`).join('')}
     </table>
   </div>
-  <div style="display:flex;gap:8px"><button class="btn btn-gold" onclick="showToast('📢 전체 공지 발송')">전체 공지</button><button class="btn btn-blue" onclick="showToast('⏱️ 투표 기간 조정')">기간 조정</button></div>`;
+  <div style="display:flex;gap:8px"><button class="btn btn-gold" onclick="showToast(' 전체 공지 발송')">전체 공지</button><button class="btn btn-blue" onclick="showToast(' 투표 기간 조정')">기간 조정</button></div>`;
 }
 
 // ══════════════════════════════════
@@ -329,7 +329,7 @@ function tabReport(){
     {date:'03.27',reporter:'퀘이사왕',target:'hate_speech',type:'커뮤니티 파괴',urgency:'긴급',status:'완료',league:'quasar'},
   ];
   const filtered=currentLeague==='all'?allReports:allReports.filter(r=>r.league===currentLeague);
-  return `<div class="page-title">🛡️ HIGH GUARD</div><div class="page-sub">신고 처리</div>
+  return `<div class="page-title">HIGH GUARD</div><div class="page-sub">신고 처리</div>
   ${filterHTML()}
   <div class="card-row c4">
     <div class="kpi-card"><div class="kpi-label">미처리 PENDING</div><div class="kpi-val" style="color:var(--red)">${dd.reports}</div></div>
@@ -339,7 +339,7 @@ function tabReport(){
   </div>
   <div class="chart-section"><div class="chart-title">신고 목록 — REPORTS</div>
     <table class="data-table"><tr><th>날짜</th><th>신고자</th><th>대상</th><th>유형</th><th>리그</th><th>상태</th><th>조치</th></tr>
-    ${filtered.map(r=>`<tr><td>${r.date}</td><td>${r.reporter}</td><td>${r.target}</td><td><span class="badge badge-purple">${r.type}</span></td><td>${LEAGUE_ICONS[r.league]}</td><td><span class="badge ${r.status==='미처리'?'badge-red':r.status==='처리중'?'badge-yellow':'badge-green'}">${r.status}</span></td><td>${r.status!=='완료'?`<button class="btn btn-gold" onclick="showToast('✅ 처리')">처리</button>`:'—'}</td></tr>`).join('')}
+    ${filtered.map(r=>`<tr><td>${r.date}</td><td>${r.reporter}</td><td>${r.target}</td><td><span class="badge badge-purple">${r.type}</span></td><td> </td><td><span class="badge ${r.status==='미처리'?'badge-red':r.status==='처리중'?'badge-yellow':'badge-green'}">${r.status}</span></td><td>${r.status!=='완료'?`<button class="btn btn-gold" onclick="showToast(' 처리')">처리</button>`:'—'}</td></tr>`).join('')}
     </table>
   </div>`;
 }
@@ -349,7 +349,7 @@ function tabReport(){
 // ══════════════════════════════════
 function tabEconomy(){
   const dd=d();const wk=randomBars(7,200,800);
-  return `<div class="page-title">💎 ORACLE AUDITOR</div><div class="page-sub">경제 감시</div>
+  return `<div class="page-title">ORACLE AUDITOR</div><div class="page-sub">경제 감시</div>
   ${filterHTML()}
   <div class="card-row c4">
     <div class="kpi-card"><div class="kpi-label">유통량 CIRC.</div><div class="kpi-val" style="color:var(--gold)">${currentLeague==='all'?'1.24B':dd.eco.volume}</div></div>
@@ -366,12 +366,12 @@ function tabEconomy(){
 function tabSettings(){
   const isAll=currentLeague==='all';
   const promoRows=isAll?
-    Object.entries(PROMO_FORMULA).map(([lg,f])=>`<tr><td>${LEAGUE_ICONS[lg]} ${LEAGUE_NAMES[lg]}</td><td style="font-family:'Orbitron',monospace;font-size:10px;color:var(--gold)">${f}</td></tr>`).join('')
-    :`<tr><td>${LEAGUE_ICONS[currentLeague]} ${LEAGUE_NAMES[currentLeague]}</td><td style="font-family:'Orbitron',monospace;font-size:10px;color:var(--gold)">${PROMO_FORMULA[currentLeague]}</td></tr>`;
-  return `<div class="page-title">⚙️ SETTINGS</div><div class="page-sub">시스템 설정</div>
+    Object.entries(PROMO_FORMULA).map(([lg,f])=>`<tr><td> ${LEAGUE_NAMES[lg]}</td><td style="font-family:'Orbitron',monospace;font-size:10px;color:var(--gold)">${f}</td></tr>`).join('')
+    :`<tr><td> ${LEAGUE_NAMES[currentLeague]}</td><td style="font-family:'Orbitron',monospace;font-size:10px;color:var(--gold)">${PROMO_FORMULA[currentLeague]}</td></tr>`;
+  return `<div class="page-title">SETTINGS</div><div class="page-sub">시스템 설정</div>
   ${filterHTML()}
   <div class="chart-section"><div class="chart-title">시즌 관리 — SEASON</div>
-    <div style="display:flex;align-items:center;gap:12px"><div><div style="font-size:9px;color:var(--muted)">현재 시즌</div><div style="font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--gold)">SEASON 3</div></div><div style="flex:1"><div style="font-size:9px;color:var(--muted)">남은 기간</div><div style="font-family:'Orbitron',monospace;font-size:13px">12일 14시간</div></div><button class="btn btn-gold" onclick="showToast('⚙️ 시즌 설정')">설정</button></div>
+    <div style="display:flex;align-items:center;gap:12px"><div><div style="font-size:9px;color:var(--muted)">현재 시즌</div><div style="font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--gold)">SEASON 3</div></div><div style="flex:1"><div style="font-size:9px;color:var(--muted)">남은 기간</div><div style="font-family:'Orbitron',monospace;font-size:13px">12일 14시간</div></div><button class="btn btn-gold" onclick="showToast(' 시즌 설정')">설정</button></div>
   </div>
   <div class="chart-section"><div class="chart-title">승격 공식 — PROMOTION FORMULA</div>
     <table class="data-table"><tr><th>구간</th><th>공식</th></tr>${promoRows}</table>
@@ -379,7 +379,7 @@ function tabSettings(){
   <div class="chart-section"><div class="chart-title">공지 발행 — NOTICE</div>
     <div class="form-group"><div class="form-label">제목</div><input class="form-input" placeholder="공지 제목..."></div>
     <div class="form-group"><div class="form-label">내용</div><textarea class="form-input" placeholder="공지 내용..."></textarea></div>
-    <button class="btn btn-gold" onclick="showToast('📢 공지 발행!')">발행 Publish</button>
+    <button class="btn btn-gold" onclick="showToast(' 공지 발행!')">발행 Publish</button>
   </div>`;
 }
 
@@ -393,11 +393,11 @@ function tabCourt(){
     {id:'CASE-045',defendant:'toxic_fan',charge:'커뮤니티 조화 파괴 (T2)',status:'판결완료',verdict:'영혼침체 7일',league:'dust'},
   ];
   const filtered=currentLeague==='all'?allCases:allCases.filter(c=>c.league===currentLeague);
-  return `<div class="page-title">⚖️ SOVEREIGN COURT</div><div class="page-sub">재판소</div>
+  return `<div class="page-title">SOVEREIGN COURT</div><div class="page-sub">재판소</div>
   ${filterHTML()}
   <div class="chart-section"><div class="chart-title">재판 안건 — CASES</div>
     <table class="data-table"><tr><th>안건</th><th>피고</th><th>혐의</th><th>리그</th><th>상태</th><th>판결</th></tr>
-    ${filtered.map(c=>`<tr><td style="font-family:'Orbitron',monospace;color:var(--gold)">${c.id}</td><td>${c.defendant}</td><td><span class="badge badge-red">${c.charge}</span></td><td>${LEAGUE_ICONS[c.league]}</td><td><span class="badge ${c.status==='심리중'?'badge-yellow':'badge-green'}">${c.status}</span></td><td>${c.verdict}</td></tr>`).join('')}
+    ${filtered.map(c=>`<tr><td style="font-family:'Orbitron',monospace;color:var(--gold)">${c.id}</td><td>${c.defendant}</td><td><span class="badge badge-red">${c.charge}</span></td><td> </td><td><span class="badge ${c.status==='심리중'?'badge-yellow':'badge-green'}">${c.status}</span></td><td>${c.verdict}</td></tr>`).join('')}
     </table>
   </div>
   <div class="chart-section"><div class="chart-title">관리자 로그 — ADMIN LOG</div>

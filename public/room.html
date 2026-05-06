@@ -601,14 +601,11 @@ html,body {
 
 <div id="app">
   <nav class="top-nav">
-    <a class="top-nav-item " href="/"><div class="top-nav-icon">🏠</div><div class="top-nav-label">홈</div></a>
-    <a class="top-nav-item " href="/astra.html"><div class="top-nav-icon">⭐</div><div class="top-nav-label">아스트라</div></a>
-    <a class="top-nav-item " href="/fandom.html"><div class="top-nav-icon">🏘️</div><div class="top-nav-label">내팬덤</div></a>
-    <a class="top-nav-item active" href="/room3d.html"><div class="top-nav-icon">🏡</div><div class="top-nav-label">내 방</div></a>
-    <a class="top-nav-item " href="/nebula.html"><div class="top-nav-icon">🌌</div><div class="top-nav-label">성궤</div></a>
-    <a class="top-nav-item " href="/avatar.html"><div class="top-nav-icon">🎭</div><div class="top-nav-label">아바타</div></a>
-    <a class="top-nav-item " href="/shop.html"><div class="top-nav-icon">🛒</div><div class="top-nav-label">상점</div></a>
-    <a class="top-nav-item" href="/competition.html">경쟁</a>
+    <a class="top-nav-item " href="/"><div class="top-nav-icon"></div><div class="top-nav-label">홈</div></a>
+    <a class="top-nav-item " href="/astra.html"><div class="top-nav-icon"></div><div class="top-nav-label">아스트라</div></a>
+    <a class="top-nav-item " href="/fandom.html"><div class="top-nav-icon"></div><div class="top-nav-label">팬덤</div></a>
+    <a class="top-nav-item active" href="/room3d.html"><div class="top-nav-icon"></div><div class="top-nav-label">내 방</div></a>
+    <a class="top-nav-item " href="/shop.html"><div class="top-nav-icon"></div><div class="top-nav-label">상점</div></a>
   </nav>
 
   <!-- TOP NAV -->
@@ -619,11 +616,11 @@ html,body {
     <a class="tb-back" href="/">←</a>
     <div class="tb-info">
       <div class="tb-name" id="tbName">별빛 탐험가의 방</div>
-      <div class="tb-sub" id="tbSub">🌟 더스트 리그 · 성진 Lv.23</div>
+      <div class="tb-sub" id="tbSub">더스트 리그 · 성진 Lv.23</div>
     </div>
     <div class="tb-actions">
-      <button class="tb-btn tb-btn-share" onclick="shareRoom()">공유 📤</button>
-      <button class="tb-btn tb-btn-edit" id="editBtn" onclick="toggleEditMode()">꾸미기 ✏️</button>
+      <button class="tb-btn tb-btn-share" onclick="shareRoom()">공유</button>
+      <button class="tb-btn tb-btn-edit" id="editBtn" onclick="toggleEditMode()">꾸미기</button>
     </div>
   </div>
 
@@ -637,7 +634,6 @@ html,body {
       <div class="owner-profile">
         <div class="owner-av" id="ownerAv">
           <div style="position:relative;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,rgba(192,132,252,.4),rgba(7,7,15,.9));display:flex;align-items:center;justify-content:center;font-size:28px;border:2px solid rgba(240,192,64,.4)">
-            🌟
             <div class="owner-av-ring" style="border-top:2px solid rgba(240,192,64,.5);border-right:2px solid transparent;border-bottom:2px solid transparent;border-left:2px solid transparent"></div>
           </div>
         </div>
@@ -661,10 +657,10 @@ html,body {
           <div class="stage-dot" id="sd3"></div>
         </div>
         <div class="stage-info">
-          <div class="stage-name" id="stageName" style="font-size:11px">🌑 Void</div>
+          <div class="stage-name" id="stageName" style="font-size:11px">Void</div>
           <div class="stage-desc" id="stageDesc" style="font-size:9px">아이템 더 배치하세요!</div>
         </div>
-        <div class="stage-next" id="stageNext" style="font-size:10px">1/4 ✦</div>
+        <div class="stage-next" id="stageNext" style="font-size:10px">1/4</div>
       </div>
 
       <!-- 경쟁 랭킹 배너 -->
@@ -683,17 +679,17 @@ html,body {
       <!-- 방 통계 -->
       <div class="room-stats" style="grid-template-columns:1fr 1fr;margin:10px 14px 0">
         <div class="room-stat-card" style="padding:10px">
-          <div class="rsc-icon" style="font-size:14px">👁️</div>
+          <div class="rsc-icon" style="font-size:14px"></div>
           <div class="rsc-val" id="statVisit" style="font-size:14px">127</div>
           <div class="rsc-label">방문</div>
         </div>
         <div class="room-stat-card" style="padding:10px">
-          <div class="rsc-icon" style="font-size:14px">💜</div>
+          <div class="rsc-icon" style="font-size:14px"></div>
           <div class="rsc-val" id="statHeart" style="font-size:14px">89</div>
           <div class="rsc-label">하트</div>
         </div>
         <div class="room-stat-card" style="padding:10px;grid-column:span 2">
-          <div class="rsc-icon" style="font-size:14px">⚡</div>
+          <div class="rsc-icon" style="font-size:14px"></div>
           <div class="rsc-val" id="statCP" style="font-size:14px">380</div>
           <div class="rsc-label">문화력 CP</div>
         </div>
@@ -701,7 +697,7 @@ html,body {
 
       <!-- 인벤토리 -->
       <div class="inventory-section">
-        <div class="section-title" style="margin-bottom:10px;font-size:9px">✦ 내 아이템</div>
+        <div class="section-title" style="margin-bottom:10px;font-size:9px">내 아이템</div>
         <div class="inv-filter" style="gap:4px;margin-bottom:10px">
           <button class="filter-chip active" style="font-size:10px;padding:4px 8px" onclick="filterItems('all',this)">전체</button>
           <button class="filter-chip" style="font-size:10px;padding:4px 8px" onclick="filterItems('furniture',this)">가구</button>
@@ -712,25 +708,25 @@ html,body {
 
       <!-- 테마 선택 -->
       <div class="theme-section">
-        <div class="section-title" style="margin-bottom:10px;font-size:9px">✦ 방 테마</div>
+        <div class="section-title" style="margin-bottom:10px;font-size:9px">방 테마</div>
         <div class="theme-grid" style="grid-template-columns:repeat(2,1fr)" id="themeGrid"></div>
       </div>
 
       <!-- 뽐내기 -->
       <div class="share-section" style="padding-bottom:20px">
-        <div class="section-title" style="margin-bottom:10px;font-size:9px">✦ 뽐내기</div>
+        <div class="section-title" style="margin-bottom:10px;font-size:9px">뽐내기</div>
         <div class="share-btns" style="grid-template-columns:repeat(2,1fr)">
           <button class="share-btn" onclick="shareToSNS('instagram')">
-            <div class="share-btn-icon">📸</div>인스타
+            <div class="share-btn-icon"></div>인스타
           </button>
           <button class="share-btn" onclick="shareToSNS('twitter')">
-            <div class="share-btn-icon">🐦</div>X
+            <div class="share-btn-icon"></div>X
           </button>
           <button class="share-btn" onclick="shareToSNS('kakao')">
-            <div class="share-btn-icon">💬</div>카카오
+            <div class="share-btn-icon"></div>카카오
           </button>
           <button class="share-btn" onclick="shareToSNS('copy')">
-            <div class="share-btn-icon">🔗</div>링크
+            <div class="share-btn-icon"></div>링크
           </button>
         </div>
       </div>
@@ -752,7 +748,6 @@ html,body {
             <div class="room-avatar-body" id="roomAvatarBody">
               <div class="room-avatar-aura" id="roomAvatarAura"
                 style="border-top:2px solid rgba(192,132,252,.5);border-right:2px solid transparent;border-bottom:2px solid transparent;border-left:2px solid transparent;inset:-5px"></div>
-              🌟
             </div>
             <div class="room-avatar-shadow"></div>
           </div>
@@ -760,16 +755,16 @@ html,body {
             <div class="visitor-dot"></div>
             <span id="liveVisitors">3명 방문 중</span>
           </div>
-          <div class="room-theme-badge" id="roomThemeBadge">🌑 보이드 테마</div>
+          <div class="room-theme-badge" id="roomThemeBadge">보이드 테마</div>
         </div>
       </div>
 
       <!-- 방명록 — 방 바로 밑 -->
       <div class="visitors-section" style="padding-bottom:20px">
-        <div class="section-title" style="margin-bottom:12px">✦ 방명록</div>
+        <div class="section-title" style="margin-bottom:12px">방명록</div>
         <div class="visitor-list" id="visitorList"></div>
         <div class="gb-input-wrap">
-          <input class="gb-input" id="gbInput" placeholder="방명록을 남겨보세요 ✨" maxlength="100">
+          <input class="gb-input" id="gbInput" placeholder="방명록을 남겨보세요" maxlength="100">
           <button class="gb-send" onclick="sendGuestbook()">남기기</button>
         </div>
       </div>
@@ -924,19 +919,19 @@ function renderRoomParticles(color='#c084fc') {
 
 function updateStage() {
   placedCount = ITEMS.filter(i=>i.placed).length;
-  let stage=1, name='🌑 Void — 어두운 방', desc, next;
+  let stage=1, name='Void — 어두운 방', desc, next;
 
   if(placedCount >= 8) {
-    stage=3; name='🌟 Supernova — 빛나는 우주';
+    stage=3; name='Supernova — 빛나는 우주';
     desc='최고 단계! 당신의 방이 전 제국에 빛납니다.';
-    next='MAX ✦';
+    next='MAX';
   } else if(placedCount >= 4) {
-    stage=2; name='🔥 Ignition — 불꽃의 방';
+    stage=2; name='Ignition — 불꽃의 방';
     desc=`아이템 ${8-placedCount}개 더 배치하면 Supernova로 진화해요!`;
-    next=`${placedCount}/8 ✦`;
+    next=`${placedCount}/8`;
   } else {
     desc=`아이템 ${4-placedCount}개 더 배치하면 Ignition 단계로 진화해요!`;
-    next=`${placedCount}/4 ✦`;
+    next=`${placedCount}/4`;
   }
 
   for(let i=1;i<=3;i++) {
@@ -961,7 +956,7 @@ function renderInventory(filter='all') {
   grid.innerHTML = filtered.map(item=>`
     <div class="inv-item ${item.placed?'placed':''}" onclick="onItemClick(${item.id})">
       ${item.placed ? '<div class="placed-badge">✓</div>' : ''}
-      ${item.locked ? `<div class="inv-item-lock" title="${item.lockMsg}">🔒</div>` : ''}
+      ${item.locked ? `<div class="inv-item-lock" title="${item.lockMsg}"></div>` : ''}
       <div class="inv-item-emoji">${item.emoji}</div>
       <div class="inv-item-name">${item.name}</div>
       <div class="inv-item-rarity rarity-${item.rarity}">${item.rarity.toUpperCase()}</div>
@@ -979,7 +974,7 @@ function filterItems(type, btn) {
 function onItemClick(itemId) {
   const item = ITEMS.find(i=>i.id===itemId);
   if(!item) return;
-  if(item.locked) { showToast(`🔒 ${item.lockMsg} 달성 시 해금!`); return; }
+  if(item.locked) { showToast(`${item.lockMsg} 달성 시 해금!`); return; }
   if(item.placed) { removeItem(itemId); return; }
   openPlaceModal(item);
 }
@@ -995,7 +990,7 @@ function openPlaceModal(item) {
     <div class="modal-item-detail">
       <div class="modal-item-name">${item.name}</div>
       <div class="modal-item-rarity rarity-${item.rarity}">${item.rarity.toUpperCase()}</div>
-      <div class="modal-item-bonus">✦ ${item.bonus}</div>
+      <div class="modal-item-bonus">${item.bonus}</div>
     </div>
   `;
 
@@ -1044,7 +1039,7 @@ function removeItem(itemId) {
   renderRoomItems();
   renderInventory(currentFilter);
   updateStage();
-  showToast(`${item.emoji} ${item.name} 제거됐어요.`);
+  showToast(`${item.name} 제거됐어요.`);
 }
 
 function closeModal() {
@@ -1083,7 +1078,7 @@ function renderGuestbook() {
       </div>
       <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0">
         <div class="visitor-time">${g.time}</div>
-        <div class="visitor-heart" onclick="heartEntry(${i})">❤️ ${g.hearts}</div>
+        <div class="visitor-heart" onclick="heartEntry(${i})">${g.hearts}</div>
       </div>
     </div>
   `).join('');
@@ -1092,7 +1087,7 @@ function renderGuestbook() {
 function heartEntry(idx) {
   GUESTBOOK[idx].hearts++;
   renderGuestbook();
-  showToast('💜 하트를 남겼어요!');
+  showToast('하트를 남겼어요!');
   document.getElementById('heartCount').textContent = parseInt(document.getElementById('heartCount').textContent)+1;
   document.getElementById('statHeart').textContent = parseInt(document.getElementById('statHeart').textContent)+1;
 }
@@ -1101,10 +1096,10 @@ function sendGuestbook() {
   const input = document.getElementById('gbInput');
   const msg = input.value.trim();
   if(!msg) return;
-  GUESTBOOK.unshift({ name:'나', emoji:'🌟', msg, time:'방금', hearts:0 });
+  GUESTBOOK.unshift({ name:'나', emoji:'', msg, time:'방금', hearts:0 });
   input.value = '';
   renderGuestbook();
-  showToast('✨ 방명록을 남겼어요!');
+  showToast('방명록을 남겼어요!');
 }
 
 // ════════════════════════════════════
@@ -1113,12 +1108,12 @@ function sendGuestbook() {
 function toggleEditMode() {
   isEditMode = !isEditMode;
   const btn = document.getElementById('editBtn');
-  btn.textContent = isEditMode ? '완료 ✓' : '꾸미기 ✏️';
+  btn.textContent = isEditMode ? '완료' : '꾸미기';
   btn.style.background = isEditMode
     ? 'linear-gradient(90deg,#10b981,#059669)'
     : 'linear-gradient(90deg,var(--accent),var(--accent2))';
   renderRoomItems();
-  showToast(isEditMode ? '✏️ 편집 모드 ON — 아이템을 클릭해 배치/제거하세요!' : '✓ 방 꾸미기 완료!');
+  showToast(isEditMode ? '편집 모드 ON — 아이템을 클릭해 배치/제거하세요!' : '방 꾸미기 완료!');
 }
 
 function onRoomTap(e) {
@@ -1135,16 +1130,16 @@ function onRoomTap(e) {
 function shareRoom() {
   const url = `https://asteria.me.kr/room.html`;
   if(navigator.share) {
-    navigator.share({ title:'별빛 탐험가의 아스트라 방', text:'내 방 구경하러 와요! 🌟', url })
+    navigator.share({ title:'별빛 탐험가의 아스트라 방', text:'내 방 구경하러 와요!', url })
       .catch(()=>{});
   } else {
-    navigator.clipboard.writeText(url).then(()=>showToast('🔗 링크가 복사됐어요!'));
+    navigator.clipboard.writeText(url).then(()=>showToast('링크가 복사됐어요!'));
   }
 }
 
 function shareToSNS(platform) {
   const url = encodeURIComponent('https://asteria.me.kr/room.html');
-  const text = encodeURIComponent('별빛 탐험가의 아스트라 방을 구경해보세요! 🌟 #아스테리아 #팬덤');
+  const text = encodeURIComponent('별빛 탐험가의 아스트라 방을 구경해보세요! #아스테리아 #팬덤');
   const urls = {
     twitter: `https://twitter.com/intent/tweet?text=${text}&url=${url}`,
     kakao: `https://story.kakao.com/share?url=${url}`,
@@ -1153,14 +1148,14 @@ function shareToSNS(platform) {
   };
   if(platform==='copy') {
     navigator.clipboard.writeText('https://asteria.me.kr/room.html')
-      .then(()=>showToast('🔗 링크가 복사됐어요!'));
+      .then(()=>showToast('링크가 복사됐어요!'));
     return;
   }
   if(platform==='instagram') {
-    showToast('📸 이미지를 저장하고 인스타에 올려보세요!'); return;
+    showToast('이미지를 저장하고 인스타에 올려보세요!'); return;
   }
   if(urls[platform]) window.open(urls[platform],'_blank');
-  showToast('공유 완료! 🎉');
+  showToast('공유 완료!');
 }
 
 // ════════════════════════════════════

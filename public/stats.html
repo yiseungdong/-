@@ -89,7 +89,7 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 <!-- 스탯 상세 모달 -->
 <div class="stat-modal" id="statModal">
   <div class="sm-card">
-    <button class="sm-close" onclick="closeStatModal()">✕</button>
+    <button class="sm-close" onclick="closeStatModal()">&times;</button>
     <div id="smIcon" class="sm-icon"></div>
     <div id="smName" class="sm-name"></div>
     <div id="smEn" class="sm-en"></div>
@@ -105,13 +105,10 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 <div id="app">
   <nav class="top-nav">
     <a class="top-nav-item" href="/"><div class="top-nav-icon">🏠</div><div class="top-nav-label">홈</div></a>
+    <a class="top-nav-item" href="/fandom.html"><div class="top-nav-icon">🏘️</div><div class="top-nav-label">팬덤</div></a>
     <a class="top-nav-item" href="/astra.html"><div class="top-nav-icon">⭐</div><div class="top-nav-label">아스트라</div></a>
-    <a class="top-nav-item" href="/fandom.html"><div class="top-nav-icon">🏘️</div><div class="top-nav-label">내팬덤</div></a>
-    <a class="top-nav-item" href="/room3d.html"><div class="top-nav-icon">🏡</div><div class="top-nav-label">내 방</div></a>
-    <a class="top-nav-item" href="/league.html"><div class="top-nav-icon">🌌</div><div class="top-nav-label">리그</div></a>
-    <a class="top-nav-item active" href="/stats.html"><div class="top-nav-icon">📊</div><div class="top-nav-label">스탯</div></a>
+    <a class="top-nav-item" href="/room3d.html"><div class="top-nav-icon">🏡</div><div class="top-nav-label">내방</div></a>
     <a class="top-nav-item" href="/shop.html"><div class="top-nav-icon">🛒</div><div class="top-nav-label">상점</div></a>
-    <a class="top-nav-item" href="/competition.html">경쟁</a>
   </nav>
 
   <div class="page-title">STAT DASHBOARD</div>

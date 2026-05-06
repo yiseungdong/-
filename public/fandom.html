@@ -842,7 +842,7 @@ canvas{position:absolute;inset:0;z-index:1}
       <div class="fc-header-stats">
         <span>👥 <span id="bM">98,432</span></span>
         <span style="color:rgba(200,190,220,0.3)">·</span>
-        <span>⭐ <span id="bS">847</span>점</span>
+        <span><span id="bS">847</span>점</span>
       </div>
     </div>
     <div class="fc-header-arrow" id="fcArrow">▼</div>
@@ -859,7 +859,7 @@ canvas{position:absolute;inset:0;z-index:1}
       <!-- 화력 게이지 -->
       <div style="margin-bottom:6px;">
         <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
-          <span style="font-size:9px;color:rgba(220,210,240,0.7);">🔥 이달 화력</span>
+          <span style="font-size:9px;color:rgba(220,210,240,0.7);">이달 화력</span>
           <span id="fcEnergyPct" style="font-size:9px;color:#f59e0b;font-weight:700;">72%</span>
         </div>
         <div style="height:4px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;">
@@ -870,13 +870,13 @@ canvas{position:absolute;inset:0;z-index:1}
       <div style="font-size:8px;color:rgba(220,210,240,0.5);margin-bottom:4px;">🏅 이달의 MVP</div>
       <div style="display:flex;flex-direction:column;gap:2px;">
         <div style="display:flex;justify-content:space-between;font-size:8px;">
-          <span>🔥 기여왕</span><span style="color:#f0c040;font-weight:700;">StarWarrior</span>
+          <span>기여왕</span><span style="color:#f0c040;font-weight:700;">StarWarrior</span>
         </div>
         <div style="display:flex;justify-content:space-between;font-size:8px;">
           <span>🌱 성장왕</span><span style="color:#f0c040;font-weight:700;">RisingStar</span>
         </div>
         <div style="display:flex;justify-content:space-between;font-size:8px;">
-          <span>💬 화제왕</span><span style="color:#f0c040;font-weight:700;">BuzzMaker</span>
+          <span>화제왕</span><span style="color:#f0c040;font-weight:700;">BuzzMaker</span>
         </div>
       </div>
     </div>
@@ -896,12 +896,12 @@ canvas{position:absolute;inset:0;z-index:1}
     flex-shrink: 0;
     align-self: flex-start;
     margin-top: 4px;
-  ">🏘️ 내 팬덤</button>
+  ">내 팬덤</button>
 </div><!-- /flex wrapper -->
 <div class="chat-panel" id="chatPanel">
   <div class="chat-panel-hdr">
-    <div class="chat-panel-title" id="chatPanelTitle">💬 팬클럽 전체 채팅</div>
-    <div class="chat-panel-close" onclick="closeChatPanel()">✕</div>
+    <div class="chat-panel-title" id="chatPanelTitle">팬클럽 전체 채팅</div>
+    <div class="chat-panel-close" onclick="closeChatPanel()">&times;</div>
   </div>
   <div class="chat-breadcrumb" id="chatBreadcrumb" style="display:none"></div>
   <div class="chat-body" id="chatBody"></div>
@@ -915,7 +915,7 @@ canvas{position:absolute;inset:0;z-index:1}
 <div id="board-panel" style="display:none;position:fixed;top:44px;right:0;bottom:44px;width:320px;background:var(--panel);border-left:1px solid var(--border);z-index:500;flex-direction:column;">
   <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
     <span style="font-size:15px;font-weight:700;color:var(--text);">📋 게시판 거리</span>
-    <button onclick="closeBoardPanel()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;">✕</button>
+    <button onclick="closeBoardPanel()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;">&times;</button>
   </div>
   <div style="background:rgba(0,0,0,0.3);border-bottom:1px solid var(--border);padding:10px 12px;flex-shrink:0;">
     <div style="font-size:10px;color:var(--muted);margin-bottom:7px;letter-spacing:0.6px;">조직 · ORGANIZATION</div>
@@ -935,7 +935,7 @@ canvas{position:absolute;inset:0;z-index:1}
 <div id="vote-panel" style="display:none;position:fixed;top:44px;right:0;bottom:44px;width:320px;background:var(--panel);border-left:1px solid var(--border);z-index:500;flex-direction:column;">
   <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
     <span style="font-size:15px;font-weight:700;color:var(--text);">🗳️ 투표소</span>
-    <button onclick="closeVotePanel()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;">✕</button>
+    <button onclick="closeVotePanel()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;">&times;</button>
   </div>
   <div style="background:rgba(0,0,0,0.3);border-bottom:1px solid var(--border);padding:10px 12px;flex-shrink:0;">
     <div style="font-size:10px;color:var(--muted);margin-bottom:7px;letter-spacing:0.6px;">조직 · ORGANIZATION</div>
@@ -945,7 +945,7 @@ canvas{position:absolute;inset:0;z-index:1}
     <div style="font-size:10px;color:rgba(240,192,64,0.9);margin-bottom:7px;letter-spacing:0.6px;">카테고리 · CATEGORY</div>
     <div style="display:flex;flex-wrap:wrap;gap:6px;">
       <button class="vote-cat-btn active" data-cat="propose" onclick="switchVoteCat('propose')" style="flex:1 1 calc(50% - 3px);">📝 안건상정</button>
-      <button class="vote-cat-btn" data-cat="ongoing" onclick="switchVoteCat('ongoing')" style="flex:1 1 calc(50% - 3px);">🔥 진행중</button>
+      <button class="vote-cat-btn" data-cat="ongoing" onclick="switchVoteCat('ongoing')" style="flex:1 1 calc(50% - 3px);">진행중</button>
       <button class="vote-cat-btn" data-cat="result" onclick="switchVoteCat('result')" style="flex:1 1 calc(50% - 3px);">📊 결과</button>
       <button class="vote-cat-btn" data-cat="leader" onclick="switchVoteCat('leader')" style="flex:1 1 calc(50% - 3px);">👑 리더선출</button>
     </div>
@@ -956,7 +956,7 @@ canvas{position:absolute;inset:0;z-index:1}
 <div id="panel-starreport" style="display:none;position:fixed;top:44px;right:0;bottom:44px;width:320px;background:var(--panel);border-left:1px solid var(--border);z-index:500;flex-direction:column;overflow:hidden;">
   <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
     <span style="font-size:15px;font-weight:700;color:var(--text);">📡 별빛 제보소 · STARLIGHT TRIBUNE</span>
-    <button onclick="closeSrPanel()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;">✕</button>
+    <button onclick="closeSrPanel()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;">&times;</button>
   </div>
   <div class="reporter-badge-bar">
     <div class="reporter-badge">
@@ -986,7 +986,7 @@ canvas{position:absolute;inset:0;z-index:1}
   <div style="flex:1;overflow-y:auto;padding:8px 12px;" id="srContent">
     <div id="sr-list">
       <div class="sr-filter-row">
-        <select id="srCategoryFilter" onchange="renderSrList()" class="sr-select"><option value="all">전체 카테고리</option><option value="schedule">📅 일정/스케줄</option><option value="goods">💿 음반·굿즈</option><option value="media">🎬 영상·사진</option><option value="rumor">⚠️ 루머 팩트체크</option><option value="global">🌏 해외 활동</option><option value="statement">💬 멤버 공식 발언</option></select>
+        <select id="srCategoryFilter" onchange="renderSrList()" class="sr-select"><option value="all">전체 카테고리</option><option value="schedule">일정/스케줄</option><option value="goods">음반·굿즈</option><option value="media">영상·사진</option><option value="rumor">루머 팩트체크</option><option value="global">해외 활동</option><option value="statement">멤버 공식 발언</option></select>
         <select id="srStatusFilter" onchange="renderSrList()" class="sr-select"><option value="all">전체 상태</option><option value="verifying">🔬 검증중</option><option value="confirmed">✅ 확정</option><option value="bubbled">🔼 상위전달됨</option><option value="unconfirmed">❓ 미확인</option><option value="leader">👑 리더공지</option></select>
       </div>
       <div id="srListItems"></div>
@@ -998,7 +998,7 @@ canvas{position:absolute;inset:0;z-index:1}
     <div id="sr-submit" style="display:none">
       <div id="srBanNotice" style="display:none" class="sr-ban-notice"></div>
       <div id="srSubmitForm" class="submit-form">
-        <div class="form-group"><label>카테고리</label><select id="submitCategory" class="sr-select" style="width:100%"><option value="schedule">📅 일정/스케줄</option><option value="goods">💿 음반·굿즈</option><option value="media">🎬 영상·사진</option><option value="rumor">⚠️ 루머 팩트체크</option><option value="global">🌏 해외 활동</option><option value="statement">💬 멤버 공식 발언</option></select></div>
+        <div class="form-group"><label>카테고리</label><select id="submitCategory" class="sr-select" style="width:100%"><option value="schedule">일정/스케줄</option><option value="goods">음반·굿즈</option><option value="media">영상·사진</option><option value="rumor">루머 팩트체크</option><option value="global">해외 활동</option><option value="statement">멤버 공식 발언</option></select></div>
         <div class="form-group"><label>제목</label><input type="text" id="submitTitle" class="sr-input" placeholder="제보 제목을 입력하세요" maxlength="60"></div>
         <div class="form-group"><label>내용</label><textarea id="submitBody" class="sr-textarea" placeholder="제보 내용을 상세히 입력하세요" rows="4" maxlength="500"></textarea></div>
         <div class="form-group"><label>증거 링크 (선택)</label><input type="text" id="submitUrl" class="sr-input" placeholder="https://... (트위터, 유튜브 등)"></div>
@@ -1012,10 +1012,10 @@ canvas{position:absolute;inset:0;z-index:1}
       <div class="rank-grade-guide">
         <div class="grade-guide-title">📋 기자 등급 기준</div>
         <div class="grade-row"><span class="grade-icon">🌱</span><span class="grade-name">새내기 기자</span><span class="grade-cond">가입 즉시</span></div>
-        <div class="grade-row"><span class="grade-icon">✏️</span><span class="grade-name">수습 기자</span><span class="grade-cond">승인 제보 5건</span></div>
+        <div class="grade-row"><span class="grade-icon"></span><span class="grade-name">수습 기자</span><span class="grade-cond">승인 제보 5건</span></div>
         <div class="grade-row"><span class="grade-icon">📝</span><span class="grade-name">정기자</span><span class="grade-cond">승인 20건 + 검증 참여 50회</span></div>
         <div class="grade-row"><span class="grade-icon">🗞️</span><span class="grade-name">특파원</span><span class="grade-cond">승인 50건 + 높은 통과율</span></div>
-        <div class="grade-row"><span class="grade-icon">⭐</span><span class="grade-name">수석 기자</span><span class="grade-cond">제보수+통과율+추천수 최상위</span></div>
+        <div class="grade-row"><span class="grade-icon"></span><span class="grade-name">수석 기자</span><span class="grade-cond">제보수+통과율+추천수 최상위</span></div>
         <div class="grade-penalty-guide">
           <div class="penalty-title">⚠️ 패널티 규정</div>
           <div class="penalty-row">허위 제보 1회 → 등급 1단계 강등</div>
@@ -1029,9 +1029,9 @@ canvas{position:absolute;inset:0;z-index:1}
   </div>
   <div id="leaderNoticeModal" class="sr-modal" style="display:none">
     <div class="sr-modal-box">
-      <div class="sr-modal-header"><span>👑 전체 리더 공지 제보</span><button onclick="closeLeaderNotice()" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;">✕</button></div>
+      <div class="sr-modal-header"><span>전체 리더 공지 제보</span><button onclick="closeLeaderNotice()" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;">&times;</button></div>
       <div class="sr-modal-desc">리더가 직접 확인한 정보를 팬덤 전체에 즉시 공개합니다. 검증 절차 없이 최상단에 표시되며, 허위 공지 시 경고 및 30일 공지 제한 패널티가 부여됩니다. (월 5회 제한)</div>
-      <div class="form-group"><label>카테고리</label><select id="leaderCategory" class="sr-select" style="width:100%"><option value="schedule">📅 일정/스케줄</option><option value="goods">💿 음반·굿즈</option><option value="media">🎬 영상·사진</option><option value="rumor">⚠️ 루머 팩트체크</option><option value="global">🌏 해외 활동</option><option value="statement">💬 멤버 공식 발언</option></select></div>
+      <div class="form-group"><label>카테고리</label><select id="leaderCategory" class="sr-select" style="width:100%"><option value="schedule">일정/스케줄</option><option value="goods">음반·굿즈</option><option value="media">영상·사진</option><option value="rumor">루머 팩트체크</option><option value="global">해외 활동</option><option value="statement">멤버 공식 발언</option></select></div>
       <div class="form-group"><label>제목</label><input type="text" id="leaderTitle" class="sr-input" placeholder="공지 제목" maxlength="60"></div>
       <div class="form-group"><label>내용</label><textarea id="leaderBody" class="sr-textarea" rows="4" placeholder="팬덤 전체에 알릴 내용을 입력하세요" maxlength="500"></textarea></div>
       <div class="form-group"><label>출처/근거 (선택)</label><input type="text" id="leaderUrl" class="sr-input" placeholder="https://..."></div>
@@ -1041,7 +1041,7 @@ canvas{position:absolute;inset:0;z-index:1}
   </div>
   <div id="leaderAppealModal" class="sr-modal" style="display:none">
     <div class="sr-modal-box">
-      <div class="sr-modal-header"><span>⚠️ 허위 공지 경고 · 소명 기회</span><button onclick="closeAppealModal()" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;">✕</button></div>
+      <div class="sr-modal-header"><span>허위 공지 경고 · 소명 기회</span><button onclick="closeAppealModal()" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;">&times;</button></div>
       <div class="sr-modal-desc appeal-desc">팬덤 검증 결과 해당 공지가 허위로 판정됐습니다.<br>72시간 내 소명 이유를 제출하면 운영진이 검토 후 경고를 철회할 수 있습니다.<br>소명 없이 72시간 경과 시 경고 1회가 확정됩니다.</div>
       <div class="appeal-warning-card" id="appealWarningCard"></div>
       <div class="form-group"><label>소명 내용</label><textarea id="appealBody" class="sr-textarea" rows="4" placeholder="해당 공지가 사실인 근거나 오류가 발생한 경위를 설명해주세요" maxlength="500"></textarea></div>
@@ -1057,7 +1057,7 @@ canvas{position:absolute;inset:0;z-index:1}
 <div id="toast"></div>
 <!-- 미니 채팅창 제거됨 -->
 <div class="fc-chat-bar" onclick="openMiniChatWindow('all','팬클럽 전체','var(--lp)')">
-  <span class="fc-chat-bar-icon">💬</span>
+  <span class="fc-chat-bar-icon"></span>
   <span class="fc-chat-bar-label">팬클럽 전체 채팅</span>
   <span class="fc-chat-bar-count">
     <span class="fc-chat-bar-dot"></span>
@@ -1066,13 +1066,10 @@ canvas{position:absolute;inset:0;z-index:1}
 </div>
 <nav class="top-nav">
   <a class="top-nav-item" href="/index.html">홈</a>
-  <a class="top-nav-item" href="/fandom.html">팬덤</a>
+  <a class="top-nav-item active" href="/fandom.html">팬덤</a>
   <a class="top-nav-item" href="/astra.html">아스트라</a>
-  <a class="top-nav-item active" href="/fandom.html">내팬덤</a>
   <a class="top-nav-item" href="/room3d.html">내방</a>
-  <a class="top-nav-item" href="/avatar.html">아바타</a>
   <a class="top-nav-item" href="/shop.html">상점</a>
-  <a class="top-nav-item" href="/competition.html">경쟁</a>
 </nav>
 
 <script>
@@ -1124,7 +1121,7 @@ function buildDM() {
       moim_depth3: user.moim_depth3 || null,
       moim_depth4: user.moim_depth4 || null,
       moim_depth5: user.moim_depth5 || null,
-      ann: ['🔥 시즌 종료 D-14!', '📢 새로운 소원 제안!'],
+      ann: ['시즌 종료 D-14!', '새로운 소원 제안!'],
       ld: { n: 'StarCommander', lv: 78, a: '전략가' }
     };
   } catch(e) {
@@ -1134,7 +1131,7 @@ function buildDM() {
       fandom_id:1, myUserId:null, myNick:'나',
       moim_depth1:null, moim_depth2:null, moim_depth3:null,
       moim_depth4:null, moim_depth5:null,
-      ann:['🔥 시즌 종료 D-14!','📢 새로운 소원 제안!'],
+      ann:['시즌 종료 D-14!','새로운 소원 제안!'],
       ld:{n:'StarCommander',lv:78,a:'전략가'}
     };
   }
@@ -1234,14 +1231,14 @@ const ORG_BUILDING = {
 
 /* 목업 채팅 메시지 */
 const MOCK_MSGS = [
-  {name:'StarFan',    msg:'안녕하세요! 오늘도 화이팅 💜',  league:'star'},
+  {name:'StarFan',    msg:'안녕하세요! 오늘도 화이팅',  league:'star'},
   {name:'MoonChild',  msg:'오늘 미션 같이 하실 분!',        league:'nova'},
-  {name:'ArmyLove',   msg:'스밍 시작합니다 🔥🔥',          league:'quasar'},
-  {name:'PurpleU',    msg:'여기 분위기 너무 좋아요 ✨',     league:'planet'},
+  {name:'ArmyLove',   msg:'스밍 시작합니다',          league:'quasar'},
+  {name:'PurpleU',    msg:'여기 분위기 너무 좋아요',     league:'planet'},
   {name:'GalaxyHeart',msg:'새로 가입했어요 잘 부탁드려요!', league:'dust'},
   {name:'NovaRider',  msg:'오늘 에너지 목표 달성했어요!',   league:'nova'},
-  {name:'StarDust99', msg:'다들 수고하셨어요 💫',           league:'star'},
-  {name:'LunarFox',   msg:'내일 컴백 기대되는 분?? 🎵',    league:'planet'},
+  {name:'StarDust99', msg:'다들 수고하셨어요',           league:'star'},
+  {name:'LunarFox',   msg:'내일 컴백 기대되는 분??',    league:'planet'},
 ];
 
 const LEAGUE_COLORS = {
@@ -1291,10 +1288,10 @@ function openMiniChatWindow(roomId, roomName, color) {
   win.innerHTML = `
     <div class="mcw-hdr" style="background:${color}18">
       <div class="mcw-dot" style="background:${color}"></div>
-      <div class="mcw-title">💬 ${roomName}</div>
+      <div class="mcw-title">${roomName}</div>
       <div class="mcw-btns">
         <div class="mcw-btn" onclick="minimizeMcw(this)">_</div>
-        <div class="mcw-btn" onclick="closeMcw(this)">✕</div>
+        <div class="mcw-btn" onclick="closeMcw(this)">&times;</div>
       </div>    </div>
     <div class="mcw-body" id="mcwBody_${roomId}"></div>
     <div class="mcw-footer">
@@ -1344,8 +1341,8 @@ function loadMcwMsgs(roomId, color) {
   const names = [...CHAT_MOCK_NAMES]
     .sort(() => Math.random() - 0.5).slice(0, count);
   const msgs = [
-    '안녕하세요! 💜','오늘 미션 같이해요!','화이팅!! 🔥',
-    '스밍 고고~','반가워요 👋','우리 팬클럽 최고 ✨',
+    '안녕하세요!','오늘 미션 같이해요!','화이팅!!',
+    '스밍 고고~','반가워요','우리 팬클럽 최고',
     '오늘도 열심히!','레벨업 했어요 🎉'
   ];
   names.forEach((name, i) => {
@@ -1390,8 +1387,8 @@ function sendMcwMsg(roomId, color) {
   showSpeechBubble('myAv', '나', msg, true);
   setTimeout(() => {
     const replies = [
-      '맞아요! 💜','오~ 좋아요 ✨','화이팅!! 🔥',
-      '저도요! 😊','완전 공감 💫','같이해요~ 👋'
+      '맞아요!','오~ 좋아요','화이팅!!',
+      '저도요!','완전 공감','같이해요~'
     ];
     const name = CHAT_MOCK_NAMES[
       Math.floor(Math.random() * CHAT_MOCK_NAMES.length)];
@@ -1490,7 +1487,7 @@ star:{name:'스타',lp:'#fbbf24',ls:'#f59e0b',lg:'rgba(251,191,36,.3)',lr:251,lg
   sky:['#060612','#0e0e28'],ground:'#121828',groundAlt:'#161c30',
   roadColor:'#222040',roadLine:'#342e5a',
   plazaColor:'#1e1c38',plazaLine:'#3a3460',
-  symbol:'💜',vName:'작은 마을',
+  symbol:'',vName:'작은 마을',
   buildings:[
     {wall:'#2a2848',wallD:'#201e38',roof:'#d4a010',roofH:'#e8b420',win:'rgba(255,220,100,.55)',chimney:true,sign:'#fbbf24'},
     {wall:'#282645',wallD:'#1e1c35',roof:'#c89808',roofH:'#dca818',win:'rgba(255,210,80,.5)',chimney:false,sign:'#fbbf24'},
@@ -1528,7 +1525,7 @@ nova:{name:'노바',lp:'#c084fc',ls:'#a855f7',lg:'rgba(192,132,252,.3)',lr:192,l
   sky:['#06021a','#100830'],ground:'#0e0624',groundAlt:'#120a2e',
   roadColor:'#1a1040',roadLine:'#2e1e6a',
   plazaColor:'#160c38',plazaLine:'#2a1860',
-  symbol:'💎',vName:'메트로폴리스',
+  symbol:'',vName:'메트로폴리스',
   buildings:[
     {wall:'#1e1040',wallD:'#140a30',roof:'#a855f7',roofH:'#b870ff',win:'rgba(200,140,255,.55)',chimney:false,sign:'#c084fc'},
     {wall:'#201244',wallD:'#160c34',roof:'#9a4ae8',roofH:'#aa60f8',win:'rgba(180,120,240,.5)',chimney:false,sign:'#a855f7'},
@@ -1575,7 +1572,7 @@ const BLD_BASE=[
   {id:'board',rx:.64,ry:.69,rw:.06,rh:.063,nK:'게시판 거리',nE:'Board St.'},
   {id:'starreport',rx:.56,ry:.24,rw:.055,rh:.060,nK:'별빛 제보소',nE:'Star Report',
    wall:'#1a1035',wallD:'#120b28',roof:'#7c3aed',roofP:'#c084fc',winB:'#e9d5ff',chimney:false,sign:'#f0c040',
-   symbol:'🌟',vName:'별빛 제보소'}
+   symbol:'',vName:'별빛 제보소'}
 ];
 let BLD=[];
 const SCALE={dust:.6,star:.7,planet:.8,nova:.9,quasar:1.0};
@@ -1585,10 +1582,10 @@ const leagueMoim={
         {id:'point',nK:'포인트',nE:'Point',emoji:'📍',color:'#94a3b8'}],
   star:[{id:'territory',nK:'테리토리',nE:'Territory',emoji:'🚩',color:'#fbbf24'},
         {id:'base',nK:'베이스',nE:'Base',emoji:'🏕️',color:'#fbbf24'},
-        {id:'unit',nK:'유닛',nE:'Unit',emoji:'⚡',color:'#fbbf24'}],
+        {id:'unit',nK:'유닛',nE:'Unit',emoji:'',color:'#fbbf24'}],
   planet:[{id:'territory',nK:'테리토리',nE:'Territory',emoji:'🚩',color:'#34d399'},
           {id:'base',nK:'베이스',nE:'Base',emoji:'🏕️',color:'#34d399'},
-          {id:'unit',nK:'유닛',nE:'Unit',emoji:'⚡',color:'#34d399'}],
+          {id:'unit',nK:'유닛',nE:'Unit',emoji:'',color:'#34d399'}],
   nova:[{id:'province',nK:'프로빈스',nE:'Province',emoji:'🗺️',color:'#c084fc'},
         {id:'district',nK:'디스트릭트',nE:'District',emoji:'🏙️',color:'#c084fc'},
         {id:'square',nK:'스퀘어',nE:'Square',emoji:'🏛️',color:'#c084fc'},
@@ -1596,8 +1593,8 @@ const leagueMoim={
   quasar:[{id:'empire',nK:'엠파이어',nE:'Empire',emoji:'🏰',color:'#f0c040'},
           {id:'dominion',nK:'도미니언',nE:'Dominion',emoji:'👑',color:'#f0c040'},
           {id:'sector',nK:'섹터',nE:'Sector',emoji:'🔭',color:'#f0c040'},
-          {id:'cluster',nK:'클러스터',nE:'Cluster',emoji:'✨',color:'#f0c040'},
-          {id:'fanclub',nK:'팬클럽',nE:'Fan Club',emoji:'💫',color:'#f0c040'}]
+          {id:'cluster',nK:'클러스터',nE:'Cluster',emoji:'',color:'#f0c040'},
+          {id:'fanclub',nK:'팬클럽',nE:'Fan Club',emoji:'',color:'#f0c040'}]
 };
 function calcBLD(league){
   const sc=SCALE[league]||1;
@@ -2016,7 +2013,7 @@ function drawBuildings(){
       ctx.beginPath();ctx.moveTo(x+w*.2,y+h*.3);ctx.lineTo(x+w/2,y+4);ctx.lineTo(x+w*.5,y+h*.3);ctx.closePath();ctx.fill();
       ctx.globalAlpha=1;
       ctx.font='14px sans-serif';ctx.textAlign='center';
-      ctx.fillText(b.symbol||'🌟',x+w/2,y+h*.65);
+      ctx.fillText(b.symbol||'',x+w/2,y+h*.65);
       ctx.textAlign='start';
       return;
     }
@@ -2112,7 +2109,7 @@ function drawOrgChatBuilding(x,y,w,h){
     ctx.beginPath();ctx.roundRect(x+w/2-26,y+h*.32,52,14,3);ctx.fill();
     ctx.font='bold 8px "Noto Sans KR"';
     ctx.fillStyle=lp;ctx.textAlign='center';
-    ctx.fillText('💬 '+ORG_BUILDING[DM.league],x+w/2,y+h*.32+11);
+    ctx.fillText(ORG_BUILDING[DM.league],x+w/2,y+h*.32+11);
     ctx.textAlign='start';ctx.shadowBlur=0;
   }
 
@@ -2734,7 +2731,7 @@ function render(league){
     d.onclick=()=>openMo(b.id);
     const badge=b.id==='board'?'<div class="bld-badge">5</div>':b.id==='vote'?'<div class="bld-badge">2</div>':b.id==='event'?'<div class="bld-badge">1</div>':b.id==='hq'?`<div class="bld-badge">${DM.ann.length}</div>`:'';
     if(b.id==='org_chat'){
-      d.innerHTML=`${badge}<div class="bld-label"><div class="bld-name">🏠 모임 채팅</div><div class="bld-name-en">Org Chat</div></div>`;
+      d.innerHTML=`${badge}<div class="bld-label"><div class="bld-name">모임 채팅</div><div class="bld-name-en">Org Chat</div></div>`;
     }else{
       d.innerHTML=`${badge}<div class="bld-label"><div class="bld-name">${ic[b.id]||b.emoji||b.symbol||''} ${b.nK}</div><div class="bld-name-en">${b.nE}</div></div>`;
     }
@@ -2819,7 +2816,7 @@ hq: () => {
   return `
     <div class="mo-h">
       <div class="mo-t">🏰 팬클럽 본부</div>
-      <div class="mo-x" onclick="closeMo()">✕</div>
+      <div class="mo-x" onclick="closeMo()">&times;</div>
     </div>
     <div class="mc">
       <div class="mc-t">📊 현황</div>
@@ -2875,7 +2872,7 @@ hq: () => {
         <div class="fc-activity-row"><span class="fc-activity-label" id="fcActLabel1">테리토리 5개</span><div class="fc-activity-bar-wrap"><div class="fc-activity-bar" id="fcActBar1" style="width:82%"></div></div><span class="fc-activity-pct" id="fcActPct1">82%</span></div>
         <div class="fc-activity-row"><span class="fc-activity-label" id="fcActLabel2">베이스 50개</span><div class="fc-activity-bar-wrap"><div class="fc-activity-bar" id="fcActBar2" style="width:63%"></div></div><span class="fc-activity-pct" id="fcActPct2">63%</span></div>
         <div class="fc-activity-row"><span class="fc-activity-label" id="fcActLabel3">유닛 500개</span><div class="fc-activity-bar-wrap"><div class="fc-activity-bar" id="fcActBar3" style="width:54%"></div></div><span class="fc-activity-pct" id="fcActPct3">54%</span></div>
-        <div class="fc-activity-best">🔥 이번 주 최우수 모임: <span id="fcBestMoim">유닛47 "새벽별"</span></div>
+        <div class="fc-activity-best">이번 주 최우수 모임: <span id="fcBestMoim">유닛47 "새벽별"</span></div>
       </div>
     </div>
     <!-- 리그 순위 -->
@@ -2899,8 +2896,8 @@ honor:()=>{const seasons=[{s:'S5',emoji:'🌌',fc:'ARMY Korea',winner:'StarWarri
 event:()=>{const EVT=[{emoji:'🎂',title:'컴백 기념 출석 이벤트',desc:'매일 출석 체크하고 스타더스트 획득!',period:'2026.04.01 ~ 2026.04.15',dday:3,reward:'⭐ 스타더스트 +300 / LOY+5',status:'active'},{emoji:'🎵',title:'스밍 챌린지 이벤트',desc:'팬클럽 전체 스밍 1억회 달성 도전!',period:'2026.04.01 ~ 2026.04.15',dday:3,reward:'⭐ 스타더스트 +500 / ACT+10 / 한정 뱃지',status:'active'},{emoji:'🌸',title:'봄맞이 팬아트 공모전',desc:'최고의 팬아트를 뽑아라!',period:'2026.04.16 ~ 2026.04.30',dday:11,reward:'CRE+20 / 스타더스트 +1,000 / 한정 트로피',status:'upcoming'}];const MSN=[{emoji:'🎵',title:'팬클럽 스밍 1억회 달성',cur:73120000,max:100000000,ppl:1247,reward:'전원 스타더스트 +500 / ACT+10 / 한정 뱃지 "스밍전사"'},{emoji:'📝',title:'팬아트 게시물 500개 업로드',cur:210,max:500,ppl:342,reward:'CRE+15 / 스타더스트 +300'},{emoji:'💬',title:'팬클럽 채팅 총 10,000건',cur:0,max:10000,ppl:0,reward:'SOC+10 / 스타더스트 +200'}];const CAL_EVTS={1:{dots:['🔴','🟡']},2:{dots:['🔴','🟡']},3:{dots:['🔴','🟡']},4:{dots:['🔴','🟡']},5:{dots:['🔴','🟡','🟣'],items:['🔴 컴백기념 출석이벤트 (진행중 D-3)','🟡 스밍 챌린지 (진행중 D-3)','🟣 팬클럽 미팅 (오늘 20:00)']},6:{dots:['🔴','🟡']},7:{dots:['🔴','🟡']},8:{dots:['🔴','🟡']},9:{dots:['🔴','🟡']},10:{dots:['🔴','🟡','🔵'],items:['🔴 컴백기념 출석이벤트 (진행중)','🟡 스밍 챌린지 (진행중)','🔵 앨범 발매일']},11:{dots:['🔴','🟡']},12:{dots:['🔴','🟡']},13:{dots:['🔴','🟡']},14:{dots:['🔴','🟡']},15:{dots:['🔴','🟡','🟢'],items:['🔴 컴백기념 출석이벤트 (마지막 날)','🟡 스밍 챌린지 (마지막 날)','🟢 경쟁기간 종료']},16:{dots:['🟠']},17:{dots:['🟠']},18:{dots:['🟠']},19:{dots:['🟠']},20:{dots:['🟠']},21:{dots:['🟠']},22:{dots:['🟠']},23:{dots:['🟠']},24:{dots:['🟠']},25:{dots:['🟠']},26:{dots:['🟠']},27:{dots:['🟠']},28:{dots:['🟠']},29:{dots:['🟠']},30:{dots:['🟠']}};const fmt=n=>n>=10000?Math.round(n/10000)+'만':n.toLocaleString();window.eTab=function(t){const mc=document.getElementById('moC');if(!mc)return;const hdr='<div class="mo-h"><div class="mo-t">🎪 이벤트 광장 · EVENT PLAZA</div><div class="mo-x" onclick="closeMo()">✕</div></div><div style="padding:4px 4px 0;">';const tabs='<div style="display:flex;border-bottom:1px solid var(--border);margin:-4px -4px 12px;">'+['events','gacha','mission','calendar'].map(id=>'<button onclick="eTab(\''+id+'\')" style="flex:1;padding:9px 2px;font-size:9px;font-weight:700;background:none;border:none;border-bottom:2px solid '+(id===t?'var(--gold)':'transparent')+';color:'+(id===t?'var(--gold)':'var(--muted)')+';cursor:pointer;">'+{events:'현재 이벤트',gacha:'한정 뽑기',mission:'팬덤 미션',calendar:'캘린더'}[id]+'</button>').join('')+'</div>';let body='';if(t==='events'){body='<div style="background:linear-gradient(135deg,rgba(240,192,64,0.1),rgba(10,10,22,0));border:1px solid rgba(240,192,64,0.25);border-radius:10px;padding:10px 12px;margin-bottom:10px;display:flex;align-items:center;gap:10px;"><span style="font-size:20px;">🎪</span><div><div style="font-size:11px;color:var(--gold);font-weight:700;">참여중인 이벤트 2개</div><div style="font-size:9px;color:var(--muted);margin-top:2px;">획득 스타더스트 합계: 1,240 ⭐</div></div></div>'+EVT.map(e=>{const isUp=e.status==='upcoming';return '<div style="padding:12px;border-radius:10px;margin-bottom:8px;background:rgba(255,255,255,0.02);border:1px solid var(--border);"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-size:18px;">'+e.emoji+'</span><div style="flex:1;"><div style="font-size:12px;font-weight:700;color:var(--text);">'+e.title+'</div></div><span style="font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;background:'+(isUp?'rgba(100,100,100,0.2);color:var(--muted)':'rgba(239,68,68,0.2);color:#fca5a5')+';">'+(isUp?'D+'+e.dday+' 시작예정':'D-'+e.dday)+'</span></div><div style="font-size:10px;color:var(--muted);margin-bottom:6px;">'+e.desc+'</div><div style="font-size:9px;color:var(--muted);margin-bottom:6px;">📅 '+e.period+'</div><div style="font-size:10px;color:var(--gold);margin-bottom:8px;">🎁 '+e.reward+'</div><button onclick="showToast(\''+(isUp?'📢 알림이 설정됐습니다!':'🎉 이벤트에 참여했습니다! ')+e.reward+'\')" style="width:100%;padding:8px;border-radius:8px;border:none;background:'+(isUp?'rgba(100,100,100,0.2);color:var(--muted)':'linear-gradient(135deg,var(--gold),#fbbf24);color:#1a1200')+';font-size:11px;font-weight:700;cursor:pointer;">'+(isUp?'🔔 알림받기':'🎉 참여하기')+'</button></div>';}).join('');}else if(t==='gacha'){body='<div style="font-size:10px;color:var(--muted);margin-bottom:12px;text-align:center;">✨ 기간 한정 특별 아이템을 뽑아보세요</div><div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;text-align:center;"><div style="font-size:10px;font-weight:700;color:var(--gold);margin-bottom:8px;">🌟 스타더스트 뽑기</div><div style="font-size:36px;margin-bottom:6px;">🎁</div><div style="font-size:10px;color:var(--muted);margin-bottom:4px;">현재 보유: <span style="color:var(--gold);font-family:Orbitron;font-weight:700;">8,472 ⭐</span></div><div style="font-size:9px;color:var(--muted);margin-bottom:8px;">획득 가능: COMMON ~ EPIC 등급</div><div style="display:flex;gap:6px;"><button onclick="showToast(\'준비 중인 기능입니다! 💫\')" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);font-size:11px;font-weight:700;cursor:pointer;">1회 뽑기<br><span style="font-size:9px;color:var(--gold);">500 ⭐</span></button><button onclick="showToast(\'준비 중인 기능입니다! 💫\')" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--gold);background:rgba(240,192,64,0.08);color:var(--gold);font-size:11px;font-weight:700;cursor:pointer;">10회 뽑기<br><span style="font-size:9px;">4,500 ⭐ (10%↓)</span></button></div></div><div style="background:linear-gradient(135deg,rgba(240,192,64,0.08),rgba(10,10,22,0));border:1px solid rgba(240,192,64,0.3);border-radius:10px;padding:14px;text-align:center;"><div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:8px;"><span style="font-size:10px;font-weight:700;color:var(--gold);">💎 프리미엄 뽑기</span><span style="font-size:8px;padding:1px 6px;border-radius:8px;background:rgba(240,192,64,0.2);color:var(--gold);font-weight:700;">PREMIUM</span></div><div style="font-size:36px;margin-bottom:6px;">💎</div><div style="font-size:10px;color:#fca5a5;margin-bottom:4px;font-family:Orbitron;">남은 기간: D-3</div><div style="font-size:9px;color:var(--muted);margin-bottom:4px;">획득 가능: EPIC ~ LEGENDARY 등급</div><div style="font-size:9px;color:var(--gold);margin-bottom:8px;">🎯 천장: 50회 내 LEGENDARY 1개 보장</div><div style="display:flex;gap:6px;"><button onclick="showToast(\'준비 중인 기능입니다! 💫\')" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--text);font-size:11px;font-weight:700;cursor:pointer;">1회 뽑기<br><span style="font-size:9px;color:var(--muted);">1,200원</span></button><button onclick="showToast(\'준비 중인 기능입니다! 💫\')" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--gold);background:rgba(240,192,64,0.08);color:var(--gold);font-size:11px;font-weight:700;cursor:pointer;">10회 뽑기<br><span style="font-size:9px;">10,000원 (17%↓)</span></button></div></div>';}else if(t==='mission'){const pBar=(c,m)=>{const p=Math.round(c/m*100);return '<div style="height:5px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;margin:6px 0;"><div class="pf" style="width:'+p+'%;height:100%;background:linear-gradient(90deg,var(--gold),#fbbf24);border-radius:3px;"></div></div><div style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted);"><span>'+fmt(c)+' / '+fmt(m)+' ('+p+'%)</span><span>👥 참여자</span></div>';};body='<div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:10px 12px;margin-bottom:10px;"><div style="font-size:11px;font-weight:700;color:#fca5a5;">⚔️ 경쟁기간 · 2026.04.01 ~ 04.15 · D-3</div><div style="height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;margin-top:6px;"><div class="pf" style="width:33%;height:100%;background:linear-gradient(90deg,#ef4444,#fbbf24);border-radius:2px;"></div></div></div><div style="font-size:10px;font-weight:700;color:var(--gold);margin-bottom:8px;">🎯 이번달 공동 미션</div>'+MSN.map(m=>{const p=Math.round(m.cur/m.max*100);return '<div style="padding:11px 12px;border-radius:10px;margin-bottom:8px;background:rgba(255,255,255,0.02);border:1px solid var(--border);"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span style="font-size:16px;">'+m.emoji+'</span><div style="font-size:12px;font-weight:700;color:var(--text);">'+m.title+'</div></div><div style="height:5px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;margin:6px 0;"><div class="pf" style="width:'+p+'%;height:100%;background:linear-gradient(90deg,var(--gold),#fbbf24);border-radius:3px;"></div></div><div style="display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-bottom:6px;"><span>'+fmt(m.cur)+' / '+fmt(m.max)+' ('+p+'%)</span><span>👥 '+m.ppl.toLocaleString()+'명</span></div><div style="font-size:9px;color:var(--gold);margin-bottom:8px;">🎁 '+m.reward+'</div><button onclick="showToast(\'🎯 미션에 참여했습니다!\')" style="width:100%;padding:7px;border-radius:8px;border:none;background:linear-gradient(135deg,var(--gold),#fbbf24);color:#1a1200;font-size:11px;font-weight:700;cursor:pointer;">'+(m.cur>0?'📊 내 기여 현황':'🎯 참여하기')+'</button></div>';}).join('')+'<div style="margin-top:8px;padding:8px 10px;background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid var(--border);font-size:9px;color:var(--muted);line-height:1.6;">💡 경쟁기간(1~15일) 중 달성해야 보상이 지급됩니다<br>💡 자유활동기간(16~말일)에는 다음달 미션이 공개됩니다</div>';}else if(t==='calendar'){const days=['일','월','화','수','목','금','토'];const today=5;let selDay=today;window.eSel=function(d){selDay=d;const items=CAL_EVTS[d]?.items||['이벤트 없음'];document.getElementById('cal-detail').innerHTML=items.map(i=>'<div style="padding:4px 0;font-size:11px;color:var(--text);">'+i+'</div>').join('');};const hd=days.map(d=>'<div style="flex:1;text-align:center;font-size:9px;font-weight:700;color:var(--muted);padding:4px 0;">'+d+'</div>').join('');let cells='';const startDay=3;for(let i=0;i<startDay;i++)cells+='<div style="flex:1;padding:4px;min-height:28px;"></div>';for(let d=1;d<=30;d++){const ce=CAL_EVTS[d];const isToday=d===today;const dots=ce?ce.dots.map(c=>'<span style="font-size:5px;">'+c+'</span>').join(''):'';cells+='<div onclick="eSel('+d+')" style="flex:1;padding:2px;min-height:28px;text-align:center;cursor:pointer;border-radius:6px;'+(isToday?'background:rgba(240,192,64,0.2);border:1px solid var(--gold);':'border:1px solid transparent;')+'"><div style="font-size:10px;color:'+(isToday?'var(--gold)':'var(--text)')+';font-weight:'+(isToday?'900':'400')+';">'+d+'</div><div style="display:flex;justify-content:center;gap:1px;min-height:8px;">'+dots+'</div></div>';if((startDay+d)%7===0)cells+='</div><div style="display:flex;">';}body='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;"><span style="font-size:9px;color:var(--muted);cursor:pointer;">◀</span><span style="font-size:12px;font-weight:700;color:var(--gold);">📅 2026년 4월 · April 2026</span><span style="font-size:9px;color:var(--muted);cursor:pointer;">▶</span></div><div style="display:flex;margin-bottom:2px;">'+hd+'</div><div style="display:flex;flex-wrap:wrap;">'+cells+'</div><div style="margin-top:10px;padding:8px 10px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:8px;" id="cal-detail">'+(CAL_EVTS[today]?.items||['이벤트 없음']).map(i=>'<div style="padding:4px 0;font-size:11px;color:var(--text);">'+i+'</div>').join('')+'</div>';}mc.innerHTML=hdr+tabs+body+'</div>';setTimeout(function(){document.querySelectorAll('#moC .pf').forEach(function(el){var w=el.style.width;el.style.width='0%';setTimeout(function(){el.style.width=w;},60);});},50);};eTab('events');return '';},
 starreport:()=>`
 <div class="mo-h">
-  <div class="mo-t">🌟 별빛 제보소</div>
-  <div class="mo-x" onclick="closeMo()">✕</div>
+  <div class="mo-t">별빛 제보소</div>
+  <div class="mo-x" onclick="closeMo()">&times;</div>
 </div>
 <div class="mc">
   <div class="mc-t">📋 내 기자 등급</div>
@@ -2919,7 +2916,7 @@ starreport:()=>`
   </div>
 </div>
 <div class="mc">
-  <div class="mc-t">🔥 최신 제보</div>
+  <div class="mc-t">최신 제보</div>
   <div class="mc-c" id="reportList">
     ${[
       {cat:'👀 목격',title:'홍대 카페 목격담',user:'StarEye99',trust:89,votes:34,verified:true},
@@ -2943,7 +2940,7 @@ starreport:()=>`
   </div>
 </div>
 <div class="mc">
-  <div class="mc-t">✏️ 제보하기</div>
+  <div class="mc-t">제보하기</div>
   <div class="mc-c">
     <select style="width:100%;padding:5px 8px;background:rgba(255,255,255,.06);border:1px solid rgba(180,150,255,.2);border-radius:8px;color:var(--text);font-size:10px;margin-bottom:6px;">
       <option>👀 목격</option>
@@ -2953,11 +2950,11 @@ starreport:()=>`
       <option>🎁 굿즈</option>
     </select>
     <input placeholder="제보 내용을 입력하세요..." style="width:100%;padding:6px 8px;background:rgba(255,255,255,.06);border:1px solid rgba(180,150,255,.2);border-radius:8px;color:var(--text);font-size:10px;box-sizing:border-box;margin-bottom:6px;" />
-    <button onclick="showToast('제보가 등록되었습니다! 검증 투표가 시작됩니다 🌟')" style="width:100%;padding:6px;background:linear-gradient(135deg,var(--lp),var(--accent2));border:none;border-radius:8px;color:#fff;font-size:10px;font-weight:700;cursor:pointer;">🌟 제보 등록</button>
+    <button onclick="showToast('제보가 등록되었습니다! 검증 투표가 시작됩니다')" style="width:100%;padding:6px;background:linear-gradient(135deg,var(--lp),var(--accent2));border:none;border-radius:8px;color:#fff;font-size:10px;font-weight:700;cursor:pointer;">제보 등록</button>
   </div>
 </div>
 <div class="mc">
-  <div class="mc-t">⭐ 기자 등급 안내</div>
+  <div class="mc-t">기자 등급 안내</div>
   <div class="mc-c">
     ${[
       {grade:'새내기기자',icon:'🌱',cond:'제보 1건 이상'},
@@ -2995,10 +2992,10 @@ function openLeagueChat(rect){
         <div class="league-chat-name">${rect.nameKo}</div>
         <div class="league-chat-sub">${rect.nameEn}</div>
       </div>
-      <button class="league-chat-close" onclick="closeLeagueChat('${rect.id}')">✕</button>
+      <button class="league-chat-close" onclick="closeLeagueChat('${rect.id}')">&times;</button>
     </div>
     <div class="league-chat-messages" id="chat-messages-${rect.id}">
-      <div class="chat-system-msg">💬 ${rect.nameKo} 모임 채팅방입니다</div>
+      <div class="chat-system-msg">${rect.nameKo} 모임 채팅방입니다</div>
     </div>
     <div class="league-chat-input-row">
       <input class="league-chat-input" id="chat-input-${rect.id}" type="text"
@@ -3095,7 +3092,7 @@ window.addEventListener('DOMContentLoaded',()=>{
         ent.style.display='none';
         ent.remove();
         startMiniEvents();startNpcChat();initSocket();autoAssignMoimIfNeeded();
-        showToast('🌟 '+DM.name+' STARIUM');
+        showToast(DM.name+' STARIUM');
         setTimeout(()=>{
           document.getElementById('hint').classList.add('show');
           setTimeout(()=>document.getElementById('hint').classList.remove('show'),3000);
@@ -3110,22 +3107,22 @@ window.addEventListener('DOMContentLoaded',()=>{
 });
 /* 미니 이벤트 팝업 (살아있는 마을) */
 const MINI_EVENTS=[
-  {icon:'⚡',tpl:'{name}님이 출석체크!'},
+  {icon:'',tpl:'{name}님이 출석체크!'},
   {icon:'🏆',tpl:'{name}님이 레벨업!'},
   {icon:'💌',tpl:'새 소원이 등록되었습니다!'},
-  {icon:'🎵',tpl:'{name}님이 소울 레조넌스!'},
+  {icon:'',tpl:'{name}님이 소울 레조넌스!'},
   {icon:'🗳️',tpl:'투표소에 새 안건 등록!'},
   {icon:'🎁',tpl:'{name}님이 선물을 보냈어요!'},
   {icon:'📝',tpl:'{name}님이 게시글 작성!'},
-  {icon:'🌟',tpl:'{name}님이 별똥별을 띄웠어요!'},
+  {icon:'',tpl:'{name}님이 별똥별을 띄웠어요!'},
   {icon:'👋',tpl:'{name}님이 마을에 입장!'},
   {icon:'🎪',tpl:'이벤트 광장이 활기차요!'},
-  {icon:'💫',tpl:'{name}님 아키타입 진화!'},
-  {icon:'🔥',tpl:'우리 팬클럽 순위 상승!'},
+  {icon:'',tpl:'{name}님 아키타입 진화!'},
+  {icon:'',tpl:'우리 팬클럽 순위 상승!'},
   {icon:'🏅',tpl:'{name}님이 뱃지 획득!'},
-  {icon:'💜',tpl:'{name}님이 팬아트 업로드!'},
+  {icon:'',tpl:'{name}님이 팬아트 업로드!'},
   {icon:'📊',tpl:'오늘 활동 에너지 +5%!'},
-  {icon:'🌟',tpl:'새 제보가 등록되었습니다! 검증에 참여하세요'}];
+  {icon:'',tpl:'새 제보가 등록되었습니다! 검증에 참여하세요'}];
 const MINI_NAMES=['StarFan','MoonChild','ArmyLove','PurpleU','Dreamer','GalaxyHeart','NovaRider','CosmicSoul','StellarBoy','LightBeam','OrbitGirl','StarDust99','NeonWave','EchoStar','LunarFox'];
 let miniEvtTimer=null;
 
@@ -3422,12 +3419,12 @@ function renderVoteList(){
 // ===== 별빛 제보소 v3 (완성) =====
 const REPORTER_GRADES=[
   {name:'새내기 기자',icon:'🌱',minApproved:0,nextCond:'승인 제보 5건'},
-  {name:'수습 기자',icon:'✏️',minApproved:5,nextCond:'승인 20건+검증50회'},
+  {name:'수습 기자',icon:'',minApproved:5,nextCond:'승인 20건+검증50회'},
   {name:'정기자',icon:'📝',minApproved:20,nextCond:'승인 50건+높은통과율'},
   {name:'특파원',icon:'🗞️',minApproved:50,nextCond:'최상위 등급 달성'},
-  {name:'수석 기자',icon:'⭐',minApproved:100,nextCond:''}
+  {name:'수석 기자',icon:'',minApproved:100,nextCond:''}
 ];
-const SR_CAT_LABELS={schedule:'📅 일정',goods:'💿 굿즈',media:'🎬 영상',rumor:'⚠️ 루머',global:'🌏 해외',statement:'💬 발언'};
+const SR_CAT_LABELS={schedule:'일정',goods:'굿즈',media:'영상',rumor:'루머',global:'해외',statement:'발언'};
 let MOCK_REPORTS=[
   {id:0,type:'leader',category:'schedule',urgent:false,title:'[리더 공지] 4월 팬미팅 공식 확정',body:'4월 20일 서울 KSPO돔에서 팬미팅이 확정되었습니다. 공식 팬클럽 회원 우선 예매 진행 예정.',url:'',author:'팬클럽대표',authorGrade:4,status:'leader',createdAt:'3시간 전',trueVotes:0,falseVotes:0,unsureVotes:0,likes:45,likedByMe:false,bubbleLevel:0,verifyDeadline:null},
   {id:1,type:'report',category:'schedule',urgent:false,title:'다음 주 음방 출연 일정 제보',body:'KBS 뮤직뱅크 3월 15일 출연 확정. 리허설 오전 7시 시작.',url:'https://twitter.com/kbs_schedule/1234',author:'스케줄마스터',authorGrade:2,status:'confirmed',createdAt:'5시간 전',trueVotes:24,falseVotes:1,unsureVotes:2,likes:31,likedByMe:false,bubbleLevel:2,verifyDeadline:null},
@@ -3463,7 +3460,7 @@ function updateReporterBadge(){
   const data=getMyReporterData();const gradeIdx=getMyGrade(data.approvedCount);const grade=REPORTER_GRADES[gradeIdx];const next=REPORTER_GRADES[gradeIdx+1];
   const bn=document.getElementById('myBadgeName'),bp=document.getElementById('myBadgeProgress'),bh=document.getElementById('myBadgeHint');
   if(bn)bn.textContent=grade.icon+' '+grade.name;
-  if(bp)bp.textContent=next?'제보 '+data.approvedCount+'/'+next.minApproved+'건':'최고 등급 달성! ⭐';
+  if(bp)bp.textContent=next?'제보 '+data.approvedCount+'/'+next.minApproved+'건':'최고 등급 달성!';
   if(bh)bh.textContent=next?'다음 등급: '+next.name+' ('+next.nextCond+')':'수석 기자 — 아스테리아 최고의 취재원입니다';
 }
 let srCurrentOrgTab='all';
@@ -3495,7 +3492,7 @@ function renderSrCard(r){
   const sl={verifying:'<span class="sr-card-status status-verifying">🔬 검증중</span>',confirmed:'<span class="sr-card-status status-confirmed">✅ 확정</span>',bubbled:'<span class="sr-card-status status-bubbled">🔼 상위전달</span>',unconfirmed:'<span class="sr-card-status status-unconfirmed">❓ 미확인</span>',leader:'<span class="sr-card-status status-leader">👑 리더공지</span>'};
   const gi=['🌱','✏️','📝','🗞️','⭐'];
   const bb=r.bubbleLevel>0?'<div class="bubble-up-badge">🔼 '+r.bubbleLevel+'단계 상위 전달됨</div>':'';
-  const uh=r.url?'<div class="sr-card-url">🔗 <a href="'+r.url+'" target="_blank" style="color:#818cf8">'+r.url+'</a></div>':'';
+  const uh=r.url?'<div class="sr-card-url"><a href="'+r.url+'" target="_blank" style="color:#818cf8">'+r.url+'</a></div>':'';
   const ub=r.urgent?'<span class="sr-urgent-badge">🚨 긴급</span>':'';
   const lc=r.likedByMe?' liked':'';
   const myNick=localStorage.getItem('asteria_nick')||'';
@@ -3518,7 +3515,7 @@ function castVerifyVote(id,type){
 }
 function checkBubbleUp(r){
   const t=r.trueVotes+r.falseVotes+r.unsureVotes;if(t<10)return;const tp=r.trueVotes/t;
-  if(tp>=0.8&&r.bubbleLevel===1){r.bubbleLevel=2;r.status='confirmed';showToast('🌟 공식 확정! 리그 전체에 공유됩니다');}
+  if(tp>=0.8&&r.bubbleLevel===1){r.bubbleLevel=2;r.status='confirmed';showToast('공식 확정! 리그 전체에 공유됩니다');}
   else if(tp>=0.6&&r.bubbleLevel===0){r.bubbleLevel=1;r.status='bubbled';showToast('🔼 버블업! 상위 소모임으로 전달됐습니다');}
   else if(tp<0.3&&t>=10){r.status='unconfirmed';applyFalsePenalty(r.author);}
 }
@@ -3532,7 +3529,7 @@ function applyFalsePenalty(author){
 }
 function renderSrRank(){
   const rk=[{rank:1,grade:4,nick:'수석기자별빛',score:'제보 87건 · 통과율 94% · 추천 312'},{rank:2,grade:3,nick:'특파원하늘',score:'제보 52건 · 통과율 89% · 추천 187'},{rank:3,grade:3,nick:'정기자달빛',score:'제보 31건 · 통과율 82% · 추천 94'},{rank:4,grade:2,nick:'수습이슬',score:'제보 12건 · 통과율 75% · 추천 41'},{rank:5,grade:1,nick:'새내기팬123',score:'제보 3건 · 통과율 67% · 추천 8'}];
-  const gi=['🌱','✏️','📝','🗞️','⭐'];const md=['🥇','🥈','🥉'];const c=document.getElementById('srRankItems');if(!c)return;
+  const gi=['','','','',''];const md=['','',''];const c=document.getElementById('srRankItems');if(!c)return;
   c.innerHTML=rk.map(r=>'<div class="rank-item"><span class="rank-num">'+(md[r.rank-1]||r.rank)+'</span><span class="rank-grade-icon">'+(gi[r.grade]||'🌱')+'</span><span class="rank-nick">'+r.nick+'</span><span class="rank-score">'+r.score+'</span></div>').join('');
 }
 function submitReport(){
@@ -3675,7 +3672,7 @@ function openFcChat(type, orgPath) {
   const breadcrumb = document.getElementById('chatBreadcrumb');
   const body = document.getElementById('chatBody');
   panel.classList.add('open');
-  title.textContent = '🏠 모임 채팅';
+  title.textContent = '모임 채팅';
   breadcrumb.style.display = 'flex';
   const hasMoim = DM.moim_depth1 !== null && DM.moim_depth1 !== undefined;
   if (type === 'all' || !hasMoim) {
@@ -3889,7 +3886,7 @@ function showNpcBubble(npcIdx, msg) {
 function startNpcChat() {
   const npcMsgs = [
     '오늘도 열심히! 💪', '같이 미션 해요~', '안녕하세요 👋',
-    '스밍 고고! 🔥', '우리 팬클럽 최고 ✨', '화이팅!! 💜',
+    '스밍 고고!', '우리 팬클럽 최고', '화이팅!!',
     '오늘 일기 썼어요 📝', '레벨업 했어요! 🎉'
   ];
   setInterval(() => {
@@ -3931,7 +3928,7 @@ function initSocket() {
       if (!body) return;
       body.innerHTML = '';
       if (!data.messages || data.messages.length === 0) {
-        body.innerHTML = '<div class="chat-system-msg">💬 아직 대화가 없어요. 첫 메시지를 남겨보세요!</div>';
+        body.innerHTML = '<div class="chat-system-msg">아직 대화가 없어요. 첫 메시지를 남겨보세요!</div>';
         return;
       }
       data.messages.forEach(m => renderChatMessage(body, m, false));
@@ -3988,7 +3985,7 @@ async function autoAssignMoimIfNeeded() {
       DM.moim_depth3 = data.moim_depth3 || null;
       DM.moim_depth4 = data.moim_depth4 || null;
       DM.moim_depth5 = data.moim_depth5 || null;
-      showToast('🏠 소모임이 배정됐어요!');
+      showToast('소모임이 배정됐어요!');
       console.log('✅ 소모임 자동 배정 완료:', data);
     }
   } catch (e) {
@@ -4158,12 +4155,12 @@ function renderFcHeader(league){
   var fandomSideBtn = document.getElementById('fandomSideBtnLocal');
   if (fandomSideBtn) {
     if (DM.isVisiting) {
-      fandomSideBtn.textContent = '🏠 내 팬덤으로';
+      fandomSideBtn.textContent = '내 팬덤으로';
       fandomSideBtn.onclick = function(){ location.href = '/fandom.html'; };
     } else {
       var token = localStorage.getItem('asteria_token');
       if (token) {
-        fandomSideBtn.textContent = '🏘️ 내 팬덤';
+        fandomSideBtn.textContent = '내 팬덤';
         fandomSideBtn.onclick = function(){ location.href = '/fandom.html'; };
       } else {
         fandomSideBtn.textContent = '🚀 로그인';
