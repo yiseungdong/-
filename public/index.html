@@ -976,7 +976,7 @@ function layoutSpiral(fanclubs, league) {
     const maxR = count <= 10 ? 70 : count <= 20 ? 50 : count <= 40 ? 35 : 28;
     const ri = Math.round(minR + (maxR - minR) * ratio);
     const angle = i * angleStep;
-    const dist = startR + i * spacing;
+    const dist = startR + (i - 1) * spacing;
     positions.push({
       x: cx + Math.cos(angle) * dist,
       y: cy + Math.sin(angle) * dist,
