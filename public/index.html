@@ -82,16 +82,7 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 
 
 /* ── 홈: 리그맵 ── */
-#page-home{padding-top:140px;padding-bottom:64px}
-.qhdr{
-  display:flex;flex-direction:column;align-items:center;padding:8px 20px 6px;gap:3px;
-  position:relative;z-index:10;width:100%;text-align:center;
-}
-.qhdr-top{display:flex;align-items:center;gap:10px}
-.qhdr-gem{color:var(--gold);font-size:14px}
-.qhdr-title{font-family:'Orbitron',monospace;font-size:11px;letter-spacing:4px;color:var(--gold);text-transform:uppercase}
-.qhdr-line{width:60%;height:1px;background:linear-gradient(90deg,transparent,rgba(180,150,255,.2),transparent)}
-.qhdr-sub{font-size:11px;color:var(--muted);letter-spacing:1px}
+#page-home{padding-top:60px;padding-bottom:64px}
 
 /* 승격/강등 비교 바 */
 .promotion-bar{position:absolute;left:0;width:100%;padding:6px 16px;background:rgba(3,3,8,0.85);backdrop-filter:blur(5px);z-index:60;display:flex;justify-content:center}
@@ -348,11 +339,6 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 
 <!-- 홈: 리그맵 -->
 <div id="page-home" class="page active">
-  <div class="qhdr">
-    <div class="qhdr-top"><span class="qhdr-gem">✦</span><span class="qhdr-title">Quasar League</span><span class="qhdr-gem">✦</span></div>
-    <div class="qhdr-line"></div>
-    <div class="qhdr-sub">— 제국의 정점 · 실시간 팬클럽 화력 순위 —</div>
-  </div>
   <!-- 별자리 드래그 뷰 -->
   <div class="cv" id="cv">
     <div class="promotion-bar top-bar" id="topBar">
@@ -421,7 +407,7 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
   <div class="ltop">
     <div class="ltop-l">
       <button class="btn-back" onclick="showPage('page-home')">← 홈</button>
-      <div><div class="ltitle" id="ltitle">QUASAR LEAGUE MAP</div><div style="font-size:11px;color:var(--muted);margin-top:2px" id="lsub2"></div></div>
+      <div><div class="ltitle" id="ltitle"></div><div style="font-size:11px;color:var(--muted);margin-top:2px" id="lsub2"></div></div>
     </div>
     <div style="font-size:11px;color:var(--muted)">🔴 LIVE · 전체 팬덤 세력도</div>
   </div>
@@ -655,10 +641,8 @@ function doLogin(){
 
 // ── 리그 이동 ──
 function goLeagueMap(key){
-  const names={QUASAR:'QUASAR LEAGUE MAP',NOVA:'NOVA LEAGUE MAP',NEBULA:'NEBULA LEAGUE MAP',COMET:'COMET LEAGUE MAP',DUST:'DUST LEAGUE MAP'};
-  const subs={QUASAR:'최상위 · 5개 팬덤 전쟁',NOVA:'1부 리그 · 도전자들의 무대',NEBULA:'2부 리그 · 성운의 전사',COMET:'3부 리그 · 혜성처럼 질주',DUST:'4부 리그 · 먼지에서 별로'};
-  document.getElementById('ltitle').textContent=names[key]||'LEAGUE MAP';
-  document.getElementById('lsub2').textContent=subs[key]||'';
+  document.getElementById('ltitle').textContent='';
+  document.getElementById('lsub2').textContent='';
   flash(()=>{showPage('page-league');centerMap()});
 }
 
@@ -811,7 +795,7 @@ const DUST_COLORS = [
 
 const LEAGUE_DATA = {
   dust: {
-    name:'DUST LEAGUE', subtitle:'모든 별의 시작점 · 신생 팬클럽', color:'#94a3b8', bg:'#030308', colors:DUST_COLORS,
+    name:'', subtitle:'', color:'#94a3b8', bg:'#030308', colors:DUST_COLORS,
     fanclubs:[
       {name:'STARDUST',score:12450,icon:''},{name:'MOONLIGHT',score:11200,icon:''},
       {name:'TWILIGHT',score:10100,icon:'🌅'},{name:'NEBULA KIDS',score:9200,icon:'💫'},
@@ -841,7 +825,7 @@ const LEAGUE_DATA = {
     ]
   },
   star: {
-    name:'STAR LEAGUE', subtitle:'빛나는 도약 · 성장하는 팬클럽', color:'#fbbf24', bg:'#0a0700', colors:STAR_COLORS,
+    name:'', subtitle:'', color:'#fbbf24', bg:'#0a0700', colors:STAR_COLORS,
     fanclubs:[
       {name:'GOLDEN WAVE',score:45200,icon:'🌊'},{name:'SUNFLOWER',score:42100,icon:'🌻'},
       {name:'LIGHTBEAM',score:39500,icon:'💡'},{name:'HONEY BEE',score:37200,icon:'🐝'},
@@ -866,7 +850,7 @@ const LEAGUE_DATA = {
     ]
   },
   planet: {
-    name:'PLANET LEAGUE', subtitle:'궤도에 오른 힘 · 안정된 팬클럽', color:'#34d399', bg:'#000f08', colors:PLANET_COLORS,
+    name:'', subtitle:'', color:'#34d399', bg:'#000f08', colors:PLANET_COLORS,
     fanclubs:[
       {name:'EVERGREEN',score:78500,icon:'🌿'},{name:'OCEAN DEEP',score:72400,icon:'🌊'},
       {name:'EARTH CORE',score:67200,icon:'🌍'},{name:'JADE',score:62500,icon:'💚'},
@@ -881,7 +865,7 @@ const LEAGUE_DATA = {
     ]
   },
   nova: {
-    name:'NOVA LEAGUE', subtitle:'폭발하는 에너지 · 영향력 있는 팬클럽', color:'#c084fc', bg:'#0d0020', colors:NOVA_COLORS,
+    name:'', subtitle:'', color:'#c084fc', bg:'#0d0020', colors:NOVA_COLORS,
     fanclubs:[
       {name:'SUPERNOVA',score:112000,icon:''},{name:'PURPLE RAIN',score:98700,icon:''},
       {name:'COSMOS',score:87300,icon:''},{name:'MYSTIC',score:76500,icon:''},
@@ -891,7 +875,7 @@ const LEAGUE_DATA = {
     ]
   },
   quasar: {
-    name:'QUASAR LEAGUE', subtitle:'제국의 정점 · 실시간 팬클럽 화력 순위', color:'#f0c040', bg:'#0a0700', colors:QUASAR_COLORS,
+    name:'', subtitle:'', color:'#f0c040', bg:'#0a0700', colors:QUASAR_COLORS,
     fanclubs:[
       {name:'ARMY',score:127450,icon:'🪖'},{name:'BLINK',score:98320,icon:'🩷'},
       {name:'STAY',score:82100,icon:'🖤'},{name:'CARAT',score:71880,icon:'💎'},
@@ -1023,12 +1007,6 @@ function createNode(fc, pos, rank, fcColor, isFirst) {
 function switchLeague(league) {
   const data = LEAGUE_DATA[league];
   if (!data) return;
-
-  // 리그 헤더 업데이트
-  document.querySelector('.qhdr-title').textContent = data.name;
-  document.querySelector('.qhdr-title').style.color = data.color;
-  document.querySelectorAll('.qhdr-gem').forEach(g => g.style.color = data.color);
-  document.querySelector('.qhdr-sub').textContent = `— ${data.subtitle} —`;
 
   // 배경색 변경
   document.body.style.background = data.bg;
