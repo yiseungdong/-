@@ -91,9 +91,6 @@ canvas{position:absolute;inset:0;z-index:1}
 .top-nav-item.active {
   color:#c084fc; border-bottom-color:#c084fc;
 }
-#navFandomBtn {
-  display: none !important;
-}
 /* 접이식 헤더 */
 .fc-header {
   min-width:200px;
@@ -1069,13 +1066,13 @@ canvas{position:absolute;inset:0;z-index:1}
 </div>
 <nav class="top-nav">
   <a class="top-nav-item" href="/index.html">홈</a>
-  <a class="top-nav-item active" href="/fandom.html">팬덤</a>
+  <a class="top-nav-item" href="/fandom.html">팬덤</a>
   <a class="top-nav-item" href="/astra.html">아스트라</a>
+  <a class="top-nav-item active" href="/fandom.html">내팬덤</a>
   <a class="top-nav-item" href="/room3d.html">내방</a>
   <a class="top-nav-item" href="/avatar.html">아바타</a>
   <a class="top-nav-item" href="/shop.html">상점</a>
   <a class="top-nav-item" href="/competition.html">경쟁</a>
-  <div id="navFandomBtn" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);"></div>
 </nav>
 
 <script>
@@ -4156,12 +4153,6 @@ function renderFcHeader(league){
 </script>
 <script src="/js/avatar-svgs.js"></script>
 <div id="league-chat-container"></div>
-<script>
-(function(){
-  var btn = document.getElementById('navFandomBtn');
-  if(btn) btn.style.display = 'none';
-})();
-</script>
 <script>
 (function(){
   var fandomSideBtn = document.getElementById('fandomSideBtnLocal');
