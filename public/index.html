@@ -967,7 +967,8 @@ function layoutSpiral(fanclubs, league) {
   // 나선 시작 반지름: 2위 원이 1위 원 테두리에 정확히 맞닿음
   const startR = r1 + r2;
   // 나선 간격: 2위 원 직경 + 5px 여백
-  const spacing = Math.round(r2 / 2) + 1;
+  const spacingBase = Math.round(r2 / 2) + 1;
+  const spacing = (league === 'star' || league === 'dust') ? Math.round(spacingBase * 1.1) : spacingBase;
   const angleStep = count <= 10 ? 0.85 : count <= 20 ? 0.65 : count <= 40 ? 0.48 : 0.42;
 
   for (let i = 1; i < count; i++) {
