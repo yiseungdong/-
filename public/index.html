@@ -1027,12 +1027,18 @@ function createNode(fc, pos, rank, fcColor, isFirst) {
     ? `width:${diam}px;height:${diam}px;background:radial-gradient(circle at 35% 35%,rgba(255,215,0,.6),rgba(${rgb},.3),rgba(7,7,15,.95));box-shadow:0 0 0 4px rgba(240,192,64,.7),0 0 80px rgba(240,192,64,.5),0 0 200px rgba(192,132,252,.3);animation:op1 3s ease-in-out infinite`
     : `width:${diam}px;height:${diam}px;background:radial-gradient(circle at 35% 35%,rgba(${rgb},.15),rgba(7,7,15,.95));box-shadow:0 0 0 2px rgba(${rgb},.7),0 0 30px rgba(${rgb},.4)`;
 
+  // 원 크기에 비례한 글씨 크기
+  const rankFs = isFirst ? 22 : Math.max(8, Math.round(pos.r * 0.26));
+  const iconFs = isFirst ? 56 : Math.max(12, Math.round(pos.r * 0.55));
+  const nameFs = isFirst ? 22 : Math.max(8, Math.round(pos.r * 0.24));
+  const scoreFs = isFirst ? 15 : Math.max(7, Math.round(pos.r * 0.18));
+
   node.innerHTML = `
-    <div class="q-orb" style="${orbStyle};border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:${isFirst?'12':'8'}px">
-      <div style="font-family:'Orbitron',monospace;color:var(--gold);font-size:${isFirst?22:16}px;font-weight:700;margin-bottom:6px">${rank}위</div>
-      <span style="font-size:${isFirst?56:36}px;line-height:1;margin-bottom:8px">${fc.icon}</span>
-      <div style="color:${fcColor};font-size:${isFirst?22:15}px;font-weight:700;margin-bottom:4px;font-family:'Noto Sans KR',sans-serif">${fc.name}</div>
-      <div style="color:var(--gold);font-size:${isFirst?15:11}px;opacity:0.8">${scoreStr} QP</div>
+    <div class="q-orb" style="${orbStyle};border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:${isFirst?'12':'4'}px;overflow:hidden">
+      <div style="font-family:'Orbitron',monospace;color:var(--gold);font-size:${rankFs}px;font-weight:700;margin-bottom:${isFirst?6:2}px">${rank}위</div>
+      <span style="font-size:${iconFs}px;line-height:1;margin-bottom:${isFirst?8:3}px">${fc.icon}</span>
+      <div style="color:${fcColor};font-size:${nameFs}px;font-weight:700;margin-bottom:${isFirst?4:1}px;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:${diam-8}px;text-align:center">${fc.name}</div>
+      <div style="color:var(--gold);font-size:${scoreFs}px;opacity:0.8">${scoreStr} QP</div>
     </div>
   `;
   return node;
