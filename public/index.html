@@ -1028,10 +1028,11 @@ function createNode(fc, pos, rank, fcColor, isFirst) {
     : `width:${diam}px;height:${diam}px;background:radial-gradient(circle at 35% 35%,rgba(${rgb},.15),rgba(7,7,15,.95));box-shadow:0 0 0 2px rgba(${rgb},.7),0 0 30px rgba(${rgb},.4)`;
 
   // 원 크기에 비례한 글씨 크기
-  const rankFs = isFirst ? 22 : Math.max(8, Math.round(pos.r * 0.26));
-  const iconFs = isFirst ? 56 : Math.max(12, Math.round(pos.r * 0.55));
-  const nameFs = isFirst ? 22 : Math.max(8, Math.round(pos.r * 0.24));
-  const scoreFs = isFirst ? 15 : Math.max(7, Math.round(pos.r * 0.18));
+  const rankFs = isFirst ? Math.max(14, Math.round(pos.r * 0.14)) : Math.max(8, Math.round(pos.r * 0.26));
+  const iconFs = isFirst ? Math.max(24, Math.round(pos.r * 0.3)) : Math.max(12, Math.round(pos.r * 0.55));
+  const nameFsBase = isFirst ? Math.max(12, Math.round(pos.r * 0.14)) : Math.max(8, Math.round(pos.r * 0.24));
+  const nameFs = isFirst && fc.name.length > 8 ? Math.round(nameFsBase * 0.75) : isFirst && fc.name.length > 6 ? Math.round(nameFsBase * 0.85) : nameFsBase;
+  const scoreFs = isFirst ? Math.max(10, Math.round(pos.r * 0.09)) : Math.max(7, Math.round(pos.r * 0.18));
 
   node.innerHTML = `
     <div class="q-orb" style="${orbStyle};border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:${isFirst?'12':'4'}px;overflow:hidden">
