@@ -281,34 +281,26 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
   <a class="top-nav-item" href="/shop.html">상점</a>
 </nav>
 
-<div id="leagueBorderCard" style="position:fixed; top:70px; right:20px; z-index:100; background:rgba(10,10,26,0.9); border:0.5px solid rgba(255,255,255,0.12); border-radius:12px; padding:14px 16px; width:320px; backdrop-filter:blur(8px); display:none;">
-  <div style="font-size:10px; color:rgba(255,255,255,0.7); letter-spacing:2px; margin-bottom:12px;">LEAGUE BORDER</div>
+<div id="leagueBorderCard" style="position:fixed; top:70px; right:20px; z-index:100; background:rgba(10,10,26,0.92); border:0.5px solid rgba(255,255,255,0.12); border-radius:12px; padding:14px 18px; width:380px; display:none;">
+  <div id="lbTitle" style="font-size:12px; color:#f0c040; letter-spacing:3px; font-weight:600; margin-bottom:12px;">-- LEAGUE</div>
   <div style="display:flex; align-items:stretch;">
-    <div style="flex:1;">
+    <div style="flex:1; display:flex; flex-direction:column;">
       <div style="display:flex; align-items:center; padding-bottom:8px; margin-bottom:8px; border-bottom:0.5px solid rgba(255,255,255,0.07);">
         <div id="lbDot1" style="width:6px; height:6px; border-radius:50%; flex-shrink:0; margin-right:8px; background:#f0c040;"></div>
-        <div>
-          <div style="font-size:10px; color:rgba(255,255,255,0.7); margin-bottom:2px;">현 리그 꼴등</div>
-          <div style="display:flex; align-items:baseline; gap:6px;">
-            <span id="lbName1" style="font-size:13px; color:#e8e4f0; font-weight:500;">-</span>
-            <span id="lbScore1" style="font-size:12px; color:#f0c040; font-weight:500;">- QP</span>
-          </div>
-        </div>
+        <span style="font-size:10px; color:#e8e4f0; margin-right:6px; white-space:nowrap;">최하위 팬덤</span>
+        <span id="lbName1" style="font-size:13px; color:#e8e4f0; font-weight:600; white-space:nowrap;">-</span>
+        <span id="lbScore1" style="font-size:13px; color:#e8e4f0; white-space:nowrap; margin-left:4px;">(-)</span>
       </div>
       <div style="display:flex; align-items:center;">
         <div id="lbDot2" style="width:6px; height:6px; border-radius:50%; flex-shrink:0; margin-right:8px; background:#a78bfa;"></div>
-        <div>
-          <div style="font-size:10px; color:rgba(255,255,255,0.7); margin-bottom:2px;">하위 리그 1등</div>
-          <div style="display:flex; align-items:baseline; gap:6px;">
-            <span id="lbName2" style="font-size:13px; color:#e8e4f0; font-weight:500;">-</span>
-            <span id="lbScore2" style="font-size:12px; color:#a78bfa; font-weight:500;">- QP</span>
-          </div>
-        </div>
+        <span style="font-size:10px; color:#e8e4f0; margin-right:6px; white-space:nowrap;">하위 리그 1등</span>
+        <span id="lbName2" style="font-size:13px; color:#e8e4f0; font-weight:600; white-space:nowrap;">-</span>
+        <span id="lbScore2" style="font-size:13px; color:#e8e4f0; white-space:nowrap; margin-left:4px;">(-)</span>
       </div>
     </div>
-    <div style="display:flex; flex-direction:column; align-items:flex-end; justify-content:center; padding-left:12px; border-left:0.5px solid rgba(255,255,255,0.07); margin-left:12px; gap:4px;">
-      <div style="font-size:10px; color:rgba(255,255,255,0.7);">격차</div>
-      <div id="lbDiff" style="font-size:13px; color:#f0c040; font-weight:500; white-space:nowrap;">-</div>
+    <div style="display:flex; flex-direction:column; align-items:flex-end; justify-content:center; padding-left:16px; border-left:0.5px solid rgba(255,255,255,0.1); margin-left:8px; flex-shrink:0;">
+      <span style="font-size:10px; color:#e8e4f0; display:block; margin-bottom:2px;">격차</span>
+      <span id="lbDiff" style="font-size:13px; color:#f0c040; font-weight:600; white-space:nowrap;">-</span>
     </div>
   </div>
 </div>
@@ -1111,30 +1103,35 @@ function updateLeagueBorderCard(league) {
   const card = document.getElementById('leagueBorderCard');
   if (!card) return;
 
+  const leagueNames = { quasar:'QUASAR LEAGUE', nova:'NOVA LEAGUE', planet:'PLANET LEAGUE', star:'STAR LEAGUE', dust:'DUST LEAGUE' };
+  const leagueColors = { quasar:'#f0c040', nova:'#a78bfa', planet:'#34d399', star:'#c0c0c0', dust:'#9ca3af' };
+
   const promoData = {
-    quasar: { bottom: { current: 'EXO-L', currentQP: 63240, lower: 'ONCE', lowerQP: 112000, lowerColor: '#a78bfa' }, color: '#f0c040' },
-    nova: { bottom: { current: 'Neverland', currentQP: 65200, lower: 'EVERGREEN', lowerQP: 78500, lowerColor: '#34d399' }, color: '#a78bfa' },
-    planet: { bottom: { current: 'SUMMIT', currentQP: 35600, lower: 'GOLDEN WAVE', lowerQP: 45200, lowerColor: '#fbbf24' }, color: '#34d399' },
-    star: { bottom: { current: 'DAYBREAK', currentQP: 19400, lower: 'STARDUST', lowerQP: 12450, lowerColor: '#9ca3af' }, color: '#fbbf24' },
-    dust: { bottom: null, color: '#9ca3af' }
+    quasar: { current:'EXO-L', currentQP:63240, lower:'ONCE', lowerQP:112000, lowerColor:'#a78bfa' },
+    nova: { current:'Neverland', currentQP:65200, lower:'EVERGREEN', lowerQP:78500, lowerColor:'#34d399' },
+    planet: { current:'SUMMIT', currentQP:35600, lower:'GOLDEN WAVE', lowerQP:45200, lowerColor:'#fbbf24' },
+    star: { current:'DAYBREAK', currentQP:19400, lower:'STARDUST', lowerQP:12450, lowerColor:'#9ca3af' },
+    dust: null
   };
 
-  const info = promoData[league];
-  if (!info || !info.bottom) { card.style.display = 'none'; return; }
+  var titleEl = document.getElementById('lbTitle');
+  if (titleEl) { titleEl.textContent = leagueNames[league] || league.toUpperCase()+' LEAGUE'; titleEl.style.color = leagueColors[league] || '#f0c040'; }
 
-  document.getElementById('lbDot1').style.background = info.color;
-  document.getElementById('lbName1').textContent = info.bottom.current;
-  document.getElementById('lbScore1').textContent = info.bottom.currentQP.toLocaleString() + ' QP';
-  document.getElementById('lbScore1').style.color = info.color;
+  var info = promoData[league];
+  if (!info) { card.style.display = 'none'; return; }
 
-  document.getElementById('lbDot2').style.background = info.bottom.lowerColor;
-  document.getElementById('lbName2').textContent = info.bottom.lower;
-  document.getElementById('lbScore2').textContent = info.bottom.lowerQP.toLocaleString() + ' QP';
-  document.getElementById('lbScore2').style.color = info.bottom.lowerColor;
+  var color = leagueColors[league] || '#f0c040';
+  document.getElementById('lbDot1').style.background = color;
+  document.getElementById('lbName1').textContent = info.current;
+  document.getElementById('lbScore1').textContent = '(' + info.currentQP.toLocaleString() + ' QP)';
 
-  const diff = Math.abs(info.bottom.lowerQP - info.bottom.currentQP);
+  document.getElementById('lbDot2').style.background = info.lowerColor;
+  document.getElementById('lbName2').textContent = info.lower;
+  document.getElementById('lbScore2').textContent = '(' + info.lowerQP.toLocaleString() + ' QP)';
+
+  var diff = Math.abs(info.lowerQP - info.currentQP);
   document.getElementById('lbDiff').textContent = diff.toLocaleString() + ' QP';
-  document.getElementById('lbDiff').style.color = info.color;
+  document.getElementById('lbDiff').style.color = color;
 
   card.style.display = 'block';
 }
