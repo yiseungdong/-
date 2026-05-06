@@ -2087,11 +2087,11 @@ async function initDB() {
         END IF;
         UPDATE nebulae
         SET serial_code = (
-          CHR(65 + ((serial_number - 1) / (26 * 9999))) ||
-          CHR(65 + (((serial_number - 1) / 9999) % 26)) ||
-          LPAD(((serial_number - 1) % 9999 + 1)::TEXT, 4, '0')
+          CHR(65 + ((id - 1) / (26 * 9999))) ||
+          CHR(65 + (((id - 1) / 9999) % 26)) ||
+          LPAD(((id - 1) % 9999 + 1)::TEXT, 4, '0')
         )
-        WHERE serial_code IS NULL AND serial_number IS NOT NULL;
+        WHERE serial_code IS NULL;
       END $$;
     `);
 
