@@ -1,0 +1,1279 @@
+      CREATE TABLE IF NOT EXISTS users (
+        id              SERIAL PRIMARY KEY,
+        nickname        VARCHAR(50)  NOT NULL,
+        email           VARCHAR(100) NOT NULL UNIQUE,
+        password        VARCHAR(255),  -- nullable: 소셜 로그인 전용 계정
+        emoji           VARCHAR(10)  NOT NULL DEFAULT '🌟',
+
+        -- 캐릭터 성장
+        level           INTEGER NOT NULL DEFAULT 1,      -- 1~100
+        exp             INTEGER NOT NULL DEFAULT 0,      -- 레벨업 경험치
+        grade           VARCHAR(20) NOT NULL DEFAULT 'stardust',
+        -- stardust(1-10) seed(11-20) spirit(21-30) citizen(31-40)
+        -- knight(41-50) baron(51-60) earl(61-70) sage(71-80)
+        -- highlord(81-90) celestial(91-100)
+
+        -- 6대 헥사곤 스탯
+        stat_loy        INTEGER NOT NULL DEFAULT 0,  -- 성실 (Loyalty)
+        stat_act        INTEGER NOT NULL DEFAULT 0,  -- 행동 (Action)
+        stat_soc        INTEGER NOT NULL DEFAULT 0,  -- 사회 (Social)
+        stat_eco        INTEGER NOT NULL DEFAULT 0,  -- 경제 (Economy)
+        stat_cre        INTEGER NOT NULL DEFAULT 0,  -- 창의 (Creative)
+        stat_int        INTEGER NOT NULL DEFAULT 0,  -- 지성 (Intellect)
+
+        -- 추가 스탯
+        stat_mor        INTEGER NOT NULL DEFAULT 0,  -- 도덕성 (Moral)
+        stat_lea        INTEGER NOT NULL DEFAULT 0,  -- 리더십 (Leadership)
+        stat_col        INTEGER NOT NULL DEFAULT 0,  -- 수집력 (Collection)
+        stat_art        INTEGER NOT NULL DEFAULT 0,  -- 예술성 (Art)
+        stat_sen        INTEGER NOT NULL DEFAULT 0,  -- 감성 (Sensitivity)
+        stat_kno        INTEGER NOT NULL DEFAULT 0,  -- 지식 (Knowledge)
+        stat_rel        INTEGER NOT NULL DEFAULT 0,  -- 유대 (Relation)
+        stat_tal        INTEGER NOT NULL DEFAULT 0,  -- 화술 (Talent)
+
+        -- 재화
+        ap              INTEGER NOT NULL DEFAULT 0,  -- 활동 포인트
+        cp              INTEGER NOT NULL DEFAULT 0,  -- 문화 주권 지수
+        stardust        INTEGER NOT NULL DEFAULT 500, -- 기본 재화
+
+        -- 리그 소속
+        league          VARCHAR(20) NOT NULL DEFAULT 'dust',
+        -- dust / star / planet / nova / quasar
+        fandom_id       INTEGER,                     -- 소속 팬클럽 ID
+        unit_id         INTEGER,                     -- 소속 유닛 ID (레거시)
+        org_id          INTEGER,                     -- 소속 조직(최하위 모임) ID
+
+        -- 주권 점수 (투표 가중치)
+        sovereign_weight DECIMAL(5,2) NOT NULL DEFAULT 1.0,
+
+        -- 무결성
+        integrity_score INTEGER NOT NULL DEFAULT 100, -- 0~100
+        is_banned       BOOLEAN NOT NULL DEFAULT FALSE,
+        ban_reason      VARCHAR(255),
+
+        -- 로그인 실패 잠금
+        login_fail_count INTEGER NOT NULL DEFAULT 0,
+        locked_until    TIMESTAMP,
+
+        -- 아키타입 (활동 패턴 기반 칭호)
+        archetype       VARCHAR(50),
+        -- balancer / tactician / patron / muse / core 등
+
+        -- 닉네임 변경 횟수
+        nickname_changes INTEGER NOT NULL DEFAULT 0,
+
+        -- 개척자 여부
+        is_pioneer      BOOLEAN NOT NULL DEFAULT FALSE,
+        pioneer_rank    INTEGER,  -- 초기 1000명 순번
+
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        last_login      TIMESTAMP,
+        last_active     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS moim_groups (
+        id SERIAL PRIMARY KEY,
+        fandom_id INTEGER,
+        league VARCHAR(20) NOT NULL,
+        depth INTEGER NOT NULL,
+        name VARCHAR(100) NOT NULL,
+        parent_id INTEGER REFERENCES moim_groups(id),
+        max_members INTEGER NOT NULL,
+        current_members INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS fanclub_requests (
+        id SERIAL PRIMARY KEY,
+        artist_name VARCHAR(100) NOT NULL,
+        fanclub_name VARCHAR(100) NOT NULL,
+        color VARCHAR(20) NOT NULL,
+        description VARCHAR(200),
+        applicant_email VARCHAR(200),
+        status VARCHAR(20) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT NOW(),
+        reviewed_at TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS moim_chat_messages (
+        id SERIAL PRIMARY KEY,
+        room_id VARCHAR(200) NOT NULL,
+        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        nickname VARCHAR(100) NOT NULL DEFAULT '팬',
+        league VARCHAR(20) DEFAULT 'star',
+        message TEXT NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS fanclubs (
+        id              SERIAL PRIMARY KEY,
+        name            VARCHAR(100) NOT NULL UNIQUE,
+        emoji           VARCHAR(10)  NOT NULL DEFAULT '⭐',
+        color           VARCHAR(7)   NOT NULL DEFAULT '#c084fc',
+        description     TEXT,
+
+        -- 리그 위치
+        league          VARCHAR(20) NOT NULL DEFAULT 'dust',
+        rank            INTEGER,         -- 리그 내 순위
+        qp              BIGINT NOT NULL DEFAULT 0,  -- Quasar Points (화력)
+
+        -- 조직 규모
+        member_count    INTEGER NOT NULL DEFAULT 0,
+        active_members  INTEGER NOT NULL DEFAULT 0,
+
+        -- 수장
+        leader_id       INTEGER REFERENCES users(id),
+
+        -- 승격/강등 점수
+        score_iai       DECIMAL(10,2) NOT NULL DEFAULT 0,  -- 개인 성실도
+        score_gsi       DECIMAL(10,2) NOT NULL DEFAULT 0,  -- 조직 시너지
+        score_pii       DECIMAL(10,2) NOT NULL DEFAULT 0,  -- 대외 영향력
+        score_total     DECIMAL(10,2) NOT NULL DEFAULT 0,  -- 최종 점수
+
+        -- 문화력 (개인 공간 합산)
+        cultural_power  BIGINT NOT NULL DEFAULT 0,
+
+        -- 리그 방어막
+        shield_active   BOOLEAN NOT NULL DEFAULT FALSE,
+        shield_until    TIMESTAMP,
+
+        -- 시즌
+        season          INTEGER NOT NULL DEFAULT 1,
+
+        -- 공식 인증
+        is_verified     BOOLEAN NOT NULL DEFAULT FALSE,
+        verified_at     TIMESTAMP,
+
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS nebulae (
+        id              SERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id) UNIQUE,
+
+        -- 성궤 정보
+        serial_code     VARCHAR(8) UNIQUE,   -- 아스트라 번호 (AA0001 형식)
+        ark_type        VARCHAR(30) NOT NULL DEFAULT 'life',
+        -- life(생활) oracle(전략) sovereign(주권) vault(자산) artist(아티스트 전용)
+
+        -- 공간 진화 단계
+        evolution_stage INTEGER NOT NULL DEFAULT 1,
+        -- 1: Void(어두운 방) 2: Ignition(우주 배경) 3: Supernova(태양계)
+
+        -- 테마 & 꾸미기
+        theme           VARCHAR(50) NOT NULL DEFAULT 'void',
+        bg_color        VARCHAR(7)  NOT NULL DEFAULT '#030308',
+        accent_color    VARCHAR(7)  NOT NULL DEFAULT '#c084fc',
+        bgm_track       VARCHAR(100),
+
+        -- 방문자 & 교감
+        visitor_count   INTEGER NOT NULL DEFAULT 0,
+        total_hearts    INTEGER NOT NULL DEFAULT 0,  -- 방문자가 남긴 에너지
+
+        -- 문화력 지수 (CP)
+        cultural_power  BIGINT NOT NULL DEFAULT 0,
+        cp_item_value   INTEGER NOT NULL DEFAULT 0,
+        cp_placement_bonus DECIMAL(5,2) NOT NULL DEFAULT 1.0,
+        cp_history_score INTEGER NOT NULL DEFAULT 0,
+
+        -- 교감 지수 (아티스트와의 연결)
+        resonance_index DECIMAL(8,4) NOT NULL DEFAULT 0,
+
+        -- 아티스트 강림 여부
+        has_advent      BOOLEAN NOT NULL DEFAULT FALSE,
+        advent_at       TIMESTAMP,
+        advent_message  TEXT,
+
+        -- 아이템 슬롯 (JSON)
+        items           JSONB NOT NULL DEFAULT '[]',
+        -- [{slot: 1, item_id: xx, placed_at: ..., bonus: {...}}]
+
+        -- 방명록
+        guestbook       JSONB NOT NULL DEFAULT '[]',
+
+        -- 타임캡슐
+        timecapsules    JSONB NOT NULL DEFAULT '[]',
+
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS nebula_items (
+        id              SERIAL PRIMARY KEY,
+        name            VARCHAR(100) NOT NULL,
+        type            VARCHAR(20)  NOT NULL,
+        -- furniture / artifact / decor / special
+        rarity          VARCHAR(20)  NOT NULL DEFAULT 'common',
+        -- common / rare / epic / legendary / genesis
+        emoji           VARCHAR(10),
+        description     TEXT,
+
+        -- 획득 조건
+        unlock_condition JSONB,
+        -- {type: 'level', value: 50} | {type: 'mission', id: 'xx'} | {type: 'purchase'}
+
+        -- 스탯 보너스
+        stat_bonus      JSONB NOT NULL DEFAULT '{}',
+        -- {loy: 10, act: 5} 등
+
+        -- 시각 효과
+        visual_effect   VARCHAR(50),
+
+        -- 가격 (0이면 미션 보상만)
+        price_stardust  INTEGER NOT NULL DEFAULT 0,
+        price_ap        INTEGER NOT NULL DEFAULT 0,
+
+        -- 제한 수량 (null = 무제한)
+        max_supply      INTEGER,
+        current_supply  INTEGER NOT NULL DEFAULT 0,
+
+        -- 시즌 한정
+        is_seasonal     BOOLEAN NOT NULL DEFAULT FALSE,
+        season_only     INTEGER,
+
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS artifacts (
+        id              SERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id),
+        item_id         INTEGER REFERENCES nebula_items(id),
+
+        -- 고유 식별
+        serial_code     VARCHAR(50) UNIQUE,  -- 디지털 지문
+        owner_serial    INTEGER,             -- 성궤 번호 각인
+
+        -- 속성
+        artifact_type   VARCHAR(30) NOT NULL DEFAULT 'common',
+        -- common / soul / zero_ticket / genesis
+
+        -- 현재 상태
+        is_displayed    BOOLEAN NOT NULL DEFAULT FALSE,
+        nebula_slot     INTEGER,  -- 배치된 슬롯 번호
+        is_frozen       BOOLEAN NOT NULL DEFAULT FALSE,  -- 처벌로 인한 동결
+
+        -- 제로 티켓 연동
+        zero_ticket_id  VARCHAR(100),  -- 하드웨어 티켓 ID
+        event_name      VARCHAR(200),
+        event_date      DATE,
+        venue_name      VARCHAR(200),
+        gps_lat         DECIMAL(10,7),
+        gps_lng         DECIMAL(10,7),
+
+        -- 가치
+        power_bonus     INTEGER NOT NULL DEFAULT 0,  -- 스탯 보너스 합계
+        resonance_bonus DECIMAL(5,2) NOT NULL DEFAULT 1.0,
+
+        -- 거래 이력
+        trade_history   JSONB NOT NULL DEFAULT '[]',
+
+        acquired_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS activity_logs (
+        id              BIGSERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id),
+        fandom_id       INTEGER REFERENCES fanclubs(id),
+
+        -- 활동 분류
+        area            VARCHAR(20) NOT NULL,
+        -- consume(소비) create(창작) social(소통) power(화력)
+        -- offline(오프라인) governance(거버넌스) collect(수집)
+        -- economy(경제) system(시스템) space(공간) edu(교육)
+        -- predict(예측) history(역사) wellness(웰니스)
+
+        action          VARCHAR(50) NOT NULL,  -- streaming, vote, comment 등
+        score_type      VARCHAR(20) NOT NULL,  -- per_action / time_based / achievement / value
+
+        -- 점수
+        ap_earned       INTEGER NOT NULL DEFAULT 0,
+        cp_earned       INTEGER NOT NULL DEFAULT 0,
+
+        -- 스탯 반영
+        stat_affected   VARCHAR(10),  -- loy / act / soc 등
+        stat_delta      INTEGER NOT NULL DEFAULT 0,
+
+        -- 콤보/시너지
+        is_combo        BOOLEAN NOT NULL DEFAULT FALSE,
+        combo_multiplier DECIMAL(4,2) NOT NULL DEFAULT 1.0,
+        is_sync         BOOLEAN NOT NULL DEFAULT FALSE,
+        sync_multiplier DECIMAL(4,2) NOT NULL DEFAULT 1.0,
+
+        -- 메타데이터
+        meta            JSONB DEFAULT '{}',
+
+        -- 어뷰징 감지
+        is_flagged      BOOLEAN NOT NULL DEFAULT FALSE,
+        flag_reason     VARCHAR(100),
+
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS chat_messages (
+        id              BIGSERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id),
+        fandom_id       INTEGER REFERENCES fanclubs(id),
+        unit_id         INTEGER,
+        room            VARCHAR(50) NOT NULL DEFAULT 'global',
+        -- global / fandom:{id} / unit:{id} / nebula:{id}
+        message         TEXT NOT NULL,
+        is_deleted      BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS votes (
+        id              SERIAL PRIMARY KEY,
+        title           VARCHAR(200) NOT NULL,
+        description     TEXT,
+        vote_type       VARCHAR(30) NOT NULL DEFAULT 'general',
+        -- general / league / fandom / gate / governance
+
+        options         JSONB NOT NULL DEFAULT '[]',
+        -- [{id: 1, label: '옵션A', votes: 0, weighted_votes: 0}]
+
+        -- 제한
+        min_level       INTEGER NOT NULL DEFAULT 1,
+        league_required VARCHAR(20),
+        fandom_id       INTEGER REFERENCES fanclubs(id),
+
+        -- 기간
+        starts_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        ends_at         TIMESTAMP NOT NULL,
+        is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+
+        -- 결과
+        winner_option   INTEGER,
+        total_votes     INTEGER NOT NULL DEFAULT 0,
+        total_weight    DECIMAL(12,2) NOT NULL DEFAULT 0,
+
+        created_by      INTEGER REFERENCES users(id),
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS vote_records (
+        id              SERIAL PRIMARY KEY,
+        vote_id         INTEGER NOT NULL REFERENCES votes(id),
+        user_id         INTEGER NOT NULL REFERENCES users(id),
+        option_chosen   INTEGER NOT NULL,
+        sovereign_weight DECIMAL(8,2) NOT NULL DEFAULT 1.0,
+        zero_ticket_verified BOOLEAN NOT NULL DEFAULT FALSE,
+        voted_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(vote_id, user_id)
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS penalties (
+        id              SERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id),
+        penalty_type    VARCHAR(30) NOT NULL,
+        -- stat_drain / sovereign_silence / void_sarcophagus / eternal_exile
+        reason          TEXT NOT NULL,
+        issued_by       VARCHAR(20) NOT NULL DEFAULT 'system',
+        -- system / council (주권자 재판소)
+        severity        VARCHAR(20) NOT NULL DEFAULT 'low',
+        -- low / medium / high / critical
+
+        -- 처벌 내용
+        stat_reduction  JSONB DEFAULT '{}',  -- {loy: -10, act: -5}
+        ap_deducted     INTEGER NOT NULL DEFAULT 0,
+        cp_deducted     INTEGER NOT NULL DEFAULT 0,
+        artifacts_seized JSONB DEFAULT '[]',
+
+        -- 기간
+        starts_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        ends_at         TIMESTAMP,  -- null = 영구
+        is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+
+        -- 갱생
+        atonement_required TEXT,
+        atonement_completed BOOLEAN NOT NULL DEFAULT FALSE,
+
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS mentorships (
+        id              SERIAL PRIMARY KEY,
+        mentor_id       INTEGER NOT NULL REFERENCES users(id),
+        mentee_id       INTEGER NOT NULL REFERENCES users(id),
+        status          VARCHAR(20) NOT NULL DEFAULT 'active',
+        -- active / completed / dissolved
+        energy_sent     INTEGER NOT NULL DEFAULT 0,
+        growth_bonus    INTEGER NOT NULL DEFAULT 0,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(mentor_id, mentee_id)
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS referrals (
+        id              SERIAL PRIMARY KEY,
+        referrer_id     INTEGER NOT NULL REFERENCES users(id),
+        referee_id      INTEGER NOT NULL REFERENCES users(id) UNIQUE,
+        reward_given    BOOLEAN NOT NULL DEFAULT FALSE,
+        referrer_bonus  INTEGER NOT NULL DEFAULT 500,  -- 스타더스트
+        referee_bonus   INTEGER NOT NULL DEFAULT 300,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS zero_tickets (
+        id              SERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id),
+        hw_id           VARCHAR(200) NOT NULL UNIQUE,  -- 하드웨어 식별값
+        event_name      VARCHAR(200) NOT NULL,
+        event_date      DATE NOT NULL,
+        venue           VARCHAR(200),
+        seat_info       VARCHAR(100),
+        gps_verified    BOOLEAN NOT NULL DEFAULT FALSE,
+        gps_lat         DECIMAL(10,7),
+        gps_lng         DECIMAL(10,7),
+        checked_in_at   TIMESTAMP,
+        ap_reward       INTEGER NOT NULL DEFAULT 1000,
+        is_archived     BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS notifications (
+        id              BIGSERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id),
+        type            VARCHAR(30) NOT NULL,
+        -- league_up / league_down / advent / mentee_growth
+        -- vote_result / energy_transfer / scout_offer
+        title           VARCHAR(200) NOT NULL,
+        body            TEXT,
+        is_read         BOOLEAN NOT NULL DEFAULT FALSE,
+        meta            JSONB DEFAULT '{}',
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS refresh_tokens (
+        id              SERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        token           VARCHAR(500) NOT NULL UNIQUE,
+        expires_at      TIMESTAMP NOT NULL,
+        is_revoked      BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS user_social_auth (
+        id              SERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        provider        VARCHAR(20) NOT NULL,  -- kakao / google
+        provider_id     VARCHAR(200) NOT NULL,
+        provider_email  VARCHAR(200),
+        provider_name   VARCHAR(100),
+        provider_avatar VARCHAR(500),
+        access_token    TEXT,
+        refresh_token   TEXT,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(provider, provider_id)
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS daily_checkin (
+        id              SERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        checked_date    DATE NOT NULL DEFAULT CURRENT_DATE,
+        streak          INTEGER NOT NULL DEFAULT 1,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, checked_date)
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS stat_history (
+        id              BIGSERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        stat_name       VARCHAR(10) NOT NULL,
+        old_value       INTEGER NOT NULL,
+        new_value       INTEGER NOT NULL,
+        delta           INTEGER NOT NULL,
+        source          VARCHAR(50),
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS stardust_ledger (
+        id              BIGSERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        amount          INTEGER NOT NULL,
+        balance_after   INTEGER NOT NULL,
+        type            VARCHAR(30) NOT NULL,
+        description     VARCHAR(200),
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS abuse_patterns (
+        id              BIGSERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        pattern_type    VARCHAR(30) NOT NULL,
+        activity_type   VARCHAR(50) NOT NULL,
+        interval_ms     INTEGER,
+        repeat_count    INTEGER NOT NULL DEFAULT 1,
+        severity        VARCHAR(20) NOT NULL DEFAULT 'warning',
+        is_resolved     BOOLEAN NOT NULL DEFAULT FALSE,
+        resolved_at     TIMESTAMP,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS organizations (
+        id              SERIAL PRIMARY KEY,
+        fanclub_id      INTEGER NOT NULL REFERENCES fanclubs(id) ON DELETE CASCADE,
+        parent_id       INTEGER REFERENCES organizations(id),
+        name            VARCHAR(100) NOT NULL,
+        org_type        VARCHAR(30) NOT NULL,
+        depth           INTEGER NOT NULL DEFAULT 0,
+        member_count    INTEGER NOT NULL DEFAULT 0,
+        max_members     INTEGER NOT NULL DEFAULT 200,
+        contribution_score DECIMAL(10,2) NOT NULL DEFAULT 0,
+        mission_completion DECIMAL(5,2) NOT NULL DEFAULT 0,
+        activity_density DECIMAL(5,2) NOT NULL DEFAULT 0,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS league_config (
+        league              VARCHAR(10) PRIMARY KEY,
+        league_name_ko      VARCHAR(20) NOT NULL,
+        league_name_en      VARCHAR(20) NOT NULL,
+        max_fanclubs        INT,
+        max_members         INT,
+        iai_weight          FLOAT NOT NULL,
+        gsi_weight          FLOAT NOT NULL,
+        pii_weight          FLOAT NOT NULL,
+        min_members_promote INT,
+        org_structure       JSONB,
+        court_jury_level    INT NOT NULL,
+        court_jury_count    INT NOT NULL,
+        punishment_severity INT CHECK (punishment_severity BETWEEN 1 AND 5)
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS seasons (
+        id              SERIAL PRIMARY KEY,
+        season_number   INTEGER NOT NULL UNIQUE,
+        name            VARCHAR(100) NOT NULL,
+        starts_at       TIMESTAMP NOT NULL,
+        ends_at         TIMESTAMP NOT NULL,
+        rest_starts_at  TIMESTAMP,
+        rest_ends_at    TIMESTAMP,
+        status          VARCHAR(20) NOT NULL DEFAULT 'upcoming',
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS trade_listings (
+        id              SERIAL PRIMARY KEY,
+        seller_id       INTEGER NOT NULL REFERENCES users(id),
+        artifact_id     INTEGER NOT NULL REFERENCES artifacts(id) UNIQUE,
+        price           INTEGER NOT NULL,
+        item_name       VARCHAR(100),
+        item_rarity     VARCHAR(20),
+        item_emoji      VARCHAR(10),
+        status          VARCHAR(20) NOT NULL DEFAULT 'active',
+        buyer_id        INTEGER REFERENCES users(id),
+        sold_at         TIMESTAMP,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS hw_ban_list (
+        id              SERIAL PRIMARY KEY,
+        hw_fingerprint  VARCHAR(500) NOT NULL UNIQUE,
+        banned_user_id  INTEGER REFERENCES users(id),
+        reason          VARCHAR(255) NOT NULL,
+        banned_by       VARCHAR(20) NOT NULL DEFAULT 'system',
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS device_registry (
+        id              SERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id),
+        hw_fingerprint  VARCHAR(500) NOT NULL,
+        device_name     VARCHAR(100),
+        last_used       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        is_primary      BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, hw_fingerprint)
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS audit_log (
+        id              BIGSERIAL PRIMARY KEY,
+        table_name      VARCHAR(50) NOT NULL,
+        record_id       BIGINT NOT NULL,
+        action          VARCHAR(20) NOT NULL,
+        old_data        JSONB,
+        new_data        JSONB,
+        changed_by      INTEGER,
+        ip_address      VARCHAR(45),
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS court_cases (
+        id              SERIAL PRIMARY KEY,
+        case_number     VARCHAR(20) NOT NULL UNIQUE,
+        track           VARCHAR(20) NOT NULL,
+        status          VARCHAR(20) NOT NULL DEFAULT 'submitted',
+        reported_user_id INTEGER NOT NULL REFERENCES users(id),
+        reporter_id     INTEGER NOT NULL REFERENCES users(id),
+        fandom_id       INTEGER REFERENCES fanclubs(id),
+        league          VARCHAR(20),
+        category        VARCHAR(50) NOT NULL,
+        title           VARCHAR(200) NOT NULL,
+        description     TEXT NOT NULL,
+        evidence        JSONB DEFAULT '[]',
+        verdict         VARCHAR(30),
+        verdict_reason  TEXT,
+        penalty_applied JSONB,
+        jury_members    JSONB DEFAULT '[]',
+        jury_votes      JSONB DEFAULT '[]',
+        jury_required   INTEGER NOT NULL DEFAULT 5,
+        viewer_count    INTEGER NOT NULL DEFAULT 0,
+        is_hot          BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        resolved_at     TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS reporter_accuracy (
+        id              SERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id) UNIQUE,
+        total_reports   INTEGER NOT NULL DEFAULT 0,
+        guilty_verdicts INTEGER NOT NULL DEFAULT 0,
+        accuracy_rate   DECIMAL(5,2) NOT NULL DEFAULT 100.0,
+        is_restricted   BOOLEAN NOT NULL DEFAULT FALSE,
+        restricted_until TIMESTAMP,
+        updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS chat_memory (
+        id              SERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id),
+        summary         TEXT NOT NULL,
+        keywords        JSONB DEFAULT '[]',
+        emotion         VARCHAR(20),
+        chat_date       DATE NOT NULL DEFAULT CURRENT_DATE,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS rare_dialogue_cards (
+        id              SERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id),
+        dialogue        TEXT NOT NULL,
+        rarity          VARCHAR(20) NOT NULL DEFAULT 'common',
+        category        VARCHAR(30),
+        emoji           VARCHAR(10),
+        obtained_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS fan_anniversaries (
+        id              SERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id),
+        type            VARCHAR(30) NOT NULL,
+        label           VARCHAR(100) NOT NULL,
+        anniversary_date DATE NOT NULL,
+        is_custom       BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS artist_events (
+        id              SERIAL PRIMARY KEY,
+        event_type      VARCHAR(30) NOT NULL,
+        title           VARCHAR(200) NOT NULL,
+        event_date      DATE NOT NULL,
+        description     TEXT,
+        special_dialogue TEXT,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS artist_diary (
+        id              SERIAL PRIMARY KEY,
+        week_number     INTEGER NOT NULL,
+        day_of_week     INTEGER NOT NULL,
+        series_title    VARCHAR(100),
+        content         TEXT NOT NULL,
+        mood            VARCHAR(20) NOT NULL DEFAULT 'happy',
+        emoji           VARCHAR(10) NOT NULL DEFAULT '📝',
+        reactions       JSONB NOT NULL DEFAULT '{"heart":0,"strong":0,"sad":0,"funny":0,"fire":0,"star":0}',
+        comment_count   INTEGER NOT NULL DEFAULT 0,
+        publish_date    DATE NOT NULL,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(week_number, day_of_week)
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS diary_comments (
+        id              SERIAL PRIMARY KEY,
+        diary_id        INTEGER NOT NULL REFERENCES artist_diary(id),
+        user_id         INTEGER NOT NULL REFERENCES users(id),
+        comment         VARCHAR(200) NOT NULL,
+        reaction_emoji  VARCHAR(10),
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS shooting_stars (
+        id              SERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id),
+        star_type       VARCHAR(30) NOT NULL,
+        color           VARCHAR(7) NOT NULL DEFAULT '#f0c040',
+        label           VARCHAR(100) NOT NULL,
+        point_value     INTEGER NOT NULL DEFAULT 1,
+        memory_card     JSONB,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS constellation_progress (
+        id              SERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id) UNIQUE,
+        total_stars     INTEGER NOT NULL DEFAULT 0,
+        total_points    INTEGER NOT NULL DEFAULT 0,
+        exchanged_points INTEGER NOT NULL DEFAULT 0,
+        current_constellation VARCHAR(30) NOT NULL DEFAULT 'little_dipper',
+        completed_constellations JSONB NOT NULL DEFAULT '[]',
+        updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS constellations (
+        id              SERIAL PRIMARY KEY,
+        name            VARCHAR(50) NOT NULL,
+        emoji           VARCHAR(10) NOT NULL DEFAULT '⭐',
+        org_id          INTEGER REFERENCES organizations(id),
+        fandom_id       INTEGER REFERENCES fanclubs(id),
+        league          VARCHAR(20) NOT NULL,
+        max_members     INTEGER NOT NULL DEFAULT 3,
+        level           INTEGER NOT NULL DEFAULT 1,
+        exp             INTEGER NOT NULL DEFAULT 0,
+        season_number   INTEGER NOT NULL DEFAULT 1,
+        consecutive_seasons INTEGER NOT NULL DEFAULT 1,
+        is_eternal      BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS constellation_members (
+        id              SERIAL PRIMARY KEY,
+        constellation_id INTEGER NOT NULL REFERENCES constellations(id) ON DELETE CASCADE,
+        user_id         INTEGER NOT NULL REFERENCES users(id),
+        role            VARCHAR(20) NOT NULL DEFAULT 'member',
+        joined_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(constellation_id, user_id)
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS constellation_missions (
+        id              SERIAL PRIMARY KEY,
+        constellation_id INTEGER NOT NULL REFERENCES constellations(id) ON DELETE CASCADE,
+        title           VARCHAR(200) NOT NULL,
+        description     TEXT,
+        mission_type    VARCHAR(30) NOT NULL,
+        target_value    INTEGER NOT NULL,
+        current_value   INTEGER NOT NULL DEFAULT 0,
+        is_completed    BOOLEAN NOT NULL DEFAULT FALSE,
+        reward_exp      INTEGER NOT NULL DEFAULT 10,
+        reward_stardust INTEGER NOT NULL DEFAULT 50,
+        week_number     INTEGER,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS constellation_guestbook (
+        id              SERIAL PRIMARY KEY,
+        constellation_id INTEGER NOT NULL REFERENCES constellations(id) ON DELETE CASCADE,
+        user_id         INTEGER NOT NULL REFERENCES users(id),
+        message         VARCHAR(200) NOT NULL,
+        emoji           VARCHAR(10),
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS avatar_items (
+        id              SERIAL PRIMARY KEY,
+        name            VARCHAR(100) NOT NULL,
+        category        VARCHAR(30) NOT NULL,
+        rarity          VARCHAR(20) NOT NULL DEFAULT 'common',
+        emoji           VARCHAR(10),
+        description     TEXT,
+        league_required VARCHAR(20),
+        season_only     INTEGER,
+        is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+        price_stardust  INTEGER NOT NULL DEFAULT 0,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS avatar_inventory (
+        id              SERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id),
+        item_id         INTEGER NOT NULL REFERENCES avatar_items(id),
+        is_equipped     BOOLEAN NOT NULL DEFAULT FALSE,
+        obtained_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, item_id)
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS outfit_presets (
+        id              SERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id),
+        preset_name     VARCHAR(50) NOT NULL,
+        slot_number     INTEGER NOT NULL,
+        equipped_items  JSONB NOT NULL DEFAULT '[]',
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, slot_number)
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS avatar_votes (
+        id              SERIAL PRIMARY KEY,
+        fandom_id       INTEGER REFERENCES fanclubs(id),
+        week_number     INTEGER NOT NULL,
+        status          VARCHAR(20) NOT NULL DEFAULT 'active',
+        starts_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        ends_at         TIMESTAMP NOT NULL,
+        created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS avatar_vote_entries (
+        id              SERIAL PRIMARY KEY,
+        vote_id         INTEGER NOT NULL REFERENCES avatar_votes(id),
+        user_id         INTEGER NOT NULL REFERENCES users(id),
+        snapshot_data   JSONB NOT NULL,
+        vote_count      INTEGER NOT NULL DEFAULT 0,
+        rank            INTEGER,
+        UNIQUE(vote_id, user_id)
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS avatar_vote_records (
+        id              SERIAL PRIMARY KEY,
+        vote_id         INTEGER NOT NULL REFERENCES avatar_votes(id),
+        voter_id        INTEGER NOT NULL REFERENCES users(id),
+        entry_id        INTEGER NOT NULL REFERENCES avatar_vote_entries(id),
+        voted_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(vote_id, voter_id)
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS music_tracks (
+        id SERIAL PRIMARY KEY,
+        title VARCHAR(200) NOT NULL,
+        artist_name VARCHAR(100) DEFAULT 'Artist',
+        duration_sec INTEGER DEFAULT 240,
+        genre VARCHAR(30),
+        color_theme VARCHAR(7) DEFAULT '#c084fc',
+        visual_style VARCHAR(30) DEFAULT 'calm',
+        mood VARCHAR(30) DEFAULT 'neutral',
+        is_title_track BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS listening_log (
+        id BIGSERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        track_id INTEGER NOT NULL REFERENCES music_tracks(id),
+        duration_sec INTEGER DEFAULT 0,
+        resonance_gained DECIMAL(6,2) DEFAULT 0,
+        is_storm_event BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS resonance_levels (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) UNIQUE,
+        level INTEGER DEFAULT 1,
+        total_exp DECIMAL(10,2) DEFAULT 0,
+        total_listening_min INTEGER DEFAULT 0,
+        favorite_track_id INTEGER REFERENCES music_tracks(id),
+        visual_stage VARCHAR(30) DEFAULT 'calm',
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS storm_events (
+        id SERIAL PRIMARY KEY,
+        fandom_id INTEGER REFERENCES fanclubs(id),
+        track_id INTEGER NOT NULL REFERENCES music_tracks(id),
+        scheduled_at TIMESTAMP NOT NULL,
+        duration_min INTEGER DEFAULT 30,
+        status VARCHAR(20) DEFAULT 'upcoming',
+        participant_count INTEGER DEFAULT 0,
+        bonus_qp INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS timecapsules (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        type VARCHAR(20) NOT NULL DEFAULT 'personal',
+        fandom_id INTEGER REFERENCES fanclubs(id),
+        title VARCHAR(200) NOT NULL,
+        message TEXT NOT NULL,
+        stat_snapshot JSONB,
+        open_date DATE NOT NULL,
+        is_opened BOOLEAN DEFAULT FALSE,
+        opened_at TIMESTAMP,
+        is_shared BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS auto_memories (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        memory_type VARCHAR(30) NOT NULL,
+        title VARCHAR(200) NOT NULL,
+        description TEXT,
+        stat_snapshot JSONB,
+        meta JSONB DEFAULT '{}',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS wishes (
+        id SERIAL PRIMARY KEY,
+        fanclub_id INTEGER REFERENCES fanclubs(id),
+        proposer_id INTEGER REFERENCES users(id),
+        org_id INTEGER REFERENCES organizations(id),
+        org_level INTEGER DEFAULT 0,
+        title VARCHAR(100) NOT NULL,
+        description TEXT,
+        category VARCHAR(20) NOT NULL CHECK (category IN ('event','content','platform','community','charity','challenge')),
+        wish_type VARCHAR(20) DEFAULT 'main' CHECK (wish_type IN ('main','sub','surprise')),
+        status VARCHAR(20) DEFAULT 'proposed' CHECK (status IN ('proposed','climbing','selected','active','completed','failed','expired')),
+        energy_goal INTEGER NOT NULL DEFAULT 50000,
+        energy_current INTEGER DEFAULT 0,
+        season_id INTEGER,
+        sympathy_count INTEGER DEFAULT 0,
+        sympathy_threshold DECIMAL(3,2) DEFAULT 0.30,
+        sympathy_deadline TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW(),
+        selected_at TIMESTAMP,
+        completed_at TIMESTAMP
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS wish_sympathies (
+        id SERIAL PRIMARY KEY,
+        wish_id INTEGER REFERENCES wishes(id),
+        user_id INTEGER REFERENCES users(id),
+        org_id INTEGER REFERENCES organizations(id),
+        created_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(wish_id, user_id)
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS wish_energy_contributions (
+        id SERIAL PRIMARY KEY,
+        wish_id INTEGER REFERENCES wishes(id),
+        user_id INTEGER REFERENCES users(id),
+        energy_amount INTEGER NOT NULL,
+        source VARCHAR(30) NOT NULL CHECK (source IN ('auto_activity','mission','stardust','bonus')),
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS wish_missions (
+        id SERIAL PRIMARY KEY,
+        wish_id INTEGER REFERENCES wishes(id),
+        title VARCHAR(100) NOT NULL,
+        description TEXT,
+        energy_reward INTEGER NOT NULL DEFAULT 100,
+        mission_type VARCHAR(20) DEFAULT 'daily',
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS wish_archive (
+        id SERIAL PRIMARY KEY,
+        wish_id INTEGER REFERENCES wishes(id),
+        fanclub_id INTEGER REFERENCES fanclubs(id),
+        title VARCHAR(100),
+        category VARCHAR(20),
+        wish_type VARCHAR(20),
+        energy_goal INTEGER,
+        energy_final INTEGER,
+        achievement_rate DECIMAL(5,2),
+        contributor_count INTEGER,
+        season_id INTEGER,
+        star_name VARCHAR(100),
+        completed_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS sovereign_votes (
+        id SERIAL PRIMARY KEY,
+        fanclub_id INTEGER REFERENCES fanclubs(id),
+        proposer_id INTEGER REFERENCES users(id),
+        title VARCHAR(200) NOT NULL,
+        description TEXT,
+        vote_type VARCHAR(20) NOT NULL CHECK (vote_type IN ('leader_election','leader_recall','village_change','rule_change')),
+        status VARCHAR(20) DEFAULT 'discussion' CHECK (status IN ('discussion','voting','completed','cancelled')),
+        discussion_start TIMESTAMP DEFAULT NOW(),
+        discussion_end TIMESTAMP,
+        voting_start TIMESTAMP,
+        voting_end TIMESTAMP,
+        votes_for INTEGER DEFAULT 0,
+        votes_against INTEGER DEFAULT 0,
+        total_eligible INTEGER DEFAULT 0,
+        result VARCHAR(10) CHECK (result IN ('passed','rejected','tie')),
+        is_close_call BOOLEAN DEFAULT false,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS sovereign_vote_ballots (
+        id SERIAL PRIMARY KEY,
+        vote_id INTEGER REFERENCES sovereign_votes(id),
+        user_id INTEGER REFERENCES users(id),
+        choice VARCHAR(10) NOT NULL CHECK (choice IN ('for','against')),
+        created_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(vote_id, user_id)
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS sovereign_vote_discussions (
+        id SERIAL PRIMARY KEY,
+        vote_id INTEGER REFERENCES sovereign_votes(id),
+        user_id INTEGER REFERENCES users(id),
+        content TEXT NOT NULL,
+        stance VARCHAR(10) CHECK (stance IN ('for','against','neutral')),
+        likes INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS wish_mission_completions (
+        id SERIAL PRIMARY KEY,
+        mission_id INTEGER NOT NULL REFERENCES wish_missions(id),
+        wish_id INTEGER NOT NULL REFERENCES wishes(id),
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        energy_awarded INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(mission_id, user_id)
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS wish_reward_claims (
+        id SERIAL PRIMARY KEY,
+        wish_id INTEGER NOT NULL REFERENCES wishes(id),
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        reward_type VARCHAR(20) NOT NULL CHECK (reward_type IN ('badge','item_drop','stardust_refund','partial_refund')),
+        badge_tier VARCHAR(10) CHECK (badge_tier IN ('gold','silver','bronze')),
+        stardust_amount INTEGER NOT NULL DEFAULT 0,
+        item_id INTEGER,
+        claimed_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(wish_id, user_id, reward_type)
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS wish_pipeline_log (
+        id SERIAL PRIMARY KEY,
+        wish_id INTEGER NOT NULL REFERENCES wishes(id),
+        from_org_id INTEGER REFERENCES organizations(id),
+        to_org_id INTEGER REFERENCES organizations(id),
+        sympathy_at_transfer INTEGER NOT NULL,
+        transferred_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS rival_matches (
+        id SERIAL PRIMARY KEY,
+        season_id INTEGER,
+        month INTEGER NOT NULL,
+        year INTEGER NOT NULL,
+        user1_id INTEGER REFERENCES users(id),
+        user2_id INTEGER REFERENCES users(id),
+        user1_ap INTEGER DEFAULT 0,
+        user2_ap INTEGER DEFAULT 0,
+        winner_id INTEGER REFERENCES users(id),
+        status VARCHAR(20) DEFAULT 'matched' CHECK (status IN ('matched','active','completed','declined')),
+        user1_message TEXT,
+        user2_message TEXT,
+        match_start TIMESTAMP,
+        match_end TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(user1_id, month, year)
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS stat_kings (
+        id SERIAL PRIMARY KEY,
+        season_id INTEGER,
+        month INTEGER NOT NULL,
+        year INTEGER NOT NULL,
+        user_id INTEGER REFERENCES users(id),
+        fanclub_id INTEGER REFERENCES fanclubs(id),
+        stat_type VARCHAR(10) NOT NULL CHECK (stat_type IN ('LOY','ACT','SOC','ECO','CRE','INT')),
+        growth_amount DECIMAL(10,2) DEFAULT 0,
+        rank_position INTEGER NOT NULL,
+        league VARCHAR(20),
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS org_wars (
+        id SERIAL PRIMARY KEY,
+        season_id INTEGER,
+        month INTEGER NOT NULL,
+        year INTEGER NOT NULL,
+        parent_org_id INTEGER REFERENCES organizations(id),
+        fanclub_id INTEGER REFERENCES fanclubs(id),
+        mission_type VARCHAR(30) NOT NULL,
+        mission_title VARCHAR(100) NOT NULL,
+        status VARCHAR(20) DEFAULT 'announced' CHECK (status IN ('announced','active','completed')),
+        winner_org_id INTEGER REFERENCES organizations(id),
+        mvp_user_id INTEGER REFERENCES users(id),
+        match_start TIMESTAMP,
+        match_end TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS org_wars_scores (
+        id SERIAL PRIMARY KEY,
+        war_id INTEGER REFERENCES org_wars(id),
+        org_id INTEGER REFERENCES organizations(id),
+        score DECIMAL(10,2) DEFAULT 0,
+        member_count INTEGER DEFAULT 0,
+        participation_rate DECIMAL(5,2) DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS firepower_daily (
+        id SERIAL PRIMARY KEY,
+        fanclub_id INTEGER REFERENCES fanclubs(id),
+        record_date DATE NOT NULL DEFAULT CURRENT_DATE,
+        energy_total INTEGER DEFAULT 0,
+        energy_peak INTEGER DEFAULT 0,
+        peak_hour INTEGER,
+        active_members INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(fanclub_id, record_date)
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS mirror_match_events (
+        id SERIAL PRIMARY KEY,
+        upper_fanclub_id INTEGER REFERENCES fanclubs(id),
+        lower_fanclub_id INTEGER REFERENCES fanclubs(id),
+        upper_league VARCHAR(20),
+        lower_league VARCHAR(20),
+        score_gap DECIMAL(10,2),
+        event_type VARCHAR(20) CHECK (event_type IN ('alert','break','close_call')),
+        reversed BOOLEAN DEFAULT false,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS season_mvps (
+        id SERIAL PRIMARY KEY,
+        season_id INTEGER NOT NULL,
+        fanclub_id INTEGER REFERENCES fanclubs(id),
+        user_id INTEGER REFERENCES users(id),
+        category VARCHAR(20) NOT NULL CHECK (category IN ('activity','growth','contribution','rookie','guardian')),
+        score DECIMAL(12,2) DEFAULT 0,
+        league VARCHAR(20),
+        awarded_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS archetype_history (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        previous_archetype VARCHAR(30),
+        new_archetype VARCHAR(30),
+        trigger_stats JSONB,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS sovereigns (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        fanclub_id INTEGER REFERENCES fanclubs(id),
+        league VARCHAR(20) NOT NULL,
+        grade VARCHAR(20) DEFAULT 'bronze' CHECK (grade IN ('bronze','silver','gold','diamond')),
+        consecutive_seasons INTEGER DEFAULT 1,
+        status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active','grace','revoked')),
+        grace_deadline TIMESTAMP,
+        achieved_at TIMESTAMP DEFAULT NOW(),
+        revoked_at TIMESTAMP,
+        UNIQUE(user_id, fanclub_id)
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS onboarding_quests (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        quest_key VARCHAR(30) NOT NULL,
+        quest_title VARCHAR(100) NOT NULL,
+        completed BOOLEAN DEFAULT false,
+        reward_claimed BOOLEAN DEFAULT false,
+        completed_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(user_id, quest_key)
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS pioneers (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        orbit_number VARCHAR(20) NOT NULL,
+        pioneer_tier VARCHAR(20) DEFAULT 'standard',
+        joined_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(user_id)
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS wall_of_honor (
+        id SERIAL PRIMARY KEY,
+        record_type VARCHAR(20) NOT NULL CHECK (record_type IN ('individual','fanclub','global')),
+        category VARCHAR(50) NOT NULL,
+        record_holder_id INTEGER,
+        fanclub_id INTEGER REFERENCES fanclubs(id),
+        league VARCHAR(20),
+        record_value DECIMAL(12,2),
+        record_description TEXT,
+        previous_holder_id INTEGER,
+        season_id INTEGER,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS ranking_daily_summary (
+        id SERIAL PRIMARY KEY,
+        fanclub_id INTEGER REFERENCES fanclubs(id),
+        record_date DATE NOT NULL DEFAULT CURRENT_DATE,
+        rank_start INTEGER,
+        rank_end INTEGER,
+        rank_change INTEGER DEFAULT 0,
+        league VARCHAR(20),
+        summary_message TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(fanclub_id, record_date)
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS ai_moderation_log (
+        id SERIAL PRIMARY KEY,
+        target_type VARCHAR(20) NOT NULL CHECK (target_type IN ('chat','post','comment')),
+        target_id INTEGER,
+        user_id INTEGER REFERENCES users(id),
+        fanclub_id INTEGER REFERENCES fanclubs(id),
+        violation_type VARCHAR(30),
+        severity VARCHAR(10) CHECK (severity IN ('low','medium','high','critical')),
+        content_snippet TEXT,
+        action_taken VARCHAR(30),
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS fanclub_mood (
+        id SERIAL PRIMARY KEY,
+        fanclub_id INTEGER REFERENCES fanclubs(id),
+        record_date DATE NOT NULL DEFAULT CURRENT_DATE,
+        mood_score DECIMAL(3,2) DEFAULT 0.50,
+        positive_ratio DECIMAL(3,2) DEFAULT 0.50,
+        negative_ratio DECIMAL(3,2) DEFAULT 0.10,
+        neutral_ratio DECIMAL(3,2) DEFAULT 0.40,
+        total_messages INTEGER DEFAULT 0,
+        hot_topics JSONB,
+        peak_hour INTEGER,
+        created_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(fanclub_id, record_date)
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS bug_reports (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        page VARCHAR(30) NOT NULL,
+        issue_type VARCHAR(30) NOT NULL,
+        description TEXT,
+        status VARCHAR(20) DEFAULT 'open' CHECK (status IN ('open','reviewing','resolved','closed')),
+        admin_note TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS user_feedback (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        satisfaction INTEGER CHECK (satisfaction BETWEEN 1 AND 5),
+        best_feature VARCHAR(30),
+        improvement TEXT,
+        new_feature_request TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS open_events (
+        id SERIAL PRIMARY KEY,
+        event_type VARCHAR(30) NOT NULL,
+        title VARCHAR(100) NOT NULL,
+        description TEXT,
+        reward_type VARCHAR(20) NOT NULL,
+        reward_amount INTEGER DEFAULT 0,
+        reward_item VARCHAR(50),
+        start_date TIMESTAMP NOT NULL,
+        end_date TIMESTAMP NOT NULL,
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+      CREATE TABLE IF NOT EXISTS open_event_claims (
+        id SERIAL PRIMARY KEY,
+        event_id INTEGER REFERENCES open_events(id),
+        user_id INTEGER REFERENCES users(id),
+        claimed_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(event_id, user_id)
+      )
+    `);
