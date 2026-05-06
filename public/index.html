@@ -269,7 +269,7 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
   <div class="nav-dropdown" style="position:relative;display:inline-block;">
     <a class="top-nav-item" href="/fandom.html" onclick="event.preventDefault();var m=this.nextElementSibling;m.style.display=m.style.display==='block'?'none':'block';">팬덤</a>
     <div style="display:none;position:absolute;top:100%;left:50%;transform:translateX(-50%);background:rgba(10,10,26,0.95);border:0.5px solid rgba(255,255,255,0.1);border-radius:12px;padding:8px 0;min-width:120px;z-index:1000;backdrop-filter:blur(10px);">
-      <a href="/index.html?league=dust" style="display:block;padding:8px 20px;font-size:13px;text-decoration:none;text-align:center;color:#9ca3af;">더스트</a>
+      <a href="/index.html?league=dust" style="display:block;padding:8px 20px;font-size:13px;text-decoration:none;text-align:center;color:#e8e4f0;">더스트</a>
       <a href="/index.html?league=star" style="display:block;padding:8px 20px;font-size:13px;text-decoration:none;text-align:center;color:#c0c0c0;">스타</a>
       <a href="/index.html?league=planet" style="display:block;padding:8px 20px;font-size:13px;text-decoration:none;text-align:center;color:#34d399;">플래닛</a>
       <a href="/index.html?league=nova" style="display:block;padding:8px 20px;font-size:13px;text-decoration:none;text-align:center;color:#a78bfa;">노바</a>
@@ -281,14 +281,14 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
   <a class="top-nav-item" href="/shop.html">상점</a>
 </nav>
 
-<div id="leagueBorderCard" style="position:fixed; top:70px; right:20px; z-index:100; background:rgba(10,10,26,0.9); border:0.5px solid rgba(255,255,255,0.12); border-radius:12px; padding:14px 16px; width:230px; backdrop-filter:blur(8px); display:none;">
-  <div style="font-size:10px; color:rgba(255,255,255,0.35); letter-spacing:2px; margin-bottom:12px;">LEAGUE BORDER</div>
+<div id="leagueBorderCard" style="position:fixed; top:70px; right:20px; z-index:100; background:rgba(10,10,26,0.9); border:0.5px solid rgba(255,255,255,0.12); border-radius:12px; padding:14px 16px; width:320px; backdrop-filter:blur(8px); display:none;">
+  <div style="font-size:10px; color:rgba(255,255,255,0.7); letter-spacing:2px; margin-bottom:12px;">LEAGUE BORDER</div>
   <div style="display:flex; align-items:stretch;">
     <div style="flex:1;">
       <div style="display:flex; align-items:center; padding-bottom:8px; margin-bottom:8px; border-bottom:0.5px solid rgba(255,255,255,0.07);">
         <div id="lbDot1" style="width:6px; height:6px; border-radius:50%; flex-shrink:0; margin-right:8px; background:#f0c040;"></div>
         <div>
-          <div style="font-size:10px; color:rgba(255,255,255,0.35); margin-bottom:2px;">현 리그 꼴등</div>
+          <div style="font-size:10px; color:rgba(255,255,255,0.7); margin-bottom:2px;">현 리그 꼴등</div>
           <div style="display:flex; align-items:baseline; gap:6px;">
             <span id="lbName1" style="font-size:13px; color:#e8e4f0; font-weight:500;">-</span>
             <span id="lbScore1" style="font-size:12px; color:#f0c040; font-weight:500;">- QP</span>
@@ -298,7 +298,7 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
       <div style="display:flex; align-items:center;">
         <div id="lbDot2" style="width:6px; height:6px; border-radius:50%; flex-shrink:0; margin-right:8px; background:#a78bfa;"></div>
         <div>
-          <div style="font-size:10px; color:rgba(255,255,255,0.35); margin-bottom:2px;">하위 리그 1등</div>
+          <div style="font-size:10px; color:rgba(255,255,255,0.7); margin-bottom:2px;">하위 리그 1등</div>
           <div style="display:flex; align-items:baseline; gap:6px;">
             <span id="lbName2" style="font-size:13px; color:#e8e4f0; font-weight:500;">-</span>
             <span id="lbScore2" style="font-size:12px; color:#a78bfa; font-weight:500;">- QP</span>
@@ -307,7 +307,7 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
       </div>
     </div>
     <div style="display:flex; flex-direction:column; align-items:flex-end; justify-content:center; padding-left:12px; border-left:0.5px solid rgba(255,255,255,0.07); margin-left:12px; gap:4px;">
-      <div style="font-size:10px; color:rgba(255,255,255,0.35);">격차</div>
+      <div style="font-size:10px; color:rgba(255,255,255,0.7);">격차</div>
       <div id="lbDiff" style="font-size:13px; color:#f0c040; font-weight:500; white-space:nowrap;">-</div>
     </div>
   </div>

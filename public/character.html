@@ -13,7 +13,7 @@
   --void:#020a18; --panel:rgba(5,12,30,0.96);
   --border:rgba(200,175,80,0.13); --gold:#f0c040;
   --accent:#4a90d9; --accent2:#2c6fbd; --accent3:#f0c040;
-  --text:#e8ecf4; --muted:rgba(160,180,210,0.5);
+  --text:#e8ecf4; --muted:rgba(255,255,255,0.8);
 }
 html,body {
   width:100%; height:100%; background:var(--void); color:var(--text);
@@ -31,7 +31,7 @@ html,body {
 .top-nav::-webkit-scrollbar{display:none}
 .tni {
   flex-shrink:0; display:flex; flex-direction:column; align-items:center;
-  padding:10px 14px; cursor:pointer; text-decoration:none; color:var(--muted);
+  padding:10px 14px; cursor:pointer; text-decoration:none; color:#e8e4f0;
   border-bottom:2px solid transparent; gap:3px; transition:all .2s;
 }
 .tni.active { color:var(--accent); border-bottom-color:var(--accent); }
@@ -44,7 +44,7 @@ html,body {
 }
 .page-tab {
   flex:1; padding:12px; text-align:center; font-size:12px; font-weight:600;
-  color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; transition:all .2s;
+  color:#e8e4f0; cursor:pointer; border-bottom:2px solid transparent; transition:all .2s;
 }
 .page-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
 
@@ -59,7 +59,7 @@ html,body {
 .char-setting::-webkit-scrollbar-thumb{background:rgba(192,132,252,.3);border-radius:3px}
 
 .sec-title {
-  font-size:10px; color:var(--muted); letter-spacing:2.5px; text-transform:uppercase;
+  font-size:10px; color:#e8e4f0; letter-spacing:2.5px; text-transform:uppercase;
   margin-bottom:14px; display:flex; align-items:center; gap:8px;
 }
 .sec-title::after { content:''; flex:1; height:1px; background:var(--border); }
@@ -100,11 +100,11 @@ html,body {
 .my-badge { background:rgba(56,189,248,.15); border:1px solid rgba(56,189,248,.3); color:var(--accent3); }
 .artist-badge { background:rgba(240,192,64,.15); border:1px solid rgba(240,192,64,.3); color:var(--gold); }
 .char-current-name { font-size:18px; font-weight:900; }
-.char-name-sub { font-size:11px; color:var(--muted); margin-top:3px; }
+.char-name-sub { font-size:11px; color:#e8e4f0; margin-top:3px; }
 
 /* 이름 입력 */
 .name-input-wrap { display:flex; flex-direction:column; gap:10px; }
-.name-label { font-size:11px; color:var(--muted); font-weight:600; }
+.name-label { font-size:11px; color:#e8e4f0; font-weight:600; }
 .name-input-row { display:flex; gap:8px; }
 .name-input {
   flex:1; background:rgba(255,255,255,.07); border:1px solid var(--border);
@@ -112,8 +112,8 @@ html,body {
   font-family:'Noto Sans KR',sans-serif; outline:none; transition:border-color .2s;
 }
 .name-input:focus { border-color:rgba(192,132,252,.5); }
-.name-input::placeholder { color:var(--muted); }
-.name-count { font-size:10px; color:var(--muted); text-align:right; margin-top:3px; }
+.name-input::placeholder { color:#e8e4f0; }
+.name-count { font-size:10px; color:#e8e4f0; text-align:right; margin-top:3px; }
 
 /* 변경 버튼 */
 .change-btn {
@@ -135,7 +135,7 @@ html,body {
   border-radius:10px; padding:10px 14px; margin-top:8px;
 }
 .cost-icon { font-size:16px; }
-.cost-text { flex:1; font-size:11px; color:var(--muted); line-height:1.5; }
+.cost-text { flex:1; font-size:11px; color:#e8e4f0; line-height:1.5; }
 .cost-price { font-family:'Orbitron',monospace; font-size:13px; font-weight:700; color:var(--gold); }
 
 /* 무료 변경권 */
@@ -148,14 +148,14 @@ html,body {
 .ft-icon { font-size:20px; }
 .ft-info { flex:1; }
 .ft-title { font-size:12px; font-weight:700; color:#10b981; }
-.ft-desc { font-size:10px; color:var(--muted); margin-top:2px; }
+.ft-desc { font-size:10px; color:#e8e4f0; margin-top:2px; }
 .ft-count {
   font-family:'Orbitron',monospace; font-size:18px; font-weight:900; color:#10b981;
 }
 
 /* 이름 히스토리 */
 .name-history { margin-top:14px; }
-.nh-title { font-size:10px; color:var(--muted); margin-bottom:8px; }
+.nh-title { font-size:10px; color:#e8e4f0; margin-bottom:8px; }
 .nh-list { display:flex; flex-direction:column; gap:6px; }
 .nh-item {
   display:flex; align-items:center; gap:10px;
@@ -163,10 +163,10 @@ html,body {
   border-radius:10px; padding:8px 12px;
 }
 .nh-name { flex:1; font-size:12px; }
-.nh-date { font-size:10px; color:var(--muted); }
+.nh-date { font-size:10px; color:#e8e4f0; }
 .nh-badge { font-size:9px; padding:2px 7px; border-radius:10px; }
 .nh-current { background:rgba(192,132,252,.15); color:var(--accent); }
-.nh-past { background:rgba(255,255,255,.05); color:var(--muted); }
+.nh-past { background:rgba(255,255,255,.05); color:#e8e4f0; }
 
 /* 아티스트 캐릭터 성궤 연동 안내 */
 .nebula-guide {
@@ -178,7 +178,7 @@ html,body {
 .ng-icon { font-size:32px; }
 .ng-info { flex:1; }
 .ng-title { font-size:13px; font-weight:700; color:var(--gold); margin-bottom:4px; }
-.ng-desc { font-size:11px; color:var(--muted); line-height:1.6; }
+.ng-desc { font-size:11px; color:#e8e4f0; line-height:1.6; }
 .ng-btn {
   padding:8px 16px; border-radius:20px; border:none;
   background:linear-gradient(90deg,var(--gold),#e6a800);
@@ -207,7 +207,7 @@ html,body {
   padding:8px 16px; flex:1;
 }
 .map-title { font-family:'Orbitron',monospace; font-size:12px; font-weight:700; color:var(--gold); }
-.map-sub { font-size:10px; color:var(--muted); margin-top:2px; }
+.map-sub { font-size:10px; color:#e8e4f0; margin-top:2px; }
 .map-my-card {
   background:rgba(12,12,26,.85); backdrop-filter:blur(12px);
   border:1px solid rgba(192,132,252,.3); border-radius:14px;
@@ -215,7 +215,7 @@ html,body {
 }
 .map-my-av { font-size:20px; }
 .map-my-name { font-size:11px; font-weight:700; color:var(--accent); }
-.map-my-pos { font-size:9px; color:var(--muted); }
+.map-my-pos { font-size:9px; color:#e8e4f0; }
 
 /* 방향키 컨트롤 */
 .dpad {
@@ -247,7 +247,7 @@ html,body {
 .mbi-users { display:flex; flex-direction:column; gap:4px; }
 .mbi-user { display:flex; align-items:center; gap:6px; font-size:11px; }
 .mbi-av { font-size:14px; }
-.mbi-name { color:var(--muted); }
+.mbi-name { color:#e8e4f0; }
 .mbi-name.nearby { color:var(--text); font-weight:600; }
 
 /* 캐릭터 말풍선 */
@@ -277,8 +277,8 @@ html,body {
 .cp-header { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
 .cp-av { font-size:22px; }
 .cp-name { font-size:13px; font-weight:700; flex:1; }
-.cp-close { font-size:16px; cursor:pointer; color:var(--muted); }
-.cp-msg { font-size:12px; color:var(--muted); background:rgba(255,255,255,.04); border-radius:8px; padding:8px 10px; margin-bottom:10px; line-height:1.5; }
+.cp-close { font-size:16px; cursor:pointer; color:#e8e4f0; }
+.cp-msg { font-size:12px; color:#e8e4f0; background:rgba(255,255,255,.04); border-radius:8px; padding:8px 10px; margin-bottom:10px; line-height:1.5; }
 .cp-input-row { display:flex; gap:6px; }
 .cp-input { flex:1; background:rgba(255,255,255,.08); border:1px solid var(--border); border-radius:8px; padding:7px 10px; color:var(--text); font-size:12px; font-family:'Noto Sans KR',sans-serif; outline:none; }
 .cp-send { padding:0 12px; border-radius:8px; background:var(--accent); border:none; color:#fff; font-size:12px; cursor:pointer; font-family:'Noto Sans KR',sans-serif; }
@@ -308,7 +308,7 @@ html,body {
 .emoji-grid { display:grid; grid-template-columns:repeat(8,1fr); gap:8px; }
 .emoji-btn { width:100%; aspect-ratio:1; border-radius:10px; border:1px solid var(--border); background:rgba(255,255,255,.04); font-size:22px; cursor:pointer; transition:all .2s; display:flex; align-items:center; justify-content:center; }
 .emoji-btn:hover { border-color:var(--accent); background:rgba(192,132,252,.1); transform:scale(1.1); }
-.emoji-cancel { width:100%; margin-top:12px; padding:11px; border-radius:12px; background:transparent; border:1px solid var(--border); color:var(--muted); font-size:13px; cursor:pointer; font-family:'Noto Sans KR',sans-serif; }
+.emoji-cancel { width:100%; margin-top:12px; padding:11px; border-radius:12px; background:transparent; border:1px solid var(--border); color:#e8e4f0; font-size:13px; cursor:pointer; font-family:'Noto Sans KR',sans-serif; }
 </style>
 </head>
 <body>
@@ -1021,13 +1021,13 @@ function updateNearbyUsers() {
 
   const el = document.getElementById('nearbyUsers');
   if(nearbyList.length === 0) {
-    el.innerHTML = '<div style="font-size:10px;color:var(--muted)">주변에 아무도 없어요</div>';
+    el.innerHTML = '<div style="font-size:10px;color:#e8e4f0">주변에 아무도 없어요</div>';
   } else {
     el.innerHTML = nearbyList.map(u=>`
       <div class="mbi-user">
         <div class="mbi-av">${u.emoji}</div>
         <div class="mbi-name nearby">${u.name}</div>
-        <div style="font-size:9px;color:var(--muted)">${Math.round(u.dist*10)/10}m</div>
+        <div style="font-size:9px;color:#e8e4f0">${Math.round(u.dist*10)/10}m</div>
       </div>
     `).join('');
   }
