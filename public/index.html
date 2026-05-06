@@ -959,11 +959,15 @@ function layoutSpiral(fanclubs, league) {
   const cx = CX * scale, cy = CY * scale;
   positions.push({ x: cx, y: cy, r: r1 });
 
-  // 나선 시작 반지름: 1위 반지름 기준 (r1 + GAP)
-  const GAP = r1 * 0.6;
-  const startR = (r1 + GAP) * scale;
-  // 나선 간격: 1위 반지름에 비례
-  const spacing = (r1 * 0.7) * scale;
+  // 2위 반지름 추정 (루프 전 미리 계산)
+  const ratio2 = count > 1 ? Math.max(0.3, fanclubs[1].score / maxScore) : 0.5;
+  const minR2 = count <= 10 ? 50 : count <= 20 ? 35 : count <= 40 ? 22 : 18;
+  const maxR2 = count <= 10 ? 70 : count <= 20 ? 50 : count <= 40 ? 35 : 28;
+  const r2 = Math.round(minR2 + (maxR2 - minR2) * ratio2);
+  // 나선 시작 반지름: 2위가 1위에 붙도록 (r1 + r2 + 여백10)
+  const startR = (r1 + r2 + 10) * scale;
+  // 나선 간격: 기존의 절반
+  const spacing = (r1 * 0.35) * scale;
   const angleStep = count <= 10 ? 0.85 : count <= 20 ? 0.65 : count <= 40 ? 0.48 : 0.42;
 
   for (let i = 1; i < count; i++) {
