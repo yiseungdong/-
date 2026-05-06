@@ -84,13 +84,6 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 /* ── 홈: 리그맵 ── */
 #page-home{padding-top:60px;padding-bottom:64px}
 
-/* 승격/강등 비교 바 */
-.promotion-bar{position:absolute;left:0;width:100%;padding:6px 16px;background:rgba(3,3,8,0.85);backdrop-filter:blur(5px);z-index:60;display:flex;justify-content:center}
-.top-bar{top:0;border-bottom:1px solid rgba(240,192,64,0.2)}
-.bottom-bar{bottom:0;border-top:1px solid rgba(240,192,64,0.2)}
-.bar-compare{display:flex;align-items:center;gap:12px;font-size:12px;color:#e8e4f0}
-.bar-vs{font-family:'Orbitron',monospace;color:#f87171;font-weight:700;font-size:11px}
-.bar-gap{font-size:11px;margin-left:12px;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,0.05)}
 
 /* 별자리 뷰포트 (홈 리그맵) */
 .cv{flex:1;overflow:hidden;position:relative;cursor:grab;min-height:0}
@@ -122,8 +115,6 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 }
 .q-orb.r3{animation-delay:-1.3s}.q-orb.r4{animation-delay:-2.6s}.q-orb.r5{animation-delay:-.7s}
 @keyframes op2{0%,100%{box-shadow:0 0 0 2px rgba(192,132,252,.55),0 0 40px rgba(192,132,252,.45),0 0 100px rgba(192,132,252,.2)}50%{box-shadow:0 0 0 3px rgba(192,132,252,.9),0 0 70px rgba(192,132,252,.7),0 0 160px rgba(192,132,252,.4)}}
-.q-hint{text-align:center;font-size:11px;color:var(--muted);letter-spacing:2px;padding:8px 0;animation:blink 2.5s ease-in-out infinite;flex-shrink:0}
-@keyframes blink{0%,100%{opacity:.3}50%{opacity:1}}
 
 /* ── 리그 선택 페이지 ── */
 #page-league-select{align-items:center;justify-content:center;padding:40px;overflow-y:auto;padding-top:80px;padding-bottom:80px}
@@ -268,21 +259,6 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
   .lc{width:130px;padding:20px 10px 16px}
 }
 
-/* ── 버그 리포트 ── */
-.bug-report-btn{position:fixed;bottom:80px;right:20px;width:48px;height:48px;border-radius:50%;background:rgba(5,12,30,0.93);border:1px solid rgba(200,175,80,0.13);color:#4a90d9;font-size:20px;cursor:pointer;z-index:9999;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,0.3);transition:all .3s}
-.bug-report-btn:hover{background:#4a90d9;color:#fff;transform:scale(1.1)}
-.bug-modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:10000;align-items:center;justify-content:center}
-.bug-modal-overlay.open{display:flex}
-.bug-modal{background:rgba(5,12,30,0.97);border:1px solid rgba(200,175,80,0.2);border-radius:16px;padding:28px;max-width:420px;width:90%;max-height:80vh;overflow-y:auto;color:#e8ecf4}
-.bug-modal h3{font-family:Orbitron,monospace;font-size:18px;color:#f0c040;margin-bottom:16px}
-.bug-modal label{display:block;font-size:13px;color:rgba(160,180,210,0.7);margin:12px 0 6px}
-.bug-modal select,.bug-modal textarea{width:100%;padding:10px;border:1px solid rgba(200,175,80,0.15);border-radius:8px;background:rgba(255,255,255,0.05);color:#e8ecf4;font-family:'Noto Sans KR',sans-serif;font-size:14px;outline:none}
-.bug-modal select:focus,.bug-modal textarea:focus{border-color:#4a90d9}
-.bug-modal textarea{resize:vertical;min-height:80px}
-.bug-modal-btns{display:flex;gap:10px;margin-top:18px}
-.bug-modal-btns button{flex:1;padding:10px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;border:none;font-family:'Noto Sans KR',sans-serif}
-.bug-submit{background:linear-gradient(90deg,#4a90d9,#7c5ce0);color:#fff}
-.bug-cancel{background:transparent;border:1px solid rgba(200,175,80,0.2)!important;color:#e8ecf4}
 </style>
 <script src="/js/avatar-svgs.js"></script>
 </head>
@@ -304,6 +280,38 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
   <a class="top-nav-item" href="/room3d.html">내방</a>
   <a class="top-nav-item" href="/shop.html">상점</a>
 </nav>
+
+<div id="leagueBorderCard" style="position:fixed; top:70px; right:20px; z-index:100; background:rgba(10,10,26,0.9); border:0.5px solid rgba(255,255,255,0.12); border-radius:12px; padding:14px 16px; width:230px; backdrop-filter:blur(8px); display:none;">
+  <div style="font-size:10px; color:rgba(255,255,255,0.35); letter-spacing:2px; margin-bottom:12px;">LEAGUE BORDER</div>
+  <div style="display:flex; align-items:stretch;">
+    <div style="flex:1;">
+      <div style="display:flex; align-items:center; padding-bottom:8px; margin-bottom:8px; border-bottom:0.5px solid rgba(255,255,255,0.07);">
+        <div id="lbDot1" style="width:6px; height:6px; border-radius:50%; flex-shrink:0; margin-right:8px; background:#f0c040;"></div>
+        <div>
+          <div style="font-size:10px; color:rgba(255,255,255,0.35); margin-bottom:2px;">현 리그 꼴등</div>
+          <div style="display:flex; align-items:baseline; gap:6px;">
+            <span id="lbName1" style="font-size:13px; color:#e8e4f0; font-weight:500;">-</span>
+            <span id="lbScore1" style="font-size:12px; color:#f0c040; font-weight:500;">- QP</span>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center;">
+        <div id="lbDot2" style="width:6px; height:6px; border-radius:50%; flex-shrink:0; margin-right:8px; background:#a78bfa;"></div>
+        <div>
+          <div style="font-size:10px; color:rgba(255,255,255,0.35); margin-bottom:2px;">하위 리그 1등</div>
+          <div style="display:flex; align-items:baseline; gap:6px;">
+            <span id="lbName2" style="font-size:13px; color:#e8e4f0; font-weight:500;">-</span>
+            <span id="lbScore2" style="font-size:12px; color:#a78bfa; font-weight:500;">- QP</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex; flex-direction:column; align-items:flex-end; justify-content:center; padding-left:12px; border-left:0.5px solid rgba(255,255,255,0.07); margin-left:12px; gap:4px;">
+      <div style="font-size:10px; color:rgba(255,255,255,0.35);">격차</div>
+      <div id="lbDiff" style="font-size:13px; color:#f0c040; font-weight:500; white-space:nowrap;">-</div>
+    </div>
+  </div>
+</div>
 
 <!-- 별빛 배경 -->
 <canvas id="starCanvas"></canvas>
@@ -341,22 +349,6 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 <div id="page-home" class="page active">
   <!-- 별자리 드래그 뷰 -->
   <div class="cv" id="cv">
-    <div class="promotion-bar top-bar" id="topBar">
-      <div class="bar-compare">
-        <span class="bar-team" id="topUpper">🔽 상위리그 꼴등: --</span>
-        <span class="bar-vs">VS</span>
-        <span class="bar-team" id="topCurrent">🔼 현리그 1등: --</span>
-        <span class="bar-gap" id="topGap">격차: --</span>
-      </div>
-    </div>
-    <div class="promotion-bar bottom-bar" id="bottomBar">
-      <div class="bar-compare">
-        <span class="bar-team" id="bottomCurrent">🔽 현리그 꼴등: --</span>
-        <span class="bar-vs">VS</span>
-        <span class="bar-team" id="bottomLower">🔼 하위리그 1등: --</span>
-        <span class="bar-gap" id="bottomGap">격차: --</span>
-      </div>
-    </div>
     <div class="cw" id="cw">
       <div class="q-ring" style="width:520px;height:520px"></div>
       <div class="q-ring" style="width:800px;height:800px"></div>
@@ -385,7 +377,6 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
       </div>
     </div>
   </div>
-  <div class="q-hint">✦ 팬덤을 클릭하면 리그 맵으로 이동합니다 · 드래그로 탐험하세요 ✦</div>
 </div>
 
 <!-- 리그 선택 -->
@@ -531,22 +522,6 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 
 <!-- 토스트 -->
 <div class="toast" id="toast"></div>
-
-<!-- 버그 리포트 -->
-<button class="bug-report-btn" onclick="document.getElementById('bugModal').classList.add('open')" title="버그 신고">🐛</button>
-<div class="bug-modal-overlay" id="bugModal" onclick="if(event.target===this)this.classList.remove('open')">
-<div class="bug-modal">
-<h3>🐛 버그 신고</h3>
-<label>어떤 페이지에서 문제가 발생했나요?</label>
-<select id="bugPage"><option value="home">홈</option><option value="astra">아스트라</option><option value="room">내 방</option><option value="nebula">성궤</option><option value="avatar">아바타</option><option value="shop">상점</option><option value="chat">채팅</option><option value="league">리그</option><option value="stats">스탯</option><option value="archetype">아키타입</option><option value="other">기타</option></select>
-<label>어떤 문제인가요?</label>
-<select id="bugType"><option value="not_visible">화면이 안 보여요</option><option value="not_clickable">버튼이 안 눌려요</option><option value="error">에러가 떠요</option><option value="slow">느려요</option><option value="other">기타</option></select>
-<label>자세한 설명 (선택, 최대 500자)</label>
-<textarea id="bugDesc" maxlength="500" placeholder="어떤 상황에서 문제가 발생했는지 알려주세요..."></textarea>
-<div class="bug-modal-btns">
-<button class="bug-cancel" onclick="document.getElementById('bugModal').classList.remove('open')">취소</button>
-<button class="bug-submit" onclick="submitBugReport()">제출하기</button>
-</div></div></div>
 
 <script>
 // ══════════════════════════════════════════════
@@ -747,10 +722,6 @@ function showAvChat(msg){
   clearTimeout(b._t);b._t=setTimeout(()=>b.classList.remove('show'),3500);
 }
 
-// ── 버그 리포트 ──
-async function submitBugReport(){var t=localStorage.getItem('accessToken');if(!t){alert('로그인이 필요합니다.');return}try{var r=await fetch('/api/bugs',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},body:JSON.stringify({page:document.getElementById('bugPage').value,issue_type:document.getElementById('bugType').value,description:document.getElementById('bugDesc').value})});var d=await r.json();if(r.ok){showToast(d.message);document.getElementById('bugModal').classList.remove('open');document.getElementById('bugDesc').value=''}else{alert(d.message||'제출 실패')}}catch(e){alert('네트워크 오류')}}
-
-// ── 리그 전환 ──
 // ── 리그 전환 ──
 
 // 리그별 팬클럽 개별 색상 (순위순 그라데이션)
@@ -1054,73 +1025,41 @@ function switchLeague(league) {
   const clampedTy = Math.min(0, Math.max(vh - cwH, ty));
   cw.style.transform = `translate(${clampedTx}px,${clampedTy}px)`;
 
-  // 승격/강등 비교 바 업데이트
-  updatePromotionBars(league);
+  // 리그 보더 카드 업데이트
+  updateLeagueBorderCard(league);
 }
 
-// 승격/강등 비교 바 업데이트
-function updatePromotionBars(league) {
-  const topBar = document.getElementById('topBar');
-  const bottomBar = document.getElementById('bottomBar');
-  const topUpper = document.getElementById('topUpper');
-  const topCurrent = document.getElementById('topCurrent');
-  const topGap = document.getElementById('topGap');
-  const bottomCurrent = document.getElementById('bottomCurrent');
-  const bottomLower = document.getElementById('bottomLower');
-  const bottomGap = document.getElementById('bottomGap');
-
-  function gapColor(gap) {
-    if (gap >= 100) return '#4ade80';
-    if (gap >= 50) return '#fbbf24';
-    if (gap >= 20) return '#fb923c';
-    return '#f87171';
-  }
+// 리그 보더 카드 업데이트
+function updateLeagueBorderCard(league) {
+  const card = document.getElementById('leagueBorderCard');
+  if (!card) return;
 
   const promoData = {
-    quasar: {
-      top: null,
-      bottom: { current: 'EXO-L 63,240', lower: 'ONCE 112,000', gap: 112000 - 63240 }
-    },
-    nova: {
-      top: { upper: 'EXO-L 63,240', current: 'ONCE 112,000', gap: 112000 - 63240 },
-      bottom: { current: 'VORTEX 65,200', lower: 'EVERGREEN 78,500', gap: 78500 - 65200 }
-    },
-    planet: {
-      top: { upper: 'VIOLET 65,200', current: 'EVERGREEN 78,500', gap: 78500 - 65200 },
-      bottom: { current: 'SUMMIT 35,600', lower: 'GOLDEN WAVE 45,200', gap: 45200 - 35600 }
-    },
-    star: {
-      top: { upper: 'SUMMIT 35,600', current: 'GOLDEN WAVE 45,200', gap: 45200 - 35600 },
-      bottom: { current: 'DAYBREAK 19,400', lower: 'STARDUST 12,450', gap: 19400 - 12450 }
-    },
-    dust: {
-      top: { upper: 'DAYBREAK 19,400', current: 'STARDUST 12,450', gap: 19400 - 12450 },
-      bottom: null
-    }
+    quasar: { bottom: { current: 'EXO-L', currentQP: 63240, lower: 'ONCE', lowerQP: 112000, lowerColor: '#a78bfa' }, color: '#f0c040' },
+    nova: { bottom: { current: 'Neverland', currentQP: 65200, lower: 'EVERGREEN', lowerQP: 78500, lowerColor: '#34d399' }, color: '#a78bfa' },
+    planet: { bottom: { current: 'SUMMIT', currentQP: 35600, lower: 'GOLDEN WAVE', lowerQP: 45200, lowerColor: '#fbbf24' }, color: '#34d399' },
+    star: { bottom: { current: 'DAYBREAK', currentQP: 19400, lower: 'STARDUST', lowerQP: 12450, lowerColor: '#9ca3af' }, color: '#fbbf24' },
+    dust: { bottom: null, color: '#9ca3af' }
   };
 
   const info = promoData[league];
-  if (!info) return;
+  if (!info || !info.bottom) { card.style.display = 'none'; return; }
 
-  if (info.top) {
-    topBar.style.display = 'flex';
-    topUpper.textContent = '🔽 상위리그 꼴등: ' + info.top.upper;
-    topCurrent.textContent = '🔼 현리그 1등: ' + info.top.current;
-    topGap.textContent = '격차: ' + info.top.gap.toLocaleString();
-    topGap.style.color = gapColor(info.top.gap);
-  } else {
-    topBar.style.display = 'none';
-  }
+  document.getElementById('lbDot1').style.background = info.color;
+  document.getElementById('lbName1').textContent = info.bottom.current;
+  document.getElementById('lbScore1').textContent = info.bottom.currentQP.toLocaleString() + ' QP';
+  document.getElementById('lbScore1').style.color = info.color;
 
-  if (info.bottom) {
-    bottomBar.style.display = 'flex';
-    bottomCurrent.textContent = '🔽 현리그 꼴등: ' + info.bottom.current;
-    bottomLower.textContent = '🔼 하위리그 1등: ' + info.bottom.lower;
-    bottomGap.textContent = '격차: ' + info.bottom.gap.toLocaleString();
-    bottomGap.style.color = gapColor(info.bottom.gap);
-  } else {
-    bottomBar.style.display = 'none';
-  }
+  document.getElementById('lbDot2').style.background = info.bottom.lowerColor;
+  document.getElementById('lbName2').textContent = info.bottom.lower;
+  document.getElementById('lbScore2').textContent = info.bottom.lowerQP.toLocaleString() + ' QP';
+  document.getElementById('lbScore2').style.color = info.bottom.lowerColor;
+
+  const diff = Math.abs(info.bottom.lowerQP - info.bottom.currentQP);
+  document.getElementById('lbDiff').textContent = diff.toLocaleString() + ' QP';
+  document.getElementById('lbDiff').style.color = info.color;
+
+  card.style.display = 'block';
 }
 
 // 입장 첫화면: localStorage의 리그 정보 우선, 없으면 퀘이사
