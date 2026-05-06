@@ -522,11 +522,31 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 
 <!-- 토스트 -->
 <div class="toast" id="toast"></div>
+<button id="zoomResetBtn" onclick="resetZoom()" style="position:fixed;bottom:20px;right:20px;background:rgba(10,10,26,0.8);border:0.5px solid rgba(255,255,255,0.15);color:#e8e4f0;padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;z-index:100;display:none;">초기화</button>
 
 <script>
 // ══════════════════════════════════════════════
 //  아스테리아 메인 — JS 로직
 // ══════════════════════════════════════════════
+
+function resetZoom(){
+  cvScale=1;
+  // switchLeague 내부의 1위 중앙 로직 재실행
+  const vp=document.getElementById('cv'),cw=document.getElementById('cw');
+  if(!vp||!cw)return;
+  const nodes=cw.querySelectorAll('.q-node');
+  if(nodes.length>0){
+    const first=nodes[0];
+    const fx=parseFloat(first.style.left),fy=parseFloat(first.style.top);
+    const ntx=vp.clientWidth/2-fx,nty=vp.clientHeight/2-fy;
+    if(window._cvSetTxTy)window._cvSetTxTy(ntx,nty);
+    cw.style.transformOrigin='0 0';
+    cw.style.transform=`translate(${ntx}px,${nty}px) scale(1)`;
+  }
+  const btn=document.getElementById('zoomResetBtn');
+  if(btn)btn.style.display='none';
+}
+
 const FANCLUB_DATA = {
   quasar: [
     { rank: 1, artist: '방탄소년단', fanclub: 'ARMY', emoji: '🪖', color: '#9333ea' },
@@ -638,20 +658,48 @@ function flash(cb){
   });
 }
 
-// ── 별자리 뷰 드래그 ──
+// ── 별자리 뷰 드래그 + 줌 ──
+let cvScale=1;
+const CV_MIN_SCALE=0.3,CV_MAX_SCALE=2.5;
 (function(){
   const vp=document.getElementById('cv'),wd=document.getElementById('cw');
   let drag=false,sx,sy,tx=0,ty=0;
-  function init(){const vw=vp.clientWidth,vh=vp.clientHeight;const ww=parseInt(wd.style.width)||1800;const wh=parseInt(wd.style.height)||1200;tx=vw/2-ww/2;ty=vh/2-wh/2;clamp();apply()}
-  function clamp(){const vw=vp.clientWidth,vh=vp.clientHeight;const ww=parseInt(wd.style.width)||1800;const wh=parseInt(wd.style.height)||1200;tx=Math.min(0,Math.max(vw-ww,tx));ty=Math.min(0,Math.max(vh-wh,ty))}
-  function apply(){wd.style.transform=`translate(${tx}px,${ty}px)`}
+  function init(){const vw=vp.clientWidth,vh=vp.clientHeight;const ww=parseInt(wd.style.width)||1800;const wh=parseInt(wd.style.height)||1200;tx=vw/2-ww*cvScale/2;ty=vh/2-wh*cvScale/2;apply()}
+  function apply(){wd.style.transform=`translate(${tx}px,${ty}px) scale(${cvScale})`;wd.style.transformOrigin='0 0'}
+  window._cvApply=apply;window._cvSetTxTy=function(x,y){tx=x;ty=y};window._cvGetTxTy=function(){return{tx,ty}};
   setTimeout(init,60);window.addEventListener('resize',init);
   vp.addEventListener('mousedown',e=>{if(e.target.closest('.q-node'))return;drag=true;sx=e.clientX-tx;sy=e.clientY-ty;vp.style.cursor='grabbing'});
-  window.addEventListener('mousemove',e=>{if(!drag)return;tx=e.clientX-sx;ty=e.clientY-sy;clamp();apply()});
+  window.addEventListener('mousemove',e=>{if(!drag)return;tx=e.clientX-sx;ty=e.clientY-sy;apply()});
   window.addEventListener('mouseup',()=>{drag=false;vp.style.cursor='grab'});
-  vp.addEventListener('touchstart',e=>{if(e.target.closest('.q-node'))return;drag=true;sx=e.touches[0].clientX-tx;sy=e.touches[0].clientY-ty},{passive:true});
-  window.addEventListener('touchmove',e=>{if(!drag)return;tx=e.touches[0].clientX-sx;ty=e.touches[0].clientY-sy;clamp();apply()},{passive:true});
+  vp.addEventListener('touchstart',e=>{if(e.target.closest('.q-node'))return;if(e.touches.length===1){drag=true;sx=e.touches[0].clientX-tx;sy=e.touches[0].clientY-ty}},{passive:true});
+  window.addEventListener('touchmove',e=>{if(e.touches.length===1&&drag){tx=e.touches[0].clientX-sx;ty=e.touches[0].clientY-sy;apply()}},{passive:true});
   window.addEventListener('touchend',()=>drag=false);
+
+  // 마우스 휠 확대/축소
+  vp.addEventListener('wheel',function(e){
+    e.preventDefault();
+    const delta=e.deltaY>0?0.9:1.1;
+    const ns=Math.min(CV_MAX_SCALE,Math.max(CV_MIN_SCALE,cvScale*delta));
+    const rect=vp.getBoundingClientRect();
+    const mx=e.clientX-rect.left,my=e.clientY-rect.top;
+    tx=mx-(mx-tx)*(ns/cvScale);ty=my-(my-ty)*(ns/cvScale);
+    cvScale=ns;apply();
+    var zb=document.getElementById('zoomResetBtn');if(zb)zb.style.display=Math.abs(cvScale-1)<0.05?'none':'block';
+  },{passive:false});
+
+  // 모바일 핀치줌
+  let lastDist=0;
+  vp.addEventListener('touchstart',function(e){
+    if(e.touches.length===2){lastDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY)}
+  },{passive:true});
+  vp.addEventListener('touchmove',function(e){
+    if(e.touches.length===2){
+      e.preventDefault();
+      const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+      if(lastDist>0){cvScale=Math.min(CV_MAX_SCALE,Math.max(CV_MIN_SCALE,cvScale*(d/lastDist)));apply()}
+      lastDist=d;
+    }
+  },{passive:false});
 })();
 
 // ── 리그맵 드래그 ──
@@ -1014,16 +1062,17 @@ function switchLeague(league) {
     ring.style.borderColor = `${data.color}20`;
   });
 
-  // 뷰포트를 1등 중심으로 이동
+  // 뷰포트를 1등 중심으로 이동 (줌 스케일 반영)
+  cvScale = 1;
   const vp = document.getElementById('cv');
   const vw = vp.clientWidth, vh = vp.clientHeight;
   const firstX = positions[0] ? positions[0].x : CX;
   const firstY = positions[0] ? positions[0].y : CY;
-  const tx = vw / 2 - firstX, ty = vh / 2 - firstY;
-  const cwW = parseInt(cw.style.width), cwH = parseInt(cw.style.height);
-  const clampedTx = Math.min(0, Math.max(vw - cwW, tx));
-  const clampedTy = Math.min(0, Math.max(vh - cwH, ty));
-  cw.style.transform = `translate(${clampedTx}px,${clampedTy}px)`;
+  const ntx = vw / 2 - firstX * cvScale;
+  const nty = vh / 2 - firstY * cvScale;
+  if (window._cvSetTxTy) window._cvSetTxTy(ntx, nty);
+  cw.style.transformOrigin = '0 0';
+  cw.style.transform = `translate(${ntx}px,${nty}px) scale(${cvScale})`;
 
   // 리그 보더 카드 업데이트
   updateLeagueBorderCard(league);
