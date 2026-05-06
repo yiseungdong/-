@@ -1031,14 +1031,14 @@ function createNode(fc, pos, rank, fcColor, isFirst) {
   const rankFs = isFirst ? Math.max(14, Math.round(pos.r * 0.14)) : Math.max(8, Math.round(pos.r * 0.26));
   const iconFs = isFirst ? Math.max(24, Math.round(pos.r * 0.3)) : Math.max(12, Math.round(pos.r * 0.55));
   const nameFsBase = isFirst ? Math.max(12, Math.round(pos.r * 0.14)) : Math.max(8, Math.round(pos.r * 0.24));
-  const nameFs = isFirst && fc.name.length > 8 ? Math.round(nameFsBase * 0.75) : isFirst && fc.name.length > 6 ? Math.round(nameFsBase * 0.85) : nameFsBase;
+  const nameFs = isFirst && fc.name.length > 8 ? Math.round(nameFsBase * 0.85) : isFirst && fc.name.length > 6 ? Math.round(nameFsBase * 0.92) : nameFsBase;
   const scoreFs = isFirst ? Math.max(10, Math.round(pos.r * 0.09)) : Math.max(7, Math.round(pos.r * 0.18));
 
   node.innerHTML = `
-    <div class="q-orb" style="${orbStyle};border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:${isFirst?'12':'4'}px;overflow:hidden">
-      <div style="font-family:'Orbitron',monospace;color:var(--gold);font-size:${rankFs}px;font-weight:700;margin-bottom:${isFirst?6:2}px">${rank}위</div>
-      <span style="font-size:${iconFs}px;line-height:1;margin-bottom:${isFirst?8:3}px">${fc.icon}</span>
-      <div style="color:${fcColor};font-size:${nameFs}px;font-weight:700;margin-bottom:${isFirst?4:1}px;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:${diam-8}px;text-align:center">${fc.name}</div>
+    <div class="q-orb" style="${orbStyle};border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:${isFirst?'6':'4'}px;overflow:hidden">
+      <div style="font-family:'Orbitron',monospace;color:var(--gold);font-size:${rankFs}px;font-weight:700;margin-bottom:${isFirst?3:2}px">${rank}위</div>
+      <span style="font-size:${iconFs}px;line-height:1;margin-bottom:${isFirst?4:3}px">${fc.icon}</span>
+      <div style="color:${fcColor};font-size:${nameFs}px;font-weight:700;margin-bottom:${isFirst?2:1}px;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:${diam-8}px;text-align:center">${fc.name}</div>
       <div style="color:var(--gold);font-size:${scoreFs}px;opacity:0.8">${scoreStr} QP</div>
     </div>
   `;
