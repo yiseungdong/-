@@ -531,14 +531,19 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 
 function resetZoom(){
   cvScale=1;
-  // switchLeague 내부의 1위 중앙 로직 재실행
   const vp=document.getElementById('cv'),cw=document.getElementById('cw');
   if(!vp||!cw)return;
   const nodes=cw.querySelectorAll('.q-node');
   if(nodes.length>0){
     const first=nodes[0];
+    const orb=first.querySelector('.q-orb');
     const fx=parseFloat(first.style.left),fy=parseFloat(first.style.top);
-    const ntx=vp.clientWidth/2-fx,nty=vp.clientHeight/2-fy;
+    // 원 중심 = 좌상단 좌표 + 반지름(원 크기의 절반)
+    const r=orb?(orb.offsetWidth/2):0;
+    const cx=fx+r,cy=fy+r;
+    const vw=vp.clientWidth||window.innerWidth;
+    const vh=vp.clientHeight||window.innerHeight;
+    const ntx=vw/2-cx,nty=vh/2-cy;
     if(window._cvSetTxTy)window._cvSetTxTy(ntx,nty);
     cw.style.transformOrigin='0 0';
     cw.style.transform=`translate(${ntx}px,${nty}px) scale(1)`;
@@ -1065,11 +1070,12 @@ function switchLeague(league) {
   // 뷰포트를 1등 중심으로 이동 (줌 스케일 반영)
   cvScale = 1;
   const vp = document.getElementById('cv');
-  const vw = vp.clientWidth, vh = vp.clientHeight;
+  const vw = vp ? vp.clientWidth : window.innerWidth;
+  const vh = vp ? vp.clientHeight : window.innerHeight;
   const firstX = positions[0] ? positions[0].x : CX;
   const firstY = positions[0] ? positions[0].y : CY;
-  const ntx = vw / 2 - firstX * cvScale;
-  const nty = vh / 2 - firstY * cvScale;
+  const ntx = (vw > 0 ? vw : window.innerWidth) / 2 - firstX * cvScale;
+  const nty = (vh > 0 ? vh : window.innerHeight) / 2 - firstY * cvScale;
   if (window._cvSetTxTy) window._cvSetTxTy(ntx, nty);
   cw.style.transformOrigin = '0 0';
   cw.style.transform = `translate(${ntx}px,${nty}px) scale(${cvScale})`;
