@@ -80,22 +80,6 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 .page{display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;flex-direction:column;overflow:hidden}
 .page.active{display:flex}
 
-/* ── 리그 전환 탭 ── */
-.league-tabs{
-  position:fixed;top:100px;left:0;width:100%;
-  display:flex;justify-content:center;gap:8px;padding:8px 16px;
-  background:rgba(3,3,8,0.85);backdrop-filter:blur(6px);z-index:95;
-}
-.league-tab{
-  display:flex;align-items:center;gap:6px;padding:8px 16px;
-  border:1px solid rgba(180,150,255,0.13);border-radius:20px;
-  background:rgba(10,10,22,0.8);color:rgba(200,190,220,0.5);
-  font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:500;
-  cursor:pointer;transition:all .3s;
-}
-.league-tab:hover{border-color:rgba(180,150,255,0.3);color:#e8e4f0}
-.league-tab.active{border-color:#f0c040;color:#f0c040;background:rgba(240,192,64,0.1)}
-.tab-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
 
 /* ── 홈: 리그맵 ── */
 #page-home{padding-top:140px;padding-bottom:64px}
@@ -286,8 +270,6 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
   .slogan-banner{padding:10px 16px}
   .slogan-kr{font-size:12px}
   .slogan-en{font-size:10px}
-  .league-tabs{gap:4px;padding:6px 8px}
-  .league-tab{padding:6px 10px;font-size:11px}
   .rp{display:none}
   .ltop{margin-top:56px;padding:10px 16px}
   .btn-back{padding:6px 12px;font-size:12px}
@@ -317,7 +299,16 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 
 <nav class="top-nav">
   <a class="top-nav-item active" href="/index.html">홈</a>
-  <a class="top-nav-item" href="/fandom.html">팬덤</a>
+  <div class="nav-dropdown" style="position:relative;display:inline-block;">
+    <a class="top-nav-item" href="/fandom.html" onclick="event.preventDefault();var m=this.nextElementSibling;m.style.display=m.style.display==='block'?'none':'block';">팬덤</a>
+    <div style="display:none;position:absolute;top:100%;left:50%;transform:translateX(-50%);background:rgba(10,10,26,0.95);border:0.5px solid rgba(255,255,255,0.1);border-radius:12px;padding:8px 0;min-width:120px;z-index:1000;backdrop-filter:blur(10px);">
+      <a href="/index.html?league=dust" style="display:block;padding:8px 20px;font-size:13px;text-decoration:none;text-align:center;color:#9ca3af;">더스트</a>
+      <a href="/index.html?league=star" style="display:block;padding:8px 20px;font-size:13px;text-decoration:none;text-align:center;color:#c0c0c0;">스타</a>
+      <a href="/index.html?league=planet" style="display:block;padding:8px 20px;font-size:13px;text-decoration:none;text-align:center;color:#34d399;">플래닛</a>
+      <a href="/index.html?league=nova" style="display:block;padding:8px 20px;font-size:13px;text-decoration:none;text-align:center;color:#a78bfa;">노바</a>
+      <a href="/index.html?league=quasar" style="display:block;padding:8px 20px;font-size:13px;text-decoration:none;text-align:center;color:#f0c040;">퀘이사</a>
+    </div>
+  </div>
   <a class="top-nav-item" href="/astra.html">아스트라</a>
   <a class="top-nav-item" href="/room3d.html">내방</a>
   <a class="top-nav-item" href="/shop.html">상점</a>
@@ -352,14 +343,6 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
   </div>
 </div>
 
-<!-- 리그 전환 탭 -->
-<div class="league-tabs" id="leagueTabs">
-  <button class="league-tab" data-league="dust" onclick="switchLeague('dust')"><span class="tab-dot" style="background:#94a3b8"></span><span>더스트</span></button>
-  <button class="league-tab" data-league="star" onclick="switchLeague('star')"><span class="tab-dot" style="background:#fbbf24"></span><span>스타</span></button>
-  <button class="league-tab" data-league="planet" onclick="switchLeague('planet')"><span class="tab-dot" style="background:#34d399"></span><span>플래닛</span></button>
-  <button class="league-tab" data-league="nova" onclick="switchLeague('nova')"><span class="tab-dot" style="background:#c084fc"></span><span>노바</span></button>
-  <button class="league-tab active" data-league="quasar" onclick="switchLeague('quasar')"><span class="tab-dot" style="background:#f0c040"></span><span>퀘이사</span></button>
-</div>
 
 <!-- ══════ 페이지들 ══════ -->
 
@@ -681,7 +664,7 @@ function goLeagueMap(key){
 
 function goFromNode(el){
   const fan=el.getAttribute('data-fan');
-  const league=document.querySelector('.league-tab.active')?.dataset?.league||'star';
+  const league=new URLSearchParams(window.location.search).get('league')||'quasar';
   flash(()=>{
     location.href='/fandom.html?fan='+encodeURIComponent(fan)+'&league='+league;
   });
@@ -1041,19 +1024,6 @@ function switchLeague(league) {
   const data = LEAGUE_DATA[league];
   if (!data) return;
 
-  // 탭 active 변경
-  document.querySelectorAll('.league-tab').forEach(tab => {
-    tab.classList.remove('active');
-    tab.style.borderColor = '';
-    tab.style.color = '';
-    tab.style.background = '';
-  });
-  const activeTab = document.querySelector(`[data-league="${league}"]`);
-  activeTab.classList.add('active');
-  activeTab.style.borderColor = data.color;
-  activeTab.style.color = data.color;
-  activeTab.style.background = `${data.color}15`;
-
   // 리그 헤더 업데이트
   document.querySelector('.qhdr-title').textContent = data.name;
   document.querySelector('.qhdr-title').style.color = data.color;
@@ -1178,7 +1148,13 @@ function updatePromotionBars(league) {
 // 입장 첫화면: localStorage의 리그 정보 우선, 없으면 퀘이사
 window.addEventListener('DOMContentLoaded', () => {
   const _userLeague = (function(){ try { return JSON.parse(localStorage.getItem('asteria_user')||'{}').league; } catch(e){ return null; } })();
-  switchLeague(_userLeague || 'quasar');
+  const urlParams = new URLSearchParams(window.location.search);
+  const leagueParam = urlParams.get('league');
+  if (leagueParam && LEAGUE_DATA[leagueParam]) {
+    switchLeague(leagueParam);
+  } else {
+    switchLeague(_userLeague || 'quasar');
+  }
   const token = localStorage.getItem('asteria_token') || localStorage.getItem('accessToken');
   const nick = localStorage.getItem('asteria_nick') || '';
   if (token) {
@@ -1268,5 +1244,6 @@ window.addEventListener('DOMContentLoaded', () => {
   loop();
 })();
 </script>
+<script>document.addEventListener('click',function(e){if(!e.target.closest('.nav-dropdown')){document.querySelectorAll('.nav-dropdown>div:last-child').forEach(function(m){m.style.display='none'})}})</script>
 </body>
 </html>

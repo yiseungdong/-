@@ -191,7 +191,16 @@ textarea.rm-input{resize:vertical;min-height:60px}
 <div id="app">
   <nav class="top-nav">
     <a class="top-nav-item" href="/"><div class="top-nav-icon">🏠</div><div class="top-nav-label">홈</div></a>
-    <a class="top-nav-item" href="/fandom.html"><div class="top-nav-icon">🏘️</div><div class="top-nav-label">팬덤</div></a>
+    <div class="nav-dropdown" style="position:relative;display:inline-block;">
+      <a class="top-nav-item" href="/fandom.html" onclick="event.preventDefault();var m=this.nextElementSibling;m.style.display=m.style.display==='block'?'none':'block';"><div class="top-nav-icon">🏘️</div><div class="top-nav-label">팬덤</div></a>
+      <div style="display:none;position:absolute;top:100%;left:50%;transform:translateX(-50%);background:rgba(10,10,26,0.95);border:0.5px solid rgba(255,255,255,0.1);border-radius:12px;padding:8px 0;min-width:120px;z-index:1000;backdrop-filter:blur(10px);">
+        <a href="/index.html?league=dust" style="display:block;padding:8px 20px;font-size:13px;text-decoration:none;text-align:center;color:#9ca3af;">더스트</a>
+        <a href="/index.html?league=star" style="display:block;padding:8px 20px;font-size:13px;text-decoration:none;text-align:center;color:#c0c0c0;">스타</a>
+        <a href="/index.html?league=planet" style="display:block;padding:8px 20px;font-size:13px;text-decoration:none;text-align:center;color:#34d399;">플래닛</a>
+        <a href="/index.html?league=nova" style="display:block;padding:8px 20px;font-size:13px;text-decoration:none;text-align:center;color:#a78bfa;">노바</a>
+        <a href="/index.html?league=quasar" style="display:block;padding:8px 20px;font-size:13px;text-decoration:none;text-align:center;color:#f0c040;">퀘이사</a>
+      </div>
+    </div>
     <a class="top-nav-item" href="/astra.html"><div class="top-nav-icon">⭐</div><div class="top-nav-label">아스트라</div></a>
     <a class="top-nav-item" href="/room3d.html"><div class="top-nav-icon">🏡</div><div class="top-nav-label">내방</div></a>
     <a class="top-nav-item" href="/shop.html"><div class="top-nav-icon">🛒</div><div class="top-nav-label">상점</div></a>
@@ -383,5 +392,6 @@ function showToast(msg){const t=document.getElementById('toast');t.textContent=m
 
 render();
 </script>
+<script>document.addEventListener('click',function(e){if(!e.target.closest('.nav-dropdown')){document.querySelectorAll('.nav-dropdown>div:last-child').forEach(function(m){m.style.display='none'})}})</script>
 </body>
 </html>
