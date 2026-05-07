@@ -97,8 +97,8 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
 .q-ring:nth-child(3){border-color:rgba(240,192,64,.05);animation-duration:55s}
 @keyframes rr{from{transform:translate(-50%,-50%) rotate(0)}to{transform:translate(-50%,-50%) rotate(360deg)}}
 .q-ring::after{content:'';position:absolute;top:-3px;left:50%;width:6px;height:6px;border-radius:50%;background:var(--quasar);transform:translateX(-50%);box-shadow:0 0 8px var(--quasar)}
-.q-node{position:absolute;display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:filter .3s}
-.q-node:hover{filter:brightness(1.25);z-index:50}
+.q-node{position:absolute;display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:filter .3s,transform .3s cubic-bezier(.34,1.56,.64,1)}
+.q-node:hover{filter:brightness(1.25);z-index:50;transform:translateY(-10px) scale(1.06)}
 .q-orb{border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative}
 .q-orb.r1{
   width:380px;height:380px;
