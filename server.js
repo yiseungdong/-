@@ -251,6 +251,11 @@ async function initDB() {
       ALTER TABLE fanclubs ADD COLUMN IF NOT EXISTS artist_name_kr VARCHAR(100);
     `);
 
+    // fanclubs rank 인덱스
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_fanclubs_rank ON fanclubs(rank);
+    `);
+
     // ── 3. 아스트라 성궤 (개인 공간) ──
     await client.query(`
       CREATE TABLE IF NOT EXISTS nebulae (
@@ -887,7 +892,10 @@ async function initDB() {
         return;
       }
 
-      const { rows: fanclubs } = await pool.query('SELECT id, name, league FROM fanclubs ORDER BY rank');
+      const { rows: fanclubs } = await pool.query({
+        text: 'SELECT id, name, league FROM fanclubs ORDER BY rank',
+        query_timeout: 5000
+      });
 
       const leagueStructure = {
         dust: [
