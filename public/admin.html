@@ -116,7 +116,7 @@ textarea.form-input{resize:vertical;min-height:50px}
 // ══════════════════════════════════
 // 별빛 배경
 // ══════════════════════════════════
-(function(){const cv=document.getElementById('starCanvas'),ctx=cv.getContext('2d');let W,H;function r(){W=cv.width=innerWidth;H=cv.height=innerHeight}r();addEventListener('resize',r);const S=Array.from({length:100},()=>({x:Math.random()*2e3,y:Math.random()*2e3,r:Math.random()*.6+.3,b:Math.random()*.4+.2,p:Math.random()*6.28,s:Math.random()*.006+.002,c:Math.random()<.1?'#f0c040':'#fff'}));(function l(){ctx.clearRect(0,0,W,H);S.forEach(s=>{s.p+=s.s;ctx.globalAlpha=s.b*(.5+.5*Math.sin(s.p));ctx.fillStyle=s.c;ctx.beginPath();ctx.arc(s.x%W,s.y%H,s.r,0,6.28);ctx.fill()});ctx.globalAlpha=1;requestAnimationFrame(l)})()})();
+(function(){const cv=document.getElementById('starCanvas'),ctx=cv.getContext('2d');let W,H;function r(){W=cv.width=innerWidth;H=cv.height=innerHeight}r();addEventListener('resize',r);const S=Array.from({length:300},()=>({x:Math.random()*2e3,y:Math.random()*2e3,r:Math.random()*.6+.3,b:Math.random()*.4+.2,p:Math.random()*6.28,s:Math.random()*.006+.002,c:Math.random()<.1?'#f0c040':'#fff'}));(function l(){ctx.clearRect(0,0,W,H);S.forEach(s=>{s.p+=s.s;ctx.globalAlpha=s.b*(.7+.3*Math.sin(s.p));ctx.fillStyle=s.c;ctx.beginPath();ctx.arc(s.x%W,s.y%H,s.r,0,6.28);ctx.fill()});ctx.globalAlpha=1;requestAnimationFrame(l)})()})();
 
 // ══════════════════════════════════
 // 전역 상태

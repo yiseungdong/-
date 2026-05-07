@@ -153,8 +153,8 @@ html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-f
   let W,H;
   function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight}
   resize();addEventListener('resize',resize);
-  const S=Array.from({length:180},()=>({x:Math.random()*2000,y:Math.random()*2000,r:Math.random()<.8?Math.random()*.6+.3:Math.random()*1.2+.8,b:Math.random()*.5+.3,p:Math.random()*6.28,s:Math.random()*.008+.002,c:Math.random()<.08?'#f0c040':Math.random()<.06?'#c084fc':'#fff'}));
-  (function loop(){ctx.clearRect(0,0,W,H);S.forEach(s=>{s.p+=s.s;const a=s.b*(.5+.5*Math.sin(s.p));ctx.globalAlpha=a;ctx.fillStyle=s.c;ctx.beginPath();ctx.arc(s.x%W,s.y%H,s.r,0,6.28);ctx.fill()});ctx.globalAlpha=1;requestAnimationFrame(loop)})();
+  const S=Array.from({length:400},()=>({x:Math.random()*2000,y:Math.random()*2000,r:Math.random()<.7?Math.random()*.6+.3:Math.random()*1.2+.8,b:Math.random()*.4+.6,p:Math.random()*6.28,s:Math.random()*.008+.002,c:Math.random()<.08?'#f0c040':Math.random()<.06?'#c084fc':'#fff'}));
+  (function loop(){ctx.clearRect(0,0,W,H);S.forEach(s=>{s.p+=s.s;const a=s.b*(.7+.3*Math.sin(s.p));ctx.globalAlpha=a;ctx.fillStyle=s.c;ctx.beginPath();ctx.arc(s.x%W,s.y%H,s.r,0,6.28);ctx.fill()});ctx.globalAlpha=1;requestAnimationFrame(loop)})();
 })();
 
 // ══════════════════════════════════════════

@@ -1302,15 +1302,15 @@ function rotateAlert(){
   const ctx=cv.getContext('2d');let W,H;
   function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight;}
   resize();addEventListener('resize',resize);
-  const stars=Array.from({length:280},()=>{const s=Math.random();
+  const stars=Array.from({length:500},()=>{const s=Math.random();
     return{x:Math.random()*2000,y:Math.random()*2000,
       r:s<0.7?Math.random()*0.8+0.3:s<0.9?Math.random()*1.2+1:Math.random()*2+2,
-      br:Math.random()*0.5+0.3,ph:Math.random()*Math.PI*2,
+      br:Math.random()*0.4+0.6,ph:Math.random()*Math.PI*2,
       sp:Math.random()*0.008+0.002,
       col:Math.random()<0.08?'#f0c040':Math.random()<0.06?'#c084fc':Math.random()<0.04?'#38bdf8':'#fff',
       big:s>=0.9};});
   const meteors=Array.from({length:3},()=>({active:false,x:0,y:0,vx:0,vy:0,len:0,op:0,timer:Math.random()*300}));
-  function loop(){ctx.clearRect(0,0,W,H);    stars.forEach(st=>{st.ph+=st.sp;const a=st.br*(0.5+0.5*Math.sin(st.ph));
+  function loop(){ctx.clearRect(0,0,W,H);    stars.forEach(st=>{st.ph+=st.sp;const a=st.br*(0.7+0.3*Math.sin(st.ph));
       ctx.save();ctx.globalAlpha=a;const x=st.x%W,y=st.y%H;
       if(st.big){const g=ctx.createRadialGradient(x,y,0,x,y,st.r*3);
         g.addColorStop(0,st.col);g.addColorStop(1,'transparent');

@@ -107,7 +107,7 @@ function goStart(){
 }
 renderGrid();
 // 별빛 배경
-(function(){var c=document.getElementById('starCanvas');if(!c)return;var x=c.getContext('2d');var W,H;function r(){W=c.width=innerWidth;H=c.height=innerHeight}r();addEventListener('resize',r);var s=[];for(var i=0;i<200;i++)s.push({x:Math.random()*2000,y:Math.random()*2000,r:Math.random()*1.2+0.3,a:Math.random(),s:Math.random()*0.02+0.005});function d(){x.clearRect(0,0,W,H);s.forEach(function(p){p.a+=p.s;var o=0.3+Math.sin(p.a)*0.7;x.beginPath();x.arc(p.x%W,p.y%H,p.r,0,Math.PI*2);x.fillStyle='rgba(200,180,255,'+o+')';x.fill()});requestAnimationFrame(d)}d()})();
+(function(){var c=document.getElementById('starCanvas');if(!c)return;var x=c.getContext('2d');var W,H;function r(){W=c.width=innerWidth;H=c.height=innerHeight}r();addEventListener('resize',r);var s=[];for(var i=0;i<400;i++)s.push({x:Math.random()*2000,y:Math.random()*2000,r:Math.random()*1.2+0.3,a:Math.random(),s:Math.random()*0.02+0.005});function d(){x.clearRect(0,0,W,H);s.forEach(function(p){p.a+=p.s;var o=0.3+Math.sin(p.a)*0.7;x.beginPath();x.arc(p.x%W,p.y%H,p.r,0,Math.PI*2);x.fillStyle='rgba(200,180,255,'+o+')';x.fill()});requestAnimationFrame(d)}d()})();
 </script>
 </body>
 </html>
