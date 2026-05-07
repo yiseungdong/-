@@ -2779,18 +2779,64 @@ const eb=document.getElementById('fcEnergyBar');const ep=document.getElementById
 function initDrag(){
   const cont=document.getElementById('vc'),world=document.getElementById('vw');
   let drag=false,sx=0,sy=0,cx=0,cy=0,ox=0,oy=0,moved=false;
+  let sc=1; // 줌 스케일
+  const SC_MIN=0.4,SC_MAX=2.0;
   const ww=window.innerWidth,wh=window.innerHeight;
   cx=-(W/2-ww/2);cy=-(H/2-wh/2);
-  world.style.transform=`translate(${cx}px,${cy}px)`;
+  function applyTransform(){world.style.transform=`translate(${cx}px,${cy}px) scale(${sc})`;world.style.transformOrigin='0 0';}
+  applyTransform();
+  function clampPos(){const padX=Math.min(150,ww*.2),padY=Math.min(150,wh*.2);const scaledW=W*sc,scaledH=H*sc;cx=Math.max(-(scaledW-ww+padX),Math.min(padX,cx));cy=Math.max(-(scaledH-wh+padY),Math.min(padY,cy));}
   function st(x,y){drag=true;sx=x;sy=y;ox=cx;oy=cy;moved=false}
-  function mv(x,y){if(!drag)return;const dx=x-sx,dy=y-sy;if(Math.abs(dx)>3||Math.abs(dy)>3)moved=true;cx=ox+dx;cy=oy+dy;const padX=Math.min(150,ww*.2),padY=Math.min(150,wh*.2);cx=Math.max(-(W-ww+padX),Math.min(padX,cx));cy=Math.max(-(H-wh+padY),Math.min(padY,cy));world.style.transform=`translate(${cx}px,${cy}px)`}
+  function mv(x,y){if(!drag)return;const dx=x-sx,dy=y-sy;if(Math.abs(dx)>3||Math.abs(dy)>3)moved=true;cx=ox+dx;cy=oy+dy;clampPos();applyTransform();}
   function en(){drag=false}
+  // 마우스 휠 줌
+  cont.addEventListener('wheel',e=>{
+    e.preventDefault();
+    const delta=e.deltaY>0?-0.1:0.1;
+    const newSc=Math.max(SC_MIN,Math.min(SC_MAX,sc+delta));
+    // 마우스 위치 기준으로 줌
+    const mx=e.clientX,my=e.clientY;
+    cx=(cx-mx)/sc*newSc+mx;
+    cy=(cy-my)/sc*newSc+my;
+    sc=newSc;
+    clampPos();
+    applyTransform();
+  },{passive:false});
+  // 핀치 줌 (모바일)
+  let lastPinchDist=0;
+  cont.addEventListener('touchstart',e=>{
+    if(e.target.closest('.bld'))return;
+    if(e.touches.length===2){
+      lastPinchDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+      return;
+    }
+    const tc=e.touches[0];st(tc.clientX,tc.clientY);
+  },{passive:true});
+  cont.addEventListener('touchmove',e=>{
+    if(e.touches.length===2){
+      const dist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+      if(lastPinchDist){
+        const newSc=Math.max(SC_MIN,Math.min(SC_MAX,sc*(dist/lastPinchDist)));
+        const mx=(e.touches[0].clientX+e.touches[1].clientX)/2;
+        const my=(e.touches[0].clientY+e.touches[1].clientY)/2;
+        cx=(cx-mx)/sc*newSc+mx;
+        cy=(cy-my)/sc*newSc+my;
+        sc=newSc;
+        clampPos();
+        applyTransform();
+      }
+      lastPinchDist=dist;
+      return;
+    }
+    const tc=e.touches[0];mv(tc.clientX,tc.clientY);
+  },{passive:true});
+  cont.addEventListener('touchend',e=>{
+    lastPinchDist=0;
+    if(!moved){const tc=e.changedTouches[0];const a=document.getElementById('myAv');a.style.left=(tc.clientX-cx-24)+'px';a.style.top=(tc.clientY-cy-40)+'px';a.classList.add('walk');setTimeout(()=>a.classList.remove('walk'),700)}en();
+  });
   cont.addEventListener('mousedown',e=>{if(e.target.closest('.bld,.hdr-back,.mo'))return;st(e.clientX,e.clientY)});
   window.addEventListener('mousemove',e=>mv(e.clientX,e.clientY));window.addEventListener('mouseup',en);
   cont.addEventListener('click',e=>{if(moved||e.target.closest('.bld,.hdr,.bot,.mo'))return;const a=document.getElementById('myAv');a.style.left=(e.clientX-cx-24)+'px';a.style.top=(e.clientY-cy-40)+'px';a.classList.add('walk');setTimeout(()=>a.classList.remove('walk'),700)});
-  cont.addEventListener('touchstart',e=>{if(e.target.closest('.bld'))return;const tc=e.touches[0];st(tc.clientX,tc.clientY)},{passive:true});
-  cont.addEventListener('touchmove',e=>{const tc=e.touches[0];mv(tc.clientX,tc.clientY)},{passive:true});
-  cont.addEventListener('touchend',e=>{if(!moved){const tc=e.changedTouches[0];const a=document.getElementById('myAv');a.style.left=(tc.clientX-cx-24)+'px';a.style.top=(tc.clientY-cy-40)+'px';a.classList.add('walk');setTimeout(()=>a.classList.remove('walk'),700)}en()});
 }
 function animNPC(){document.querySelectorAll('.npc').forEach(n=>{setInterval(()=>{const cl=parseFloat(n.style.left)||900,ct=parseFloat(n.style.top)||800;n.style.left=Math.max(W*.2,Math.min(W*.8,cl+(Math.random()-.5)*50))+'px';n.style.top=Math.max(H*.3,Math.min(H*.75,ct+(Math.random()-.5)*40))+'px'},5000+Math.random()*4000)})}
 /* playEnt 로직은 DOMContentLoaded에 통합 */
